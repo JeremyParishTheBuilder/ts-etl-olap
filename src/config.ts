@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const CONFIG = {
-  CHAIN_REG_ROOT_DIR: process.env.CHAIN_REG_ROOT_DIR || "/../",
+  CHAIN_REG_ROOT_DIR: process.env.CHAIN_REG_ROOT_DIR || "../",
   CHAIN_REG_DIR_NAME: process.env.CHAIN_REG_DIR_NAME || "chain-registry",
   DEBUG: process.env.DEBUG === "true", // Convert string to boolean
 };

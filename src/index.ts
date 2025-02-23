@@ -1,7 +1,7 @@
-import { CONFIG } from "./config.js";
+import { listChainRegContents, listDirectoryContents } from './utils/listDirectories.js';
 
 console.log("This is the main file");
 
-console.log("Root Dir:", CONFIG.CHAIN_REG_ROOT_DIR);
-console.log("Registry Name:", CONFIG.CHAIN_REG_DIR_NAME);
-console.log("Debug Mode:", CONFIG.DEBUG);
+//What do you wnt index to do?
+listChainRegContents();
+//listDirectoryContents("../chain-registry");
