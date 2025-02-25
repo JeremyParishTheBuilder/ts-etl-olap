@@ -1,7 +1,6 @@
-import { listChainRegContents, listDirectoryContents } from './utils/listDirectories.js';
+import { getChainRegContents } from './utils/initializeChainReg.js';
 
 console.log("This is the main file");
 
-//What do you wnt index to do?
-listChainRegContents();
-//listDirectoryContents("../chain-registry");
+
+getChainRegContents();
