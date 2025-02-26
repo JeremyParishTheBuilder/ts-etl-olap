@@ -2,14 +2,18 @@
 import fs from 'fs';
 import path from 'path';
 import { File } from './File.js';
+import { DirectoryContent } from './DirectoryContent.js';
 
-export class Directory {
-  fullPath: string;
+export class Directory extends DirectoryContent  {
+  //private fullPath: string;
+  //private baseName: string;
   private contentsCache: (Directory | File)[] | null = null;
   private isChain: boolean | null = null;
 
   constructor(fullPath: string) {
-    this.fullPath = fullPath;
+    super(fullPath);
+    //this.fullPath = fullPath;
+    //this.basename = path.basename(fullPath);
   }
 
   private readContents(): void {

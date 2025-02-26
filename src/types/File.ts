@@ -1,12 +1,15 @@
-import path from 'path';
+import { DirectoryContent } from './DirectoryContent.js';
 
-export class File {
-  fullPath: string;
-  basename: string;
-
+export class File extends DirectoryContent {
   constructor(fullPath: string) {
-    this.fullPath = fullPath;
-    this.basename = path.basename(fullPath);
+    super(fullPath);
   }
+
+  /*
+  public isSchemaJson(fileName: JsonFileName): void {
+    console.log("LOL");
+    console.log(fileName);
+  }
+  */
 
 }

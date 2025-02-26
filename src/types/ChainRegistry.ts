@@ -22,10 +22,7 @@ class ChainRegistry {
 
   private static instance: ChainRegistry | null = null;
 
-  private chainRegDirectory: Directory | null = null;
-  private testnetsDirectory: Directory | null = null;
-  private nonCosmosMainnetsDirectory: Directory | null = null;
-  private nonCosmosTestnetsDirectory: Directory | null = null;
+  private multiNetworkDirectories: { [key: string]: Directory | null } = {};
 
   private static NON_COSMOS_DIR_NAME = "_non-cosmos";
   private static TESTNETS_DIR_NAME = "testnets";
@@ -33,17 +30,7 @@ class ChainRegistry {
   private static IMAGES_DIR_NAME = "images";
 
   private constructor() {
-    this.chainRegDirectory = new Directory(path.join(
-      CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME));
-    this.testnetsDirectory = new Directory(path.join(
-      CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
-      ChainRegistry.TESTNETS_DIR_NAME));
-    this.nonCosmosMainnetsDirectory = new Directory(path.join(
-      CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
-      ChainRegistry.NON_COSMOS_DIR_NAME));
-    this.nonCosmosTestnetsDirectory = new Directory(path.join(
-      CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
-      ChainRegistry.TESTNETS_DIR_NAME, ChainRegistry.NON_COSMOS_DIR_NAME));
+    this.initializeMultiNetworkDirectories();
   }
 
   // Singleton pattern: Only creates the instance once
@@ -54,21 +41,59 @@ class ChainRegistry {
     return this.instance;
   }
 
-  public getNetworksDirectory(
+  private initializeMultiNetworkDirectories(): void {
+    this.multiNetworkDirectories = {
+      cosmosMainnets: new Directory(path.join(
+        CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME)),
+      cosmosTestnets: new Directory(path.join(
+        CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
+        ChainRegistry.TESTNETS_DIR_NAME)),
+      nonCosmosMainnets: new Directory(path.join(
+        CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
+        ChainRegistry.NON_COSMOS_DIR_NAME)),
+      nonCosmosTestnets: new Directory(path.join(
+        CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
+        ChainRegistry.TESTNETS_DIR_NAME, ChainRegistry.NON_COSMOS_DIR_NAME)),
+    };
+  }
+
+  public getMultiNetworkDirectory(
     networkType: NetworkType = NetworkType.MAINNETS,
     chainType: ChainType = ChainType.COSMOS
   ): Directory | null {
     if (networkType === NetworkType.MAINNETS) {
       return chainType === ChainType.COSMOS
-        ? this.chainRegDirectory
-        : this.nonCosmosMainnetsDirectory;
+        ? this.multiNetworkDirectories.cosmosMainnets
+        : this.multiNetworkDirectories.nonCosmosMainnets;
     }
     if (networkType === NetworkType.TESTNETS) {
       return chainType === ChainType.COSMOS
-        ? this.testnetsDirectory
-        : this.nonCosmosTestnetsDirectory;
+        ? this.multiNetworkDirectories.cosmosTestnets
+        : this.multiNetworkDirectories.nonCosmosTestnets;
     }
     return null;
+  }
+
+  private chainNameToDirectoryMap: Map<string, Directory> | null = null;
+
+  private createChainNameToDirectoryMap(): void {
+    this.chainNameToDirectoryMap = new Map();
+    Object.values(this.multiNetworkDirectories).forEach((multiNetworkDirectory) => {
+      if (multiNetworkDirectory) {
+        multiNetworkDirectory.contents().forEach((directoryContent) => {
+          if (directoryContent instanceof Directory && directoryContent.isChainDirectory()) {
+            this.chainNameToDirectoryMap?.set(directoryContent.basename, directoryContent);
+          }
+        });
+      }
+    });
+  }
+
+  public getChainDirectory(chainName: string): Directory | null {
+    if (!this.chainNameToDirectoryMap) {
+      this.createChainNameToDirectoryMap();
+    }
+    return this.chainNameToDirectoryMap?.get(chainName) ?? null;
   }
 
   public getFileProperty(fileName: JsonFileName): void {
