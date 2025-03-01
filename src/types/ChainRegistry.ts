@@ -1,6 +1,7 @@
 import path from "path";
-import { Directory } from "../types/Directory.js";
-import { CONFIG } from "../config.js";
+import Chain from '../types/Chain.js';
+import Directory from '../types/Directory.js';
+import { CONFIG } from '../config.js';
 
 export enum NetworkType {
   MAINNETS = "mainnets",
@@ -13,9 +14,9 @@ export enum ChainType {
 }
 
 export enum JsonFileName {
-  assetlist = "assetlist.json",
-  chain = "chain.json",
-  versions = "versions.json"
+  ASSETLIST = "assetlist.json",
+  CHAIN = "chain.json",
+  VERSIONS = "versions.json"
 }
 
 class ChainRegistry {
@@ -28,6 +29,9 @@ class ChainRegistry {
   private static TESTNETS_DIR_NAME = "testnets";
 
   private static IMAGES_DIR_NAME = "images";
+
+  private _chainNames: Set<string> | null | undefined = null;
+  private _chainNameToChainMap: Map<string, Chain> | null = null;
 
   private constructor() {
     this.initializeMultiNetworkDirectories();
@@ -80,8 +84,8 @@ class ChainRegistry {
     this.chainNameToDirectoryMap = new Map();
     Object.values(this.multiNetworkDirectories).forEach((multiNetworkDirectory) => {
       if (multiNetworkDirectory) {
-        multiNetworkDirectory.contents().forEach((directoryContent) => {
-          if (directoryContent instanceof Directory && directoryContent.isChainDirectory()) {
+        multiNetworkDirectory.contents.forEach((directoryContent) => {
+          if (directoryContent instanceof Directory && directoryContent.isChain) {
             this.chainNameToDirectoryMap?.set(directoryContent.basename, directoryContent);
           }
         });
@@ -100,6 +104,10 @@ class ChainRegistry {
     console.log("LOL");
     console.log(fileName);
   }
+
+  public chain(chainName: string): Chain | undefined {
+    return this._chainNameToChainMap!.get(chainName);
+  } 
 
 }
 

@@ -14,3 +14,5 @@ export class DirectoryContent {
     return this._fullPath;
   }
 }
+
+export default DirectoryContent;

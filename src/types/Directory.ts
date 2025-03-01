@@ -1,56 +1,54 @@
-// src/types/Directory.ts
 import fs from 'fs';
 import path from 'path';
-import { File } from './File.js';
-import { DirectoryContent } from './DirectoryContent.js';
+import { CONFIG } from '../config.js';
+import File from './File.js';
+import DirectoryContent from './DirectoryContent.js';
+import { JsonFileName } from './ChainRegistry.js';
 
 export class Directory extends DirectoryContent  {
-  //private fullPath: string;
-  //private baseName: string;
-  private contentsCache: (Directory | File)[] | null = null;
-  private isChain: boolean | null = null;
+
+  private _contents: (Directory | File)[] | null = null;
+  private _isChain: boolean | null = null;
 
   constructor(fullPath: string) {
     super(fullPath);
-    //this.fullPath = fullPath;
-    //this.basename = path.basename(fullPath);
   }
 
   private readContents(): void {
     try {
       const entries = fs.readdirSync(this.fullPath);
-      this.contentsCache = entries.map((entry) => {
+      this._contents = entries.map((entry) => {
         const fullPath = path.join(this.fullPath, entry);
         const stat = fs.lstatSync(fullPath);
         return stat.isDirectory() ? new Directory(fullPath) : new File(fullPath);
       });
     } catch (error) {
       console.error('Error reading directory:', error);
-      this.contentsCache = [];
+      this._contents = [];
     }
   }
 
-  public contents(): (Directory | File)[] {
-    if (this.contentsCache === null) {
+  public get contents(): (Directory | File)[] {
+    if (this._contents === null) {
       this.readContents();
     }
-    return this.contentsCache!;
+    return this._contents!;
   }
 
-  public isChainDirectory(): boolean {
-    if (this.isChain !== null) {
-      return this.isChain;
+  public get isChain(): boolean {
+    if (this._isChain !== null) {
+      return this._isChain;
     }
-    const contents = this.contents();
-    this.isChain = contents.some(
-      (entry) => entry instanceof File && (entry.basename === "assetlist.json" || entry.basename === "chain.json")
+    const contents = this.contents;
+    this._isChain = contents.some(
+      (entry) => entry instanceof File && (entry.basename === JsonFileName.ASSETLIST || entry.basename === JsonFileName.CHAIN)
     );
-    return this.isChain;
+    return this._isChain;
   }
 
   // Method to log the cached contents to the console
   public logContents(): void {
-    const contents = this.contents();  // Automatically loads contents if not loaded
+    const contents = this.contents;  // Automatically loads contents if not loaded
     console.log(`Contents of directory ${this.fullPath}:`);
 
     if (contents.length) {
@@ -63,3 +61,5 @@ export class Directory extends DirectoryContent  {
   }
 
 }
+
+export default Directory;
