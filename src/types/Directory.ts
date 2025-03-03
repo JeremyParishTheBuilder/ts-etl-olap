@@ -1,9 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { CONFIG } from '../config.js';
 import File from './File.js';
 import DirectoryContent from './DirectoryContent.js';
-import { JsonFileName } from './ChainRegistry.js';
+import { ChainFileName } from '../constants/ChainConstants.js';
 
 export class Directory extends DirectoryContent  {
 
@@ -12,6 +11,11 @@ export class Directory extends DirectoryContent  {
 
   constructor(fullPath: string) {
     super(fullPath);
+  }
+
+  reclassify<T extends Directory>(newType: T): T {
+    Object.assign(newType, this); // Copies properties from this Directory to newType
+    return newType;
   }
 
   private readContents(): void {
@@ -35,13 +39,22 @@ export class Directory extends DirectoryContent  {
     return this._contents!;
   }
 
+  public find<T extends DirectoryContent>(
+    basename: string,
+    contentType: new (...args: any[]) => T
+  ): T | undefined {
+    return this.contents.find(
+      (content) => content instanceof contentType && content.basename === basename
+    ) as T | undefined;
+  }
+
   public get isChain(): boolean {
     if (this._isChain !== null) {
       return this._isChain;
     }
     const contents = this.contents;
     this._isChain = contents.some(
-      (entry) => entry instanceof File && (entry.basename === JsonFileName.ASSETLIST || entry.basename === JsonFileName.CHAIN)
+      (entry) => entry instanceof File && (entry.basename === ChainFileName.ASSETLIST || entry.basename === ChainFileName.CHAIN)
     );
     return this._isChain;
   }

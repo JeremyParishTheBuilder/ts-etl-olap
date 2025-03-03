@@ -1,16 +1,16 @@
-import AssetPointer from './AssetPointer.js'
 import Chain from './Chain.js';
 import { ChainFileName } from '../constants/ChainConstants.js';
 
-export class Asset extends AssetPointer {
+export class Version {
 
+  private _versionName: string;
   private _chain: Chain;
   private _properties: Record<string, any> | null = null; // Stores JSON properties
 
   [key: string]: any;
 
-  public constructor(chain: Chain, baseDenom: string) {
-    super(chain.chainName, baseDenom);
+  public constructor(chain: Chain, versionName: string) {
+    this._versionName = versionName;
     this._chain = chain;
 
     return new Proxy(this, {
@@ -26,16 +26,16 @@ export class Asset extends AssetPointer {
 
   private loadProperties(): void {
     if (this._properties !== null) return;
-    const assetlistFile = this._chain.chainDirectory.file(ChainFileName.ASSETLIST);
-    if (!assetlistFile?.contents?.assets) {
+    const versionsFile = this._chain.chainDirectory.file(ChainFileName.VERSIONS);
+    if (!versionsFile?.contents?.versions) {
       this._properties = {};
       return;
     }
-    this._properties = assetlistFile.contents.assets.find(
-      (asset: any) => asset.base === this._baseDenom
+    this._properties = versionsFile.contents.versions.find(
+      (version: any) => version.name === this._versionName
     ) ?? {};
   }
 
 }
 
-export default Asset;
+export default Version;

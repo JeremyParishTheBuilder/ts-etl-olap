@@ -21,3 +21,5 @@ export const CONFIG = {
 if (CONFIG.DEBUG) {
   console.log("Config loaded:", CONFIG);
 }
+
+export default CONFIG;
