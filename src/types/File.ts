@@ -35,7 +35,6 @@ export class File extends DirectoryContent {
         this._failed = true;  // Cache the failed attempt
       }
     }
-
     return this._contents;
   }
 

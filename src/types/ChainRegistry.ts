@@ -1,9 +1,10 @@
 import path from "path";
 import Chain from '../types/Chain.js';
+import Asset from '../types/Asset.js';
 import Directory from '../types/Directory.js';
-import ChainDirectory from '../types/ChainDirectory.js';
 import { NetworkTypeDirName, ChainTypeDirName } from '../constants/ChainConstants.js';
 import CONFIG from '../config.js';
+import AssetPointer from "./AssetPointer.js";
 
 class ChainRegistry {
 
@@ -80,7 +81,7 @@ class ChainRegistry {
     if (chainInstance === null) {
       const directory = this.findChainDirectory(chainName);
       if (directory) {
-        chainInstance = new Chain(new ChainDirectory(directory));
+        chainInstance = new Chain(directory);
         this._chainNameToChainMap!.set(chainName, chainInstance);
       }
     }
@@ -99,50 +100,18 @@ class ChainRegistry {
     });
   }
 
+  public asset(assetPointer: AssetPointer): Asset | undefined {
+    return this.
+      chain(assetPointer.chainName)?.
+      asset(assetPointer.baseDenom);
+  }
+
   private findChainDirectory(name: string): Directory | undefined {
     return Object.values(this._multiChainDirectories)
       .map((multiChainDirectory) => multiChainDirectory?.find(name, Directory))
       .find((dir) => dir?.isChain);
   }
 
-  /*
-  private loadChainNames(): void {
-
-    const assetlistFile = this._chainDirectory.file(ChainFileName.ASSETLIST);
-    if (!assetlistFile?.contents?.assets) {
-      this._baseDenomToAssetMap = new Map(); // No assets found, but still initialize the Map
-      return;
-    }
-    const assetArray: { base: string }[] = assetlistFile.contents.assets || [];
-    this._baseDenomToAssetMap = new Map(assetArray.map(asset => [asset.base, null]));
-  }
-  */
-
-
-  //private chainNameToDirectoryMap: Map<string, ChainDirectory> | null = null;
-
-  /*
-  private createChainNameToDirectoryMap(): void {
-    this.chainNameToDirectoryMap = new Map();
-    Object.values(this._multiChainDirectories).forEach((multiNetworkDirectory) => {
-      if (multiNetworkDirectory) {
-        multiNetworkDirectory.contents.forEach((directoryContent) => {
-          if (directoryContent instanceof Directory && directoryContent.isChain) {
-            chainDirectory = new ChainDirectory(directoryContent);
-            this.chainNameToDirectoryMap?.set(directoryContent.basename, chainDirectory);
-          }
-        });
-      }
-    });
-  }
-
-  public getChainDirectory(chainName: string): ChainDirectory | null {
-    if (!this.chainNameToDirectoryMap) {
-      this.createChainNameToDirectoryMap();
-    }
-    return this.chainNameToDirectoryMap?.get(chainName) ?? null;
-  }
-  */
 
 }
 

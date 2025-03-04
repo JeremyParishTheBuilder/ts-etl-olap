@@ -1,4 +1,5 @@
-import ChainDirectory from './ChainDirectory.js';
+import Directory from './Directory.js';
+import File from './File.js';
 import { ChainFileName, ChainDirName } from '../constants/ChainConstants.js';
 import Asset from './Asset.js'; 
 import Version from './Version.js';
@@ -6,16 +7,19 @@ import Version from './Version.js';
 export class Chain {
 
   private _chainName: string;
-  private _chainDirectory: ChainDirectory;
+  private _directory: Directory;
   private _properties: Record<string, any> | null | undefined = null; // Stores JSON properties
+
+  private _keyFiles: Map<ChainFileName, File | undefined> = new Map(); //Stores Files like: Assetlist, Chain & Versions.
+  private _keyDirectories: Map<ChainDirName, Directory | undefined> = new Map(); //Stores Directories like: /images/.
 
   private _baseDenomToAssetMap: Map<string, Asset | null | undefined> | null = null;
   private _versionNameToVersionMap: Map<string, Version | null | undefined> | null = null;
 
   [key: string]: any;
 
-  public constructor(directory: ChainDirectory) {
-    this._chainDirectory = directory;
+  public constructor(directory: Directory) {
+    this._directory = directory;
     this._chainName = directory.basename;
 
     return new Proxy(this, {
@@ -31,7 +35,7 @@ export class Chain {
 
   private loadProperties(): void {
     if (this._properties !== null) return;
-    const chainFile = this._chainDirectory.file(ChainFileName.CHAIN);
+    const chainFile = this.file(ChainFileName.CHAIN);
     this._properties = chainFile ? (chainFile.contents || {}) : undefined;
   }
 
@@ -39,34 +43,32 @@ export class Chain {
     return this._chainName; //by directory name, not JSON property--some chains don't have chain json
   }
 
-  public get chainDirectory(): ChainDirectory {
-    return this._chainDirectory;
-  }
-
-  /*
-  // Delegate file method to ChainDirectory
   public file(name: ChainFileName): File | undefined {
-    return this._chainDirectory.file(name);
+    if (!this._keyFiles.has(name)) {
+      this._keyFiles.set(name, this._directory.find(name, File));
+    }
+    return this._keyFiles.get(name);
   }
 
-  // Delegate directory method to ChainDirectory
   public directory(name: ChainDirName): Directory | undefined {
-    return this._chainDirectory.directory(name);
+    if (!this._keyDirectories.has(name)) {
+      this._keyDirectories.set(name, this._directory.find(name, Directory));
+    }
+    return this._keyDirectories.get(name);
   }
-  */
 
-  public asset(baseDenom: string): Asset | null | undefined {
+  public asset(baseDenom: string): Asset | undefined {
     if (!this._baseDenomToAssetMap) this.loadBaseDenoms(); // Ensure it's initialized
     if (!this._baseDenomToAssetMap?.has(baseDenom)) return undefined; // Base denom doesn't exist
     if (this._baseDenomToAssetMap.get(baseDenom) === null) {
       this._baseDenomToAssetMap.set(baseDenom, new Asset(this, baseDenom)); // Lazy-load asset
     }
-    return this._baseDenomToAssetMap!.get(baseDenom);
+    return this._baseDenomToAssetMap.get(baseDenom) || undefined;
   }
 
   private loadBaseDenoms(): void {
     if (this._baseDenomToAssetMap !== null) return; // Already initialized
-    const assetlistFile = this._chainDirectory.file(ChainFileName.ASSETLIST);
+    const assetlistFile = this.file(ChainFileName.ASSETLIST);
     if (!assetlistFile?.contents?.assets) {
       this._baseDenomToAssetMap = new Map(); // No assets found, but still initialize the Map
       return;
@@ -81,12 +83,12 @@ export class Chain {
     if (this._versionNameToVersionMap.get(versionName) === null) {
       this._versionNameToVersionMap.set(versionName, new Version(this, versionName)); // Lazy-load asset
     }
-    return this._versionNameToVersionMap!.get(versionName);
+    return this._versionNameToVersionMap.get(versionName);
   }
 
   private loadVersionNames(): void {
     if (this._versionNameToVersionMap !== null) return; // Already initialized
-    const versionFile = this._chainDirectory.file(ChainFileName.VERSIONS);
+    const versionFile = this.file(ChainFileName.VERSIONS);
     if (!versionFile?.contents?.versions) {
       this._versionNameToVersionMap = new Map(); // No versions found, but still initialize the Map
       return;

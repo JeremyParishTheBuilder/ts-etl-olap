@@ -14,6 +14,14 @@ export class AssetPointer {
     return this._key;
   }
 
+  public get chainName(): string {
+    return this._chainName;
+  }
+
+  public get baseDenom(): string {
+    return this._baseDenom;
+  }
+
 }
 
 export default AssetPointer;

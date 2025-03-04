@@ -26,7 +26,7 @@ export class Version {
 
   private loadProperties(): void {
     if (this._properties !== null) return;
-    const versionsFile = this._chain.chainDirectory.file(ChainFileName.VERSIONS);
+    const versionsFile = this._chain.file(ChainFileName.VERSIONS);
     if (!versionsFile?.contents?.versions) {
       this._properties = {};
       return;
