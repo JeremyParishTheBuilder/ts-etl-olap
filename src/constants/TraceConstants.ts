@@ -24,7 +24,6 @@ export const allTraceTypes = [
   TraceType.LEGACY_MINTAGE
 ];
 
-
 export const nonIbcTransition = [
   TraceType.BRIDGE,
   TraceType.WRAPPED,
@@ -33,4 +32,9 @@ export const nonIbcTransition = [
   TraceType.ADDITIONAL_MINTAGE,
   TraceType.TEST_MINTAGE,
   TraceType.LEGACY_MINTAGE
+];
+
+export const ibcTraceTypes = [
+  TraceType.IBC,
+  TraceType.IBC_CW20
 ];
