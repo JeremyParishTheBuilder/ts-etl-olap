@@ -100,7 +100,8 @@ class ChainRegistry {
     });
   }
 
-  public asset(assetPointer: AssetPointer): Asset | undefined {
+  public asset(assetPointer: AssetPointer | undefined): Asset | undefined {
+    if (!assetPointer) return undefined;
     return this.
       chain(assetPointer.chainName)?.
       asset(assetPointer.baseDenom);

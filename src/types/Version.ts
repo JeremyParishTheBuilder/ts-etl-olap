@@ -1,17 +1,17 @@
-import Chain from './Chain.js';
+import ChainRegistry from './ChainRegistry.js';
 import { ChainFileName } from '../constants/ChainConstants.js';
 
 export class Version {
 
   private _versionName: string;
-  private _chain: Chain;
+  private _chainName: string;
   private _properties: Record<string, any> | null = null; // Stores JSON properties
 
   [key: string]: any;
 
-  public constructor(chain: Chain, versionName: string) {
+  public constructor(chainName: string, versionName: string) {
+    this._chainName = chainName;
     this._versionName = versionName;
-    this._chain = chain;
 
     return new Proxy(this, {
       get: (target, prop: string) => {
@@ -26,14 +26,15 @@ export class Version {
 
   private loadProperties(): void {
     if (this._properties !== null) return;
-    const versionsFile = this._chain.file(ChainFileName.VERSIONS);
-    if (!versionsFile?.contents?.versions) {
-      this._properties = {};
-      return;
-    }
-    this._properties = versionsFile.contents.versions.find(
-      (version: any) => version.name === this._versionName
-    ) ?? {};
+    this._properties = ChainRegistry.getInstance().
+      chain(this._chainName)?.
+      file(ChainFileName.VERSIONS)?.
+      contents?.
+      versions?.
+      find(
+        (version: any) =>
+          version.name === this._versionName
+      ) ?? {};
   }
 
 }

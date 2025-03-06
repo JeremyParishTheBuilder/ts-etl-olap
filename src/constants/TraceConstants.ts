@@ -11,6 +11,13 @@ export enum TraceType {
   LEGACY_MINTAGE = "legacy-mintage"
 }
 
+export enum TracePropertyName {
+  TYPE = "type",
+  COUNTERPARTY = "counterparty",
+  CHAIN = "chain",
+  PROVIDER = "provider"
+}
+
 export const allTraceTypes = [
   TraceType.IBC,
   TraceType.IBC_CW20,

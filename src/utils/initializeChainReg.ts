@@ -1,4 +1,5 @@
 import ChainRegistry from '../types/ChainRegistry.js';
+import RegistryObject from '../types/RegistryObject.js';
 
 export const getChainRegContents = () => {
 
@@ -11,9 +12,9 @@ export const getChainRegContents = () => {
     console.log(chain.blah);
     console.log("Assets:");
     console.log(chain.asset("uosmo")?.property("name"));
-    //console.log("Versions:");
-    //console.log(chain.version("v28")?.recommended_version);
-    //console.log(chain_reg.chain("cosmoshub")?.asset("uatom")?.property("description"));
+    console.log("Versions:");
+    console.log(chain.version("v28")?.recommended_version);
+    console.log(chain_reg.chain("cosmoshub")?.asset("uatom")?.property("description"));
     console.log("Traces:");
     console.log(chain_reg.chain("osmosis")?.
       asset("ibc/F6B691D5F7126579DDC87357B09D653B47FDCE0A3383FF33C8D8B544FE29A8A6")?.
@@ -31,6 +32,22 @@ export const getChainRegContents = () => {
       chain("osmosis")?.
       asset("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2")?.
       property("extended_description", [])
+    );
+    console.log("USDC");
+    /*console.log(chain_reg.
+      chain("osmosis")?.
+      asset("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858")?.
+      property("traces")
+    );*/
+    console.log(RegistryObject.arrayToJson(
+      chain_reg.
+        chain("osmosis")?.
+        asset("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858")?.
+        property("traces")));
+    console.log(chain_reg.
+      chain("osmosis")?.
+      asset("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858")?.
+      toJSON()
     );
   }
   

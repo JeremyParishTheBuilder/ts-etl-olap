@@ -58,10 +58,11 @@ export class Chain {
   }
 
   public asset(baseDenom: string): Asset | undefined {
+    //if (!baseDenom) return undefined;
     if (!this._baseDenomToAssetMap) this.loadBaseDenoms(); // Ensure it's initialized
     if (!this._baseDenomToAssetMap?.has(baseDenom)) return undefined; // Base denom doesn't exist
     if (this._baseDenomToAssetMap.get(baseDenom) === null) {
-      this._baseDenomToAssetMap.set(baseDenom, new Asset(this, baseDenom)); // Lazy-load asset
+      this._baseDenomToAssetMap.set(baseDenom, new Asset(this._chainName, baseDenom)); // Lazy-load asset
     }
     return this._baseDenomToAssetMap.get(baseDenom) || undefined;
   }
@@ -81,7 +82,7 @@ export class Chain {
     if (!this._versionNameToVersionMap) this.loadVersionNames(); // Ensure it's initialized
     if (!this._versionNameToVersionMap?.has(versionName)) return undefined; // Base denom doesn't exist
     if (this._versionNameToVersionMap.get(versionName) === null) {
-      this._versionNameToVersionMap.set(versionName, new Version(this, versionName)); // Lazy-load asset
+      this._versionNameToVersionMap.set(versionName, new Version(this._chainName, versionName)); // Lazy-load asset
     }
     return this._versionNameToVersionMap.get(versionName);
   }
