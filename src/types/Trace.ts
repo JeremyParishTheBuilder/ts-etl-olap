@@ -11,11 +11,10 @@ class Trace extends RegistryObject {
   }
 
   public get assetPointer(): AssetPointer | undefined {
-    if (this._assetPointer === null) {
-      const counterparty: Record<string, any> | undefined = this.property(TracePropertyName.COUNTERPARTY);
-      this._assetPointer = new AssetPointer(counterparty?.chain_name, counterparty?.base_denom) ?? undefined;
-    }
-    return this._assetPointer;
+    if (this._assetPointer !== null) return this._assetPointer;
+    const counterparty: Record<string, any> | undefined = this.property(TracePropertyName.COUNTERPARTY);
+    if (!counterparty) return this._assetPointer = undefined;
+    return this._assetPointer = new AssetPointer(counterparty.chain_name, counterparty.base_denom);
   }
 
 }

@@ -1,14 +1,14 @@
 import Directory from './Directory.js';
 import File from './File.js';
 import { ChainFileName, ChainDirName } from '../constants/ChainConstants.js';
-import Asset from './Asset.js'; 
+import RegistryObject from './RegistryObject.js';
+import Asset from './Asset.js';
 import Version from './Version.js';
 
-export class Chain {
+export class Chain extends RegistryObject {
 
   private _chainName: string;
   private _directory: Directory;
-  private _properties: Record<string, any> | null | undefined = null; // Stores JSON properties
 
   private _keyFiles: Map<ChainFileName, File | undefined> = new Map(); //Stores Files like: Assetlist, Chain & Versions.
   private _keyDirectories: Map<ChainDirName, Directory | undefined> = new Map(); //Stores Directories like: /images/.
@@ -16,27 +16,14 @@ export class Chain {
   private _baseDenomToAssetMap: Map<string, Asset | null | undefined> | null = null;
   private _versionNameToVersionMap: Map<string, Version | null | undefined> | null = null;
 
-  [key: string]: any;
-
   public constructor(directory: Directory) {
+    super();
     this._directory = directory;
     this._chainName = directory.basename;
-
-    return new Proxy(this, {
-      get: (target, prop: string) => {
-        if (prop in target) return (target as any)[prop];
-        if (target._properties === null) {
-          target.loadProperties();
-        }
-        return target._properties?.[prop];
-      },
-    });
   }
 
-  private loadProperties(): void {
-    if (this._properties !== null) return;
-    const chainFile = this.file(ChainFileName.CHAIN);
-    this._properties = chainFile ? (chainFile.contents || {}) : undefined;
+  protected fetchJsonProperties(): Record<string, any> | null {
+    return this.file(ChainFileName.CHAIN)?.contents || {};
   }
 
   public get chainName(): string {
@@ -58,7 +45,6 @@ export class Chain {
   }
 
   public asset(baseDenom: string): Asset | undefined {
-    //if (!baseDenom) return undefined;
     if (!this._baseDenomToAssetMap) this.loadBaseDenoms(); // Ensure it's initialized
     if (!this._baseDenomToAssetMap?.has(baseDenom)) return undefined; // Base denom doesn't exist
     if (this._baseDenomToAssetMap.get(baseDenom) === null) {

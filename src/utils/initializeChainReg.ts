@@ -8,8 +8,8 @@ export const getChainRegContents = () => {
 
   const chain = chain_reg.chain("osmosis");
   if (chain) {
-    console.log(chain.pretty_name);
-    console.log(chain.blah);
+    console.log(chain.property("pretty_name"));
+    console.log(chain.property("blah"));
     console.log("Assets:");
     console.log(chain.asset("uosmo")?.property("name"));
     console.log("Versions:");

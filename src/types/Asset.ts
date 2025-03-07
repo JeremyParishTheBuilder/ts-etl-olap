@@ -13,16 +13,17 @@ import { TraceType, allTraceTypes, TracePropertyName } from '../constants/TraceC
 
 export class Asset extends RegistryObject {
 
-  private _pointer: AssetPointer;
+  private _assetPointer: AssetPointer;
   private _lastTrace: Trace | undefined | null = null;
+  private _derivedProperties: Record<string, any> | null = null;
 
   public constructor(chainName: string, baseDenom: string, json: Record<string, any> | null = null) {
     super(json);
-    this._pointer = new AssetPointer(chainName, baseDenom);
+    this._assetPointer = new AssetPointer(chainName, baseDenom);
   }
 
-  public get pointer(): AssetPointer {
-    return this._pointer;
+  public get assetPointer(): AssetPointer {
+    return this._assetPointer;
   }
 
   private deriveDecimals(): number | undefined {
@@ -37,31 +38,39 @@ export class Asset extends RegistryObject {
   }
 
   public property(propertyName: string, traceTypes: Array<TraceType> = allTraceTypes): any | undefined {
-    if (propertyName === AssetPropertyName.TRACES && traceTypes.length) return this.traces(traceTypes); // Bypass cache
 
-    if (this._properties === null) this.loadProperties();
-    if (this._properties?.[propertyName]) return this._properties?.[propertyName];
+    //bypass cache when looking for traces
+    if (propertyName === AssetPropertyName.TRACES && traceTypes.length) return this.traces(traceTypes);
 
-    //derived properties to cache
+    //cached json properties
+    if (this._jsonProperties === null) this.loadProperties();
+    if (!this._jsonProperties) return undefined;
+    if (this._jsonProperties[propertyName]) return this._jsonProperties[propertyName];
+
+    //cached derived properties
     if (allAssetDerivedPropertyNames.includes(propertyName as AssetDerivedPropertyName)) {
+      if (this._derivedProperties === null) this._derivedProperties = {};
+      if (this._derivedProperties[propertyName]) return this._derivedProperties[propertyName];
       if (propertyName === AssetDerivedPropertyName.DECIMALS)
-        return this._properties![propertyName] = this.deriveDecimals();
+        if (!(propertyName in this._derivedProperties)) this._derivedProperties[propertyName] = null;
+        return this._derivedProperties[propertyName] = this.deriveDecimals();
     }
 
-    if (!traceTypes.length) return undefined; // Stop if no tracing is needed
-    if (!traceTypes.includes(this.lastTrace?.property("type")!)) return undefined; // Must match type
+    if (!traceTypes.length) return undefined; // Stop if not to inherit
+    if (!traceTypes.includes(this.lastTrace?.property("type")!)) return undefined; // Stop inheriting if wrong trace type
 
+    // inherit from traces (recursion)
     return ChainRegistry.getInstance()
       .asset(this.lastTrace?.assetPointer!)
-      ?.property(propertyName);
+      ?.property(propertyName, traceTypes);
   }
 
   protected fetchJsonProperties(): Record<string, any> | null {
     return ChainRegistry.getInstance()
-      .chain(this._pointer.chainName)
+      .chain(this._assetPointer.chainName!)
       ?.file(ChainFileName.ASSETLIST)
       ?.contents?.assets?.find(
-        (asset: any) => asset.base === this._pointer.baseDenom
+        (asset: any) => asset.base === this._assetPointer.baseDenom
       ) || {};
   }
 
