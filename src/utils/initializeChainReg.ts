@@ -1,5 +1,5 @@
 import ChainRegistry from '../types/ChainRegistry.js';
-import RegistryObject from '../types/RegistryObject.js';
+import { arrayToJson } from '../types/RegistryObject.js';
 
 export const getChainRegContents = () => {
 
@@ -39,7 +39,7 @@ export const getChainRegContents = () => {
       asset("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858")?.
       property("traces")
     );*/
-    console.log(RegistryObject.arrayToJson(
+    console.log(arrayToJson(
       chain_reg.
         chain("osmosis")?.
         asset("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858")?.
@@ -48,6 +48,11 @@ export const getChainRegContents = () => {
       chain("osmosis")?.
       asset("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858")?.
       toJSON()
+    );
+    console.log(
+      chain_reg.
+        ibcConnection("osmosis", "cosmoshub")?.
+        channel()
     );
   }
   

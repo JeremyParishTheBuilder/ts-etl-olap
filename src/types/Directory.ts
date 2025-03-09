@@ -49,14 +49,10 @@ export class Directory extends DirectoryContent  {
   }
 
   public get isChain(): boolean {
-    if (this._isChain !== null) {
-      return this._isChain;
-    }
-    const contents = this.contents;
-    this._isChain = contents.some(
-      (entry) => entry instanceof File && (entry.basename === ChainFileName.ASSETLIST || entry.basename === ChainFileName.CHAIN)
-    );
-    return this._isChain;
+    if (this._isChain !== null) return this._isChain;
+    const assetlistFileExists = fs.existsSync(path.join(this.fullPath, ChainFileName.ASSETLIST));
+    const chainFileExists = fs.existsSync(path.join(this.fullPath, ChainFileName.CHAIN));
+    return this._isChain = assetlistFileExists || chainFileExists;
   }
 
   // Method to log the cached contents to the console

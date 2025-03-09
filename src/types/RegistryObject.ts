@@ -25,18 +25,18 @@ abstract class RegistryObject {
     return { ...this._jsonProperties };
   }
 
-  public static arrayToJson(registryObjectArray: Array<RegistryObject>): Record<string, any> | undefined {
-    let jsonArray: any[] = [];
-    registryObjectArray.forEach(registryObject => {
-      jsonArray.push(registryObject.toJSON());
-    });
-    return jsonArray.length ? jsonArray : undefined;
-  }
-
   public print(): void {
     console.log(this.toJSON());
   }
 
+}
+
+export function arrayToJson(registryObjectArray: Array<RegistryObject>): Record < string, any > | undefined {
+  let jsonArray: any[] = [];
+  registryObjectArray.forEach(registryObject => {
+    jsonArray.push(registryObject.toJSON());
+  });
+  return jsonArray.length ? jsonArray : undefined;
 }
 
 export default RegistryObject;

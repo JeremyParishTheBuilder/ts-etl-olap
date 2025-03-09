@@ -5,7 +5,6 @@ import {
   AssetDerivedPropertyName,
   allAssetDerivedPropertyNames
 } from '../constants/AssetConstants.js'; 
-import Chain from './Chain.js';
 import Trace from './Trace.js';
 import ChainRegistry from './ChainRegistry.js';
 import { ChainFileName } from '../constants/ChainConstants.js';
