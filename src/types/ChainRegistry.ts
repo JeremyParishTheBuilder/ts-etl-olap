@@ -2,16 +2,34 @@ import path from "path";
 import Chain from '../types/Chain.js';
 import Asset from '../types/Asset.js';
 import Directory from '../types/Directory.js';
-import { NetworkTypeDirName, ChainTypeDirName } from '../constants/ChainConstants.js';
 import CONFIG from '../config.js';
 import AssetPointer from './AssetPointer.js';
 import IbcConnection from './IbcConnection.js';
+import IbcChannel from './IbcChannel.js';
 import File from './File.js';
+import RegistryObject from './RegistryObject.js';
+import NetworkType from './NetworkType.js';
+
+enum NetworkTypeDirName {
+  MAINNET = "",
+  TESTNET = "testnets"
+}
+
+enum ChainTypeDirName {
+  COSMOS = "",
+  NON_COSMOS = "_non-cosmos"
+}
 
 class ChainRegistry {
 
   private static instance: ChainRegistry | null = null;
   private static IBC_DIR_NAME = "_IBC";
+
+  public static ChainFileName = {
+    ASSETLIST: "assetlist.json",
+    CHAIN: "chain.json",
+    VERSIONS: "versions.json"
+  }
 
   private _multiChainDirectories: { [key: string]: Directory | null } = {};
   private _ibcDirectories: { [key: string]: Directory | undefined } = {};
@@ -27,6 +45,10 @@ class ChainRegistry {
     }
     return this.instance;
   }
+
+/*  private getNetworkTypeDir(networkType: NetworkType): string {
+    return networkType === NetworkType.MAINNET ? NetworkTypeDirName.MAINNET : NetworkTypeDirName.TESTNET
+  }*/
 
   private initializeMultiChainDirectories(): void { //structure of chain directories
     this._multiChainDirectories = {
@@ -67,6 +89,7 @@ class ChainRegistry {
     };
   }
 
+  /*
   public multiChainDirectory(
     networkType: NetworkTypeDirName = NetworkTypeDirName.MAINNET,
     chainType: ChainTypeDirName = ChainTypeDirName.COSMOS
@@ -89,6 +112,7 @@ class ChainRegistry {
     if (networkType === NetworkTypeDirName.TESTNET) return this._ibcDirectories.testnet;
     return undefined;
   }
+  */
 
   
 
@@ -108,6 +132,7 @@ class ChainRegistry {
 
   public chain(chainName: string): Chain | undefined {
     if (!this._chainNameToChainMap) this.loadChainNames();
+    if (!this._chainNameToChainMap) return undefined;
     const chainMap = this._chainNameToChainMap;
     if (!chainMap?.has(chainName)) return undefined;
     let chainInstance = chainMap.get(chainName);
@@ -115,11 +140,26 @@ class ChainRegistry {
       const directory = this.findChainDirectory(chainName);
       if (directory) {
         chainInstance = new Chain(directory);
-        this._chainNameToChainMap!.set(chainName, chainInstance);
+        this._chainNameToChainMap.set(chainName, chainInstance);
       }
     }
-    return chainInstance!;
+    return chainInstance ?? undefined;
   }
+
+  public chains(conditions?: Array<(item: string) => boolean>): string[] {
+    if (this._chainNameToChainMap === null) this.loadChainNames();
+    if (!this._chainNameToChainMap) return [];
+    const array = Array.from(this._chainNameToChainMap.keys());
+    return RegistryObject.objects<string>(array, conditions);
+  }
+
+  public assets(conditions?: Array<(item: AssetPointer) => boolean>): AssetPointer[] {
+    return this.chains().flatMap(chainKey =>
+      ChainRegistry.getInstance().chain(chainKey)?.assets(conditions) ?? []
+    );
+  }
+
+  
 
   private findChainDirectory(name: string): Directory | undefined {
     return Object.values(this._multiChainDirectories)
@@ -153,23 +193,19 @@ class ChainRegistry {
   }
 
 
-  public ibcConnection(chainName1: string, chainName2: string): IbcConnection | undefined {
-    if (!chainName1 || !chainName2) return undefined;
+  public ibcConnection(chainNameA: string, chainNameB: string): IbcConnection | undefined {
+    if (!chainNameA || !chainNameB) return undefined;
 
     if (!this._ibcConnectionsMap) this.loadIbcConnectionNames();
 
     // Ensure chain names are sorted alphabetically
-    const [chainA, chainB] = [chainName1, chainName2].sort();
-    const ibcFileName = `${chainA}-${chainB}.json`;
+    const [chain1, chain2] = [chainNameA, chainNameB].sort();
+    const ibcFileName = `${chain1}-${chain2}.json`;
 
-    console.log("uhhh");
-    console.log(this._ibcConnectionsMap);
     if (!this._ibcConnectionsMap!.has(ibcFileName)) return undefined;
 
     let ibcInstance = this._ibcConnectionsMap!.get(ibcFileName);
-    console.log("well");
     if (ibcInstance === null) {
-      console.log("searching");
       let ibcFile: File | undefined;
 
       // Check both IBC directories (mainnet and testnet)
@@ -191,6 +227,23 @@ class ChainRegistry {
 
     return ibcInstance || undefined;
   }
+
+  public ibcChannel(chainA: Record<string, string>, chainB: Record<string, string>): IbcChannel | undefined {
+    if (!chainA?.chain_name || !chainB?.chain_name) return undefined;
+
+    // Sort chains by name
+    const [chain1Name, chain2Name] = [chainA.chain_name, chainB.chain_name].sort();
+
+    // Retrieve IBC connection
+    const ibcConnection = this.ibcConnection(chain1Name, chain2Name);
+    if (!ibcConnection) return undefined;
+
+    // Assign chain1 and chain2 based on sorted order
+    const [chain1, chain2] = chain1Name === chainA.chain_name ? [chainA, chainB] : [chainB, chainA];
+
+    return ibcConnection.channel(chain1, chain2);
+  }
+
 }
 
 export default ChainRegistry;

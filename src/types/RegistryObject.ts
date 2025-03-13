@@ -29,6 +29,17 @@ abstract class RegistryObject {
     console.log(this.toJSON());
   }
 
+  public static objects<T>(array: Array<T>, conditions?: Array<(item: T) => boolean>): T[] {
+    if (!array.length) return [];
+
+    let result = [...array]; // Copy to prevent mutation
+    for (const condition of conditions || []) {
+      result = result.filter(condition);
+    }
+
+    return result;
+  }
+
 }
 
 export function arrayToJson(registryObjectArray: Array<RegistryObject>): Record < string, any > | undefined {

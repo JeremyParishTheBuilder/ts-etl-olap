@@ -1,28 +1,43 @@
 import AssetPointer from './AssetPointer.js';
 import RegistryObject from './RegistryObject.js';
-import {
-  AssetPropertyName,
-  AssetDerivedPropertyName,
-  allAssetDerivedPropertyNames
-} from '../constants/AssetConstants.js'; 
 import Trace from './Trace.js';
 import ChainRegistry from './ChainRegistry.js';
-import { ChainFileName } from '../constants/ChainConstants.js';
-import { TraceType, allTraceTypes, TracePropertyName } from '../constants/TraceConstants.js';
+import Chain from './Chain.js';
 
-export class Asset extends RegistryObject {
+class Asset extends RegistryObject {
+
+  public static readonly PropertyName = {
+    TRACES: "traces"
+  }
+
+  public static readonly DerivedPropertyName = {
+    DECIMALS: "decimals"
+  }
+  public get DerivedPropertyName() {
+    return Asset.DerivedPropertyName
+  }
 
   private _assetPointer: AssetPointer;
-  private _lastTrace: Trace | undefined | null = null;
-  private _derivedProperties: Record<string, any> | null = null;
+  public get assetPointer(): AssetPointer {
+    return this._assetPointer;
+  }
 
   public constructor(chainName: string, baseDenom: string, json: Record<string, any> | null = null) {
     super(json);
     this._assetPointer = new AssetPointer(chainName, baseDenom);
   }
 
-  public get assetPointer(): AssetPointer {
-    return this._assetPointer;
+  private _lastTrace: Trace | undefined | null = null;
+  private _derivedProperties: Record<string, any> | null = null;
+
+  
+
+  public get chain(): Chain {
+    return ChainRegistry.getInstance().chain(this.assetPointer.chainName)!;
+  }
+
+  public key(): string {
+    return this._assetPointer.key();
   }
 
   private deriveDecimals(): number | undefined {
@@ -36,27 +51,32 @@ export class Asset extends RegistryObject {
     return undefined;
   }
 
-  public property(propertyName: string, traceTypes: Array<TraceType> = allTraceTypes): any | undefined {
+  public derivedProperty(propertyName: string): any | undefined {
 
-    //bypass cache when looking for traces
-    if (propertyName === AssetPropertyName.TRACES && traceTypes.length) return this.traces(traceTypes);
-
-    //cached json properties
-    if (this._jsonProperties === null) this.loadProperties();
-    if (!this._jsonProperties) return undefined;
-    if (this._jsonProperties[propertyName]) return this._jsonProperties[propertyName];
-
-    //cached derived properties
-    if (allAssetDerivedPropertyNames.includes(propertyName as AssetDerivedPropertyName)) {
+    if (Object.values(this.DerivedPropertyName).includes(propertyName)) {
       if (this._derivedProperties === null) this._derivedProperties = {};
-      if (this._derivedProperties[propertyName]) return this._derivedProperties[propertyName];
-      if (propertyName === AssetDerivedPropertyName.DECIMALS)
-        if (!(propertyName in this._derivedProperties)) this._derivedProperties[propertyName] = null;
+      if (propertyName in this._derivedProperties) return this._derivedProperties[propertyName];
+
+      if (propertyName === this.DerivedPropertyName.DECIMALS) {
         return this._derivedProperties[propertyName] = this.deriveDecimals();
+      }
     }
 
+  }
+
+  public property(propertyName: string, traceTypes: Array<string> = Object.values(Trace.Type)): any | undefined {
+
+    //bypass cache when looking for traces
+    if (propertyName === Asset.PropertyName.TRACES && traceTypes.length) return this.traces(traceTypes);
+
+    let VALUE = super.property(propertyName);
+    if (VALUE) return VALUE;
+
+    VALUE = this.derivedProperty(propertyName);
+    if (VALUE) return VALUE;
+
     if (!traceTypes.length) return undefined; // Stop if not to inherit
-    if (!traceTypes.includes(this.lastTrace?.property("type")!)) return undefined; // Stop inheriting if wrong trace type
+    if (!traceTypes.includes(this.lastTrace?.property(Trace.PropertyName.TYPE)!)) return undefined; // Stop inheriting if wrong trace type
 
     // inherit from traces (recursion)
     return ChainRegistry.getInstance()
@@ -66,8 +86,8 @@ export class Asset extends RegistryObject {
 
   protected fetchJsonProperties(): Record<string, any> | null {
     return ChainRegistry.getInstance()
-      .chain(this._assetPointer.chainName!)
-      ?.file(ChainFileName.ASSETLIST)
+      .chain(this.assetPointer.chainName)
+      ?.file(Chain.FileName.ASSETLIST)
       ?.contents?.assets?.find(
         (asset: any) => asset.base === this._assetPointer.baseDenom
       ) || {};
@@ -75,18 +95,18 @@ export class Asset extends RegistryObject {
 
   public get lastTrace(): Trace | undefined {
     if (this._lastTrace !== null) return this._lastTrace;  // Use cached value
-    const traces = this.property(AssetPropertyName.TRACES, []); //get Json traces--will NOT bypass json loading
+    const traces = this.property(Asset.PropertyName.TRACES, []); //get Json traces--will NOT bypass json loading
     return this._lastTrace = traces?.length ? new Trace(traces[traces.length - 1]) : undefined; //save the very last
   }
 
-  private traces(traceTypes: Array<TraceType> = allTraceTypes): Array<Trace> | undefined {
-    const traceType = this.lastTrace?.property<TraceType>(TracePropertyName.TYPE);
+  private traces(traceTypes: Array<string> = Object.values(Trace.PropertyName)): Array<Trace> | undefined {
+    const traceType = this.lastTrace?.property<string>(Trace.PropertyName.TYPE);
 
     if (!traceType || !traceTypes.includes(traceType)) return undefined;
 
     const previousTraces = ChainRegistry.getInstance()
       .asset(this._lastTrace!.assetPointer)
-      ?.property(AssetPropertyName.TRACES, traceTypes);
+      ?.property(Asset.PropertyName.TRACES, traceTypes);
 
     return previousTraces ? [...previousTraces, this._lastTrace!] : [this._lastTrace!];
   }

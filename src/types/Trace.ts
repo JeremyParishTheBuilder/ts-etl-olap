@@ -4,6 +4,26 @@ import { TracePropertyName } from '../constants/TraceConstants.js';
 
 class Trace extends RegistryObject {
 
+  public static readonly Type = {
+    IBC: "ibc",
+    IBC_CW20: "ibc-cw20",
+    IBC_BRIDGE: "ibc-bridge",
+    BRIDGE: "bridge",
+    WRAPPED: "wrapped",
+    LIQUID_STAKE: "liquid-stake",
+    SYNTHETIC: "synthetic",
+    ADDITIONAL_MINTAGE: "additional-mintage",
+    TEST_MINTAGE: "test-mintage",
+    LEGACY_MINTAGE: "legacy-mintage"
+  } as const;
+
+  public static readonly PropertyName = {
+    TYPE: "type",
+    COUNTERPARTY: "counterparty",
+    CHAIN: "chain",
+    PROVIDER: "provider"
+  } as const;
+
   private _assetPointer: AssetPointer | undefined | null = null;
 
   public constructor(json: Record<string, any>) {
@@ -12,7 +32,7 @@ class Trace extends RegistryObject {
 
   public get assetPointer(): AssetPointer | undefined {
     if (this._assetPointer !== null) return this._assetPointer;
-    const counterparty: Record<string, any> | undefined = this.property(TracePropertyName.COUNTERPARTY);
+    const counterparty: Record<string, any> | undefined = this.property(Trace.PropertyName.COUNTERPARTY);
     return this._assetPointer = counterparty
       ? new AssetPointer(counterparty.chain_name, counterparty.base_denom)
       : undefined;

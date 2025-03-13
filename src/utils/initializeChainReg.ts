@@ -1,5 +1,7 @@
 import ChainRegistry from '../types/ChainRegistry.js';
 import { arrayToJson } from '../types/RegistryObject.js';
+import AssetPointer from '../types/AssetPointer.js';
+import { ibcTraceTypes } from '../constants/TraceConstants.js';
 
 export const getChainRegContents = () => {
 
@@ -54,6 +56,44 @@ export const getChainRegContents = () => {
         ibcConnection("osmosis", "cosmoshub")?.
         channel()
     );
+    
+    console.log(
+      chain_reg.
+        ibcChannel(
+          { "chain_name": "osmosis", "port_id": "transfer" },
+          { "chain_name": "cosmoshub", "port_id": "transfer" }
+        )
+    );//
+
+    const filter1 = (chainName: string) => chainName.startsWith("cosmos");
+    const filter2 = (chainName: string) => chain_reg.chain(chainName)
+      ?.property("bech32_prefix") === "osmo";
+
+    chain_reg.chains([filter2])?.forEach((chainKey) => {
+      console.log(chainKey);
+    });
+
+    console.log(chain_reg.chains());
+
+    const filter3 = (asset: AssetPointer) => chain_reg.asset(asset)?.property("symbol") === "OSMO";
+    console.log(chain_reg.chain("kopi"));
+    console.log(chain_reg.chain("kopi")?.assets());
+    //console.log(chain_reg.chain("kopi"));
+    console.log(chain_reg.chain("kopi")?.assets([filter3]));
+
+    const filteredAssets: any[] = chain_reg.assets([filter3]);
+
+    filteredAssets?.forEach((asset) => {
+      /*chain.assets().forEach((asset) => {
+        const lastTrace = asset.lastTrace;
+        if (ibcTraceTypes.includes(lastTrace.type)) {
+
+        }
+      });*/
+      console.log(chain_reg.asset(asset)?.property("base"));
+      //console.log(chain_reg.chain(chain)?.property("chain_name"));
+    });
+
   }
   
 };

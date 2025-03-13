@@ -10,12 +10,9 @@ export class AssetPointer {
     //this._key = chainName + ":" + baseDenom;
   }
 
-  //suspect we may need this function, but for now, no usage
-  /*
-  public get key(): string {
+  public /*get*/ key(): string {
     return this._chainName + ":" + this._baseDenom;
   }
-  */
 
   public get chainName(): string {
     return this._chainName;

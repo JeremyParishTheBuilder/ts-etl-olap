@@ -6,31 +6,21 @@ import Chain from './Chain.js';
 
 class IbcConnection extends RegistryObject {
 
-  private _chain1: string | undefined;
-  private _chain2: string | undefined;
+  //private _chain1: string | undefined;
+  //private _chain2: string | undefined;
+  private static CHANNELS: string = "channels";
+  
   private _channels: IbcChannel[] | undefined = []; 
 
   constructor(json: Record<string, any>) {
     super(json);
-    this._chain1 = json.chain_1.chain_name;
-    this._chain2 = json.chain_2.chain_name;
-    this.property(IbcConnectionPropertyName.CHANNELS)?.forEach((channel: Record<string, any>) => {
+    //this._chain1 = json.chain_1.chain_name;
+    //this._chain2 = json.chain_2.chain_name;
+    this.property(IbcConnection.CHANNELS)?.forEach((channel: Record<string, any>) => {
       this._channels!.push(new IbcChannel(channel));
     });
     if (!this._channels!.length) this._channels = undefined;
   }
-
-  
-  //protected fetchJsonProperties(): Record<string, any> | null {
-    //return ChainRegistry.getInstance().
-      //ibcConnection(this._chain1, this._chain2);
-  //}
-  
-  /*
-  public get chain1(): string | undefined {
-    if (this._chain1) return this._chain1;
-    return this._chain1 = property(this._chain1);
-  }*/
 
   public channel(
     chain_1: Record<string, any> = { "port_id": "transfer" },
@@ -40,9 +30,9 @@ class IbcConnection extends RegistryObject {
     if (!this._channels) return undefined;
 
     const matches = this._channels.filter((channel: IbcChannel) => {
-      const c1 = channel.property("chain_1");
-      const c2 = channel.property("chain_2");
-      const tags = channel.property("tags");
+      const c1 = channel.property(IbcChannel.CHAIN_1);
+      const c2 = channel.property(IbcChannel.CHAIN_2);
+      const tags = channel.property(IbcChannel.TAGS);
 
       return (
         (!chain_1.channel_id || c1?.channel_id === chain_1.channel_id) &&
@@ -57,11 +47,5 @@ class IbcConnection extends RegistryObject {
   }
 
 }
-
-/*
-export function findIbcConnection(): IbcConnection | undefined {
-  return ChainRegistry.getInstance().
-    ibcConnection()
-}*/
 
 export default IbcConnection;
