@@ -9,31 +9,16 @@ class Chain extends RegistryObject {
 
   private _chainName: string;
   private _directory: Directory;
-  private _derivedProperties: Record<string, any> | null = null;
 
-  public static readonly FileName = {
-    ASSETLIST: "assetlist.json",
-    CHAIN: "chain.json",
-    VERSIONS: "versions.json"
+  public static readonly NetworkType = {
+    MAINNET: "mainnet",
+    TESTNET: "testnet",
+    DEVNET: "devnet"
   }
-
-  public static readonly DirectoryName = {
-    IMAGES: "images"
+  public static readonly ChainType = {
+    COSMOS: "cosmos",
+    NON_COSMOS: "non-cosmos",
   }
-
-  public static readonly DerivedPropertyName = {
-    CHAIN_NAME: "chain_name",
-    NETWORK_TYPE: "network_type"
-  }
-  public get DerivedPropertyName() {
-    return Chain.DerivedPropertyName
-  }
-
-  private _keyFiles: Map<string, File | undefined> = new Map(); //Stores Files like: Assetlist, Chain & Versions.
-  private _keyDirectories: Map<string, Directory | undefined> = new Map(); //Stores Directories like: /images/.
-
-  private _baseDenomToAssetMap: Map<string, Asset | null | undefined> | null = null;
-  private _versionNameToVersionMap: Map<string, Version | null | undefined> | null = null;
 
   public constructor(directory: Directory) {
     super();
@@ -45,9 +30,6 @@ class Chain extends RegistryObject {
     return this.file(Chain.FileName.CHAIN)?.contents || {};
   }
 
-  private deriveNetworkType(): string | undefined {
-    return undefined;
-  }
 
   public derivedProperty(propertyName: string): any | undefined {
 
@@ -60,7 +42,7 @@ class Chain extends RegistryObject {
       }
 
       if (propertyName === this.DerivedPropertyName.NETWORK_TYPE) {
-        return this._derivedProperties[propertyName] = this.deriveNetworkType();
+        return this._derivedProperties[propertyName] = this.networkType;
       }
     }
 
@@ -70,29 +52,33 @@ class Chain extends RegistryObject {
     return super.property(propertyName) ?? this.derivedProperty(propertyName) ?? undefined;
   }
 
-  public get chainName(): string {
-    return this._chainName; //by directory name, not JSON property--some chains don't have chain json
+  //--Key Files and Directories--
+  private _keyFiles: Map<string, File | undefined> = new Map(); //Stores Files like: Assetlist, Chain & Versions.
+  private _keyDirectories: Map<string, Directory | undefined> = new Map(); //Stores Directories like: /images/.
+
+  public static readonly FileName = {
+    ASSETLIST: "assetlist.json",
+    CHAIN: "chain.json",
+    VERSIONS: "versions.json"
+  }
+  public static readonly DirectoryName = {
+    IMAGES: "images"
   }
 
   public file(name: string): File | undefined {
     if (!Object.values(Chain.FileName).includes(name)) return undefined;
-
-    if (!this._keyFiles.has(name)) {
-      this._keyFiles.set(name, this._directory.find(name, File));
-    }
-
+    if (!this._keyFiles.has(name)) this._keyFiles.set(name, this._directory.find(name, File));
     return this._keyFiles.get(name);
   }
-
   public directory(name: string): Directory | undefined {
     if (!Object.values(Chain.DirectoryName).includes(name)) return undefined;
-
-    if (!this._keyDirectories.has(name)) {
-      this._keyDirectories.set(name, this._directory.find(name, Directory));
-    }
-
+    if (!this._keyDirectories.has(name)) this._keyDirectories.set(name, this._directory.find(name, Directory));
     return this._keyDirectories.get(name);
   }
+  //--
+
+  //--Assets--
+  private _baseDenomToAssetMap: Map<string, Asset | null | undefined> | null = null;
 
   public assets(conditions?: Array<(item: AssetPointer) => boolean>): AssetPointer[] {
     if (this._baseDenomToAssetMap === null) this.loadBaseDenoms();
@@ -121,6 +107,10 @@ class Chain extends RegistryObject {
     const assetArray: { base: string }[] = assetlistFile.contents.assets || [];
     this._baseDenomToAssetMap = new Map(assetArray.map(asset => [asset.base, null]));
   }
+  //--
+
+  //--Versions--
+  private _versionNameToVersionMap: Map<string, Version | null | undefined> | null = null;
 
   public version(versionName: string): Version | null | undefined {
     if (!this._versionNameToVersionMap) this.loadVersionNames(); // Ensure it's initialized
@@ -141,6 +131,30 @@ class Chain extends RegistryObject {
     const versionArray: { name: string }[] = versionFile.contents.versions || [];
     this._versionNameToVersionMap = new Map(versionArray.map(version => [version.name, null]));
   }
+  //--
+
+  //--Derived Properties--
+  private _derivedProperties: Record<string, any> | null = null;
+
+  public static readonly DerivedPropertyName = {
+    CHAIN_NAME: "chain_name",
+    NETWORK_TYPE: "network_type"
+  }
+
+  public get DerivedPropertyName() {
+    return Chain.DerivedPropertyName
+  }
+
+  public get chainName(): string {
+    return this._chainName; //by directory name, not JSON property--some chains don't have chain json
+  }
+
+  public networkType(): string {
+    if (this.chainName.includes(Chain.NetworkType.TESTNET)) return Chain.NetworkType.TESTNET;
+    if (this.chainName.includes(Chain.NetworkType.DEVNET)) return Chain.NetworkType.DEVNET;
+    return Chain.NetworkType.MAINNET;
+  }
+  //--
 
 }
 

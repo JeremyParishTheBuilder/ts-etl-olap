@@ -1,6 +1,5 @@
 import AssetPointer from './AssetPointer.js';
 import RegistryObject from './RegistryObject.js';
-import { TracePropertyName } from '../constants/TraceConstants.js';
 
 class Trace extends RegistryObject {
 

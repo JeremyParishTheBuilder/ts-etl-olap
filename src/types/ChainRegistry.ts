@@ -8,37 +8,11 @@ import IbcConnection from './IbcConnection.js';
 import IbcChannel from './IbcChannel.js';
 import File from './File.js';
 import RegistryObject from './RegistryObject.js';
-import NetworkType from './NetworkType.js';
-
-enum NetworkTypeDirName {
-  MAINNET = "",
-  TESTNET = "testnets"
-}
-
-enum ChainTypeDirName {
-  COSMOS = "",
-  NON_COSMOS = "_non-cosmos"
-}
 
 class ChainRegistry {
 
   private static instance: ChainRegistry | null = null;
-  private static IBC_DIR_NAME = "_IBC";
 
-  public static ChainFileName = {
-    ASSETLIST: "assetlist.json",
-    CHAIN: "chain.json",
-    VERSIONS: "versions.json"
-  }
-
-  private _multiChainDirectories: { [key: string]: Directory | null } = {};
-  private _ibcDirectories: { [key: string]: Directory | undefined } = {};
-
-  private constructor() {
-    this.initializeMultiChainDirectories();
-  }
-
-  // Singleton pattern: Only creates the instance once
   public static getInstance(): ChainRegistry {
     if (!this.instance) {
       this.instance = new ChainRegistry();
@@ -46,73 +20,72 @@ class ChainRegistry {
     return this.instance;
   }
 
-/*  private getNetworkTypeDir(networkType: NetworkType): string {
-    return networkType === NetworkType.MAINNET ? NetworkTypeDirName.MAINNET : NetworkTypeDirName.TESTNET
-  }*/
+  private constructor() {
+    this.initializeMultiChainDirectories();
+  }
 
-  private initializeMultiChainDirectories(): void { //structure of chain directories
+  private _multiChainDirectories: { [key: string]: Directory | null } = {};
+  private _ibcDirectories: { [key: string]: Directory | undefined } = {};
+
+  private initializeMultiChainDirectories(): void {
+    const testnetsDirName: string = "testnets";
+    const nonCosmosDirName: string = "_non-cosmos";
+    const ibcDirName: string = "_IBC";
+
     this._multiChainDirectories = {
       cosmosMainnets: new Directory(path.join(
-        CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
-        NetworkTypeDirName.MAINNET,
-        ChainTypeDirName.COSMOS
+        CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME
       )),
       cosmosTestnets: new Directory(path.join(
         CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
-        NetworkTypeDirName.TESTNET,
-        ChainTypeDirName.COSMOS
+        testnetsDirName
       )),
       nonCosmosMainnets: new Directory(path.join(
         CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
-        NetworkTypeDirName.MAINNET,
-        ChainTypeDirName.NON_COSMOS
+        nonCosmosDirName
       )),
       nonCosmosTestnets: new Directory(path.join(
         CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
-        NetworkTypeDirName.TESTNET,
-        ChainTypeDirName.NON_COSMOS
+        testnetsDirName,
+        nonCosmosDirName
       )),
     };
     this._ibcDirectories = {
       mainnet: new Directory(path.join(
         CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
-        NetworkTypeDirName.MAINNET,
-        ChainTypeDirName.COSMOS,
-        ChainRegistry.IBC_DIR_NAME
+        ibcDirName
       )),
       testnet: new Directory(path.join(
         CONFIG.CHAIN_REG_ROOT_DIR, CONFIG.CHAIN_REG_DIR_NAME,
-        NetworkTypeDirName.TESTNET,
-        ChainTypeDirName.COSMOS,
-        ChainRegistry.IBC_DIR_NAME
+        testnetsDirName,
+        ibcDirName
       )),
     };
   }
 
-  /*
+  
   public multiChainDirectory(
-    networkType: NetworkTypeDirName = NetworkTypeDirName.MAINNET,
-    chainType: ChainTypeDirName = ChainTypeDirName.COSMOS
+    networkType: string = Chain.NetworkType.MAINNET,
+    chainType: string = Chain.ChainType.COSMOS
   ): Directory | null {
-    if (networkType === NetworkTypeDirName.MAINNET) {
-      return chainType === ChainTypeDirName.COSMOS
+    if (networkType === Chain.NetworkType.MAINNET) {
+      return chainType === Chain.ChainType.COSMOS
         ? this._multiChainDirectories.cosmosMainnets
         : this._multiChainDirectories.nonCosmosMainnets;
     }
-    if (networkType === NetworkTypeDirName.TESTNET) {
-      return chainType === ChainTypeDirName.COSMOS
+    if (networkType === Chain.NetworkType.TESTNET) {
+      return chainType === Chain.ChainType.COSMOS
         ? this._multiChainDirectories.cosmosTestnets
         : this._multiChainDirectories.nonCosmosTestnets;
     }
     return null;
   }
 
-  public ibcDirectory(networkType: NetworkTypeDirName = NetworkTypeDirName.MAINNET): Directory | undefined {
-    if (networkType === NetworkTypeDirName.MAINNET) return this._ibcDirectories.mainnet;
-    if (networkType === NetworkTypeDirName.TESTNET) return this._ibcDirectories.testnet;
+  public ibcDirectory(networkType: string = Chain.NetworkType.MAINNET): Directory | undefined {
+    if (networkType === Chain.NetworkType.MAINNET) return this._ibcDirectories.mainnet;
+    if (networkType === Chain.NetworkType.TESTNET || Chain.NetworkType.DEVNET) return this._ibcDirectories.testnet;
     return undefined;
   }
-  */
 
   
 
@@ -153,13 +126,11 @@ class ChainRegistry {
     return RegistryObject.objects<string>(array, conditions);
   }
 
-  public assets(conditions?: Array<(item: AssetPointer) => boolean>): AssetPointer[] {
-    return this.chains().flatMap(chainKey =>
+  public assets(conditions?: Array<(item: AssetPointer) => boolean>, chainConditions?: Array<(item: string) => boolean>,): AssetPointer[] {
+    return this.chains(chainConditions).flatMap(chainKey =>
       ChainRegistry.getInstance().chain(chainKey)?.assets(conditions) ?? []
     );
   }
-
-  
 
   private findChainDirectory(name: string): Directory | undefined {
     return Object.values(this._multiChainDirectories)

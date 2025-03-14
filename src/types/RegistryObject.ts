@@ -10,6 +10,8 @@ abstract class RegistryObject {
     if (this._jsonProperties === null) this._jsonProperties = this.fetchJsonProperties() || {};
   }
 
+  
+
   public property<T = any>(propertyName: string): T | undefined {
     if (this._jsonProperties === null) this.loadProperties();
     if (!this._jsonProperties) return undefined;

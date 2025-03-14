@@ -69,10 +69,7 @@ class Asset extends RegistryObject {
     //bypass cache when looking for traces
     if (propertyName === Asset.PropertyName.TRACES && traceTypes.length) return this.traces(traceTypes);
 
-    let VALUE = super.property(propertyName);
-    if (VALUE) return VALUE;
-
-    VALUE = this.derivedProperty(propertyName);
+    const VALUE = super.property(propertyName) ?? this.derivedProperty(propertyName);
     if (VALUE) return VALUE;
 
     if (!traceTypes.length) return undefined; // Stop if not to inherit

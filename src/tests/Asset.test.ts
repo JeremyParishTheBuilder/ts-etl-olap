@@ -1,8 +1,6 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
 import Asset from "../types/Asset.js";
 import Trace from "../types/Trace.js";
-import { AssetPropertyName, AssetDerivedPropertyName } from "../constants/AssetConstants.js";
-import { TraceType } from "../constants/TraceConstants.js";
 
 vi.mock("../types/ChainRegistry", () => ({
   default: {
@@ -40,7 +38,7 @@ describe("Asset Class", () => {
   });
 
   test("should derive decimals correctly", () => {
-    expect(asset.property(AssetDerivedPropertyName.DECIMALS)).toBe(6);
+    expect(asset.property(Asset.DerivedPropertyName.DECIMALS)).toBe(6);
   });
 
   test("should return undefined for missing properties", () => {
@@ -68,7 +66,7 @@ describe("Asset Class", () => {
   });
 
   test("should return traces correctly", () => {
-    const trace = new Trace({ type: TraceType.IBC });
+    const trace = new Trace({ type: Trace.Type.IBC });
     vi.spyOn(asset, "lastTrace", "get").mockReturnValue(trace);
     expect(asset.lastTrace).toBe(trace);
   });
