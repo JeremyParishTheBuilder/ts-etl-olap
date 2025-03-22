@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
 import Asset from "../types/Asset.js";
+import ChainPointer from "../types/ChainPointer.js";
 import Trace from "../types/Trace.js";
 
 vi.mock("../types/ChainRegistry", () => ({
@@ -15,7 +16,7 @@ describe("Asset Class", () => {
   let asset: Asset;
 
   beforeEach(() => {
-    asset = new Asset("osmosis", "uosmo", {
+    asset = new Asset(new ChainPointer(undefined, "osmosis"), "uosmo", {
       display: "OSMO",
       denom_units: [
         { denom: "uosmo", exponent: 0 },
@@ -25,8 +26,8 @@ describe("Asset Class", () => {
   });
 
   test("should initialize with correct AssetPointer", () => {
-    expect(asset.assetPointer.chainName).toBe("osmosis");
-    expect(asset.assetPointer.baseDenom).toBe("uosmo");
+    expect(asset.pointer.parent.key).toBe("osmosis");
+    expect(asset.pointer.key).toBe("uosmo");
   });
 
   test("should return correct property values", () => {
@@ -50,7 +51,7 @@ describe("Asset Class", () => {
   });
 
   test("should return lastTrace when traces exists", () => {
-    const newAsset = new Asset("osmosis", "ibc/...", {
+    const newAsset = new Asset(new ChainPointer(undefined, "osmosis"), "ibc/...", {
       traces: [
         {
           type: "bridged",
@@ -61,8 +62,8 @@ describe("Asset Class", () => {
         }
       ],
     })
-    expect(newAsset.lastTrace?.assetPointer?.chainName).toBe("cosmoshub");
-    expect(newAsset.lastTrace?.assetPointer?.baseDenom).toBe("uatom");
+    expect(newAsset.lastTrace?.assetPointer?.parent.key).toBe("cosmoshub");
+    expect(newAsset.lastTrace?.assetPointer?.key).toBe("uatom");
   });
 
   test("should return traces correctly", () => {

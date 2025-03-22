@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import File from './File.js';
 import DirectoryContent from './DirectoryContent.js';
-import { ChainFileName } from '../constants/ChainConstants.js';
+import Chain from './Chain.js';
 
 export class Directory extends DirectoryContent  {
 
@@ -50,8 +50,8 @@ export class Directory extends DirectoryContent  {
 
   public get isChain(): boolean {
     if (this._isChain !== null) return this._isChain;
-    const assetlistFileExists = fs.existsSync(path.join(this.fullPath, ChainFileName.ASSETLIST));
-    const chainFileExists = fs.existsSync(path.join(this.fullPath, ChainFileName.CHAIN));
+    const assetlistFileExists = fs.existsSync(path.join(this.fullPath, Chain.FileName.ASSETLIST));
+    const chainFileExists = fs.existsSync(path.join(this.fullPath, Chain.FileName.CHAIN));
     return this._isChain = assetlistFileExists || chainFileExists;
   }
 

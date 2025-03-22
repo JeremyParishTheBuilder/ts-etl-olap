@@ -8,8 +8,11 @@ import IbcConnection from './IbcConnection.js';
 import IbcChannel from './IbcChannel.js';
 import File from './File.js';
 import RegistryObject from './RegistryObject.js';
+import ChainRegistryPointer from './ChainRegistryPointer.js';
 
-class ChainRegistry {
+class ChainRegistry extends RegistryObject {
+
+  public get pointer(): ChainRegistryPointer { return super.pointer as ChainRegistryPointer }
 
   private static instance: ChainRegistry | null = null;
 
@@ -21,6 +24,7 @@ class ChainRegistry {
   }
 
   private constructor() {
+    super(new ChainRegistryPointer());
     this.initializeMultiChainDirectories();
   }
 
@@ -63,7 +67,7 @@ class ChainRegistry {
     };
   }
 
-  
+  //--Multi Directories--
   public multiChainDirectory(
     networkType: string = Chain.NetworkType.MAINNET,
     chainType: string = Chain.ChainType.COSMOS
@@ -86,10 +90,15 @@ class ChainRegistry {
     if (networkType === Chain.NetworkType.TESTNET || Chain.NetworkType.DEVNET) return this._ibcDirectories.testnet;
     return undefined;
   }
+  //--
 
-  
-
+  //--Chain--
   private _chainNameToChainMap: Map<string, Chain | null> | null = null;
+
+  private get chainNameToChainMap(): Map<string, Chain | null> | undefined {
+    if (this._chainNameToChainMap === null) this.loadChainNames();
+    return this._chainNameToChainMap ?? undefined;
+  }
 
   private loadChainNames(): void {
     if (this._chainNameToChainMap !== null) return;
@@ -104,16 +113,14 @@ class ChainRegistry {
   }
 
   public chain(chainName: string): Chain | undefined {
-    if (!this._chainNameToChainMap) this.loadChainNames();
-    if (!this._chainNameToChainMap) return undefined;
-    const chainMap = this._chainNameToChainMap;
-    if (!chainMap?.has(chainName)) return undefined;
-    let chainInstance = chainMap.get(chainName);
+    if (!this.chainNameToChainMap) return undefined;
+    if (!this.chainNameToChainMap.has(chainName)) return undefined;
+    let chainInstance = this.chainNameToChainMap.get(chainName);
     if (chainInstance === null) {
       const directory = this.findChainDirectory(chainName);
       if (directory) {
-        chainInstance = new Chain(directory);
-        this._chainNameToChainMap.set(chainName, chainInstance);
+        chainInstance = new Chain(this.pointer, directory);
+        this.chainNameToChainMap.set(chainName, chainInstance);
       }
     }
     return chainInstance ?? undefined;
@@ -126,79 +133,78 @@ class ChainRegistry {
     return RegistryObject.objects<string>(array, conditions);
   }
 
+  private findChainDirectory(name: string): Directory | undefined {
+    return Object.values(this._multiChainDirectories)
+      .map((multiChainDirectory) => multiChainDirectory?.find(name, Directory))
+      .find((dir) => dir?.isChain);
+  }
+  //--
+
+  //--Asset--
   public assets(conditions?: Array<(item: AssetPointer) => boolean>, chainConditions?: Array<(item: string) => boolean>,): AssetPointer[] {
     return this.chains(chainConditions).flatMap(chainKey =>
       ChainRegistry.getInstance().chain(chainKey)?.assets(conditions) ?? []
     );
   }
 
-  private findChainDirectory(name: string): Directory | undefined {
-    return Object.values(this._multiChainDirectories)
-      .map((multiChainDirectory) => multiChainDirectory?.find(name, Directory))
-      .find((dir) => dir?.isChain);
-  }
-
   public asset(assetPointer: AssetPointer | undefined): Asset | undefined {
     if (!assetPointer) return undefined;
     return this.
-      chain(assetPointer.chainName)?.
-      asset(assetPointer.baseDenom);
+      chain(assetPointer.parent.key)?.
+      asset(assetPointer.key);
   }
+  //--
 
+  //--IBC Connection--
   private _ibcConnectionsMap: Map<string, IbcConnection | null> | null = null;
 
+  private get ibcConnectionsMap(): Map<string, IbcConnection | null> | undefined {
+    if (this._ibcConnectionsMap === null) this.loadIbcConnectionNames();
+    return this._ibcConnectionsMap ?? undefined;
+  }
+
   private loadIbcConnectionNames(): void {
-    if (this._ibcConnectionsMap !== null) return; // Prevent redundant loading
-
+    if (this._ibcConnectionsMap !== null) return;
     this._ibcConnectionsMap = new Map();
-
     Object.values(this._ibcDirectories).forEach((ibcDirectory) => {
-      if (!ibcDirectory) return;
-
-      ibcDirectory.contents.forEach((directoryContent) => {
+      ibcDirectory?.contents.forEach((directoryContent) => {
         if (directoryContent instanceof File && directoryContent.basename.endsWith('.json')) {
-          this._ibcConnectionsMap!.set(directoryContent.basename, null); // Initialize as null
+          const ibcConnectionKey = directoryContent.basename.replace(".json", "");
+          this._ibcConnectionsMap!.set(ibcConnectionKey, null);
         }
       });
     });
   }
 
+  public ibcConnection(connectionName: string, chainNameB?: string): IbcConnection | undefined {
+    const ibcConnectionKey = chainNameB ? IbcConnection.chainNamesToKey(connectionName, chainNameB) : connectionName; 
+    if (!this.ibcConnectionsMap?.has(ibcConnectionKey)) return undefined;
 
-  public ibcConnection(chainNameA: string, chainNameB: string): IbcConnection | undefined {
-    if (!chainNameA || !chainNameB) return undefined;
+    let ibcConnection = this.ibcConnectionsMap.get(ibcConnectionKey); //Use mapped connection, if exists
+    if (ibcConnection !== null) return ibcConnection;
 
-    if (!this._ibcConnectionsMap) this.loadIbcConnectionNames();
-
-    // Ensure chain names are sorted alphabetically
-    const [chain1, chain2] = [chainNameA, chainNameB].sort();
-    const ibcFileName = `${chain1}-${chain2}.json`;
-
-    if (!this._ibcConnectionsMap!.has(ibcFileName)) return undefined;
-
-    let ibcInstance = this._ibcConnectionsMap!.get(ibcFileName);
-    if (ibcInstance === null) {
-      let ibcFile: File | undefined;
-
-      // Check both IBC directories (mainnet and testnet)
-      for (const ibcDirectory of Object.values(this._ibcDirectories)) {
-        if (!ibcDirectory) continue;
-
-        ibcFile = ibcDirectory.find(ibcFileName, File);
-        if (ibcFile) break;
-      }
-      if (ibcFile) {
-        ibcInstance = new IbcConnection(ibcFile.contents);
-        this._ibcConnectionsMap!.set(ibcFileName, ibcInstance);
-      } else {
-        // If no file is found, keep it as null to avoid redundant searches
-        this._ibcConnectionsMap!.set(ibcFileName, null);
-      }
-      return this._ibcConnectionsMap!.get(ibcFileName) || undefined;
+    let ibcFile: File | undefined; //Find the file
+    for (const ibcDirectory of Object.values(this._ibcDirectories)) { //Check both IBC Directories (mainnet & testnet)
+      if (!ibcDirectory) continue;
+      const ibcFileName = ibcConnectionKey + ".json";
+      ibcFile = ibcDirectory.find(ibcFileName, File);
+      if (ibcFile) break;
     }
+    if (!ibcFile) return undefined;
 
-    return ibcInstance || undefined;
+    ibcConnection = new IbcConnection(this.pointer, ibcConnectionKey, ibcFile); //Save New IbcConnection to Map
+    this.ibcConnectionsMap.set(ibcConnectionKey, ibcConnection);
+    
+    return this.ibcConnectionsMap.get(ibcConnectionKey) || undefined;
   }
 
+  public ibcConnections(conditions?: Array<(item: string) => boolean>): string[] {
+    const array = Array.from(this.ibcConnectionsMap?.keys() || []);
+    return RegistryObject.objects<string>(array, conditions);
+  }
+  //--
+
+  //--IBC Channel
   public ibcChannel(chainA: Record<string, string>, chainB: Record<string, string>): IbcChannel | undefined {
     if (!chainA?.chain_name || !chainB?.chain_name) return undefined;
 
@@ -214,6 +220,7 @@ class ChainRegistry {
 
     return ibcConnection.channel(chain1, chain2);
   }
+  //--
 
 }
 

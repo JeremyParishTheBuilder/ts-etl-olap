@@ -1,28 +1,28 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import AssetPointer from "../types/AssetPointer.js";
+import ChainPointer from "../types/ChainPointer.js";
 
 describe("AssetPointer Class", () => {
   let assetPointer: AssetPointer;
 
   beforeEach(() => {
-    assetPointer = new AssetPointer("osmosis", "uosmo");
+    assetPointer = new AssetPointer(new ChainPointer(undefined, "osmosis"), "uosmo");
   });
 
   test("Creates a AssetPointer instance", () => {
-    //const assetPointer = new AssetPointer("osmosis", "uosmo");
     expect(assetPointer).toBeInstanceOf(AssetPointer);
+  });
+
+  test("Returns Parent Pointer of ChainPointer Type", () => {
+    expect(assetPointer.parent instanceof ChainPointer).toBeTruthy();
   });
 
   test("Returns correct Chain Name", () => {
-    //const assetPointer = new AssetPointer("osmosis", "uosmo");
-    expect(assetPointer).toBeInstanceOf(AssetPointer);
-    expect(assetPointer.chainName).toBe("osmosis");
+    expect(assetPointer.parent.key).toBe("osmosis");
   });
 
   test("Returns correct Base Denom", () => {
-    //const assetPointer = new AssetPointer("osmosis", "uosmo");
-    expect(assetPointer).toBeInstanceOf(AssetPointer);
-    expect(assetPointer.baseDenom).toBe("uosmo");
+    expect(assetPointer.key).toBe("uosmo");
   });
 
 });

@@ -12,8 +12,8 @@ describe("Trace Class", () => {
   test("Returns correct AssetPointer", () => {
     const trace = new Trace({ counterparty: { chain_name: "cosmoshub", base_denom: "uatom" } });
     expect(trace.assetPointer).toBeInstanceOf(AssetPointer);
-    expect(trace.assetPointer?.chainName).toBe("cosmoshub");
-    expect(trace.assetPointer?.baseDenom).toBe("uatom");
+    expect(trace.assetPointer?.parent.key).toBe("cosmoshub");
+    expect(trace.assetPointer?.key).toBe("uatom");
   });
 
   test("Handles missing counterparty gracefully", () => {

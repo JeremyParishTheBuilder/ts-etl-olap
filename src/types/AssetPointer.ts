@@ -1,27 +1,28 @@
-export class AssetPointer {
+import Pointer from './Pointer.js';
+import Asset from './Asset.js';
+import ChainPointer from './ChainPointer.js';
+import ChainRegistryPointer from './ChainRegistryPointer.js';
 
-  protected _chainName: string;
-  protected _baseDenom: string;
-  //private _key: string; //as {chain_name:base_denom}; e.g., "osmosis:uosmo"
+class AssetPointer extends Pointer {
 
-  public constructor(chainName: string, baseDenom: string) {
-    this._chainName = chainName;
-    this._baseDenom = baseDenom;
-    //this._key = chainName + ":" + baseDenom;
+  constructor(parent: Pointer, key: string, key2?: string);
+  constructor(
+    parent: ChainPointer,
+    key: string,
+    key2?: string
+  ) {
+    if (key2) {
+      let crp = new ChainRegistryPointer();
+      super(new ChainPointer(crp, key), key2);
+    }
+    super(parent, key);
   }
-
-  public /*get*/ key(): string {
-    return this._chainName + ":" + this._baseDenom;
+  public get parent(): ChainPointer {
+    return super.parent as ChainPointer;
   }
-
-  public get chainName(): string {
-    return this._chainName;
+  public get object(): Asset | undefined {
+    return this.parent.object?.asset(this.key);
   }
-
-  public get baseDenom(): string {
-    return this._baseDenom;
-  }
-
 }
 
 export default AssetPointer;

@@ -1,55 +1,26 @@
 import Directory from './Directory.js';
 import File from './File.js';
 import RegistryObject from './RegistryObject.js';
+import ChainPointer from './ChainPointer.js';
 import Asset from './Asset.js';
 import AssetPointer from './AssetPointer.js';
 import Version from './Version.js';
 
 class Chain extends RegistryObject {
 
-  private _chainName: string;
+  //private _chainName: string;
   private _directory: Directory;
 
-  public static readonly NetworkType = {
-    MAINNET: "mainnet",
-    TESTNET: "testnet",
-    DEVNET: "devnet"
-  }
-  public static readonly ChainType = {
-    COSMOS: "cosmos",
-    NON_COSMOS: "non-cosmos",
-  }
+  public get pointer(): ChainPointer { return super.pointer as ChainPointer; }
 
-  public constructor(directory: Directory) {
-    super();
+  public constructor(parent: InstanceType<typeof ChainPointer>["parent"], directory: Directory) {
+    super(new ChainPointer(parent, directory.basename));
     this._directory = directory;
-    this._chainName = directory.basename;
+    //this._chainName = directory.basename;
   }
 
   protected fetchJsonProperties(): Record<string, any> | null {
     return this.file(Chain.FileName.CHAIN)?.contents || {};
-  }
-
-
-  public derivedProperty(propertyName: string): any | undefined {
-
-    if (Object.values(this.DerivedPropertyName).includes(propertyName)) {
-      if (this._derivedProperties === null) this._derivedProperties = {};
-      if (propertyName in this._derivedProperties) return this._derivedProperties[propertyName];
-
-      if (propertyName === this.DerivedPropertyName.CHAIN_NAME) {
-        return this._derivedProperties[propertyName] = this.chainName;
-      }
-
-      if (propertyName === this.DerivedPropertyName.NETWORK_TYPE) {
-        return this._derivedProperties[propertyName] = this.networkType;
-      }
-    }
-
-  }
-
-  public property(propertyName: string): any | undefined {
-    return super.property(propertyName) ?? this.derivedProperty(propertyName) ?? undefined;
   }
 
   //--Key Files and Directories--
@@ -70,7 +41,8 @@ class Chain extends RegistryObject {
     if (!this._keyFiles.has(name)) this._keyFiles.set(name, this._directory.find(name, File));
     return this._keyFiles.get(name);
   }
-  public directory(name: string): Directory | undefined {
+  public directory(name?: string): Directory | undefined {
+    if (!name) return this._directory;
     if (!Object.values(Chain.DirectoryName).includes(name)) return undefined;
     if (!this._keyDirectories.has(name)) this._keyDirectories.set(name, this._directory.find(name, Directory));
     return this._keyDirectories.get(name);
@@ -84,7 +56,7 @@ class Chain extends RegistryObject {
     if (this._baseDenomToAssetMap === null) this.loadBaseDenoms();
     if (!this._baseDenomToAssetMap) return [];
     const array = Array.from(this._baseDenomToAssetMap.keys())
-      .map((asset) => new AssetPointer(this.chainName, asset));
+      .map((asset) => new AssetPointer(this.pointer, asset));
     return RegistryObject.objects<AssetPointer>(array, conditions);
   }
 
@@ -92,7 +64,8 @@ class Chain extends RegistryObject {
     if (!this._baseDenomToAssetMap) this.loadBaseDenoms(); // Ensure it's initialized
     if (!this._baseDenomToAssetMap?.has(baseDenom)) return undefined; // Base denom doesn't exist
     if (this._baseDenomToAssetMap.get(baseDenom) === null) {
-      this._baseDenomToAssetMap.set(baseDenom, new Asset(this._chainName, baseDenom)); // Lazy-load asset
+      //this._baseDenomToAssetMap.set(baseDenom, new Asset(this._chainName, baseDenom)); // Lazy-load asset
+      this._baseDenomToAssetMap.set(baseDenom, new Asset(this.pointer, baseDenom)); // Lazy-load asset
     }
     return this._baseDenomToAssetMap.get(baseDenom) || undefined;
   }
@@ -116,7 +89,7 @@ class Chain extends RegistryObject {
     if (!this._versionNameToVersionMap) this.loadVersionNames(); // Ensure it's initialized
     if (!this._versionNameToVersionMap?.has(versionName)) return undefined; // Base denom doesn't exist
     if (this._versionNameToVersionMap.get(versionName) === null) {
-      this._versionNameToVersionMap.set(versionName, new Version(this._chainName, versionName)); // Lazy-load asset
+      this._versionNameToVersionMap.set(versionName, new Version(this.pointer.key, versionName)); // Lazy-load asset
     }
     return this._versionNameToVersionMap.get(versionName);
   }
@@ -133,23 +106,47 @@ class Chain extends RegistryObject {
   }
   //--
 
-  //--Derived Properties--
-  private _derivedProperties: Record<string, any> | null = null;
+  //--Property Values--
+  public static readonly NetworkType = {
+    MAINNET: "mainnet",
+    TESTNET: "testnet",
+    DEVNET: "devnet"
+  }
+  public static readonly ChainType = {
+    COSMOS: "cosmos",
+    NON_COSMOS: "non-cosmos",
+  }
+  //--
 
+  //--Derived Properties--
   public static readonly DerivedPropertyName = {
     CHAIN_NAME: "chain_name",
     NETWORK_TYPE: "network_type"
   }
-
   public get DerivedPropertyName() {
     return Chain.DerivedPropertyName
   }
 
-  public get chainName(): string {
-    return this._chainName; //by directory name, not JSON property--some chains don't have chain json
+  public derivedProperty(propertyName: string): any | undefined {
+    if (!this._derivedProperties) return undefined;
+
+    if (propertyName === this.DerivedPropertyName.CHAIN_NAME) {
+      return this._derivedProperties[propertyName] = this.chainName;
+    }
+
+    if (propertyName === this.DerivedPropertyName.NETWORK_TYPE) {
+      return this._derivedProperties[propertyName] = this.networkType;
+    }
+
+    //Add checks for additional derived properties here...
+
   }
 
-  public networkType(): string {
+  private get chainName(): string {
+    return this.pointer.key; //by directory name, not JSON property--some chains don't have chain json
+  }
+
+  private get networkType(): string {
     if (this.chainName.includes(Chain.NetworkType.TESTNET)) return Chain.NetworkType.TESTNET;
     if (this.chainName.includes(Chain.NetworkType.DEVNET)) return Chain.NetworkType.DEVNET;
     return Chain.NetworkType.MAINNET;
