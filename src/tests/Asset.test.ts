@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
 import Asset from "../types/Asset.js";
-import ChainPointer from "../types/ChainPointer.js";
+import Chain from "../types/Chain.js";
+import NewPointer from "../types/NewPointer.js";
 import Trace from "../types/Trace.js";
 
 vi.mock("../types/ChainRegistry", () => ({
@@ -16,7 +17,7 @@ describe("Asset Class", () => {
   let asset: Asset;
 
   beforeEach(() => {
-    asset = new Asset(new ChainPointer(undefined, "osmosis"), "uosmo", {
+    asset = new Asset(new Chain(null, "osmosis", null, null).pointer, "uosmo", {
       display: "OSMO",
       denom_units: [
         { denom: "uosmo", exponent: 0 },
@@ -51,7 +52,7 @@ describe("Asset Class", () => {
   });
 
   test("should return lastTrace when traces exists", () => {
-    const newAsset = new Asset(new ChainPointer(undefined, "osmosis"), "ibc/...", {
+    const assetWithTrace = new Asset(new Chain(null, "osmosis", null, null).pointer, "ibc/...", {
       traces: [
         {
           type: "bridged",
@@ -62,14 +63,8 @@ describe("Asset Class", () => {
         }
       ],
     })
-    expect(newAsset.lastTrace?.assetPointer?.parent.key).toBe("cosmoshub");
-    expect(newAsset.lastTrace?.assetPointer?.key).toBe("uatom");
-  });
-
-  test("should return traces correctly", () => {
-    const trace = new Trace({ type: Trace.Type.IBC });
-    vi.spyOn(asset, "lastTrace", "get").mockReturnValue(trace);
-    expect(asset.lastTrace).toBe(trace);
+    expect(assetWithTrace.lastTrace?.assetPointer?.parent.key).toBe("cosmoshub");
+    expect(assetWithTrace.lastTrace?.assetPointer?.key).toBe("uatom");
   });
 
 });

@@ -1,110 +1,75 @@
 import Directory from './Directory.js';
 import File from './File.js';
 import RegistryObject from './RegistryObject.js';
-import ChainPointer from './ChainPointer.js';
 import Asset from './Asset.js';
-import AssetPointer from './AssetPointer.js';
 import Version from './Version.js';
+import NewPointer from './NewPointer.js';
+import Container from './Container.js';
+import ChainRegistry from './ChainRegistry.js';
+
+export type ChainKeyType = string;
 
 class Chain extends RegistryObject {
 
-  //private _chainName: string;
-  private _directory: Directory;
+  private _directory: Directory | undefined | null = null;
 
-  public get pointer(): ChainPointer { return super.pointer as ChainPointer; }
+  public keyType: string = "";
 
-  public constructor(parent: InstanceType<typeof ChainPointer>["parent"], directory: Directory) {
-    super(new ChainPointer(parent, directory.basename));
+  public constructor(
+    parentPointer: NewPointer<RegistryObject> | null,
+    key: Chain["keyType"],
+    json: Record<string, any> | null = null,
+    directory: Directory | undefined | null = null
+  ) {
+    super(new NewPointer(Chain, parentPointer, key), json);
     this._directory = directory;
-    //this._chainName = directory.basename;
+  }
+
+  public static readonly PropertyName = {
+    CHAIN_NAME: "chain_name",
+    CHAIN_TYPE: "chain_type",
+    NETWORK_TYPE: "network_type",
+    BECH32_PREFIX: "bech32_prefix",
+    CODEBASE: "codebase",
+    ENDPOINTS: "endpoints"
   }
 
   protected fetchJsonProperties(): Record<string, any> | null {
     return this.file(Chain.FileName.CHAIN)?.contents || {};
   }
 
-  //--Key Files and Directories--
-  private _keyFiles: Map<string, File | undefined> = new Map(); //Stores Files like: Assetlist, Chain & Versions.
-  private _keyDirectories: Map<string, Directory | undefined> = new Map(); //Stores Directories like: /images/.
-
   public static readonly FileName = {
     ASSETLIST: "assetlist.json",
     CHAIN: "chain.json",
     VERSIONS: "versions.json"
   }
+  public get FileName() {
+    return Chain.FileName;
+  }
+
+  public override file(name: string): File | undefined {
+    if (!Object.values(this.FileName).includes(name)) return undefined;
+    if (!this._keyFiles.has(name)) this._keyFiles.set(name, this.directory()?.find(name, File));
+    return this._keyFiles.get(name);
+  }
+
   public static readonly DirectoryName = {
     IMAGES: "images"
   }
-
-  public file(name: string): File | undefined {
-    if (!Object.values(Chain.FileName).includes(name)) return undefined;
-    if (!this._keyFiles.has(name)) this._keyFiles.set(name, this._directory.find(name, File));
-    return this._keyFiles.get(name);
+  public get DirectoryName() {
+    return Chain.FileName;
   }
-  public directory(name?: string): Directory | undefined {
+
+  /*public override directory(name?: string): Directory | null | undefined {
+    if (this._directory === null) {
+      this._directory = (this.pointer.parent.object as ChainRegistry)?.findChainDirectory(this.pointer.key);
+    }
+    if (!this._directory) return undefined;
     if (!name) return this._directory;
-    if (!Object.values(Chain.DirectoryName).includes(name)) return undefined;
-    if (!this._keyDirectories.has(name)) this._keyDirectories.set(name, this._directory.find(name, Directory));
+    if (!Object.values(this.DirectoryName).includes(name)) return undefined;
+    if (!this._keyDirectories.has(name)) this._keyDirectories.set(name, this._directory?.find(name, Directory));
     return this._keyDirectories.get(name);
-  }
-  //--
-
-  //--Assets--
-  private _baseDenomToAssetMap: Map<string, Asset | null | undefined> | null = null;
-
-  public assets(conditions?: Array<(item: AssetPointer) => boolean>): AssetPointer[] {
-    if (this._baseDenomToAssetMap === null) this.loadBaseDenoms();
-    if (!this._baseDenomToAssetMap) return [];
-    const array = Array.from(this._baseDenomToAssetMap.keys())
-      .map((asset) => new AssetPointer(this.pointer, asset));
-    return RegistryObject.objects<AssetPointer>(array, conditions);
-  }
-
-  public asset(baseDenom: string): Asset | undefined {
-    if (!this._baseDenomToAssetMap) this.loadBaseDenoms(); // Ensure it's initialized
-    if (!this._baseDenomToAssetMap?.has(baseDenom)) return undefined; // Base denom doesn't exist
-    if (this._baseDenomToAssetMap.get(baseDenom) === null) {
-      //this._baseDenomToAssetMap.set(baseDenom, new Asset(this._chainName, baseDenom)); // Lazy-load asset
-      this._baseDenomToAssetMap.set(baseDenom, new Asset(this.pointer, baseDenom)); // Lazy-load asset
-    }
-    return this._baseDenomToAssetMap.get(baseDenom) || undefined;
-  }
-
-  private loadBaseDenoms(): void {
-    if (this._baseDenomToAssetMap !== null) return; // Already initialized
-    const assetlistFile = this.file(Chain.FileName.ASSETLIST);
-    if (!assetlistFile?.contents?.assets) {
-      this._baseDenomToAssetMap = new Map(); // No assets found, but still initialize the Map
-      return;
-    }
-    const assetArray: { base: string }[] = assetlistFile.contents.assets || [];
-    this._baseDenomToAssetMap = new Map(assetArray.map(asset => [asset.base, null]));
-  }
-  //--
-
-  //--Versions--
-  private _versionNameToVersionMap: Map<string, Version | null | undefined> | null = null;
-
-  public version(versionName: string): Version | null | undefined {
-    if (!this._versionNameToVersionMap) this.loadVersionNames(); // Ensure it's initialized
-    if (!this._versionNameToVersionMap?.has(versionName)) return undefined; // Base denom doesn't exist
-    if (this._versionNameToVersionMap.get(versionName) === null) {
-      this._versionNameToVersionMap.set(versionName, new Version(this.pointer.key, versionName)); // Lazy-load asset
-    }
-    return this._versionNameToVersionMap.get(versionName);
-  }
-
-  private loadVersionNames(): void {
-    if (this._versionNameToVersionMap !== null) return; // Already initialized
-    const versionFile = this.file(Chain.FileName.VERSIONS);
-    if (!versionFile?.contents?.versions) {
-      this._versionNameToVersionMap = new Map(); // No versions found, but still initialize the Map
-      return;
-    }
-    const versionArray: { name: string }[] = versionFile.contents.versions || [];
-    this._versionNameToVersionMap = new Map(versionArray.map(version => [version.name, null]));
-  }
-  //--
+  }*/
 
   //--Property Values--
   public static readonly NetworkType = {

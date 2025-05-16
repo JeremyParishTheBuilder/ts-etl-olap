@@ -1,28 +1,26 @@
 import RegistryObject from "./RegistryObject.js";
-import IbcConnection from './IbcConnection.js';
-import IbcConnectionPointer from './IbcConnectionPointer.js';
-import IbcChannelPointer from './IbcChannelPointer.js';
+import NewPointer from './NewPointer.js';
+import IbcChannelParty from './IbcChannelParty.js';
+
+export type IbcChannelKey = number;
 
 class IbcChannel extends RegistryObject {
 
-  public get pointer(): IbcChannelPointer { return this._pointer as IbcChannelPointer; }
+  public keyType: number = -1;
+  //public directoryObjectType: null = null;
 
-  public static TAGS: string = "tags";
-  public static CHAIN_1: string = "chain_1";
-  public static CHAIN_2: string = "chain_2";
-  public static PORT_ID: string = "port_id";
-  public static CHANNEL_ID: string = "channel_id";
-
-  constructor(parent: IbcConnectionPointer, key: number, json: Record<string, any>) {
-    super(new IbcChannelPointer(parent, key), json);
+  constructor(
+    parentPointer: NewPointer<RegistryObject> | null,
+    key: IbcChannel["keyType"],
+    json: Record<string, any> | null = null
+  ) {
+    super(new NewPointer(IbcChannel, parentPointer, key), json);
   }
 
   //--JSON Properties--
   public static readonly PropertyName = {
     CHAIN_1: "chain_1",
     CHAIN_2: "chain_2",
-    PORT_ID: "port_id",
-    CHANNEL_ID: "channel_id",
     TAGS: "tags"
   } as const;
   //--
@@ -30,6 +28,17 @@ class IbcChannel extends RegistryObject {
   //--Derived Properties--
 
   //--
+
+  protected fetchJsonProperties(): Record<string, any> | null {
+    return this._jsonProperties || {"test": "hi"};
+  }
+
+  //TODO, replace with get()
+  public ibcChannelParty(ibcChannelPartyKey: IbcChannelParty["keyType"]): IbcChannelParty | undefined {
+    if (ibcChannelPartyKey === 1) { return this.property(IbcChannel.PropertyName.CHAIN_1) }
+    else if (ibcChannelPartyKey === 2) { return this.property(IbcChannel.PropertyName.CHAIN_2) }
+    else { return undefined; }
+  }
 
 }
 

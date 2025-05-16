@@ -1,5 +1,4 @@
-import AssetPointer from './AssetPointer.js';
-import ChainPointer from './ChainPointer.js';
+import NewPointer from './NewPointer.js';
 import RegistryObject from './RegistryObject.js';
 import Trace from './Trace.js';
 import ChainRegistry from './ChainRegistry.js';
@@ -7,30 +6,34 @@ import Chain from './Chain.js';
 
 class Asset extends RegistryObject {
 
-  /*private _assetPointer: AssetPointer;
-  public get assetPointer(): AssetPointer {
-    return this._assetPointer;
-  }*/
+  public keyType: string = "";
 
-  public get pointer(): AssetPointer { return super.pointer as AssetPointer }
-
-  public constructor(parent: ChainPointer, baseDenom: string, json: Record<string, any> | null = null) {
-    super(new AssetPointer(parent, baseDenom), json);
-    //this._assetPointer = new AssetPointer(chainName, baseDenom);
+  public constructor(
+    parentPointer: NewPointer<RegistryObject> | null,
+    key: Asset["keyType"],
+    json: Record<string, any> | null = null
+  ) {
+    super(new NewPointer(Asset, parentPointer, key), json);
   }
 
-  //Do we need Chain?
-  public get chain(): Chain {
-    return ChainRegistry.getInstance().chain(this.parent.key)!;
-  }
+  /*public override get<T extends RegistryObject>(
+    objectType: new (...args: any[]) => RegistryObject,
+    key: string | number
+  ): T | undefined {
+    if (objectType === Trace) {
+      console.log("test");
+      return this.lastTrace as T | undefined;
+    }
 
-  //Do we really need key?
-  /*public key(): string {
-    return this._assetPointer.key();
+    return super.get(objectType, key) as T;
   }*/
 
   public static readonly PropertyName = {
-    TRACES: "traces"
+    TRACES: "traces",
+    EXTENDED_DESCRIPTION: "extended_description",
+    SYMBOL: "symbol",
+    DENOM_UNITS: "denom_units",
+    BASE: "base"
   }
 
   public property(propertyName: string, traceTypes: Array<string> = Object.values(Trace.Type)): any | undefined {
@@ -44,20 +47,18 @@ class Asset extends RegistryObject {
     if (!traceTypes.length) return undefined; // Stop if not to inherit, such as when traceTypes = []
     if (!traceTypes.includes(this.lastTrace?.property(Trace.PropertyName.TYPE)!)) return undefined; // Stop inheriting if wrong trace type
 
-    // inherit from traces (recursion)
-    return ChainRegistry.getInstance()
-      .asset(this.lastTrace?.assetPointer!)
+    return (this._lastTrace?.assetPointer?.object as Asset)
       ?.property(propertyName, traceTypes);
   }
 
-  protected fetchJsonProperties(): Record<string, any> | null {
-    return ChainRegistry.getInstance()
-      .chain(this.pointer!.parent!.key)
+  /*protected fetchJsonProperties(): Record<string, any> | null {
+    return (ChainRegistry.getInstance()
+      .get(Chain, this.pointer!.parent!.key) as Chain)
       ?.file(Chain.FileName.ASSETLIST)
       ?.contents?.assets?.find(
         (asset: any) => asset.base === this.pointer!.key
       ) || {};
-  }
+  }*/
 
   //--Traces--
   private _lastTrace: Trace | undefined | null = null;
@@ -65,7 +66,8 @@ class Asset extends RegistryObject {
   public get lastTrace(): Trace | undefined {
     if (this._lastTrace !== null) return this._lastTrace;  // Use cached value
     const traces = this.property(Asset.PropertyName.TRACES, []); //get Json traces--will NOT bypass json loading
-    return this._lastTrace = traces?.length ? new Trace(traces[traces.length - 1]) : undefined; //save the very last
+    this._lastTrace = traces?.length ? new Trace(this.pointer, 0, traces[traces.length - 1]) : undefined;
+    return this._lastTrace = traces?.length ? new Trace(this.pointer, 0, traces[traces.length - 1]) : undefined; //save the very last
   }
 
   private traces(traceTypes: Array<string> = Object.values(Trace.PropertyName)): Array<Trace> | undefined {
@@ -73,10 +75,8 @@ class Asset extends RegistryObject {
 
     if (!traceType || !traceTypes.includes(traceType)) return undefined;
 
-    const previousTraces = ChainRegistry.getInstance()
-      .asset(this._lastTrace!.assetPointer)
+    const previousTraces = (this._lastTrace?.assetPointer?.object as Asset)
       ?.property(Asset.PropertyName.TRACES, traceTypes);
-
     return previousTraces ? [...previousTraces, this._lastTrace!] : [this._lastTrace!];
   }
   //--

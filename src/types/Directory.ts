@@ -43,17 +43,18 @@ export class Directory extends DirectoryContent  {
     basename: string,
     contentType: new (...args: any[]) => T
   ): T | undefined {
+    if (basename === ".") return this as unknown as T;
     return this.contents.find(
       (content) => content instanceof contentType && content.basename === basename
     ) as T | undefined;
   }
 
-  public get isChain(): boolean {
+  /*public get isChain(): boolean {
     if (this._isChain !== null) return this._isChain;
     const assetlistFileExists = fs.existsSync(path.join(this.fullPath, Chain.FileName.ASSETLIST));
     const chainFileExists = fs.existsSync(path.join(this.fullPath, Chain.FileName.CHAIN));
     return this._isChain = assetlistFileExists || chainFileExists;
-  }
+  }*/
 
   // Method to log the cached contents to the console
   public logContents(): void {

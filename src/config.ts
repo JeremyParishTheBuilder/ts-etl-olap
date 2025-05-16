@@ -5,7 +5,7 @@ dotenv.config();
 
 export const CONFIG = {
 
-  CHAIN_REG_ROOT_DIR: process.env.CHAIN_REG_ROOT_DIR || "../",
+  CHAIN_REG_ROOT_DIR: process.env.CHAIN_REG_ROOT_DIR || "../chain-registry",
   CHAIN_REG_DIR_NAME: process.env.CHAIN_REG_DIR_NAME || "chain-registry",
 
   //NON_COSMOS_DIR_NAME: "_non-cosmos",

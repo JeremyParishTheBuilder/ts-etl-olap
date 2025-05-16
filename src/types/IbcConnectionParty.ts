@@ -1,14 +1,22 @@
 import RegistryObject from './RegistryObject.js';
 import IbcConnection from './IbcConnection.js';
-import IbcConnectionPointer from './IbcConnectionPointer.js';
-import IbcConnectionPartyPointer from './IbcConnectionPartyPointer.js';
+//import IbcConnectionPartyPointer from './IbcConnectionPartyPointer.js';
+import NewPointer from './NewPointer.js';
+
+//export type IbcConnectionPartyKeyType = string;
 
 class IbcConnectionParty extends RegistryObject {
 
-  public get pointer(): IbcConnectionPartyPointer { return this.pointer as IbcConnectionPartyPointer; }
+  //public get pointer(): IbcConnectionPartyPointer { return this.pointer as IbcConnectionPartyPointer; }
 
-  constructor(parent: IbcConnectionPointer, key: string, json: Record<string, any>) {
-    super(new IbcConnectionPartyPointer(parent, key), json);
+  public keyType: string = "";
+
+  constructor(
+    parentPointer: NewPointer<RegistryObject> | null,
+    key: IbcConnectionParty["keyType"],
+    json: Record<string, any> | null = null
+  ) {
+    super(new NewPointer(IbcConnectionParty, parentPointer, key), json);
   }
 
   //--Properties--
@@ -40,11 +48,11 @@ class IbcConnectionParty extends RegistryObject {
 
   }
 
-  private counterparty(): IbcConnectionPartyPointer {
+  private counterparty(): NewPointer<IbcConnectionParty> {
     const counterpartyKey = this.pointer.key === IbcConnection.PropertyName.CHAIN_1
       ? IbcConnection.PropertyName.CHAIN_2
       : IbcConnection.PropertyName.CHAIN_1
-    return new IbcConnectionPartyPointer(this.pointer.parent as IbcConnectionPointer, counterpartyKey);
+    return new NewPointer(IbcConnectionParty, this.pointer.parent, counterpartyKey);
   }
   //--
 

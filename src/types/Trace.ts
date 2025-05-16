@@ -1,6 +1,8 @@
 import RegistryObject from './RegistryObject.js';
-import AssetPointer from './AssetPointer.js';
-import ChainPointer from './ChainPointer.js';
+import NewPointer from './NewPointer.js';
+import Asset from './Asset.js';
+import Chain from './Chain.js';
+import ChainRegistry from './ChainRegistry.js';
 
 class Trace extends RegistryObject {
 
@@ -24,20 +26,41 @@ class Trace extends RegistryObject {
     PROVIDER: "provider"
   } as const;
 
-  private _assetPointer: AssetPointer | undefined | null = null;
+  
+  public keyType: Number = 0;
 
-  public constructor(json: Record<string, any>) {
-    super(undefined, json);
+  public constructor(
+    parentPointer: NewPointer<RegistryObject> | null,
+    key: Trace["keyType"],
+    json: Record<string, any>) {
+    super(new NewPointer(Trace, parentPointer, key), json);
   }
 
-  public get assetPointer(): AssetPointer | undefined {
+  public override get<T extends RegistryObject>(
+    objectType: new (...args: any[]) => RegistryObject,
+    key: RegistryObject["keyType"]
+  ): T | undefined {
+    if (objectType === Trace) {
+      return this as unknown as T | undefined;
+    }
+    if (objectType === Asset) {
+      return this.assetPointer?.object as T;
+    }
+
+    return super.get(objectType, key) as T;
+  }
+
+  private _assetPointer: NewPointer<Asset> | undefined | null = null;
+  public get assetPointer(): NewPointer<Asset> | undefined {
     if (this._assetPointer !== null) return this._assetPointer;
     const counterparty: Record<string, any> | undefined = this.property(Trace.PropertyName.COUNTERPARTY);
+    const pointer = new NewPointer(
+      Asset,
+      this._pointer?.parent.parent.parent.object?.get(Chain, counterparty?.chain_name)?.pointer!,
+      counterparty?.base_denom
+    );
     return this._assetPointer = counterparty
-      ? new AssetPointer(
-          new ChainPointer(undefined, counterparty.chain_name),
-          counterparty.base_denom
-        )
+      ? pointer
       : undefined;
   }
 
