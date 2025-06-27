@@ -1,7 +1,7 @@
 import RegistryObject from "./RegistryObject.js";
 import NewPointer from './NewPointer.js';
 
-class IbcChannelParty extends RegistryObject {
+/*class IbcChannelParty extends RegistryObject {
 
   public static readonly PropertyName = {
     PORT_ID: "port_id",
@@ -19,4 +19,4 @@ class IbcChannelParty extends RegistryObject {
   }
 }
 
-export default IbcChannelParty;
+export default IbcChannelParty;*/

@@ -1,0 +1,35 @@
+import CONFIG from '../config.js';
+import NewPointer from './NewPointer.js';
+import RegistryObject from './RegistryObject.js';
+import MultiRegistryRoot from '../types/MultiRegistryRoot.js';
+import RegistryStructureEntry from './RegistryStructureEntry.js';
+
+class RegistryRoot extends RegistryObject {
+
+  public constructor(
+    protected registryStructureMap: Map<
+      string,
+      RegistryStructureEntry<string | number, any>
+    > | null,
+    protected readonly key: string
+  ) {
+    const instance = MultiRegistryRoot.getInstance();
+    super(new NewPointer(instance.pointer, key, "RegistryRoot"));
+    instance.set("RegistryRoot", key, this);
+  }
+
+  public getEntry(objectType: string): any {
+    const entry = this.registryStructureMap?.get(objectType);
+    if (!entry) {
+      throw new Error(`No registry structure entry found for ${objectType}`);
+    }
+    return entry;
+  }
+
+  public keyType(objectType: string): string | number {
+    return this.getEntry(objectType).keyPrototype;
+  }
+
+}
+
+export default RegistryRoot;

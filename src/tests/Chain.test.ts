@@ -1,7 +1,11 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
 import Chain from "../types/Chain.js";
 import NewPointer from "../types/NewPointer.js";
-import ChainRegistry from "../types/ChainRegistry.js";
+//import ChainRegistry from "../types/ChainRegistry.js";
+import RegistryObject from "../types/RegistryObject.js"
+import RegistryRoot from "../types/RegistryRoot.js"
+import MultiRegistryRoot from "../types/MultiRegistryRoot.js"
+import { CosmosChainRegistry, CosmosChainRegistryTypes } from '../registries/CosmosChainRegistry.js';
 
 vi.mock("../types/ChainRegistry", () => ({
   default: {
@@ -13,12 +17,13 @@ vi.mock("../types/ChainRegistry", () => ({
 }));
 
 describe("Chain Class", () => {
-  let chain: Chain;
-  const chain_reg_ptr = new NewPointer(ChainRegistry, null, null);
+  const reg = new RegistryRoot(CosmosChainRegistry, "Cosmos");
+  let chain = new RegistryObject(new NewPointer(reg.pointer, "osmosis", "chain"), { "pretty_name": "Osmosis" });
+  //const chain_reg_ptr = new NewPointer(root, null, null);
 
-  beforeEach(() => {
+/*  beforeEach(() => {
     chain = new Chain(chain_reg_ptr, "osmosis", { "pretty_name": "Osmosis" });
-  });
+  });*/
 
   test("should initialize with correct ChainPointer", () => {
     expect(chain.pointer.parent).toBeNull();

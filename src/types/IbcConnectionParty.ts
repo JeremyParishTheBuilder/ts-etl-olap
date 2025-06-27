@@ -1,11 +1,11 @@
 import RegistryObject from './RegistryObject.js';
-import IbcConnection from './IbcConnection.js';
+//import IbcConnection from './IbcConnection.js';
 //import IbcConnectionPartyPointer from './IbcConnectionPartyPointer.js';
 import NewPointer from './NewPointer.js';
 
 //export type IbcConnectionPartyKeyType = string;
 
-class IbcConnectionParty extends RegistryObject {
+/*class IbcConnectionParty extends RegistryObject {
 
   //public get pointer(): IbcConnectionPartyPointer { return this.pointer as IbcConnectionPartyPointer; }
 
@@ -58,4 +58,4 @@ class IbcConnectionParty extends RegistryObject {
 
 }
 
-export default IbcConnectionParty;
+export default IbcConnectionParty;*/

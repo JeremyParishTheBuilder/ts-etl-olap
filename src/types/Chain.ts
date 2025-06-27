@@ -2,10 +2,10 @@ import Directory from './Directory.js';
 import File from './File.js';
 import RegistryObject from './RegistryObject.js';
 import Asset from './Asset.js';
-import Version from './Version.js';
+//import Version from './Version.js';
 import NewPointer from './NewPointer.js';
 import Container from './Container.js';
-import ChainRegistry from './ChainRegistry.js';
+//import ChainRegistry from './ChainRegistry.js';
 
 export type ChainKeyType = string;
 
@@ -13,15 +13,15 @@ class Chain extends RegistryObject {
 
   private _directory: Directory | undefined | null = null;
 
-  public keyType: string = "";
+  //public keyType: string = "";
 
   public constructor(
-    parentPointer: NewPointer<RegistryObject> | null,
-    key: Chain["keyType"],
+    parentPointer: NewPointer | null,
+    key: string,
     json: Record<string, any> | null = null,
     directory: Directory | undefined | null = null
   ) {
-    super(new NewPointer(Chain, parentPointer, key), json);
+    super(new NewPointer(parentPointer, key, "Chain"), json);
     this._directory = directory;
   }
 
@@ -34,9 +34,9 @@ class Chain extends RegistryObject {
     ENDPOINTS: "endpoints"
   }
 
-  protected fetchJsonProperties(): Record<string, any> | null {
+  /*protected fetchJsonProperties(): Record<string, any> | null {
     return this.file(Chain.FileName.CHAIN)?.contents || {};
-  }
+  }*/
 
   public static readonly FileName = {
     ASSETLIST: "assetlist.json",
@@ -47,11 +47,11 @@ class Chain extends RegistryObject {
     return Chain.FileName;
   }
 
-  public override file(name: string): File | undefined {
+  /*public override file(name: string): File | undefined {
     if (!Object.values(this.FileName).includes(name)) return undefined;
     if (!this._keyFiles.has(name)) this._keyFiles.set(name, this.directory()?.find(name, File));
     return this._keyFiles.get(name);
-  }
+  }*/
 
   public static readonly DirectoryName = {
     IMAGES: "images"
@@ -108,7 +108,7 @@ class Chain extends RegistryObject {
   }
 
   private get chainName(): string {
-    return this.pointer.key; //by directory name, not JSON property--some chains don't have chain json
+    return this.pointer.key as string; //by directory name, not JSON property--some chains don't have chain json
   }
 
   private get networkType(): string {

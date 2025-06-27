@@ -27,7 +27,7 @@ describe("Asset Class", () => {
   });
 
   test("should initialize with correct AssetPointer", () => {
-    expect(asset.pointer.parent.key).toBe("osmosis");
+    expect((asset.pointer.parent as NewPointer).key).toBe("osmosis");
     expect(asset.pointer.key).toBe("uosmo");
   });
 
@@ -63,7 +63,7 @@ describe("Asset Class", () => {
         }
       ],
     })
-    expect(assetWithTrace.lastTrace?.assetPointer?.parent.key).toBe("cosmoshub");
+    expect(assetWithTrace.lastTrace?.assetPointer?.parent?.key).toBe("cosmoshub");
     expect(assetWithTrace.lastTrace?.assetPointer?.key).toBe("uatom");
   });
 

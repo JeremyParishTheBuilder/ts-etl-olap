@@ -1,8 +1,8 @@
 import RegistryObject from "./RegistryObject.js";
 import NewPointer from './NewPointer.js';
-import IbcChannelParty from './IbcChannelParty.js';
+//import IbcChannelParty from './IbcChannelParty.js';
 
-export type IbcChannelKey = number;
+/*export type IbcChannelKey = number;
 
 class IbcChannel extends RegistryObject {
 
@@ -10,11 +10,11 @@ class IbcChannel extends RegistryObject {
   //public directoryObjectType: null = null;
 
   constructor(
-    parentPointer: NewPointer<RegistryObject> | null,
+    parentPointer: NewPointer | null,
     key: IbcChannel["keyType"],
     json: Record<string, any> | null = null
   ) {
-    super(new NewPointer(IbcChannel, parentPointer, key), json);
+    super(new NewPointer(parentPointer, key, "IbcChannel"), json);
   }
 
   //--JSON Properties--
@@ -42,4 +42,4 @@ class IbcChannel extends RegistryObject {
 
 }
 
-export default IbcChannel;
+export default IbcChannel;*/

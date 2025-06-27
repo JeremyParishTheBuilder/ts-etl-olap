@@ -1,17 +1,17 @@
 import path from "path";
 import Chain from '../types/Chain.js';
 import Asset from '../types/Asset.js';
-import Version from '../types/Version.js';
+//import Version from '../types/Version.js';
 import Directory from '../types/Directory.js';
 import CONFIG from '../config.js';
 import NewPointer from './NewPointer.js';
-import IbcConnection from './IbcConnection.js';
-import IbcChannel from './IbcChannel.js';
+//import IbcConnection from './IbcConnection.js';
+//import IbcChannel from './IbcChannel.js';
 import File from './File.js';
 import RegistryObject from './RegistryObject.js';
 import RegistryStructureEntry from './RegistryStructureEntry.js';
 
-class ChainRegistry extends RegistryObject {
+/*class ChainRegistry extends RegistryObject {
 
 
   public keyType = typeof null;
@@ -21,7 +21,7 @@ class ChainRegistry extends RegistryObject {
   public static getInstance(
     registryStructureMap?: Map<
       new (...args: any[]) => RegistryObject,
-      RegistryStructureEntry<RegistryObject, RegistryObject, string | number, any>
+      RegistryStructureEntry<string | number, any>
     >
   ): ChainRegistry {
     if (!this.instance) {
@@ -35,11 +35,11 @@ class ChainRegistry extends RegistryObject {
 
   public constructor(
     protected registryStructureMap: Map<
-      new (...args: any[]) => RegistryObject,
-      RegistryStructureEntry<RegistryObject, RegistryObject, string | number, any>
+      string,
+      RegistryStructureEntry<string | number, any>
     >
   ) {
-    super(new NewPointer(ChainRegistry, null, null));
+    super(new NewPointer(null, null, "ChainRegistry"));
   }
 
 
@@ -64,4 +64,4 @@ class ChainRegistry extends RegistryObject {
 
 }
 
-export default ChainRegistry;
+export default ChainRegistry;*/

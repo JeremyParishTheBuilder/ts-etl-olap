@@ -1,19 +1,19 @@
 import NewPointer from './NewPointer.js';
 import RegistryObject from './RegistryObject.js';
 import Trace from './Trace.js';
-import ChainRegistry from './ChainRegistry.js';
-import Chain from './Chain.js';
+//import ChainRegistry from './ChainRegistry.js';
+//import Chain from './Chain.js';
 
 class Asset extends RegistryObject {
 
-  public keyType: string = "";
+  //public keyType: string = "";
 
   public constructor(
-    parentPointer: NewPointer<RegistryObject> | null,
-    key: Asset["keyType"],
+    parentPointer: NewPointer | null,
+    key: string,
     json: Record<string, any> | null = null
   ) {
-    super(new NewPointer(Asset, parentPointer, key), json);
+    super(new NewPointer(parentPointer, key, "Asset"), json);
   }
 
   /*public override get<T extends RegistryObject>(

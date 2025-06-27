@@ -2,6 +2,7 @@ import FsStructureEntry from '../types/FsStructureEntry.js';
 import Directory from '../types/Directory.js';
 import File from '../types/File.js';
 import CONFIG from '../config.js';
+import NewPointer from '../types/NewPointer.js';
 
 
 const chainRegistryFs = new FsStructureEntry(
@@ -91,13 +92,13 @@ chainDirectory.add(versionsFile); //adds versionsFile to chainDirectory::files a
 
 import RegistryObject from '../types/RegistryObject.js';
 import RegistryStructureEntry from '../types/RegistryStructureEntry.js';
-import ChainRegistry from '../types/ChainRegistry.js';
+//import ChainRegistry from '../types/ChainRegistry.js';
 import Chain from '../types/Chain.js';
 //import Version from '../types/Version.js'
 import Asset from '../types/Asset.js'
 import Trace from '../types/Trace.js'
-import IbcConnection from '../types/IbcConnection.js'
-import IbcChannel from '../types/IbcChannel.js'
+//import IbcConnection from '../types/IbcConnection.js'
+//import IbcChannel from '../types/IbcChannel.js'
 
 export const CosmosChainRegistry = new Map();
 
@@ -107,20 +108,20 @@ export const CosmosChainRegistryTypes = {
 } as const;
 
 const chainRegistry = new RegistryStructureEntry(
-  ChainRegistry,
+  "RegistryRoot",
   "",
   null,
   () => chainRegistryFs.getDirectories(),
-  () => "Cosmos Chain Registry",
+  () => "Cosmos",
   () => null
 );
-CosmosChainRegistry.set(ChainRegistry, chainRegistry);
+CosmosChainRegistry.set("RegistryRoot", chainRegistry);
 
 const chain = new RegistryStructureEntry(
-  Chain,
+  "Chain",
   "",
-  ChainRegistry,
-  (parent: ChainRegistry): Directory[] => {
+  "RegistryRoot",
+  (parent: RegistryObject): Directory[] => {
     const directories: Directory[] = [];
     chainType.getDirectories().forEach(multiChainDirectory => {
       multiChainDirectory.contents.forEach(content => {
@@ -132,53 +133,155 @@ const chain = new RegistryStructureEntry(
   (element: Directory) => element.basename,
   (element: Directory) => element.find(chainFile.name(), File)?.contents
 );
-CosmosChainRegistry.set(Chain, chain);
+CosmosChainRegistry.set("Chain", chain);
+
+const assetOverrideProperties: Map<string, (any: any, args?: any) => any> = new Map;
+assetOverrideProperties.set(
+  "traces",
+  (asset: RegistryObject, args: string[]): RegistryObject[] | undefined => {
+    const traceTypes: string[] = args ? args : Object.values(Trace.Type);
+
+    const lastTrace: RegistryObject | undefined = asset.get("Trace", 0);
+    if (!lastTrace) return undefined;
+    //console.log("lastTrace");
+    //console.log(lastTrace);
+    //console.log("Should be type:");
+    const traceType: string | undefined = lastTrace?.property(Trace.PropertyName.TYPE);
+    //console.log("traceType:");
+    //console.log(traceType);
+    if (!traceType || !traceTypes.includes(traceType)) return undefined;
+
+    //console.log("Requesting previousTraces:");
+    //console.log("to add onto lastTrace:");
+    //console.log(lastTrace);
+    const previousTraces: RegistryObject[] | undefined = lastTrace?.property("assetPointer")?.object?.
+      property(Asset.PropertyName.TRACES, traceTypes);
+    //console.log("previousTraces:");
+    //console.log(previousTraces);
+    return previousTraces ? [...previousTraces, lastTrace] : [lastTrace];
+  }
+);
+
+const assetDerivedProperties: Map<string, (any: any) => any> = new Map;
+assetDerivedProperties.set(
+  "decimals",
+  (asset: RegistryObject): RegistryObject | undefined => {
+    const display = asset.property("display");
+    const denom_units = asset.property("denom_units");
+    if (!display || !denom_units) return undefined;
+
+    for (let i = denom_units.length - 1; i >= 0; --i) {
+      if (denom_units[i].denom === display) {
+        return denom_units[i].exponent;
+      }
+    }
+
+    return undefined;
+  }
+);
+
+const assetArgsProperty: (any: any, propertyName: string, args?: any) => any =
+  (
+    asset: RegistryObject,
+    propertyName: string,
+    args?: string[] | boolean
+  ): any | undefined => {
+
+    const traceTypes: string[] = Object.values(Trace.Type);
+
+    //console.log("Called assetArgsProperty");
+
+    //bypass cache when looking for traces
+    //console.log(traceTypes);
+    //console.log(propertyName);
+    if (propertyName === Asset.PropertyName.TRACES && traceTypes.length) {
+      //console.log("Was this true?");
+      return asset.property(propertyName, traceTypes);
+    }
+
+    //console.log("checking for value");
+    const VALUE = asset.property(propertyName, false); // this is where it's just repeating, calling itself. Want it to call a more basic version
+    //console.log("value is");
+    //console.log(VALUE);
+    if (VALUE) return VALUE;
+    //console.log("did not return value");
+
+    if (!traceTypes.length) return undefined; // Stop if not to inherit, such as when traceTypes = []
+    if (!traceTypes.includes(asset.get("Trace", 0)?.property(Trace.PropertyName.TYPE)!)) return undefined; // Stop inheriting if wrong trace type
+
+    return asset.get("Trace", 0)?.property("assetPointer")?.object?.property(propertyName, traceTypes);
+  };
+
+const assetDefaultArgs = Object.values(Trace.Type);
 
 const asset = new RegistryStructureEntry(
-  Asset,
+  "Asset",
   "",
-  Chain,
+  "Chain",
   //(parent: Chain) => parent.directory()?.find(assetlistFile.name(), File)?.contents.assets,
   //(parent: Chain) => parent.file(assetlistFile.name())?.contents.assets,
-  (parent: Chain): any[] => chainDirectory.getDirectories(parent.pointer.key)[0]?.find(assetlistFile.name(), File)?.contents.assets,
+  (parent: RegistryObject): any[] => chainDirectory.getDirectories(parent.pointer.key as string)[0]?.find(assetlistFile.name(), File)?.contents.assets,
   //(parent: Chain): any => assetlistFile.getDirectories(parent.pointer.key)[0].find(assetlistFile.name(), File)?.contents.assets,
   //Question: Do we want RegistryObject's to have .file and .directory functions for key locations?
   (element: any): string => element.base,
-  (element: any): any => element
+  (element: any): any => element,
+  assetOverrideProperties,
+  assetDerivedProperties,
+  assetArgsProperty,
+  assetDefaultArgs
 );
-CosmosChainRegistry.set(Asset, asset);
+CosmosChainRegistry.set("Asset", asset);
+
+const traceDerivedProperties: Map<string, (any: any) => any> = new Map;
+traceDerivedProperties.set(
+  "assetPointer",
+  (trace: RegistryObject): NewPointer | undefined => {
+    return trace.root.
+      get("Chain", trace.property("counterparty")?.chain_name)?.
+      get("Asset", trace.property("counterparty")?.base_denom)?.
+      pointer;
+    /*return trace.root.pointer.object?.find("Trace", [
+      (tracePtr) => tracePtr.parent?.object?.property("base") === trace.property("counterparty")?.base_denom,
+      (tracePtr) => tracePtr.parent?.parent?.object?.property("chain_name") === trace.property("counterparty")?.chain_name
+    ])?.[0];*/
+  }
+);
 
 const trace = new RegistryStructureEntry(
-  Trace,
+  "Trace",
   -1,
-  Asset,
+  "Asset",
   /*(parent: Asset): any[] => {
     const traces = parent.property("traces")
     if (!traces) return [];
     return [traces[traces.length - 1]];
   },*/
-  (parent: Asset): (Trace | undefined)[] => [parent.lastTrace],
-  (element: any): number => 1,
-  (element: any): any => element
+  (parent: RegistryObject): (RegistryObject | undefined)[] => {
+    const tracesJson: any = parent.property("traces", false);
+    return [tracesJson?.[tracesJson.length - 1]];
+  },
+  (element: any): number => 0,
+  (element: any): any => element,
+  null,
+  traceDerivedProperties
 );
-CosmosChainRegistry.set(Trace, trace);
+CosmosChainRegistry.set("Trace", trace);
 
-class Version extends RegistryObject { }
 const version = new RegistryStructureEntry(
-  Version,
+  "Version",
   "",
-  Chain,
-  (parent: Chain): any[] => chainDirectory.getDirectories(parent.pointer.key)[0]?.find(versionsFile.name(), File)?.contents.versions,
+  "Chain",
+  (parent: RegistryObject): any[] => chainDirectory.getDirectories(parent.pointer.key as string)[0]?.find(versionsFile.name(), File)?.contents.versions,
   (element: any): string => element.name,
   (element: any): any => element
 );
-CosmosChainRegistry.set(Version, version);
+CosmosChainRegistry.set("Version", version);
 
 const ibcConnection = new RegistryStructureEntry(
-  IbcConnection,
+  "IbcConnection",
   "",
-  ChainRegistry,
-  (parent: ChainRegistry): any[] => {
+  "RegistryRoot",
+  (parent: RegistryObject): any[] => {
     const ibcFiles: File[] = [];
     /*networkType.getDirectories().forEach(
       directory => {
@@ -201,21 +304,44 @@ const ibcConnection = new RegistryStructureEntry(
   (element: File): string => element.basename.substring(0, element.basename.lastIndexOf(".")),
   (element: File): any => element.contents
 );
-CosmosChainRegistry.set(IbcConnection, ibcConnection);
+CosmosChainRegistry.set("IbcConnection", ibcConnection);
 
-const ibcChannel = new RegistryStructureEntry(
-  IbcChannel,
+const ibcConnectionParty = new RegistryStructureEntry(
+  "IbcChannelParty",
   -1,
-  IbcConnection,
-  //(parent: IbcConnection): any[] => ibcFile.getFiles(parent.pointer.key)[0]?.contents.channels,
-  (parent: IbcConnection): any[] => parent.property("channels") || [],
+  "IbcChannel",
+  (parent: RegistryObject): any[] =>
+    parent.property("chain_1") && parent.property("chain_2")
+      ? [parent.property("chain_1"), parent.property("chain_2")]
+      : [],
   null,
   (element: any): any => element
 );
-CosmosChainRegistry.set(IbcChannel, ibcChannel);
+CosmosChainRegistry.set("IbcConnectionParty", ibcConnectionParty);
 
-/*import fs from 'fs';
-import path from 'path';*/
+const ibcChannel = new RegistryStructureEntry(
+  "IbcChannel",
+  -1,
+  "IbcConnection",
+  (parent: RegistryObject): any[] => parent.property("channels") || [],
+  null,
+  (element: any): any => element
+);
+CosmosChainRegistry.set("IbcChannel", ibcChannel);
+
+const ibcChannelParty = new RegistryStructureEntry(
+  "IbcChannelParty",
+  -1,
+  "IbcChannel",
+  (parent: RegistryObject): any[] =>
+    parent.property("chain_1") && parent.property("chain_2")
+      ? [parent.property("chain_1"), parent.property("chain_2")]
+      : [],
+  null,
+  (element: any): any => element
+);
+CosmosChainRegistry.set("IbcChannelParty", ibcChannelParty);
+
 
 function isChain(directory: Directory): boolean {
   //if (directory._isChain !== null) return directory._isChain;
@@ -226,106 +352,3 @@ function isChain(directory: Directory): boolean {
   return assetlistFileExists || chainFileExists;
   //return directory._isChain = assetlistFileExists || chainFileExists;
 }
-
-/*function getAssetKeysForChain(chain: Chain): Asset["keyType"][] {
-  return (
-    chain.file(Chain.FileName.ASSETLIST)?.contents?.assets as { base: string }[]
-  )?.map((asset) => asset.base) || [];
-}
-
-function getVersionKeysForChain(chain: Chain): Version["keyType"][] {
-  return (
-    chain.file(Chain.FileName.VERSIONS)?.contents?.versions as { name: string }[]
-  )?.map((version) => version.name) || [];
-}
-
-function getChainKeys(): Chain["keyType"][] {
-  const keys: Chain["keyType"][] = [];
-  const directories = (chainDirectory.parent as FsStructureEntry).getDirectories();
-  directories.forEach((directory) => {
-    directory?.contents.forEach((directoryContent) => {
-      if (directoryContent instanceof Directory && directoryContent.isChain) {
-        keys.push(directoryContent.basename);
-      }
-    });
-  });
-  return keys;
-}*/
-
-/*function getKeys<T extends RegistryObject>(key: RegistryObject["keyType"]): T["keyType"][]{
-  const keys: this.pointer.parent["keyType"][] = [];
-  const directories = (registryStrucutre[typeof T][directory(key)].getDirectories();
-  directories.forEach((directory) => {
-    const files = ;
-    files.forEach(file => {
-      file
-      const jsonObjects = ;
-      jsonObjects.forEach((jsonObject) => {
-        jsonObject
-
-      });
-    });
-    directory?.contents.forEach((directoryContent) => {
-      if (directoryContent instanceof Directory && directoryContent.isChain) {
-        keys.push(directoryContent.basename);
-      }
-    });
-  });
-  return keys;
-}*/
-
-/*function getChainKeys(): Chain["keyType"][] {
-  const keys: Chain["keyType"][] = [];
-  Object.values(this._multiChainDirectories).forEach((multiChainDirectory) => {
-    multiChainDirectory?.contents.forEach((directoryContent) => {
-      if (directoryContent instanceof Directory && directoryContent.isChain) {
-        keys.push(directoryContent.basename);
-      }
-    });
-  });
-  return keys;
-}
-
-function getIbcConnectionKeys(): IbcConnection["keyType"][] {
-  const keys: IbcConnection["keyType"][] = [];
-  Object.values(this._ibcDirectories).forEach((ibcDirectory) => {
-    ibcDirectory?.contents.forEach((directoryContent) => {
-      if (directoryContent instanceof File && directoryContent.basename.endsWith('.json')) {
-        const ibcConnectionKey = directoryContent.basename.replace(".json", "");
-        keys.push(ibcConnectionKey);
-      }
-    });
-  });
-  return keys;
-}*/
-
-/*function getDirectories(fsStructure: any, id: string, key?: string): Directory[] {
-  const entry = fsStructure[id];
-  if (!entry) return [];
-
-  // Root node (no parent)
-  if (!entry.parent) {
-    const rootDirectory = typeof entry.directory === "function"
-      ? entry.directory()
-      : entry.directory;
-
-    return [rootDirectory];
-  }
-
-  const parentDirs = getDirectories(fsStructure, entry.parent);
-  const directories: Directory[] = [];
-
-  for (const parent of parentDirs) {
-    const keys = key ? [key] : entry.types ?? [];
-
-    for (const k of keys) {
-      const dirName = entry.directory?.(k);
-      if (!dirName) continue;
-
-      const found = parent.find(dirName, Directory);
-      if (found) directories.push(found);
-    }
-  }
-
-  return directories;
-}*/

@@ -1,9 +1,9 @@
-import ChainRegistry from './ChainRegistry.js';
+//import ChainRegistry from './ChainRegistry.js';
 import RegistryObject from './RegistryObject.js';
 import NewPointer from './NewPointer.js';
-import Chain from './Chain.js';
+//import Chain from './Chain.js';
 
-class Version extends RegistryObject {
+/*class Version extends RegistryObject {
 
 
   public keyType: string = "";
@@ -20,4 +20,4 @@ class Version extends RegistryObject {
 
 }
 
-export default Version;
+export default Version;*/

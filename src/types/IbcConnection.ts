@@ -6,16 +6,16 @@ import File from './File.js';
 
 import NewPointer from './NewPointer.js';
 
-import IbcConnectionParty from './IbcConnectionParty.js';
+//import IbcConnectionParty from './IbcConnectionParty.js';
 //import IbcConnectionPartyPointer from './IbcConnectionPartyPointer.js';
 
-import IbcChannel from './IbcChannel.js';
+//import IbcChannel from './IbcChannel.js';
 //import IbcChannelPointer from './IbcChannelPointer.js';
 
-import ChainRegistry from './ChainRegistry.js';
+//import ChainRegistry from './ChainRegistry.js';
 //import ChainRegistryPointer from './ChainRegistryPointer.js';
 
-export type IbcConnectionKeyType = string;
+/*export type IbcConnectionKeyType = string;
 
 class IbcConnection extends RegistryObject {
 
@@ -36,8 +36,8 @@ class IbcConnection extends RegistryObject {
 
   private _file: File | undefined | null;
 
-  /*public get pointer(): IbcConnectionPointer { return this._pointer; }
-  public get key(): string { return this._key; }*/
+  *//*public get pointer(): IbcConnectionPointer { return this._pointer; }
+  public get key(): string { return this._key; }*//*
 
   //private get file(): File | null { return this._file; }
 
@@ -69,7 +69,7 @@ class IbcConnection extends RegistryObject {
   public channel(channelKey: number = 0): IbcChannel | undefined {
     return this.channelArray[channelKey];
   }
-  /*public channel(
+  *//*public channel(
     chain_1: Record<string, any> = { "port_id": "transfer" },
     chain_2: Record<string, any> = { "port_id": "transfer" },
     status: string = "live"
@@ -90,7 +90,7 @@ class IbcConnection extends RegistryObject {
     });
 
     return matches?.length === 1 ? matches[0] : undefined;
-  }*/
+  }*//*
 
   public channels(conditions?: Array<(item: IbcChannel) => boolean>): IbcChannel[] {
     if (!this.channelArray) return [];
@@ -106,14 +106,14 @@ class IbcConnection extends RegistryObject {
     //if (!ibcFile?.contents?.[IbcConnection.PropertyName.CHANNELS]) return;
 
     //Uncomment the next 4 lines!!!
-    /*const channels = ibcFile?.contents?.[IbcConnection.PropertyName.CHANNELS];
+    *//*const channels = ibcFile?.contents?.[IbcConnection.PropertyName.CHANNELS];
     for (let i = 0; i < channels?.length; ++i) {
       this._channelArray!.push(new IbcChannel(this.pointer, i, channels[i]));
-    }*/
+    }*//*
 
-    /*ibcFile.contents[IbcConnection.PropertyName.CHANNELS].forEach((channel: Record<string, any>) => {
+    *//*ibcFile.contents[IbcConnection.PropertyName.CHANNELS].forEach((channel: Record<string, any>) => {
       this._channelArray!.push(new IbcChannel(this.pointer as IbcConnectionPointer, 0, channel)); //FIX THIS!!!
-    });*/
+    });*//*
   }
   //--
 
@@ -130,13 +130,13 @@ class IbcConnection extends RegistryObject {
   //--
 
   //--Key Files and Directories--
-  /*public file(name?: string): File | undefined {
+  *//*public file(name?: string): File | undefined {
     if (this._file === null) {
       this._file = (this.pointer.parent.object as ChainRegistry)?.findIbcConnectionFile(this.pointer.key + ".json");
     }
     if (!this._file) return undefined;
     return this._file;
-  }*/
+  }*//*
   //--
 
   //--Derived Properties--
@@ -160,9 +160,9 @@ class IbcConnection extends RegistryObject {
     if (propertyName === this.DerivedPropertyName.IBC_CONNECTION_PARTY_2) {
       return this._derivedProperties[propertyName] = this.ibcConnectionParty(2);
     }
-    /*if (propertyName === this.DerivedPropertyName.IBC_CONNECTION_PARTIES) {
+    *//*if (propertyName === this.DerivedPropertyName.IBC_CONNECTION_PARTIES) {
       return this._derivedProperties[propertyName] = this.ibcConnectionParties();
-    }*/
+    }*//*
 
     //Add checks for additional derived properties here...
 
@@ -170,7 +170,7 @@ class IbcConnection extends RegistryObject {
   //--
 
   //--Ibc Connection Parties--
-  /*private _ibcConnectionParty1: IbcConnectionParty | undefined | null = null;
+  *//*private _ibcConnectionParty1: IbcConnectionParty | undefined | null = null;
   private get ibcConnectionParty1(): IbcConnectionParty | undefined {
     if (this._ibcConnectionParty1 !== null) return this._ibcConnectionParty1;
 
@@ -178,7 +178,7 @@ class IbcConnection extends RegistryObject {
     if (!chain_1) return this._ibcConnectionParty1 = undefined;
 
     return new IbcConnectionParty(this.pointer, 1, chain_1);
-  }*/
+  }*//*
   
   private _IbcConnectionPartyMap: Map<number, IbcConnectionParty> | null = null;
 
@@ -209,13 +209,13 @@ class IbcConnection extends RegistryObject {
     return this.IbcConnectionPartyMap?.get(key);
   }
 
-  /*public get(objectType: typeof IbcConnectionParty, key: number) {
+  *//*public get(objectType: typeof IbcConnectionParty, key: number) {
     let ibcConnectionParty = this.IbcConnectionPartyMap?.get(key);
     return ibcConnectionParty;
-  }*/
+  }*//*
 
 
-  /*public override get<T extends RegistryObject>(
+  *//*public override get<T extends RegistryObject>(
     objectType: new (...args: any[]) => RegistryObject,
     key: RegistryObject["keyType"]
   ): T | undefined {
@@ -224,7 +224,7 @@ class IbcConnection extends RegistryObject {
     }
 
     return super.get(objectType, key) as T;
-  }*/
+  }*//*
 
   public override getKeys<T extends RegistryObject>(
     objectType: new (...args: any[]) => RegistryObject
@@ -240,21 +240,21 @@ class IbcConnection extends RegistryObject {
     else return [];
   }
 
-  /*public override getSize<T extends RegistryObject>(
+  *//*public override getSize<T extends RegistryObject>(
     objectType: new (...args: any[]) => RegistryObject
   ): T["keyType"] {
     if (objectType === IbcChannel) return this.property(IbcConnection.PropertyName.CHANNELS).length;
     else return -1;
-  }*/
+  }*//*
 
-  /*public get(
+  *//*public get(
     objectType: (new (...args: any[]) => RegistryObject),
     key: RegistryObject["keyType"]
   ): RegistryObject | undefined {
     if (objectType === IbcConnection) {
       return this.IbcConnectionPartyMap?.get(key);
     }
-  }*/
+  }*//*
 
   public ibcConnectionParties(
     conditions?: Array<(item: NewPointer<IbcConnectionParty>) => boolean>
@@ -266,7 +266,7 @@ class IbcConnection extends RegistryObject {
 
     return RegistryObject.objects<NewPointer<IbcConnectionParty>>(array, conditions);
   }
-  /* f(x) call example:
+  *//* f(x) call example:
    * 
    * where ibcConnectionPartyPointer is formatted like:
    * `{ibcConnectionKey: cosmoshub-osmosis, ibcConnectionPartyKey: chain_1}`
@@ -286,7 +286,7 @@ class IbcConnection extends RegistryObject {
    *     ibcConnectionParty.counterparty. property("connection_id") === "connection-18"
    *   )
    * };
-   */
+   *//*
 
   //--
 
@@ -297,4 +297,4 @@ class IbcConnection extends RegistryObject {
   //--
 }
 
-export default IbcConnection;
+export default IbcConnection;*/

@@ -1,23 +1,23 @@
 import RegistryObject from "./RegistryObject";
-import FsStructureEntry from './FsStructureEntry.js';
-
 
 class RegistryStructureEntry<
-  T extends RegistryObject, // RegistryObject type
-  P extends RegistryObject, // Parent RegistryObject type
   K = string | number, // Key type
   E = any // Element type being iterated over
   > {
   constructor(
-    public type: new (...args: any[]) => T, 
+    public type: string,
     public keyPrototype: K,
-    public parentType: (new (...args: any[]) => P) | null,
-    public elementsArray: (parent: P) => E[],
+    public parentType: string | null,
+    public elementsArray: (parent: RegistryObject) => E[],
     public extractKey: ((element: E) => K) | null,
-    public extractJson: (element: E) => any
+    public extractJson: (element: E) => any,
+    public overrideProperties?: Map<string, ((element: E, arg?: any) => any)> | null,
+    public derivedProperties?: Map<string, ((element: E, arg?: any) => any)> | null,
+    public argsProperty?: (element: E, propertyName: string, args?: any) => any | null,
+    public defaultArgs?: any | null
   ) { }
 
-  public getKeys(parent: P): K[] {
+  public getKeys(parent: RegistryObject): K[] {
 
     if (this.extractKey === null) return [];
     const elements: E[] = this.elementsArray(parent);
@@ -27,30 +27,14 @@ class RegistryStructureEntry<
 
   }
 
-  public getSize(parent: P): number {
+  public getSize(parent: RegistryObject): number {
     return this.elementsArray(parent).length;
   }
 
-  /*public fetchJsonProperties(parent: P, key: K): any | undefined {
-    if (K typeof number && getKeys(parent) typeof number && K < getKeys(parent)) return this.extractJson(this.elementsArray(parent)[i]);
-    const element = this.elementsArray(parent).find(el => this.getKey(el) === key);
-    return element ? this.extractJson(element) : undefined;
-  }*/
-
-  public fetchJsonProperties(parent: P, key: K): any | undefined {
-    /*console.log("trying to fetch!");
-    console.log("fetchJsonProperties() Parent:");
-    console.log(parent);
-    console.log("fetchJsonProperties() Key:");
-    console.log(key);
-    console.log("typeof key")
-    console.log(typeof key);*/
+  public fetchJsonProperties(parent: RegistryObject, key: K): any | undefined {
     const elements = this.elementsArray(parent);
-    //console.log(elements?.length);
-    
     if (!elements) return undefined;
     if (typeof key === "number") {
-      //console.log("found a number key!");
       if (key >= 0 && key < elements.length) {
         return this.extractJson(elements[key]);
       } else {
