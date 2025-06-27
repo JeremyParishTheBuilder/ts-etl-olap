@@ -1,13 +1,6 @@
 //import ChainRegistry from '../types/ChainRegistry.js';
 import RegistryObject from '../types/RegistryObject.js';
 import RegistryRoot from '../types/RegistryRoot.js';
-import { arrayToJson } from '../types/RegistryObject.js';
-//import IbcChannel from '../types/IbcChannel.js';
-//import IbcConnection from '../types/IbcConnection.js';
-//import IbcChannelParty from '../types/IbcChannelParty.js';
-import Chain from '../types/Chain.js';
-import Asset from '../types/Asset.js';
-//import Version from '../types/Version.js';
 import NewPointer from '../types/NewPointer.js';
 import { CosmosChainRegistry, CosmosChainRegistryTypes } from '../registries/CosmosChainRegistry.js';
 import MultiRegistryRoot from '../types/MultiRegistryRoot.js';
@@ -17,14 +10,14 @@ export const getChainRegContents = () => {
   console.log("starting chain reg");
   const chain_reg = new RegistryRoot(CosmosChainRegistry, "Cosmos");
   console.log("started");
-  console.log(chain_reg);
-  console.log(chain_reg.pointer);
+  //console.log(chain_reg);
+  //console.log(chain_reg.pointer);
   console.log("here is the chain_reg");
   const obj = chain_reg.pointer?.parent?.object as MultiRegistryRoot;
   console.log("here's obj");
-  console.log(obj);
+  //console.log(obj);
   console.log("and now");
-  console.log(obj?.get("RegistryRoot", "Cosmos"));
+  //console.log(obj?.get("RegistryRoot", "Cosmos"));
   //console.log(chain_reg);
   console.log("there was the chain_reg");
  
@@ -59,7 +52,6 @@ export const getChainRegContents = () => {
 
     console.log(chain_reg.get("Chain", "cosmoshub")?.get("Asset", "uatom")?.property("description"));
 
-    console.log(Asset.PropertyName.TRACES);
     console.log("Last Trace:");
     console.log(chain_reg.get("Chain", "osmosis")?.
       get("Asset", "ibc/F6B691D5F7126579DDC87357B09D653B47FDCE0A3383FF33C8D8B544FE29A8A6")?.
@@ -68,9 +60,9 @@ export const getChainRegContents = () => {
     console.log("Traces:");
     const traces = chain_reg.get("Chain", "osmosis")?.
       get("Asset", "ibc/F6B691D5F7126579DDC87357B09D653B47FDCE0A3383FF33C8D8B544FE29A8A6")?.
-      property(Asset.PropertyName.TRACES);
+      property("traces");
     console.log("Traces:");
-    console.log(traces); // this causes a problem--infinite loop, but why?
+    console.log(traces);
     console.log(traces[0].property("counterparty"));
 
 
@@ -78,7 +70,7 @@ export const getChainRegContents = () => {
     console.log(chain_reg.
       get("Chain", "cosmoshub")?.
       get("Asset", "uatom")?.
-      property(Asset.DerivedPropertyName.DECIMALS)
+      property("decimals")
     );
 
 
@@ -88,7 +80,7 @@ export const getChainRegContents = () => {
     console.log(chain_reg.
       get("Chain", "osmosis")?.
       get("Asset", "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2")?.
-      property(Asset.PropertyName.EXTENDED_DESCRIPTION)
+      property("extended_description")
     );
     console.log("reference osmosis' ATOM, but inheriting the ext_desc");
 
@@ -97,7 +89,7 @@ export const getChainRegContents = () => {
     console.log(chain_reg.
       get("Chain", "osmosis")?.
       get("Asset", "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2")?.
-      property(Asset.PropertyName.EXTENDED_DESCRIPTION, false)
+      property("extended_description", false)
     );
     console.log("reference osmosis' ATOM, without inheriting--should be undefined");
 
@@ -119,12 +111,12 @@ export const getChainRegContents = () => {
     );
     console.log("That was the JSON");
 
-    const multiTrace = chain_reg.
+    /*const multiTrace = chain_reg.
       get("Chain", "osmosis")?.
       get("Asset", "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858")?.
-      property(Asset.PropertyName.TRACES);
+      property("traces");
     console.log("multiTrace:");
-    console.log(multiTrace);
+    console.log(multiTrace);*/
 
 
 
@@ -213,15 +205,6 @@ export const getChainRegContents = () => {
     });*/
 
 
-    //Uncomment this when ready
-    //console.log("IBC Connection");
-    //const connection = chain_reg.get("IbcConnection", "juno-osmosis");
-    //console.log(connection);
-    //console.log(connection?.property("chain_1"));
-    //console.log("IBC Channel");
-    //const channel = connection?.get("IbcChannel", 1);
-    //console.log(channel);
-    //console.log(channel?.property("chain_1"));
     const property = chain_reg.
       get("IbcConnection", "juno-osmosis")?.
       get("IbcChannel", 1)?.
@@ -247,8 +230,8 @@ export const getChainRegContents = () => {
     }
     const filteredChannels4: NewPointer[] = chain_reg.find("IbcChannel", [filter4]);
     filteredChannels4?.forEach((ptr) => {
-      console.log(ptr.parent?.object?.property("chain_1"));
-      console.log(ptr.parent?.object?.property("chain_2"));
+      //console.log(ptr.parent?.object?.property("chain_1"));
+      //console.log(ptr.parent?.object?.property("chain_2"));
       console.log(ptr.object?.get("IbcChannelParty", 0)?.property("channel_id"));
       console.log(ptr.object?.get("IbcChannelParty", 1)?.property("channel_id"));
     });

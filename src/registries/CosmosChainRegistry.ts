@@ -92,13 +92,6 @@ chainDirectory.add(versionsFile); //adds versionsFile to chainDirectory::files a
 
 import RegistryObject from '../types/RegistryObject.js';
 import RegistryStructureEntry from '../types/RegistryStructureEntry.js';
-//import ChainRegistry from '../types/ChainRegistry.js';
-import Chain from '../types/Chain.js';
-//import Version from '../types/Version.js'
-import Asset from '../types/Asset.js'
-import Trace from '../types/Trace.js'
-//import IbcConnection from '../types/IbcConnection.js'
-//import IbcChannel from '../types/IbcChannel.js'
 
 export const CosmosChainRegistry = new Map();
 
@@ -135,29 +128,30 @@ const chain = new RegistryStructureEntry(
 );
 CosmosChainRegistry.set("Chain", chain);
 
+const traceTypesList = {
+  IBC: "ibc",
+  IBC_CW20: "ibc-cw20",
+  IBC_BRIDGE: "ibc-bridge",
+  BRIDGE: "bridge",
+  WRAPPED: "wrapped",
+  LIQUID_STAKE: "liquid-stake",
+  SYNTHETIC: "synthetic",
+  ADDITIONAL_MINTAGE: "additional-mintage",
+  TEST_MINTAGE: "test-mintage",
+  LEGACY_MINTAGE: "legacy-mintage"
+} as const;
+
 const assetOverrideProperties: Map<string, (any: any, args?: any) => any> = new Map;
 assetOverrideProperties.set(
   "traces",
   (asset: RegistryObject, args: string[]): RegistryObject[] | undefined => {
-    const traceTypes: string[] = args ? args : Object.values(Trace.Type);
-
+    const traceTypes: string[] = args ? args : Object.values(traceTypesList);
     const lastTrace: RegistryObject | undefined = asset.get("Trace", 0);
     if (!lastTrace) return undefined;
-    //console.log("lastTrace");
-    //console.log(lastTrace);
-    //console.log("Should be type:");
-    const traceType: string | undefined = lastTrace?.property(Trace.PropertyName.TYPE);
-    //console.log("traceType:");
-    //console.log(traceType);
+    const traceType: string | undefined = lastTrace?.property("type");
     if (!traceType || !traceTypes.includes(traceType)) return undefined;
-
-    //console.log("Requesting previousTraces:");
-    //console.log("to add onto lastTrace:");
-    //console.log(lastTrace);
     const previousTraces: RegistryObject[] | undefined = lastTrace?.property("assetPointer")?.object?.
-      property(Asset.PropertyName.TRACES, traceTypes);
-    //console.log("previousTraces:");
-    //console.log(previousTraces);
+      property("traces", traceTypes);
     return previousTraces ? [...previousTraces, lastTrace] : [lastTrace];
   }
 );
@@ -187,42 +181,28 @@ const assetArgsProperty: (any: any, propertyName: string, args?: any) => any =
     args?: string[] | boolean
   ): any | undefined => {
 
-    const traceTypes: string[] = Object.values(Trace.Type);
+    const traceTypes: string[] = Object.values(traceTypesList);
 
-    //console.log("Called assetArgsProperty");
-
-    //bypass cache when looking for traces
-    //console.log(traceTypes);
-    //console.log(propertyName);
-    if (propertyName === Asset.PropertyName.TRACES && traceTypes.length) {
-      //console.log("Was this true?");
+    if (propertyName === "traces" && traceTypes.length) {
       return asset.property(propertyName, traceTypes);
     }
-
-    //console.log("checking for value");
-    const VALUE = asset.property(propertyName, false); // this is where it's just repeating, calling itself. Want it to call a more basic version
-    //console.log("value is");
-    //console.log(VALUE);
+    const VALUE = asset.property(propertyName, false);
     if (VALUE) return VALUE;
-    //console.log("did not return value");
 
-    if (!traceTypes.length) return undefined; // Stop if not to inherit, such as when traceTypes = []
-    if (!traceTypes.includes(asset.get("Trace", 0)?.property(Trace.PropertyName.TYPE)!)) return undefined; // Stop inheriting if wrong trace type
+    if (!traceTypes.length) return undefined;
+    if (!traceTypes.includes(asset.get("Trace", 0)?.property("type")!)) return undefined;
 
     return asset.get("Trace", 0)?.property("assetPointer")?.object?.property(propertyName, traceTypes);
   };
 
-const assetDefaultArgs = Object.values(Trace.Type);
+const assetDefaultArgs = Object.values(traceTypesList);
 
 const asset = new RegistryStructureEntry(
   "Asset",
   "",
   "Chain",
-  //(parent: Chain) => parent.directory()?.find(assetlistFile.name(), File)?.contents.assets,
-  //(parent: Chain) => parent.file(assetlistFile.name())?.contents.assets,
-  (parent: RegistryObject): any[] => chainDirectory.getDirectories(parent.pointer.key as string)[0]?.find(assetlistFile.name(), File)?.contents.assets,
-  //(parent: Chain): any => assetlistFile.getDirectories(parent.pointer.key)[0].find(assetlistFile.name(), File)?.contents.assets,
-  //Question: Do we want RegistryObject's to have .file and .directory functions for key locations?
+  (parent: RegistryObject): any[] =>
+    chainDirectory.getDirectories(parent.pointer.key as string)[0]?.find(assetlistFile.name(), File)?.contents.assets,
   (element: any): string => element.base,
   (element: any): any => element,
   assetOverrideProperties,
@@ -240,10 +220,6 @@ traceDerivedProperties.set(
       get("Chain", trace.property("counterparty")?.chain_name)?.
       get("Asset", trace.property("counterparty")?.base_denom)?.
       pointer;
-    /*return trace.root.pointer.object?.find("Trace", [
-      (tracePtr) => tracePtr.parent?.object?.property("base") === trace.property("counterparty")?.base_denom,
-      (tracePtr) => tracePtr.parent?.parent?.object?.property("chain_name") === trace.property("counterparty")?.chain_name
-    ])?.[0];*/
   }
 );
 
@@ -251,11 +227,6 @@ const trace = new RegistryStructureEntry(
   "Trace",
   -1,
   "Asset",
-  /*(parent: Asset): any[] => {
-    const traces = parent.property("traces")
-    if (!traces) return [];
-    return [traces[traces.length - 1]];
-  },*/
   (parent: RegistryObject): (RegistryObject | undefined)[] => {
     const tracesJson: any = parent.property("traces", false);
     return [tracesJson?.[tracesJson.length - 1]];
@@ -283,15 +254,6 @@ const ibcConnection = new RegistryStructureEntry(
   "RegistryRoot",
   (parent: RegistryObject): any[] => {
     const ibcFiles: File[] = [];
-    /*networkType.getDirectories().forEach(
-      directory => {
-        const ibcDir: Directory | undefined = directory.find(ibcDirectory.name(), Directory);
-        ibcDir?.contents.forEach(ibcDirContent => {
-          if (ibcDirContent instanceof File && ibcDirContent.basename.includes(".json")) {
-            ibcFiles.push(ibcDirContent);
-          }
-        });
-      });*/
     ibcDirectory.getDirectories().forEach(ibcDir => {
       ibcDir.contents.forEach(content => {
         if (content instanceof File && content.basename.includes(".json")) {
@@ -344,11 +306,7 @@ CosmosChainRegistry.set("IbcChannelParty", ibcChannelParty);
 
 
 function isChain(directory: Directory): boolean {
-  //if (directory._isChain !== null) return directory._isChain;
-  //const assetlistFileExists = fs.existsSync(path.join(directory.fullPath, Chain.FileName.ASSETLIST));
-  const assetlistFileExists = directory.find(Chain.FileName.ASSETLIST, File) ? true : false;
-  //const chainFileExists = fs.existsSync(path.join(directory.fullPath, Chain.FileName.CHAIN
-  const chainFileExists = directory.find(Chain.FileName.CHAIN, File) ? true : false;
+  const assetlistFileExists = directory.find(assetlistFile.name(), File) ? true : false;
+  const chainFileExists = directory.find(chainFile.name(), File) ? true : false;
   return assetlistFileExists || chainFileExists;
-  //return directory._isChain = assetlistFileExists || chainFileExists;
 }

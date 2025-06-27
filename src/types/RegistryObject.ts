@@ -1,4 +1,3 @@
-//import Pointer from './Pointer.js';
 import NewPointer from './NewPointer.js';
 import Container from './Container.js';
 import RegistryStructureEntry from './RegistryStructureEntry.js';
@@ -86,40 +85,9 @@ class RegistryObject {
     return undefined;
   }
 
-  //--JSON Properties--
   protected _jsonProperties: Record<string, any> | null = null;
-
-  /*protected fetchJsonProperties(): Record<string, any> | null {
-    return null; // Default to passed in param/null; subclasses should provide actual implementation
-  }*/
-  //--
-
-
-  //--Derived Properties--
   protected _derivedProperties: Record<string, any> | null = null;
-
-  /*public static readonly DerivedPropertyName = {}
-  public get DerivedPropertyName() {
-    return RegistryObject.DerivedPropertyName
-  }
-
-  protected derivedProperty<T = any>(propertyName: string): T | undefined {
-    return undefined;
-  }*/
-  //--
-
-  //--Override Properties--
   protected _overrideProperties: Record<string, any> | null = null;
-
-  /*public static readonly OverridePropertyName = {}
-  public get OverridePropertyName() {
-    return RegistryObject.OverridePropertyName
-  }
-
-  protected overrideProperties<T = any>(propertyName: string): T | undefined {
-    return undefined;
-  }*/
-  //--
 
   public toJSON(): any {
     if (this._jsonProperties === null) this.loadProperties();
@@ -130,9 +98,6 @@ class RegistryObject {
     console.log(this.toJSON());
   }
 
-  /*public keyType(objectType: string): void {
-    //return this.getEntry(objectType).keyPrototype;
-  }*/
 
   protected _containers: Map<string, Container> = new Map();
 

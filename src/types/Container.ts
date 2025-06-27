@@ -3,20 +3,9 @@ import NewPointer from './NewPointer.js';
 
 class Container {
 
-  //public readonly _objectType: string;
-  //private _keyType: string | number;
   private _container: Map<string, RegistryObject | null> | Array<RegistryObject | null>;
 
   constructor(objectType: string, key: string | number) {
-    //this._objectType = objectType;
-    //const tempInstance = new RegistryObject(null as any, null as any);
-    //this._keyType = tempInstance.getKeyType(objectType);
-    //this._keyType = keyType;
-    /*console.log("Creating Container");
-    console.log("objectType:");
-    console.log(objectType);
-    console.log("key");
-    console.log(key);*/
     if (typeof key === "string") {
       this._container = new Map();
     } else if (typeof key === "number") {
@@ -24,7 +13,6 @@ class Container {
     } else {
       throw new Error(`"Unsupported key type: ${typeof key} for objectType: ${objectType}"`);
     }
-    //console.log("Done!");
   }
 
   public get(key: string | number): RegistryObject | null | undefined {

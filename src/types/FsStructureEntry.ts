@@ -39,12 +39,6 @@ class FsStructureEntry {
       return dirNames
         .map(dirName => parent.find(dirName, Directory))
         .filter((found): found is Directory => found instanceof Directory);
-      /*const keys = key ? [key] : this._types ?? []; //what if there's no key or types, but just one possible value?
-      return keys
-        .map(k => this._name?.(k))
-        .filter((dirName): dirName is string => !!dirName)
-        .map(dirName => parent.find(dirName, Directory))
-        .filter((found): found is Directory => found instanceof Directory);*/
     });
   }
 
@@ -71,25 +65,14 @@ class FsStructureEntry {
   }
 
   public getFiles(key?: string): File[] {
-    //console.log("calling get files");
-    //console.log(`Key: ${key}`);
     if (this._parent instanceof Directory) return [];
-    //console.log("parent was not Directory");
     const parentDirs: Directory[] = this._parent.getDirectories();
-    //console.log("what is this._parent?");
-    //console.log(this._parent);
-    //console.log("what is parentDirs?");
-    //console.log(parentDirs);
 
     return parentDirs.flatMap((parent) => {
       const keys = key ? [key] : this._types;
-      //console.log("keys");
-      //console.log(keys);
       const fileNames = keys
         ? keys.map(k => this._name?.(k)).filter((n): n is string => !!n)
         : [this._name?.()].filter((n): n is string => !!n);
-      //console.log("fileNames");
-      //console.log(fileNames);
 
       return fileNames
         .map(fileNames => parent.find(fileNames, File))
@@ -100,45 +83,3 @@ class FsStructureEntry {
 }
 
 export default FsStructureEntry;
-
-
-/*public getDirectories(key ?: string): Directory[] {
-  //console.log("getting Directories");
-  //if (this._parent instanceof Directory) return [this._parent];
-  if (this._parent instanceof Directory) {
-    *//*console.log("it is the root");
-    console.log(this._parent);*//*
-    return [this._parent];
-  }
-  //console.log("not root");
-
-  //console.log("parent should be an entry");
-  //console.log(this._parent);
-  const parentDirs: Directory[] = this._parent.getDirectories();
-  //console.log("parentDirs");
-  //parentDirs.forEach(dir => console.log(dir.basename));
-  //console.log(parentDirs);
-  //console.log("why are there no parent dirs?");
-  //const directories: Directory[] = [];
-
-  return parentDirs.flatMap((parent) => {
-    const keys = key ? [key] : this._types ?? [];
-    return keys
-      .map(k => this._name?.(k))
-      .filter((dirName): dirName is string => !!dirName)
-      .map(dirName => parent.find(dirName, Directory))
-      .filter((found): found is Directory => found instanceof Directory);
-  });
-
-  *//*for (const parent of parentDirs) {
-    const keys = key ? [key] : this.types ?? [];
-    for (const k of keys) {
-      const dirName = this.directory?.(k);
-      if (!dirName) continue;
-
-      const found = parent.find(dirName, Directory);
-      if (found) directories.push(found);
-    }
-  }
-  return directories;*//*
-}*/
