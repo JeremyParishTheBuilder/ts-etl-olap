@@ -1,5 +1,5 @@
 import RegistryObject from './RegistryObject.js';
-import NewPointer from './NewPointer.js';
+import Pointer from './Pointer.js';
 
 class Container {
 
@@ -67,7 +67,7 @@ class Container {
     }
   }
 
-  public pointers(): Array<NewPointer> {
+  public pointers(): Array<Pointer> {
     return this.values()
       .filter((obj): obj is RegistryObject => obj !== null)
       .map(obj => obj.pointer);

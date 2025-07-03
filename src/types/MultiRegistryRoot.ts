@@ -1,4 +1,4 @@
-import NewPointer from './NewPointer.js';
+import Pointer from './Pointer.js';
 import RegistryObject from './RegistryObject.js';
 import Container from './Container.js';
 
@@ -14,7 +14,7 @@ class MultiRegistryRoot extends RegistryObject {
   }
 
   private constructor() {
-    super(new NewPointer(null, -1, ""));
+    super(new Pointer(null, -1, ""));
   }
 
 

@@ -1,5 +1,5 @@
 import CONFIG from '../config.js';
-import NewPointer from './NewPointer.js';
+import Pointer from './Pointer.js';
 import RegistryObject from './RegistryObject.js';
 import MultiRegistryRoot from '../types/MultiRegistryRoot.js';
 import RegistryStructureEntry from './RegistryStructureEntry.js';
@@ -14,7 +14,7 @@ class RegistryRoot extends RegistryObject {
     protected readonly key: string
   ) {
     const instance = MultiRegistryRoot.getInstance();
-    super(new NewPointer(instance.pointer, key, "RegistryRoot"));
+    super(new Pointer(instance.pointer, key, "RegistryRoot"));
     instance.set("RegistryRoot", key, this);
   }
 

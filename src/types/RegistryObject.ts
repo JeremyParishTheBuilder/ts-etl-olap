@@ -1,14 +1,14 @@
-import NewPointer from './NewPointer.js';
+import Pointer from './Pointer.js';
 import Container from './Container.js';
 import RegistryStructureEntry from './RegistryStructureEntry.js';
 
 class RegistryObject {
 
-  protected _pointer: NewPointer;
-  public get pointer(): NewPointer { return this._pointer; }
+  protected _pointer: Pointer;
+  public get pointer(): Pointer { return this._pointer; }
 
   constructor(
-    pointer: NewPointer,
+    pointer: Pointer,
     json: Record<string, any> | null = null
   ) {
     this._pointer = pointer;
@@ -131,7 +131,7 @@ class RegistryObject {
     let object: RegistryObject | null | undefined = container.get(key);
     if (object === undefined) return undefined; // Base denom doesn't exist
     if (object === null) { // Base denom does exist, but no object has been created
-      container.set(key, new RegistryObject(new NewPointer(this.pointer, key, objectType))); // Lazy-load asset
+      container.set(key, new RegistryObject(new Pointer(this.pointer, key, objectType))); // Lazy-load asset
     }
     return container.get(key) ?? undefined;
   }
@@ -140,13 +140,13 @@ class RegistryObject {
    * pointers() returns the pointers for all objects of a given objectType
    * contianed direct within this object (e.g., all assets within this chain)
    */
-  public pointers(objectType: string): NewPointer[] {
+  public pointers(objectType: string): Pointer[] {
     const container = this.container(objectType);
     if (!container) return [];
     if (container.values().includes(null)) {
       const keys = container.keys();
       keys.forEach(key => {
-        container.set(key, new RegistryObject(new NewPointer(this.pointer, key, objectType)));
+        container.set(key, new RegistryObject(new Pointer(this.pointer, key, objectType)));
       });
     }
     return container.pointers();
@@ -154,12 +154,12 @@ class RegistryObject {
 
   public find(
     objectType: string,
-    conditions?: Array<(pointer: NewPointer) => boolean>
+    conditions?: Array<(pointer: Pointer) => boolean>
     //all pointers need to be at the same level (can't have an asset pointer plus a chain pointer type)
-  ): NewPointer[] {
+  ): Pointer[] {
     const entry: RegistryStructureEntry = this.root.getEntry(objectType);
     if (entry.parentType === null) return [];
-    let array: NewPointer[] = [];
+    let array: Pointer[] = [];
     if (entry.parentType !== this.pointer.objectType) {
       const parentArray = this.find(entry.parentType);
       parentArray.forEach((parent) => {

@@ -1,7 +1,7 @@
 //import ChainRegistry from '../types/ChainRegistry.js';
 import RegistryObject from '../types/RegistryObject.js';
 import RegistryRoot from '../types/RegistryRoot.js';
-import NewPointer from '../types/NewPointer.js';
+import Pointer from '../types/Pointer.js';
 import { CosmosChainRegistry } from '../registries/CosmosChainRegistry.js';
 import MultiRegistryRoot from '../types/MultiRegistryRoot.js';
 
@@ -128,24 +128,24 @@ export const getChainRegContents = () => {
 
 
 
-    /*const filter2 = (chainPtr: NewPointer) => chain_reg.get("Chain", chainPtr.key)
+    /*const filter2 = (chainPtr: Pointer) => chain_reg.get("Chain", chainPtr.key)
       ?.property(Chain.PropertyName.BECH32_PREFIX) === "osmo";
     chain_reg.find("Chain", [filter2])?.forEach((chainPtr) => {
       console.log(chainPtr);
     });*/
 
-    const filter25 = (chainPointer: NewPointer) => chainPointer.object
+    const filter25 = (chainPointer: Pointer) => chainPointer.object
       ?.property("bech32_prefix") === "osmo";
 
-    const results25: NewPointer[] = chain_reg.find("Chain", [filter25]);
-    results25.forEach((chainPointer: NewPointer) => {
+    const results25: Pointer[] = chain_reg.find("Chain", [filter25]);
+    results25.forEach((chainPointer: Pointer) => {
       console.log(chainPointer.key);
     });
 
     console.log("Done");
 
-    /*const results26: NewPointer[] = chain_reg.find("Chain");
-    results26.forEach((chainPointer: NewPointer) => {
+    /*const results26: Pointer[] = chain_reg.find("Chain");
+    results26.forEach((chainPointer: Pointer) => {
       console.log(chainPointer.key);
     });
 
@@ -155,14 +155,14 @@ export const getChainRegContents = () => {
 
 
     //const filter3 = (asset: AssetPointer) => chain_reg.asset(asset)?.property("symbol") === "OSMO";
-    const filter3 = (assetPointer: NewPointer) =>
+    const filter3 = (assetPointer: Pointer) =>
       assetPointer.object?.property("symbol") === "OSMO";
     //console.log(chain_reg.chain("kopi"));
     //console.log(chain_reg.chain("kopi")?.assets());
     //console.log(chain_reg.chain("kopi")?.assets([filter3]));
 
     //const filteredAssets: any[] = chain_reg.assets([filter3]);
-    const filteredAssets: NewPointer[] = chain_reg.find("Asset", [filter3]);
+    const filteredAssets: Pointer[] = chain_reg.find("Asset", [filter3]);
     //console.log(filteredAssets);
 
     filteredAssets?.forEach((assetPtr) => {
@@ -192,7 +192,7 @@ export const getChainRegContents = () => {
 
 
     console.log("IBC Channels:");
-    const filter4 = (ptr: NewPointer) => {
+    const filter4 = (ptr: Pointer) => {
       const obj: RegistryObject | undefined = ptr.object;
       return (
         (
@@ -206,7 +206,7 @@ export const getChainRegContents = () => {
         (obj?.property("tags")?.status === "live" || obj?.property("tags")?.status === undefined)
       );
     }
-    const filteredChannels4: NewPointer[] = chain_reg.find("IbcChannel", [filter4]);
+    const filteredChannels4: Pointer[] = chain_reg.find("IbcChannel", [filter4]);
     filteredChannels4?.forEach((ptr) => {
       //console.log(ptr.parent?.object?.property("chain_1"));
       //console.log(ptr.parent?.object?.property("chain_2"));
@@ -217,7 +217,7 @@ export const getChainRegContents = () => {
 
     //Q: Which assets have a two denoms where they are are the same letters just with different letter casing?
     console.log("same denom unit:");
-    const filter5 = (assetPointer: NewPointer) => {
+    const filter5 = (assetPointer: Pointer) => {
       const denom_units = assetPointer.object?.property("denom_units");
       for (let i = 0; i <= denom_units.length - 1; ++i) {
         for (let j = i; j <= denom_units.length - 1; ++j) {
@@ -239,8 +239,8 @@ export const getChainRegContents = () => {
 
     console.log("same denom unit:");
 
-    const filter6 = (denomUnitPtr: NewPointer) => {
-      const filter8 = (denomUnitPtr2: NewPointer) => {
+    const filter6 = (denomUnitPtr: Pointer) => {
+      const filter8 = (denomUnitPtr2: Pointer) => {
         return denomUnitPtr.key !== denomUnitPtr2.key &&
           denomUnitPtr.object?.property("denom")?.toLowerCase() === denomUnitPtr2.object?.property("denom")?.toLowerCase();
       }

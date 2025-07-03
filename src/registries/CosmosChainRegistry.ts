@@ -2,7 +2,7 @@ import FsStructureEntry from '../types/FsStructureEntry.js';
 import Directory from '../types/Directory.js';
 import File from '../types/File.js';
 import CONFIG from '../config.js';
-import NewPointer from '../types/NewPointer.js';
+import Pointer from '../types/Pointer.js';
 
 
 const chainRegistryFs = new FsStructureEntry(
@@ -257,7 +257,7 @@ CosmosChainRegistry.set("AssetImage", assetImage);
 const traceDerivedProperties: Map<string, (any: any) => any> = new Map;
 traceDerivedProperties.set(
   "assetPointer",
-  (trace: RegistryObject): NewPointer | undefined => {
+  (trace: RegistryObject): Pointer | undefined => {
     return trace.root.
       get("Chain", trace.property("counterparty")?.chain_name)?.
       get("Asset", trace.property("counterparty")?.base_denom)?.

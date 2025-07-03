@@ -1,18 +1,18 @@
 import RegistryObject from './RegistryObject.js';
 import MultiRegistryRoot from "./MultiRegistryRoot.js"
 
-class NewPointer {
-  private _parent: NewPointer | null;
+class Pointer {
+  private _parent: Pointer | null;
 
   constructor(
-    parent: NewPointer | null,
+    parent: Pointer | null,
     public readonly key: string | number,
     public readonly objectType: string
   ) {
     this._parent = parent;
   }
 
-  get parent(): NewPointer | null {
+  get parent(): Pointer | null {
     return this._parent;
   }
 
@@ -28,7 +28,7 @@ class NewPointer {
   }
 
   get root(): any {
-    let current: NewPointer = this;
+    let current: Pointer = this;
     while (current._parent && current?._parent?._parent) {
       current = current.parent!;
     }
@@ -36,4 +36,4 @@ class NewPointer {
   }
 }
 
-export default NewPointer;
+export default Pointer;
