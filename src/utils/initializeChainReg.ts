@@ -2,7 +2,7 @@
 import RegistryObject from '../types/RegistryObject.js';
 import RegistryRoot from '../types/RegistryRoot.js';
 import NewPointer from '../types/NewPointer.js';
-import { CosmosChainRegistry, CosmosChainRegistryTypes } from '../registries/CosmosChainRegistry.js';
+import { CosmosChainRegistry } from '../registries/CosmosChainRegistry.js';
 import MultiRegistryRoot from '../types/MultiRegistryRoot.js';
 
 export const getChainRegContents = () => {
@@ -174,28 +174,6 @@ export const getChainRegContents = () => {
     console.log("those were the assets");
 
 
-    //Q: Which assets have a two denoms where they are are the same letters just with different letter casing?
-    console.log("same denom unit:");
-    const filter5 = (assetPointer: NewPointer) => {
-      const denom_units = assetPointer.object?.property("denom_units");
-      for (let i = 0; i <= denom_units.length - 1; ++i) {
-        for (let j = i; j <= denom_units.length - 1; ++j) {
-          if (i === j) continue;
-          if (denom_units[i].denom.toLowerCase() === denom_units[j].denom.toLowerCase()) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    const filteredAssets5: any[] = chain_reg.find("Asset", [filter5]);
-
-    filteredAssets5?.forEach((assetPtr) => {
-      //console.log(assetPtr.parent?.object?.property("chain_name"));
-      console.log(assetPtr.parent?.key);
-      console.log(assetPtr.object?.property("base"));
-    });
-
     console.log("IBC Connections:");
 
     /*const filteredConnections45: any[] = chain_reg.find("IbcConnection", [()=>true]);
@@ -234,6 +212,46 @@ export const getChainRegContents = () => {
       //console.log(ptr.parent?.object?.property("chain_2"));
       console.log(ptr.object?.get("IbcChannelParty", 0)?.property("channel_id"));
       console.log(ptr.object?.get("IbcChannelParty", 1)?.property("channel_id"));
+    });
+
+
+    //Q: Which assets have a two denoms where they are are the same letters just with different letter casing?
+    console.log("same denom unit:");
+    const filter5 = (assetPointer: NewPointer) => {
+      const denom_units = assetPointer.object?.property("denom_units");
+      for (let i = 0; i <= denom_units.length - 1; ++i) {
+        for (let j = i; j <= denom_units.length - 1; ++j) {
+          if (i === j) continue;
+          if (denom_units[i].denom.toLowerCase() === denom_units[j].denom.toLowerCase()) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    const filteredAssets5: any[] = chain_reg.find("Asset", [filter5]);
+
+    filteredAssets5?.forEach((assetPtr) => {
+      //console.log(assetPtr.parent?.object?.property("chain_name"));
+      console.log(assetPtr.parent?.key);
+      console.log(assetPtr.object?.property("base"));
+    });
+
+    console.log("same denom unit:");
+
+    const filter6 = (denomUnitPtr: NewPointer) => {
+      const filter8 = (denomUnitPtr2: NewPointer) => {
+        return denomUnitPtr.key !== denomUnitPtr2.key &&
+          denomUnitPtr.object?.property("denom")?.toLowerCase() === denomUnitPtr2.object?.property("denom")?.toLowerCase();
+      }
+      return denomUnitPtr.parent?.object?.find("DenomUnit", [filter8]).length ? true : false;
+    }
+    const filteredAssets6: any[] = chain_reg.find("DenomUnit", [filter6]);
+
+    filteredAssets6?.forEach((denomUnitPtr) => {
+      console.log(denomUnitPtr.parent?.parent?.key);
+      console.log(denomUnitPtr.parent?.key);
+      //console.log(denomUnitPtr.key);
     });
 
   }

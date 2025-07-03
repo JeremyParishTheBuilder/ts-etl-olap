@@ -20,7 +20,6 @@ const networkType = new FsStructureEntry(
   ["mainnet", "testnet"],
   (type) => type === "mainnet" ? "." : "testnets"
 );
-
 chainRegistryFs.add(networkType);
 
 const ibcDirectory = new FsStructureEntry(
@@ -46,7 +45,6 @@ const chainType = new FsStructureEntry(
   ["cosmos", "non-cosmos"],
   (type) => type === "cosmos" ? "." : "_non-cosmos"
 );
-
 networkType.add(chainType);
 
 const chainDirectory = new FsStructureEntry(
@@ -56,7 +54,6 @@ const chainDirectory = new FsStructureEntry(
   null,
   (key) => key as string,
 );
-
 chainType.add(chainDirectory);
 
 const assetlistFile = new FsStructureEntry(
@@ -66,7 +63,6 @@ const assetlistFile = new FsStructureEntry(
   null,
   () => "assetlist.json"
 );
-
 chainDirectory.add(assetlistFile);
 
 const chainFile = new FsStructureEntry(
@@ -76,7 +72,6 @@ const chainFile = new FsStructureEntry(
   null,
   () => "chain.json"
 );
-
 chainDirectory.add(chainFile);
 
 const versionsFile = new FsStructureEntry(
@@ -86,19 +81,30 @@ const versionsFile = new FsStructureEntry(
   null,
   () => "versions.json"
 );
+chainDirectory.add(versionsFile);
 
-chainDirectory.add(versionsFile); //adds versionsFile to chainDirectory::files array,
-//and makes sure versionsFile parent is chainDirectory.
+const imagesDirectory = new FsStructureEntry(
+  "ImagesDirectory",
+  Directory,
+  chainDirectory,
+  null,
+  () => "images"
+);
+chainDirectory.add(imagesDirectory);
+
+const imageFile = new FsStructureEntry(
+  "imageFile",
+  File,
+  imagesDirectory,
+  null,
+  (name) => name as string,
+);
+imagesDirectory.add(imageFile);
 
 import RegistryObject from '../types/RegistryObject.js';
 import RegistryStructureEntry from '../types/RegistryStructureEntry.js';
 
 export const CosmosChainRegistry = new Map();
-
-export const CosmosChainRegistryTypes = {
-  VERSION: "version",
-  CHAIN: "chain"
-} as const;
 
 const chainRegistry = new RegistryStructureEntry(
   "RegistryRoot",
@@ -127,6 +133,18 @@ const chain = new RegistryStructureEntry(
   (element: Directory) => element.find(chainFile.name(), File)?.contents
 );
 CosmosChainRegistry.set("Chain", chain);
+
+const chainImage = new RegistryStructureEntry(
+  "ChainImage",
+  0,
+  "Chain",
+  (parent: RegistryObject): any[] => {
+    return parent.property("images") || [];
+  },
+  null,
+  (element: any): any => element
+);
+CosmosChainRegistry.set("ChainImage", chainImage);
 
 const traceTypesList = {
   IBC: "ibc",
@@ -211,6 +229,30 @@ const asset = new RegistryStructureEntry(
   assetDefaultArgs
 );
 CosmosChainRegistry.set("Asset", asset);
+
+const denomUnit = new RegistryStructureEntry(
+  "DenomUnit",
+  0,
+  "Asset",
+  (parent: RegistryObject): any[] => {
+    return parent.property("denom_units", false) || [];
+  },
+  null,
+  (element: any): any => element
+);
+CosmosChainRegistry.set("DenomUnit", denomUnit);
+
+const assetImage = new RegistryStructureEntry(
+  "AssetImage",
+  0,
+  "Asset",
+  (parent: RegistryObject): any[] => {
+    return parent.property("images") || [];
+  },
+  null,
+  (element: any): any => element
+);
+CosmosChainRegistry.set("AssetImage", assetImage);
 
 const traceDerivedProperties: Map<string, (any: any) => any> = new Map;
 traceDerivedProperties.set(
