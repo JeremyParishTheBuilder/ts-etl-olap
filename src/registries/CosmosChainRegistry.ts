@@ -101,6 +101,14 @@ const imageFile = new FsStructureEntry(
 );
 imagesDirectory.add(imageFile);
 
+
+function isChain(directory: Directory): boolean {
+  const assetlistFileExists = directory.find(assetlistFile.name(), File) ? true : false;
+  const chainFileExists = directory.find(chainFile.name(), File) ? true : false;
+  return assetlistFileExists || chainFileExists;
+}
+
+
 import RegistryObject from '../types/RegistryObject.js';
 import RegistryStructureEntry from '../types/RegistryStructureEntry.js';
 
@@ -345,10 +353,3 @@ const ibcChannelParty = new RegistryStructureEntry(
   (element: any): any => element
 );
 CosmosChainRegistry.set("IbcChannelParty", ibcChannelParty);
-
-
-function isChain(directory: Directory): boolean {
-  const assetlistFileExists = directory.find(assetlistFile.name(), File) ? true : false;
-  const chainFileExists = directory.find(chainFile.name(), File) ? true : false;
-  return assetlistFileExists || chainFileExists;
-}

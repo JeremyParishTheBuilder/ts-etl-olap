@@ -194,17 +194,34 @@ export const getChainRegContents = () => {
     console.log("IBC Channels:");
     const filter4 = (ptr: Pointer) => {
       const obj: RegistryObject | undefined = ptr.object;
+      const isZero = (party: Pointer) => {
+        return (
+          party.object?.property("channel_id") === "channel-0" &&
+          party.object?.property("port_id") === "transfer"
+        );
+      }
+      //let hasZero = 0;
+      /*hasZero = obj?.find("IbcChannel")
       return (
         (
+          obj?.get("IbcChannelParty", 0)?.property("channel_id") === "channel-0" &&
+          obj?.get("IbcChannelParty", 0)?.property("port_id") === "transfer"
+        ) ||
+        (
+          obj?.get("IbcChannelParty", 1)?.property("channel_id") === "channel-0" &&
+          obj?.get("IbcChannelParty", 1)?.property("port_id") === "transfer"
+        )*/
+        /*(
           obj?.get("IbcChannelParty", 0)?.property("channel_id") === "channel-0" ||
           obj?.get("IbcChannelParty", 1)?.property("channel_id") === "channel-0"
         ) &&
         (
           obj?.get("IbcChannelParty", 0)?.property("port_id") === "transfer" ||
           obj?.get("IbcChannelParty", 1)?.property("port_id") === "transfer"
-        ) &&
-        (obj?.property("tags")?.status === "live" || obj?.property("tags")?.status === undefined)
-      );
+        )*/// &&
+        //(obj?.property("tags")?.status === "live" || obj?.property("tags")?.status === undefined)
+      //);
+      return obj?.find("IbcChannelParty", [isZero]).length ? true : false;
     }
     const filteredChannels4: Pointer[] = chain_reg.find("IbcChannel", [filter4]);
     filteredChannels4?.forEach((ptr) => {
@@ -216,7 +233,7 @@ export const getChainRegContents = () => {
 
 
     //Q: Which assets have a two denoms where they are are the same letters just with different letter casing?
-    console.log("same denom unit:");
+    /*console.log("same denom unit:");
     const filter5 = (assetPointer: Pointer) => {
       const denom_units = assetPointer.object?.property("denom_units");
       for (let i = 0; i <= denom_units.length - 1; ++i) {
@@ -235,7 +252,7 @@ export const getChainRegContents = () => {
       //console.log(assetPtr.parent?.object?.property("chain_name"));
       console.log(assetPtr.parent?.key);
       console.log(assetPtr.object?.property("base"));
-    });
+    });*/
 
     console.log("same denom unit:");
 
@@ -252,6 +269,18 @@ export const getChainRegContents = () => {
       console.log(denomUnitPtr.parent?.parent?.key);
       console.log(denomUnitPtr.parent?.key);
       //console.log(denomUnitPtr.key);
+    });
+
+
+    //challenge for images
+    //find all cases where the chain logo is defined in logo_URIs but not in the images array.
+    console.log("Looking for all the chains where logoURIs exists but not Images");
+    const chainsWithImageOnlyInLogoUris = (chainPtr: Pointer) => {
+      return chainPtr.object?.property("logo_URIs") && !chainPtr.object?.get("ChainImage", 0);
+    }
+    const filteredChains = chain_reg.find("Chain", [chainsWithImageOnlyInLogoUris]);
+    filteredChains.forEach((chain) => {
+      console.log(chain.key);
     });
 
   }
