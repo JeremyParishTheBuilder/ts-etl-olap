@@ -51,7 +51,7 @@ const chainDirectory = new FsStructureEntry(
   "ChainDirectory",
   Directory,
   chainType,
-  null,
+  ["."],
   (key) => key as string,
 );
 chainType.add(chainDirectory);
@@ -102,7 +102,8 @@ const imageFile = new FsStructureEntry(
 imagesDirectory.add(imageFile);
 
 
-function isChain(directory: Directory): boolean {
+function isChainDirectory(directory: Directory | File): boolean {
+  if (directory instanceof File) return false;
   const assetlistFileExists = directory.find(assetlistFile.name(), File) ? true : false;
   const chainFileExists = directory.find(chainFile.name(), File) ? true : false;
   return assetlistFileExists || chainFileExists;
@@ -128,12 +129,33 @@ const chain = new RegistryStructureEntry(
   "Chain",
   "",
   "RegistryRoot",
+  //(parent: RegistryObject): any[] => {
   (parent: RegistryObject): Directory[] => {
     const directories: Directory[] = [];
     chainType.getDirectories().forEach(multiChainDirectory => {
       multiChainDirectory.contents.forEach(content => {
-        if (content instanceof Directory && isChain(content)) directories.push(content);
+        if (content instanceof Directory && isChainDirectory(content)) directories.push(content);
       });
+
+    //const directories: any[] = [];
+    //console.log("Directories");
+    //console.log(chainDirectory.getDirectories());
+
+    //Temporary
+    /*return chainType.getDirectories().filter(content => {
+        if (!(content instanceof Directory)) return false;
+        const assetlistFileExists = content.find(assetlistFile.name(), File) ? true : false;
+        const chainFileExists = content.find(chainFile.name(), File) ? true : false;
+      if (assetlistFileExists || chainFileExists) return content;
+    });*/
+
+      //});
+      /*multiChainDirectory.contents.forEach(content => {
+        if (!(content instanceof Directory)) return false;
+        const assetlistFileExists = content.find(assetlistFile.name(), File) ? true : false;
+        const chainFileExists = content.find(chainFile.name(), File) ? true : false;
+        if (assetlistFileExists || chainFileExists) directories.push(content);
+      });*/
     });
     return directories;
   },

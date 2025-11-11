@@ -20,7 +20,7 @@ export const getChainRegContents = () => {
   //console.log(obj?.get("RegistryRoot", "Cosmos"));
   //console.log(chain_reg);
   console.log("there was the chain_reg");
- 
+  
 
   const chain = chain_reg.get("Chain", "osmosis");
   console.log("chain");
@@ -191,7 +191,7 @@ export const getChainRegContents = () => {
 
 
 
-    console.log("IBC Channels:");
+    /*console.log("IBC Channels:");
     const filter4 = (ptr: Pointer) => {
       const obj: RegistryObject | undefined = ptr.object;
       const isZero = (party: Pointer) => {
@@ -200,27 +200,6 @@ export const getChainRegContents = () => {
           party.object?.property("port_id") === "transfer"
         );
       }
-      //let hasZero = 0;
-      /*hasZero = obj?.find("IbcChannel")
-      return (
-        (
-          obj?.get("IbcChannelParty", 0)?.property("channel_id") === "channel-0" &&
-          obj?.get("IbcChannelParty", 0)?.property("port_id") === "transfer"
-        ) ||
-        (
-          obj?.get("IbcChannelParty", 1)?.property("channel_id") === "channel-0" &&
-          obj?.get("IbcChannelParty", 1)?.property("port_id") === "transfer"
-        )*/
-        /*(
-          obj?.get("IbcChannelParty", 0)?.property("channel_id") === "channel-0" ||
-          obj?.get("IbcChannelParty", 1)?.property("channel_id") === "channel-0"
-        ) &&
-        (
-          obj?.get("IbcChannelParty", 0)?.property("port_id") === "transfer" ||
-          obj?.get("IbcChannelParty", 1)?.property("port_id") === "transfer"
-        )*/// &&
-        //(obj?.property("tags")?.status === "live" || obj?.property("tags")?.status === undefined)
-      //);
       return obj?.find("IbcChannelParty", [isZero]).length ? true : false;
     }
     const filteredChannels4: Pointer[] = chain_reg.find("IbcChannel", [filter4]);
@@ -229,8 +208,27 @@ export const getChainRegContents = () => {
       //console.log(ptr.parent?.object?.property("chain_2"));
       console.log(ptr.object?.get("IbcChannelParty", 0)?.property("channel_id"));
       console.log(ptr.object?.get("IbcChannelParty", 1)?.property("channel_id"));
-    });
+    });*/
 
+    /*//Q: Which IBC files have multiple channels that are transfer/transfer?
+    console.log("transfer/transfer IBC Files:");
+    const filter12 = (ptr: Pointer) => {
+      const obj: RegistryObject | undefined = ptr.object;
+      const isTransferTransfer = (channel: Pointer) => {
+        return (
+          channel.object?.get("IbcChannelParty", 0)?.property("port_id") === "transfer" &&
+          channel.object?.get("IbcChannelParty", 1)?.property("port_id") === "transfer"
+        );
+      }
+      console.log((obj?.find("IbcChannel", [isTransferTransfer]).length || 0) >= 2);
+
+      return (obj?.find("IbcChannel", [isTransferTransfer]).length || 0) >= 2 ? true : false;
+    }
+    const filteredChannels11: Pointer[] = chain_reg.find("IbcConnection", [filter12]);
+    filteredChannels11?.forEach((ptr) => {
+      console.log(ptr.object?.get("IbcConnectionParty", 0)?.property("chain_name"));
+      console.log(ptr.object?.get("IbcConnectionParty", 1)?.property("chain_name"));
+    });*/
 
     //Q: Which assets have a two denoms where they are are the same letters just with different letter casing?
     /*console.log("same denom unit:");
@@ -254,7 +252,7 @@ export const getChainRegContents = () => {
       console.log(assetPtr.object?.property("base"));
     });*/
 
-    console.log("same denom unit:");
+    /*console.log("same denom unit:");
 
     const filter6 = (denomUnitPtr: Pointer) => {
       const filter8 = (denomUnitPtr2: Pointer) => {
@@ -269,10 +267,10 @@ export const getChainRegContents = () => {
       console.log(denomUnitPtr.parent?.parent?.key);
       console.log(denomUnitPtr.parent?.key);
       //console.log(denomUnitPtr.key);
-    });
+    });*/
 
 
-    //challenge for images
+    /*//challenge for images
     //find all cases where the chain logo is defined in logo_URIs but not in the images array.
     console.log("Looking for all the chains where logoURIs exists but not Images");
     const chainsWithImageOnlyInLogoUris = (chainPtr: Pointer) => {
@@ -281,7 +279,9 @@ export const getChainRegContents = () => {
     const filteredChains = chain_reg.find("Chain", [chainsWithImageOnlyInLogoUris]);
     filteredChains.forEach((chain) => {
       console.log(chain.key);
-    });
+    });*/
+
+    console.log("Directories");
 
   }
   
