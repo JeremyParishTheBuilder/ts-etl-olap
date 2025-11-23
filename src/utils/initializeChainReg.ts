@@ -5,10 +5,12 @@ import Pointer from '../types/Pointer.js';
 import { CosmosChainRegistry } from '../registries/CosmosChainRegistry.js';
 import MultiRegistryRoot from '../types/MultiRegistryRoot.js';
 
+const CCR1_PATH: string = '../chain-registry';
+
 export const getChainRegContents = () => {
 
   console.log("starting chain reg");
-  const chain_reg = new RegistryRoot(CosmosChainRegistry, "Cosmos");
+  const chain_reg = new RegistryRoot(CosmosChainRegistry, "Cosmos", CCR1_PATH);
   console.log("started");
   //console.log(chain_reg);
   //console.log(chain_reg.pointer);

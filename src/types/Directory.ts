@@ -6,7 +6,8 @@ import DirectoryContent from './DirectoryContent.js';
 export class Directory extends DirectoryContent  {
 
   private _contents: (Directory | File)[] | null = null;
-  private _isChain: boolean | null = null;
+  private _failed: boolean = false;
+  //private _isChain: boolean | null = null;
 
   constructor(fullPath: string) {
     super(fullPath);
@@ -31,29 +32,53 @@ export class Directory extends DirectoryContent  {
     }
   }
 
-  public get contents(): (Directory | File)[] {
+  public get contents(): DirectoryContent[] | null {
+    if (this._failed) {
+      return null;  // Return `null` if the previous attempt failed
+    }
     if (this._contents === null) {
       this.readContents();
+      if (this._contents === null) {
+        this._failed = true;  // Cache the failed attempt
+      }
     }
     return this._contents!;
   }
 
   public find<T extends DirectoryContent>(
-    basename: string,
-    contentType: new (...args: any[]) => T
-  ): T | undefined {
-    if (basename === ".") return this as unknown as T;
-    return this.contents.find(
-      (content) => content instanceof contentType && content.basename === basename
-    ) as T | undefined;
+    itemType: new (...args: any[]) => T,
+    itemName?: string
+  ): T[] {
+
+    // Special case: return the directory itself
+    if (itemName === ".") {
+      return [this] as unknown as T[];
+    }
+
+    const contents = this.contents;
+    if (!contents) return [];
+
+    // First, restrict to the correct type
+    const typed = contents.filter(
+      (c): c is T => c instanceof itemType
+    );
+
+    // If name omitted → return all items of that type
+    if (!itemName) {
+      return typed;
+    }
+
+    // If name provided → return only those with that name (usually 0–1)
+    return typed.filter(c => c.basename === itemName);
   }
+
 
   // Method to log the cached contents to the console
   public logContents(): void {
     const contents = this.contents;  // Automatically loads contents if not loaded
     console.log(`Contents of directory ${this.fullPath}:`);
 
-    if (contents.length) {
+    if (contents?.length) {
       contents.forEach((content) => {
         console.log(content);  // Display each entry
       });

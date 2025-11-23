@@ -11,7 +11,8 @@ class RegistryRoot extends RegistryObject {
       string,
       RegistryStructureEntry<string | number, any>
     > | null,
-    protected readonly key: string
+    protected readonly key: string,
+    protected readonly path: string
   ) {
     const instance = MultiRegistryRoot.getInstance();
     super(new Pointer(instance.pointer, key, "RegistryRoot"));
