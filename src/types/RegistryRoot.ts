@@ -3,8 +3,11 @@ import Pointer from './Pointer.js';
 import RegistryObject from './RegistryObject.js';
 import MultiRegistryRoot from '../types/MultiRegistryRoot.js';
 import RegistryStructureEntry from './RegistryStructureEntry.js';
+import Directory from '../types/Directory.js';
 
 class RegistryRoot extends RegistryObject {
+
+  public readonly directory: Directory;
 
   public constructor(
     protected registryStructureMap: Map<
@@ -12,10 +15,11 @@ class RegistryRoot extends RegistryObject {
       RegistryStructureEntry<string | number, any>
     > | null,
     protected readonly key: string,
-    protected readonly path: string
+    path: string
   ) {
     const instance = MultiRegistryRoot.getInstance();
     super(new Pointer(instance.pointer, key, "RegistryRoot"));
+    this.directory = new Directory(path);
     instance.set("RegistryRoot", key, this);
   }
 

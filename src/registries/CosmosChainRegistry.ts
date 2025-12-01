@@ -8,7 +8,7 @@ import Pointer from '../types/Pointer.js';
 const chainRegistryRoot = new FsStructureEntry(
   "ChainRegistryRoot",
   Directory,
-  new Directory('../chain-registry'),
+  null,
   null,
   () => "."
 );
@@ -70,7 +70,7 @@ const versionsFile = new FsStructureEntry(
   null,
   () => "versions.json"
 );
-chainDirectory.add(versionsFile);
+//chainDirectory.add(versionsFile);
 
 const imagesDirectory = new FsStructureEntry(
   "ImagesDirectory",
@@ -79,7 +79,7 @@ const imagesDirectory = new FsStructureEntry(
   null,
   () => "images"
 );
-chainDirectory.add(imagesDirectory);
+//chainDirectory.add(imagesDirectory);
 
 const imageFile = new FsStructureEntry(
   "imageFile",
@@ -88,7 +88,7 @@ const imageFile = new FsStructureEntry(
   null,
   (name) => name as string,
 );
-imagesDirectory.add(imageFile);
+//imagesDirectory.add(imageFile);
 
 const ibcDirectory = new FsStructureEntry(
   "IbcDirectory",
@@ -103,7 +103,8 @@ const ibcFile = new FsStructureEntry(
   File,
   ibcDirectory,
   null,
-  (key) => key as string & ".json"
+  (key) => key as string & ".json",
+  (item: DirectoryContent): boolean => item instanceof File && item.basename.includes(".json")
 );
 
 function isChainDirectory(directory: Directory | File): boolean {
@@ -124,8 +125,7 @@ const chainRegistry = new RegistryStructureEntry(
   "RegistryRoot",
   "",
   null,
-  () => chainRegistryRoot.find(Directory),
-  //() => [chainRegistryFs],
+  (parent: RegistryObject): Directory[] => [parent.pointer.root.object.directory],
   () => "Cosmos",
   () => null
 );
@@ -135,12 +135,7 @@ const chain = new RegistryStructureEntry(
   "Chain",
   "",
   "RegistryRoot",
-  (parent: RegistryObject): Directory[] => {
-    //chainDirectory.find(Directory, parent.pointer.key as string)[0]?.find(File, assetlistFile.name()).at(0)?.contents.assets,
-    //chainRegistryRoot.find(Directory, parent.pointer.key as string)[0]?
-    //.find(Directory, )
-    return chainDirectory.find(Directory);
-  },
+  (parent: RegistryObject): Directory[] => chainDirectory.find(parent.pointer.root.object, Directory),
   (element: Directory) => element.basename,
   (element: Directory) => element.find(File, chainFile.name()).at(0)?.contents
 );
@@ -232,7 +227,7 @@ const asset = new RegistryStructureEntry(
   "",
   "Chain",
   (parent: RegistryObject): any[] =>
-    chainDirectory.find(Directory, parent.pointer.key as string)[0]?.find(File, assetlistFile.name()).at(0)?.contents.assets,
+    chainDirectory.find(parent.pointer.root.object, Directory, parent.pointer.key as string)[0]?.find(File, assetlistFile.name()).at(0)?.contents.assets,
   (element: any): string => element.base,
   (element: any): any => element,
   assetOverrideProperties,
@@ -296,7 +291,8 @@ const version = new RegistryStructureEntry(
   "Version",
   "",
   "Chain",
-  (parent: RegistryObject): any[] => chainDirectory.find(Directory, parent.pointer.key as string)[0]?.find(File, versionsFile.name()).at(0)?.contents.versions,
+  (parent: RegistryObject): any[] => chainDirectory.find(parent.pointer.root.object, Directory, parent.pointer.key as string)[0]
+    ?.find(File, versionsFile.name()).at(0)?.contents.versions,
   (element: any): string => element.name,
   (element: any): any => element
 );
@@ -306,17 +302,7 @@ const ibcConnection = new RegistryStructureEntry(
   "IbcConnection",
   "",
   "RegistryRoot",
-  (parent: RegistryObject): any[] => {
-    const ibcFiles: File[] = [];
-    ibcDirectory.find(Directory).forEach(ibcDir => {
-      ibcDir.contents?.forEach(content => {
-        if (content instanceof File && content.basename.includes(".json")) {
-          ibcFiles.push(content);
-        }
-      });
-    });
-    return ibcFiles;
-  },
+  (parent: RegistryObject): any[] => ibcFile.find(parent.pointer.root.object, File),
   (element: File): string => element.basename.substring(0, element.basename.lastIndexOf(".")),
   (element: File): any => element.contents
 );
