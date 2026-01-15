@@ -4,12 +4,18 @@ import RegistryRoot from '../types/RegistryRoot.js';
 import Pointer from '../types/Pointer.js';
 import { CosmosChainRegistry } from '../registries/CosmosChainRegistry.js';
 import MultiRegistryRoot from '../types/MultiRegistryRoot.js';
+//import { Database } from '../types/Database';
 
 const CCR1_PATH: string = '../chain-registry';
+
+//const db: Database = new Database("CCR");
 
 export const getChainRegContents = () => {
 
   console.log("starting chain reg");
+
+  //db.select([]).from("RegistryRoot").where({kind: "pred", fn: (rowId) => rowId === 1 }).query();
+
   const chain_reg = new RegistryRoot(CosmosChainRegistry, "Cosmos", CCR1_PATH);
   console.log("started");
   //console.log(chain_reg);
@@ -261,9 +267,9 @@ export const getChainRegContents = () => {
         return denomUnitPtr.key !== denomUnitPtr2.key &&
           denomUnitPtr.object?.property("denom")?.toLowerCase() === denomUnitPtr2.object?.property("denom")?.toLowerCase();
       }
-      return denomUnitPtr.parent?.object?.find("DenomUnit", [filter8]).length ? true : false;
+      return denomUnitPtr.parent?.object?.find("Asset::denom_unitsElement", [filter8]).length ? true : false;
     }
-    const filteredAssets6: any[] = chain_reg.find("DenomUnit", [filter6]);
+    const filteredAssets6: any[] = chain_reg.find("Asset::denom_unitsElement", [filter6]);
 
     filteredAssets6?.forEach((denomUnitPtr) => {
       console.log(denomUnitPtr.parent?.parent?.key);
@@ -284,6 +290,16 @@ export const getChainRegContents = () => {
     });*/
 
     console.log("Directories");
+
+    console.log(chain_reg.get("Chain", "osmosis")?.get("Asset", "uosmo")?.property("denom_units"));
+    console.log(
+      chain_reg.get("Chain", "osmosis")?.
+      find("Asset", [(ptr: Pointer) => ptr.object?.property("base") === "uosmo"])?.
+      [0]?.object?.
+      //find("Asset::denom_unitsElement", [(ptr: Pointer) => ptr.object?.property("base") === "uosmo"])?.
+      property("denom_units")
+    );
+    console.log(chain_reg.get("Chain", "osmosis")?.get("Asset", "uosmo")?.get("Asset::denom_unitsElement", 1));
 
   }
   

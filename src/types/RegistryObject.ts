@@ -1,6 +1,7 @@
 import Pointer from './Pointer.js';
 import Container from './Container.js';
 import RegistryStructureEntry from './RegistryStructureEntry.js';
+import RegistryRoot from './RegistryRoot.js';
 
 class RegistryObject {
 
@@ -74,7 +75,19 @@ class RegistryObject {
     //Json Properties
     if (this._jsonProperties === null) this.loadProperties();
     if (!this._jsonProperties) return undefined;
-    if (propertyName in this._jsonProperties) return this._jsonProperties[propertyName] as T;
+    if (propertyName in this._jsonProperties) {
+
+      const value = this._jsonProperties[propertyName];
+
+      //Lazy-register arrays as "table entries"
+      if (Array.isArray(value)) {
+        this.registerJsonArray(propertyName);
+      }
+
+      return value as T;
+
+      //return this._jsonProperties[propertyName] as T;
+    }
 
     //Derived Properties (fallback, if not in json)
     const derivedProperty = entry.derivedProperties?.get(propertyName);
@@ -185,6 +198,27 @@ class RegistryObject {
     }
     return result;
   }
+
+
+  public registerJsonArray(propertyName: string) {
+  
+    const map = (this.root as RegistryRoot).registryStructureMap!;
+    const entryName = `${this.pointer.objectType}::${propertyName}Element`;
+
+    if (map.has(entryName)) return; // already exists
+
+    const newEntry = new RegistryStructureEntry(
+      entryName,
+      0,                  // numeric index
+      this.pointer.objectType,    // parent
+      (parent: RegistryObject) => parent.property(propertyName, false) || [],
+      null,               // element key
+      (element: any) => element
+    );
+    map.set(entryName, newEntry);
+
+  }
+
 }
 
 export function arrayToJson(registryObjectArray: Array<RegistryObject>): Record < string, any > | undefined {

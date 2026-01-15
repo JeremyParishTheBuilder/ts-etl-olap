@@ -1,4 +1,4 @@
-import RegistryObject from "./RegistryObject";
+import RegistryObject from "./RegistryObject.js";
 
 class RegistryStructureEntry<
   K = string | number, // Key type

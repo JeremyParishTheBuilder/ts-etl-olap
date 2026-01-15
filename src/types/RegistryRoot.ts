@@ -10,7 +10,7 @@ class RegistryRoot extends RegistryObject {
   public readonly directory: Directory;
 
   public constructor(
-    protected registryStructureMap: Map<
+    public registryStructureMap: Map<
       string,
       RegistryStructureEntry<string | number, any>
     > | null,

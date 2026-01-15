@@ -1,0 +1,1 @@
+export type RowId = number & { readonly __rowId: unique symbol };

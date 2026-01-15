@@ -3,7 +3,19 @@ import Directory from '../types/Directory.js';
 import File from '../types/File.js';
 import CONFIG from '../config.js';
 import Pointer from '../types/Pointer.js';
+import { EngineRegistry } from '../engine/EngineRegistry.js';
+import { Engine } from "../engine/Engine.js" 
+import { Dialect } from "../dialect/Dialect.js";
 
+
+EngineRegistry.getInstance().newEngine("DEFAULT_POSTGRES", Dialect.Postgres);
+EngineRegistry.getInstance().setDefaultEngine("DEFAULT_POSTGRES");
+const sql: Engine = EngineRegistry.getInstance().engine();
+
+sql.createDatabase("Cosmos Chain Registry");
+sql.createTable("RegistryRoot", {
+  name: { type: String }
+});
 
 const chainRegistryRoot = new FsStructureEntry(
   "ChainRegistryRoot",
@@ -12,6 +24,22 @@ const chainRegistryRoot = new FsStructureEntry(
   null,
   () => "."
 );
+
+sql.
+  insertInto("RegistryRoot", ["name"])?.
+  values([["Cosmos Chain Registry"]]);
+
+sql.createTable("NetworkKind", {
+  name: { type: String },
+  directoryName: { type: String }
+});
+sql.
+  insertInto("NetworkKind", ["name", "directoryName"])?.
+  values([["mainnet", "."]]);
+sql.
+  insertInto("NetworkKind", ["name", "directoryName"])?.
+  values([["testnet", "testnets"]]);
+//add DirectoryContent as a type? or find some way to indicate that a field corresponds to a Directory??
 
 const networkTypeDirectory = new FsStructureEntry(
   "NetworkTypeDirectory",
@@ -22,6 +50,11 @@ const networkTypeDirectory = new FsStructureEntry(
 );
 //chainRegistryFs.add(networkTypeDirectory);
 
+sql.createTable("ChainTypeDirectory", {
+  name: { type: String },
+  directoryName: { type: String }
+});
+
 const chainTypeDirectory = new FsStructureEntry(
   "ChainTypeDirectory",
   Directory,
@@ -30,6 +63,150 @@ const chainTypeDirectory = new FsStructureEntry(
   (type) => type === "cosmos" ? "." : "_non-cosmos"
 );
 //networkTypeDirectory.add(chainTypeDirectory);
+
+sql.
+  insertInto("ChainTypeDirectory", ["name", "directoryName"])?.
+  values([["cosmos", "."]]);
+sql.
+  insertInto("ChainTypeDirectory", ["name", "directoryName"])?.
+  values([["non-cosmos", "_non-cosmos"]]);
+
+sql.createTable("ConceptStructure", {
+  id: { type: String, primaryKey: true },
+  parentId: { type: String },
+
+  //key: { type: "function", defaultValue: { f: () => {} } },
+  //qualifyFn: { type: "function", defaultValue: { f: () => true }}
+});
+
+sql.
+  insertInto("ConceptStructure", ["id", "parentId"]).
+  values([["RegistryRoot", null]]);
+sql.
+  insertInto("ConceptStructure", ["id", "parentId"]).
+  values([["Chain", "RegistryRoot"]]);
+sql.
+  insertInto("ConceptStructure", ["id", "parentId"]).
+  values([["Asset", "Chain"]]);
+
+sql.createTable("StorageBinding", {
+  id: { type: String, primaryKey: true },
+  parentId: { type: String }, // FK -> StorageBinding
+  structureId: { type: String }, // FK -> ConceptStructure
+  storageType: { type: String, enumValues: ["Fs.Directory", "Fs.File", "Json", "Db.Table"] },
+  name: { type: "function" },
+  keys: { type: "function" }, // or types
+  qualifyFn: { type: "function", defaultValue: { f: () => true }}
+});
+
+sql.
+  alterTable("StorageBinding").
+    addConstraint("FK_ConceptStructure").
+      foreignKey(["structureId"]).
+       references("ConceptStructure", ["id"]);//.
+    // addConstraint("FK_StorageBindingParent").
+    //   foreignKey(["parentId"]).
+    //   references("StorageBinding", ["id"]);
+sql.
+  insertInto("StorageBinding", ["id", "structureId", "storageType", "name"]).
+  values([["RegistryRootDirectory", "RegistryRoot", "Fs.Directory", { f: () => "chain_registry" } ]]);
+sql.
+  insertInto("StorageBinding", ["id", "parentId", "storageType", "name", "keys"]).
+  values([["NetworkTypeDirectory", "RegistryRootDirectory", "Fs.Directory",
+    { f: (networkType: string) => networkType === "mainnet" ? "." : "testnets" },
+    { f: () => ["mainnet", "testnet"] }
+  ]]);
+sql.
+  insertInto("StorageBinding", ["id", "structureId", "storageType", "name"]).
+  values([["ChainDirectory", "Chain", "Fs.Directory", { f: (chainName: string) => chainName } ]]);
+sql.
+  insertInto("StorageBinding", ["id", "structureId", "storageType", "name"]).
+  values([["ChainFile", "Chain", "Fs.File", { f: () => "chain.json" } ]]);
+sql.
+  insertInto("StorageBinding", ["id", "structureId", "storageType"]).
+  values([["AssetlistFile", "Chain", "Fs.File", { f: () => "assetlist.json" }]]);
+sql.
+  insertInto("StorageBinding", ["id", "structureId", "storageType"]).
+  values([["VersionsFile", "Chain", "Fs.File", { f: () => "versions.json" }]]);
+
+
+sql.
+  insertInto("Structure", ["level", "parentLevel", "dataType"])?.
+  values([["RegistryRoot", "Fs.Directory", "RegistryRoot"]]);
+sql.
+  insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
+  values([[
+    "NetworkKind",
+    "Fs.Directory",
+    "RegistryRoot",
+    // {
+    //   kind: "map",
+    //   cases: {
+    //     mainnet: "",
+    //     testnet: "testnets",
+    //     devnet: "testnets "
+    //   },
+    //   default: ""
+    // },
+    { f: (networkKind: string) => networkKind === "mainnet" ? "." : "testnets" },
+  ]]);
+sql.
+  insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
+  values([[
+    "ChainType",
+    "Fs.Directory",
+    "NetworkKind",
+    // {
+    //   kind: "map",
+    //   cases: {
+    //     cosmos: "."
+    //   },
+    //   default: "_non-cosmos"
+    // }
+    { f: (chainType: string) => chainType === "cosmos" ? "." : "_non-cosmos" },
+  ]]);
+sql.
+  insertInto("Structure", ["level", "dataType", "parentLevel", "name", "qualifyFn"])?.
+  values([[
+    "ChainDirectory",
+    "Fs.Directory",
+    "ChainType",
+    { kind: "identity" },
+    //{ fn: (chainName: string) => chainName },
+    { f: (fsItem: DirectoryContent): boolean => {
+      if (!(fsItem instanceof Directory)) return false;
+      return ["assetlist.json", "chain.json"]
+        .some(name => fsItem.find(File, name).length > 0);
+      }
+    }
+  ]]);
+sql.
+  insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
+  values([[
+    "ChainFile",
+    "Fs.File",
+    "ChainDirectory",
+    { kind: "const", value: "chain.json" }
+    //{ fn: () => "chain.json" }
+  ]]);
+sql.
+  insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
+  values([[
+    "AssetlistFile",
+    "Fs.File",
+    "ChainDirectory",
+    { kind: "const", value: "assetlist.json" }
+    //{ fn: () => "assetlist.json" }
+  ]]);
+sql.
+  insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
+  values([[
+    "VersionsFile",
+    "Fs.File",
+    "ChainDirectory",
+    { kind: "const", value: "versions.json" }
+    //{ fn: () => "assetlist.json" }
+  ]]);
 
 const chainDirectory = new FsStructureEntry(
   "ChainDirectory",
@@ -237,17 +414,17 @@ const asset = new RegistryStructureEntry(
 );
 CosmosChainRegistry.set("Asset", asset);
 
-const denomUnit = new RegistryStructureEntry(
-  "DenomUnit",
-  0,
-  "Asset",
-  (parent: RegistryObject): any[] => {
-    return parent.property("denom_units", false) || [];
-  },
-  null,
-  (element: any): any => element
-);
-CosmosChainRegistry.set("DenomUnit", denomUnit);
+// const denomUnit = new RegistryStructureEntry(
+//   "DenomUnit",
+//   0,
+//   "Asset",
+//   (parent: RegistryObject): any[] => {
+//     return parent.property("denom_units", false) || [];
+//   },
+//   null,
+//   (element: any): any => element
+// );
+// CosmosChainRegistry.set("DenomUnit", denomUnit);
 
 const assetImage = new RegistryStructureEntry(
   "AssetImage",
