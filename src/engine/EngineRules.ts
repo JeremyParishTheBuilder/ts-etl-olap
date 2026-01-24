@@ -13,7 +13,7 @@ export const ENGINE_RULES: Record<
   ddl: {
     supportsInlineForeignKeys: {
       dialectStrict: (d: Dialect) =>
-        DIALECT_RULES[d].constraints.allowNullableForeignKeys,
+        DIALECT_RULES[d].ddl.supportsInlineForeignKeys,
       engineDefault: true,
     }
   },

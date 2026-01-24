@@ -1,110 +1,282 @@
-import { Statement } from "../Statement.js";
-
+import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 import { Column }  from "../../types/Column.js";
-import { AddColumnAction } from "../../actions/AddColumnAction.js";
-import { DropColumnAction } from "../../actions/DropColumnAction.js";
-import { RenameColumnAction } from "../../actions/RenameColumnAction.js";
-import { AlterColumnAction } from "../../actions/AlterColumnAction.js";
+import { CONSTRAINT_KIND, type ConstraintSpec } from "../../types/Constraint.js";
 
-import { ConstraintSpec, CONSTRAINT_KIND, DropConstraintSpec } from "../../types/Constraint.js";
-import { AddConstraintAction } from "../../actions/AddConstraintAction.js";
-import { DropConstraintAction } from "../../actions/DropConstraintAction.js";
+export type AlterTableStatement =
+  | AlterAddColumn
+  | AlterDropColumn
+  | AlterRenameColumn
+  | AlterModifyColumn
+  | AlterAddConstraint
+  | AlterDropConstraint;
 
-export class AlterTableStatement extends Statement<void> {
-  constructor(
-    public table: string,
-  ) {
-    super();
-  }
-
-  add(column: Column) {
-    this.addAction(new AddColumnAction(this.table, column));
-  }
-
-  dropColumn(name: string) {
-    this.addAction(new DropColumnAction(this.table, name));
-  }
-
-  renameColumn(oldName: string, newName: string) {
-    this.addAction(new RenameColumnAction(this.table, oldName, newName));
-  }
-
-  alterColumn(name: string, column: Column) {
-    this.addAction(new AlterColumnAction(this.table, name, column));
-  }
-
-  addPrimaryKey(column: string) {
-    const constraint: ConstraintSpec = {
-      kind: CONSTRAINT_KIND.primaryKey,
-      name: column,
-      columns: [column]
-    };
-    this.addAction(new AddConstraintAction(this.table, constraint));
-  }
-
-  dropPrimaryKey() {
-    this.addAction(new DropConstraintAction(
-      this.table,
-      { kind: CONSTRAINT_KIND.primaryKey } as DropConstraintSpec
-    ));
-  }
-
-  addConstraint(name: string) {
-    return new AddConstraintFragment(this, name);
-  }
-
-  dropConstraint(name: string) {
-    this.addAction(new DropConstraintAction(this.table, { name: name } as DropConstraintSpec));
-  }
-
+interface AlterTableBaseStatement extends BaseStatement {
+  kind: "alter_table",
+  table: string,
 }
 
-class AddConstraintFragment {
-  constructor(
-    protected statement: AlterTableStatement,
-    private constraintName: string,
-  ) { }
+interface AlterAddColumn extends AlterTableBaseStatement {
+  op: "add_column";
+  column: Column;
+}
+
+interface AlterDropColumn extends AlterTableBaseStatement {
+  op: "drop_column";
+  columnName: string;
+}
+
+interface AlterRenameColumn extends AlterTableBaseStatement {
+  op: "rename_column";
+  from: string;
+  to: string;
+}
+
+interface AlterModifyColumn extends AlterTableBaseStatement {
+  op: "modify_column";
+  columnName: string;
+  column: Column;
+}
+
+interface AlterAddConstraint extends AlterTableBaseStatement {
+  op: "add_constraint";
+  constraint: ConstraintSpec;
+}
+
+interface AlterDropConstraint extends AlterTableBaseStatement {
+  op: "drop_constraint";
+  constraintName: string;
+}
+
+type AlterTableBuilderState =
+  | { state: "init" }
+  | { state: "add_column"; column: Column }
+  | { state: "drop_column"; columnName: string }
+  | { state: "rename_column"; from: string; to: string }
+  | { state: "modify_column"; columnName: string; column: Column }
+  | { state: "add_constraint"; partial: Partial<ConstraintSpec>, constraint?: ConstraintSpec }
+  | { state: "drop_constraint"; constraintName: string };
+
+export class AlterTableBuilder implements StatementBuilder {
+  private state: AlterTableBuilderState = { state: "init" };
+
+  constructor(private table: string) {}
+
+  private assertState<S extends AlterTableBuilderState["state"]>(
+    expected: S
+  ): Extract<AlterTableBuilderState, { state: S }> {
+    if (this.state.state !== expected) {
+      throw new Error(
+        `AlterTableBuilder in ${this.state.state} state, expected ${expected}`
+      );
+    }
+    return this.state as Extract<AlterTableBuilderState, { state: S }>;
+  }
+
+  private transitionState(next: AlterTableBuilderState) {
+    this.state = next;
+  }
+  
+  addColumn(column: Column) {
+    this.assertState("init");
+    this.transitionState({ state: "add_column", column });
+  }
+
+  dropColumn(columnName: string) {
+    this.assertState("init");
+    this.transitionState({ state: "drop_column", columnName });
+  }
+
+  renameColumn(from: string, to: string) {
+    this.assertState("init");
+    this.transitionState({ state: "rename_column", from, to });
+  }
+
+  modifyColumn(columnName: string, column: Column) {
+    this.assertState("init");
+    this.transitionState({ state: "modify_column", columnName, column });
+  }
+
+  dropConstraint(constraintName: string) {
+    this.assertState("init");
+    this.transitionState({ state: "drop_constraint", constraintName });
+  }
+
+  addConstraint(constraintName: string) {
+    this.assertState("init");
+    this.transitionState({ state: "add_constraint", partial: { name: constraintName } });
+  }
 
   primaryKey(columns: string[]) {
-    const constraint: ConstraintSpec = {
+    this.state = this.assertState("add_constraint");
+
+    const partial = this.state.partial;
+
+    if (partial.kind) {
+      throw new Error("Constraint kind already specified");
+    }
+
+    this.state.constraint = {
+      ...partial,
       kind: CONSTRAINT_KIND.primaryKey,
-      name: this.constraintName,
       columns: columns
-    };
-    this.statement.addAction(new AddConstraintAction(this.statement.table, constraint));
+    } as ConstraintSpec;
   }
 
   unique(columns: string[]) {
-    const constraint: ConstraintSpec = {
+    this.state = this.assertState("add_constraint");
+
+    const partial = this.state.partial;
+
+    if (partial.kind) {
+      throw new Error("Constraint kind already specified");
+    }
+
+    this.state.constraint = {
+      ...partial,
       kind: CONSTRAINT_KIND.unique,
-      name: this.constraintName,
       columns: columns
+    } as ConstraintSpec;
+  }
+
+  check(columns: string[], expr: any/*Expression*/) {
+    this.state = this.assertState("add_constraint");
+
+    const partial = this.state.partial;
+
+    if (partial.kind) {
+      throw new Error("Constraint kind already specified");
+    }
+
+    this.state.constraint = {
+      ...partial,
+      kind: CONSTRAINT_KIND.check,
+      columns: columns,
+      expr: expr/*Expression*/
+    } as ConstraintSpec;
+  }
+
+  foreignKey(childColumns: string[]) {
+    this.state = this.assertState("add_constraint");
+
+    const partial = this.state.partial;
+    if (partial.kind) {
+      throw new Error("Constraint kind already specified");
+    }
+
+    this.state.partial = {
+      ...partial,
+      kind: CONSTRAINT_KIND.foreignKey,
+      columns: childColumns
     };
-    this.statement.addAction(new AddConstraintAction(this.statement.table, constraint));
   }
-
-  foreignKey(childColumns: string[]): ForeignKeyFragment {
-    return new ForeignKeyFragment(this.statement, this.constraintName, childColumns);
-  }
-
-  //check() {} // TODO
-}
-
-class ForeignKeyFragment {
-  constructor(
-    protected statement: AlterTableStatement,
-    private constraintName: string,
-    private childColumns: string[],
-  ) { }
 
   references(parentTable: string, parentColumns: string[]) {
-    const constraint: ConstraintSpec = {
-      kind: CONSTRAINT_KIND.foreignKey,
-      name: this.constraintName,
-      columns: this.childColumns,
-      parentTable: parentTable,
-      parentColumns: parentColumns
-    };
-    this.statement.addAction(new AddConstraintAction(this.statement.table, constraint));
+    this.state = this.assertState("add_constraint");
+
+    const partial = this.state.partial;
+
+    if (!partial?.columns || !partial?.kind || !partial.name) {
+      throw new Error("Incomplete foreign key definition");
+    }
+
+    if (partial.kind !== CONSTRAINT_KIND.foreignKey) {
+      throw new Error(`References is only used for foreign keys, not ${partial.kind}`);
+    }
+
+    this.state.constraint = {
+      ...partial,
+      parentTable,
+      parentColumns
+    } as ConstraintSpec;
+  }
+
+  getNextCalls() {
+    switch (this.state.state) {
+      case "init":
+        return {
+          required: [
+            "addColumn",
+            "dropColumn",
+            "renameColumn",
+            "modifyColumn",
+            "addConstraint",
+            "dropConstraint"
+          ],
+          optional: []
+        };
+
+      case "add_constraint":
+        if (!this.state.constraint) {
+          if (!this.state.partial.kind) {
+            return { required: ["primaryKey", "unique", "foreignKey", "check"], optional: [] };
+          }
+          if (this.state.partial.kind === CONSTRAINT_KIND.foreignKey) {
+            return { required: ["references"], optional: [] };
+          }
+        }
+
+      default:
+        return { required: [], optional: [] };
+    }
+  }
+
+  createStatement(): AlterTableStatement {
+    switch (this.state.state) {
+      case "add_column":
+        return {
+          kind: "alter_table",
+          op: "add_column",
+          table: this.table,
+          column: this.state.column
+        };
+
+      case "drop_column":
+        return {
+          kind: "alter_table",
+          op: "drop_column",
+          table: this.table,
+          columnName: this.state.columnName
+        };
+
+      case "rename_column":
+        return {
+          kind: "alter_table",
+          op: "rename_column",
+          table: this.table,
+          from: this.state.from,
+          to: this.state.to
+        };
+
+      case "modify_column":
+        return {
+          kind: "alter_table",
+          op: "modify_column",
+          table: this.table,
+          columnName: this.state.columnName,
+          column: this.state.column
+        };
+
+      case "add_constraint":
+        if (!this.state.constraint) {
+          throw new Error("Cannot create AlterTableStatement: constraint not fully defined");
+        }
+        return {
+          kind: "alter_table",
+          op: "add_constraint",
+          table: this.table,
+          constraint: this.state.constraint
+        };
+      
+      case "drop_constraint":
+        return {
+          kind: "alter_table",
+          op: "drop_constraint",
+          table: this.table,
+          constraintName: this.state.constraintName
+        };
+
+      default:
+        throw new Error("Incomplete ALTER TABLE statement");
+    }
   }
 }

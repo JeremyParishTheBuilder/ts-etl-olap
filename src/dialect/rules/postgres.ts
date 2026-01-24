@@ -1,6 +1,19 @@
 import { DialectRules } from "../DialectRules.js";
 
+export const POSTGRES_FRAGMENTS: Record<string, string> = {
+  createTable: "createTable",
+
+
+  insertInto: "insertInto",
+  values: "values",
+  returning: "returning",
+
+  ///...
+};
+
 export const POSTGRES_RULES: DialectRules = {
+  fragments: POSTGRES_FRAGMENTS,
+  
   identifiers: {
     quote: `"`,
     caseSensitive: true,

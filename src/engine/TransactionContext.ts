@@ -1,13 +1,18 @@
 import type { Engine } from "./Engine.js";
-import type { EngineContext } from "./EngineContext.js";
+import { type EngineContext } from "./EngineContext.js";
 import { DatabaseContainer } from "../types/DatabaseContainer.js";
-import type { Statement } from "../statements/Statement.js";
+import { type Statement } from "../statements/Statement.js";
+import {
+  CreateTableStatement,
+  AlterTableStatement,
+  InsertIntoStatement,
+} from "../statements/index.js";
 import type { Action } from "../actions/Action.js";
-import type { Database } from "../types/Database.js";
+import { SemanticAnalyzer } from "../semantic/SemanticAnalyzer.js";
 
 export class TransactionContext extends DatabaseContainer {
   private actions: Action[] = [];
-  public stmts: Statement<any>[] = [];
+  public stmts: Statement[] = [];
 
   constructor(
     private trackStmts?: boolean
@@ -15,16 +20,18 @@ export class TransactionContext extends DatabaseContainer {
     super()
   }
 
-  addActionsFromStatement(stmt: Statement<any>) {
-    if (this.trackStmts) {
-      this.stmts.push(stmt);
-    }
-    this.actions.push(...stmt.getActions());
+  addStatement(stmt: Statement) {
+    this.stmts.push(stmt);
   }
 
   commit(engine: Engine, ctx: EngineContext) {
-    for (const action of this.actions) {
-      action.apply(ctx);
+    const analyzer = new SemanticAnalyzer(ctx);
+    for (const stmt of this.stmts) {
+    const actions = analyzer.bindStatement(stmt);
+
+    for (const action of actions) {
+        action.apply(ctx);
+      }
     }
 
     if (this.currentDatabase) {

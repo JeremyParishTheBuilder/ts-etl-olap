@@ -1,11 +1,28 @@
-import { Statement } from "../Statement.js";
-import { CreateDatabaseAction } from "../../actions/CreateDatabaseAction.js";
+import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 
-export class CreateDatabaseStatement extends Statement<void> {
+export interface CreateDatabaseStatement extends BaseStatement {
+  kind: "create_database",
+  dbName: string
+}
+
+export class CreateDatabaseBuilder implements StatementBuilder {
+
   constructor(
-    private name: string
-  ) {
-    super();
-    this.addAction(new CreateDatabaseAction(this.name));
+    private dbName: string
+  ) {}
+
+  getNextCalls() {
+    return {
+      required: [],
+      optional: [],
+    };
   }
+
+  createStatement(): CreateDatabaseStatement {
+    return {
+      kind: "create_database",
+      dbName: this.dbName
+    };
+  }
+
 }

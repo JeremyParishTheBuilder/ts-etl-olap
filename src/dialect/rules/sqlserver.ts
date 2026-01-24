@@ -1,6 +1,19 @@
 import { DialectRules } from "../DialectRules.js";
 
+const SQLSERVER_FRAGMENTS: Record<string, string> = {
+  createTable: "createTable",
+
+
+  insertInto: "insertInto",
+  values: "values",
+  output: "returning",
+
+  ///...
+};
+
 export const SQLSERVER_RULES: DialectRules = {
+  fragments: SQLSERVER_FRAGMENTS,
+
   identifiers: {
     quote: `"`,             // SQL Server allows double quotes if QUOTED_IDENTIFIER ON
     caseSensitive: false,   // Default collation is case-insensitive

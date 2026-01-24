@@ -7,5 +7,5 @@ export * from "./EngineRules.js";
 export * from "./TransactionContext.js";
 export * from "./RulesFacade.js";
 export * from "./RuleResolver.js";
-export * from "./InputBatch.js";
+export * from "../input/InputBatch.js";
 export * from "./Resolver.js";

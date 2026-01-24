@@ -1,17 +1,57 @@
-import { Statement } from "../Statement.js";
-import { InsertIntoAction } from "../../actions/InsertIntoAction.js";
-import { ColumnValue }  from "../../types/Column.js";
+import { type BaseStatement, type StatementBuilder } from "../Statement.js";
+import {type ColumnValue } from "../../types/Column.js"
 
-export class InsertIntoStatement extends Statement<void> {
+export interface InsertIntoStatement extends BaseStatement {
+  kind: "insert_into",
+  table: string,
+  columns: string[],
+  values: ColumnValue[][],
+  returning?: string[],
+}
+
+export class InsertIntoBuilder implements StatementBuilder {
+  private valuesData?: ColumnValue[][];
+  private returningCols?: string[];
+
   constructor(
-    public table: string,
-    public columns: string[] = [],
-  ) {
-    super();
+    private table: string,
+    private columns: string[] = [],
+  ) {}
+
+  values(data: ColumnValue[][]) {
+    this.valuesData = data;
   }
 
-  values(values: ColumnValue[][]) {
-    //convertSyntaxValuesIntoSemanticValues(values, ctx.rules.values.keywords);
-    this.addAction(new InsertIntoAction(this.table, this.columns, values));
+  returning(cols: string[]) {
+    if (!this.valuesData) {
+      throw new Error(`Cannot call returning() before values()`);
+    }
+    this.returningCols = cols;
   }
+
+  getNextCalls() {
+    if (!this.valuesData) return {
+      required: ["values"],
+      optional: []
+    };
+    return {
+      required: [],
+      optional: ["returning"],
+    };
+  }
+
+  createStatement(): InsertIntoStatement {
+    if (!this.valuesData) {
+      throw new Error("Missing required call: values()");
+    }
+
+    return {
+      kind: "insert_into",
+      table: this.table,
+      columns: this.columns,
+      values: this.valuesData,
+      returning: this.returningCols
+    };
+  }
+
 }

@@ -1,4 +1,6 @@
 export interface DialectRules {
+  fragments: Record<string, string>;
+
   identifiers: {
     quote: string;
     caseSensitive: boolean;

@@ -1,29 +1,37 @@
-import { Action } from "../actions/Action.js";
+import { type BeginStatement } from "./session/BeginStatement.js";
+import { type CommitStatement } from "./session/CommitStatement.js";
+import { type UseDatabaseStatement } from "./session/UseDatabaseStatement.js";
+import { type CreateDatabaseStatement } from "./ddl/CreateDatabaseStatement.js";
+import { type CreateTableStatement } from "./ddl/CreateTableStatement.js";
+import { type AlterTableStatement } from "./ddl/AlterTableStatement.js";
+import { type InsertIntoStatement } from "./dml/InsertIntoStatement.js";
 
-export abstract class Statement<T> {
-  protected actions: Action[] = [];
-
-  public getActions(): Action[] {
-    return this.actions;
-  }
-
-  public addAction(action: Action): void {
-    this.actions.push(action);
-  }
-
-  public isBegin(): boolean {
-    return false;
-  }
-
-  public isCommit(): boolean {
-    return false;
-  }
+export interface BaseStatement {
+  readonly kind: StatementKind;
 }
 
-export class BeginTransactionStatement extends Statement<void> {
-  public isBegin(): boolean { return true; }
-}
+export type StatementKind =
+  | "begin"
+  | "commit"
+  | "create_database"
+  | "use_database"
+  | "create_table"
+  | "alter_table"
+  | "insert_into";
 
-export class CommitTransactionStatement extends Statement<void> {
-  public isCommit(): boolean { return true; }
+export type Statement =
+  | BeginStatement
+  | CommitStatement
+  | CreateDatabaseStatement
+  | UseDatabaseStatement
+  | CreateTableStatement
+  | AlterTableStatement
+  | InsertIntoStatement;
+
+export interface StatementBuilder {
+  createStatement(): Statement;
+  getNextCalls(): {
+    required: string[];
+    optional: string[];
+  };
 }

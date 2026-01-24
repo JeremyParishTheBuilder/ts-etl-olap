@@ -1,6 +1,19 @@
 import { DialectRules } from "../DialectRules.js";
 
+const MYSQL_FRAGMENTS: Record<string, string> = {
+  createTable: "createTable",
+
+
+  insertInto: "insertInto",
+  values: "values",
+  returning: "returning",
+
+  ///...
+};
+
 export const MYSQL_RULES: DialectRules = {
+  fragments: MYSQL_FRAGMENTS,
+    
   identifiers: {
     quote: "`",
     caseSensitive: false, // MySQL identifiers are case-insensitive by default

@@ -4,13 +4,13 @@ import File from '../types/File.js';
 import CONFIG from '../config.js';
 import Pointer from '../types/Pointer.js';
 import { EngineRegistry } from '../engine/EngineRegistry.js';
-import { Engine } from "../engine/Engine.js" 
 import { Dialect } from "../dialect/Dialect.js";
+import { type PostgresInputBatch } from '../input/PostgresInputBatch.js';
 
 
 EngineRegistry.getInstance().newEngine("DEFAULT_POSTGRES", Dialect.Postgres);
 EngineRegistry.getInstance().setDefaultEngine("DEFAULT_POSTGRES");
-const sql: Engine = EngineRegistry.getInstance().engine();
+const sql: PostgresInputBatch = EngineRegistry.getInstance().engine().input() as PostgresInputBatch;
 
 sql.createDatabase("Cosmos Chain Registry");
 sql.createTable("RegistryRoot", {
@@ -295,6 +295,7 @@ function isChainDirectory(directory: Directory | File): boolean {
 import RegistryObject from '../types/RegistryObject.js';
 import RegistryStructureEntry from '../types/RegistryStructureEntry.js';
 import DirectoryContent from '../types/DirectoryContent.js';
+import { InputBatch } from '../input/InputBatch.js';
 
 export const CosmosChainRegistry = new Map();
 

@@ -1,11 +1,26 @@
-import { Statement} from "../Statement.js";
-import { UseDatabaseAction } from "../../actions/UseDatabaseAction.js";
+import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 
-export class UseDatabaseStatement extends Statement<void> {
+export interface UseDatabaseStatement extends BaseStatement {
+  kind: "use_database",
+  dbName: string,
+}
+
+export class UseDatabaseBuilder implements StatementBuilder {
   constructor(
-    public dbName: string
-  ) {
-    super();
-    this.addAction(new UseDatabaseAction(dbName));
+    private dbName: string
+  ) {}
+
+  getNextCalls() {
+    return {
+      required: [],
+      optional: [],
+    };
+  }
+
+  createStatement(): UseDatabaseStatement {
+    return {
+      kind: "use_database",
+      dbName: this.dbName
+    };
   }
 }

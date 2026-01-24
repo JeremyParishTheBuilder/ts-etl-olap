@@ -1,0 +1,171 @@
+Correct responsibility split
+
+Role			Responsibility
+
+Challenger		Stress-test scope and intent
+Strategy		Decide how the problem should be approached
+Manager			Decide what work units exist
+Worker			Execute one unit
+
+
+
+1) Challenger Agent (Scope Interrogator)
+
+Purpose: Prevent vague, misaligned, or cargo-cult scope.
+
+What it does:
+-Questions assumptions
+-Forces business alignment
+-Identifies ambiguity
+-Flags unnecessary complexity
+
+What it outputs:
+-clarified objective
+-explicit non-goals
+-risk list
+-clean scope statement
+
+This agent never proposes solutions.
+
+This agent runs:
+-at root
+-at any new manager-approved node
+
+Rules:
+-Max N questions (e.g. 3–5)
+-Must justify each question’s value
+-Must estimate diminishing returns
+
+Challenger is forbidden from:
+-proposing implementations
+-suggesting architectures
+-offering plans
+
+Its allowed verbs:
+-question
+-flag
+-clarify
+-summarize
+
+Violations = automatic rejection of output.
+
+2) Strategy Agent
+
+Purpose: Decide how to approach the problem.
+
+What it does:
+-Evaluates possible approaches
+-Chooses tradeoffs
+-Aligns with plan.md constraints
+
+What it outputs:
+-selected approach
+-rejected alternatives + reasons
+-high-level execution outline (no task list)
+
+No decomposition. No subtasks.
+
+3) Manager Agent (Decomposer)
+Purpose: Turn strategy into executable work units.
+
+What it does:
+-Decomposes into subtasks
+-Enforces size limits
+-Assigns each subtask:
+--worker-eligible
+--or manager-justified (recommendation only)
+
+What it outputs:
+-Subtask A → Worker (justification)
+-Subtask B → Worker (justification)
+-Subtask C → Manager suggested (reason: cross-cutting concerns)
+
+Hard constraints:
+-max N subtasks
+-max one level of suggestion
+-no self-spawning managers
+
+4) Human Review Gate (non-agent)
+
+Human decides:
+-approve worker execution
+-approve new manager node
+-force re-decomposition
+-collapse scope
+
+No agent replaces this.
+
+5) Worker Agent
+
+Purpose: Execute exactly one bounded task.
+
+What it does:
+-write code
+-write tests
+-refactor
+-generate docs
+
+Rules:
+-cannot decompose
+-cannot reframe scope
+-cannot spawn agents
+-must either succeed or fail
+
+
+6) Reviewer / Auditor Agent
+
+Purpose: Counter overconfidence.
+
+Runs when:
+-complexity is medium/high
+-correctness matters
+-risk flagged by Challenger or Manager
+
+It checks:
+-correctness
+-plan.md compliance
+-edge cases
+-test coverage
+
+7) State Summarizer Agent (optional but recommended)
+
+Purpose: Maintain project coherence.
+
+It outputs:
+-task tree status
+-completed nodes
+-blocked nodes
+-risks
+
+It never makes decisions.
+
+4. Where does human interaction happen?
+
+There are two explicit human touchpoints per node.
+
+1) After Challenger
+
+Human may be required to:
+-answer questions
+-clarify intent
+-confirm assumptions
+
+This is optional but allowed.
+
+2) After Manager
+
+Human must:
+-approve decomposition
+-approve any new manager nodes
+-approve execution start
+
+Everything else is non-interactive.
+
+
+
+node/
+ ├─ scope.md           ← Challenger output
+ ├─ strategy.md        ← Strategy output
+ ├─ tasks.json         ← Manager output
+ ├─ review_notes.md    ← Human decisions
+
