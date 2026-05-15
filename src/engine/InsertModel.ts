@@ -1,5 +1,5 @@
-import type { ColumnValue, Column } from "../types/Column.js";
-import type { Table } from "../types/Table.js";
+import type { ColumnValue, Column } from "../schema/Column.js";
+import type { Table } from "../schema/Table.js";
 
 export type InsertValue =
   | { kind: "value"; value: ColumnValue }
@@ -8,26 +8,23 @@ export type InsertValue =
   | { kind: "generated" }
   | { kind: "expression"; expr: any/*Expression*/ };
 
-export type InsertCell = {
-  column: Column;
-  input: InsertValue;
-};
+export type InsertRow = InsertValue[];
 
-export type InsertRow = InsertCell[];
-
+//This does normalization of input into a format acceptable to the Table
+//the input row of values will include a cell for all columns, and in the correct order.
 export function bindInsertRows(
   table: Table,
   columns: string[] | null,
   values: InsertValue[][]
 ): InsertRow[] {
-  const tableColumns = Array.from(table.cols.values());
+  const tableColumns = Array.from(table.columns.map.values());
 
   // Determine target columns (explicit or all)
   const targetColumns = columns && columns.length > 0
     ? columns.map(name => table.requireColumn(name))
     : tableColumns;
 
-  // Check duplicates
+  // Check for duplicates
   const seen = new Set<Column>();
   for (const col of targetColumns) {
     if (seen.has(col)) {
@@ -36,22 +33,15 @@ export function bindInsertRows(
     seen.add(col);
   }
 
+  // Map columns to explicitly input values
+  const targetColumnIndexMap = new Map<Column, number>();
+  targetColumns.forEach((col, i) => targetColumnIndexMap.set(col, i));
+
   // Build rows
   return values.map(row => {
-    if (row.length !== targetColumns.length) {
-      throw new Error("Mismatching number of columns and values");
-    }
-
-    // Map input values to target columns
-    const explicit = new Map<Column, InsertValue>();
-    for (let i = 0; i < targetColumns.length; i++) {
-      explicit.set(targetColumns[i], row[i]);
-    }
-
-    // Emit InsertCell array in **table column order**, filling omitted with default
-    return tableColumns.map(col => ({
-      column: col,
-      input: explicit.get(col) ?? { kind: "default" }
-    }));
+    return tableColumns.map(col => {
+      const idx = targetColumnIndexMap.get(col);
+      return idx !== undefined ? row[idx] : { kind: "default" };
+    });
   });
 }

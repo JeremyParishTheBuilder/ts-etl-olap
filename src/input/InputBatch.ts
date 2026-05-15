@@ -1,6 +1,6 @@
+import { WhereColumnBuilder } from "../statements/dql/WhereColumnBuilder.js";
 import {
   type Statement,
-  type StatementBuilder,
   BeginBuilder,
   CommitBuilder,
   UseDatabaseBuilder,
@@ -8,15 +8,17 @@ import {
   CreateTableBuilder,
   AlterTableBuilder,
   InsertIntoBuilder,
+  SelectBuilder,
+  UpdateSetBuilder,
+  type Builder,
+  isStatementBuilder,
 } from "../statements/index.js";
-import { type RulesFacadeShape } from "../engine/RulesFacade.js";
-import { type TransactionContext } from "../engine/TransactionContext.js";
-import { InlineColumnSpec } from "../types/Column.js";
-import { ConstraintSpec } from "../types/Constraint.js";
+import { type ColumnValue, type InlineColumnSpec } from "../schema/Column.js";
+import { type ConstraintSpec } from "../schema/Constraint.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
-  private currentBuilder: StatementBuilder | null = null;
+  private currentBuilder: Builder | null = null;
 
   static statementStarters = [
     "begin",
@@ -32,10 +34,7 @@ export abstract class InputBatch {
   ];
 
   constructor(
-    protected readonly rules: RulesFacadeShape,
-    protected readonly beginTx: () => void,
-    protected readonly commitTx: () => void,
-    protected readonly getTx: () => TransactionContext | undefined
+    protected readonly executeStatement: (stmt: Statement) => void,
   ) {}
 
   private addStatement(stmt: Statement) {
@@ -43,7 +42,7 @@ export abstract class InputBatch {
   }
 
   private finalizePreviousStatement() {
-    if (this.currentBuilder) {
+    if (this.currentBuilder && isStatementBuilder(this.currentBuilder)) {
       this.addStatement(this.currentBuilder.createStatement());
       this.currentBuilder = null;
     }
@@ -156,6 +155,19 @@ export abstract class InputBatch {
     return this;
   }
 
+  protected addColumn(
+    columnName: string,
+    inlineColumnSpec: InlineColumnSpec,
+    fragment: string = "ADD COLUMN"
+  ) {
+    this.assertAllowed("addColumn", fragment);
+    if (!(this.currentBuilder instanceof AlterTableBuilder)) {
+      throw new Error(`Cannot call '${fragment}' outside of AlterTable`);
+    }
+    this.currentBuilder.addColumn(columnName, inlineColumnSpec);
+    return this;
+  }
+
   protected addConstraint(
     name: string,
     fragment: string = "ADD CONSTRAINT"
@@ -193,50 +205,88 @@ export abstract class InputBatch {
     return this;
   }
 
-  execute() {
-    if (this.currentBuilder) {
-      this.addStatement(this.currentBuilder.createStatement());
-      this.currentBuilder = null;
-    }
-
-    for (const stmt of this.statements) {
-      if (stmt.kind === "begin") { 
-        // Explicit BEGIN
-        this.beginTx();
-        continue;
-      } else if (stmt.kind === "commit") { 
-        // Explicit COMMIT
-        this.commitTx();
-        continue;
-      }
-
-      const tx = this.getTx();
-
-      if (tx) {
-        // Statement inside an existing transaction
-        tx.addStatement(stmt);
-      } else if (!this.rules.transaction.autoCommit) {
-        // No transaction and auto-commit is OFF → error
-        throw new Error("Auto-commit is disabled: statements must be inside a BEGIN ... COMMIT block");
-      } else {
-        // Auto-commit is ON → run statement in temporary transaction
-        this.executeAutoCommit(stmt);
-      }
-    }
+  protected select(
+    columns: string[] | "*",
+    fragment: string = "SELECT"
+  ) {
+    this.assertAllowed("select", fragment);
+    this.finalizePreviousStatement();
+    this.currentBuilder = new SelectBuilder(columns);
+    return this;
   }
 
-  private executeAutoCommit(stmt: Statement) {
-    // Start a temporary transaction
-    this.beginTx();
-    
-    const actx = this.getTx();
-    if (!actx) {
-      throw new Error("Failed to start auto-commit transaction");
+  protected from(
+    name: string,
+    fragment: string = "FROM"
+  ) {
+    this.assertAllowed("from", fragment);
+    if (!(this.currentBuilder instanceof SelectBuilder)) {
+      throw new Error(`Cannot call '${fragment}' outside of Select`);
     }
-    // Add the statement to the transaction context
-    actx.addStatement(stmt);
+    this.currentBuilder.from(name);
+    return this;
+  }
+
+  protected where(
+    column: string,
+    fragment: string = "WHERE",
+  ) {
+    this.assertAllowed("where", fragment);
+    if (
+      !(this.currentBuilder instanceof SelectBuilder) &&
+      !(this.currentBuilder instanceof UpdateSetBuilder)// &&
+      //!(this.currentBuilder instanceof DeleteBuilder) // not implemented yet, TODO
+    ) {
+      throw new Error(`Cannot call '${fragment}' outside of SELECT/UPDATE/DELETE`);
+    }
+    this.currentBuilder = this.currentBuilder.where(column); // temporarily sets the currentBuilder to whereColumnBuilder
+    return this;
+  }
+
+  protected eq(
+    value: ColumnValue,
+    fragment: string = "eq",
+  ) {
+    this.assertAllowed("eq", fragment);
+
+    if (!(this.currentBuilder instanceof WhereColumnBuilder)) {
+      throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
+    }
+
+    this.currentBuilder = this.currentBuilder.eq(value);
+
+    return this;
+  }
+
+  protected and(
+    column: string,
+    fragment: string = "AND",
+  ) {
+    this.assertAllowed("and", fragment);
+
+    if (
+      !(this.currentBuilder instanceof SelectBuilder) // TODO add updatesetbuilder and delete
+    ) {
+      throw new Error(`Cannot call '${fragment}' outside of SELECT/UPDATE/DELETE`);
+    }
+
+    this.currentBuilder = this.currentBuilder.and(column);
     
-    // Commit immediately
-    this.commitTx();
+    return this;
+  }
+
+  execute() {
+    this.finalizePreviousStatement();
+
+    let resultIterators = [];
+
+    for (const stmt of this.statements) {
+      const result = this.executeStatement(stmt);
+      if (stmt.kind === "select") resultIterators.push(result);
+    }
+
+    this.statements = [];
+
+    return resultIterators;
   }
 }

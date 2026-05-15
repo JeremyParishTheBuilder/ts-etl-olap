@@ -18,6 +18,7 @@ export interface DialectRules {
     supportsNotValidatedConstraints: boolean;
     allowNullableForeignKeys?: boolean;
     requireExplicitNames?: boolean;
+    nullsDistinct: boolean,
   };
 
   insert: {

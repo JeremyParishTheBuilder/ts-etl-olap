@@ -1,17 +1,22 @@
-import { Action } from "./Action.js";
-import type { EngineContext } from "../engine/EngineContext.js";
-import type { Column } from "../types/Column.js";
+import { type Action } from "./Action.js";
+import { type ColumnSpec } from "../schema/Column.js";
+import { type Databases } from "../schema/Databases.js";
 
 export class AddColumnAction implements Action {
   constructor(
-    private table: string,
-    private column: Column
+    private dbName: string,
+    private tableName: string,
+    private columnSpec: ColumnSpec
   ) {}
 
-  apply(ctx: EngineContext) {
-    //ctx.validate.addColumn(this.column);
-    ctx.resolver
-      .requireTable(true, this.table)
-      .addColumn(this.column);
+  apply(databases: Databases) {
+    const db = databases.require(this.dbName);
+
+    const updatedTable = db.requireTable(this.tableName)
+      .addColumn(this.columnSpec);
+
+    return databases.update(
+      db.updateTable(updatedTable)
+    );
   }
 }

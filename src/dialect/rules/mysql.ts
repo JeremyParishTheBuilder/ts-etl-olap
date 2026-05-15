@@ -30,6 +30,7 @@ export const MYSQL_RULES: DialectRules = {
     allowsMultipleAutoIncrement: false, // only one AUTO_INCREMENT column per table
     allowNullableForeignKeys: true,
     supportsNotValidatedConstraints: true,
+    nullsDistinct: true,
   },
 
   insert: {

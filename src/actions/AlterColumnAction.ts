@@ -1,18 +1,24 @@
-import { Action } from "./Action.js";
-import type { EngineContext } from "../engine/EngineContext.js";
-import type { Column } from "../types/Column.js";
+import { type Action } from "./Action.js";
+import { type ColumnType } from "../schema/Column.js";
+import { type Databases } from "../schema/Databases.js";
 
 export class AlterColumnAction implements Action {
   constructor(
-    private table: string,
+    private dbName: string,
+    private tableName: string,
     private columnName: string,
-    private column: Column
+    private newType: ColumnType,
   ) {}
 
-  apply(ctx: EngineContext) {
-    //ctx.validate.dropColumn(this.column);
-    ctx.resolver
-      .requireTable(true, this.table)
-      .alterColumn(this.columnName, this.column);
+  apply(databases: Databases): Databases {
+    const db = databases.require(this.dbName);
+
+    //TODO: altering a column needs to check FKs, so should go to Database, not Table.
+    const updatedTable = db.tables.require(this.tableName)
+      .alterColumn(this.columnName, this.newType);
+
+    return databases.update(
+      db.updateTable(updatedTable)
+    );
   }
 }

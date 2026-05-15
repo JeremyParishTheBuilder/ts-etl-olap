@@ -1,4 +1,4 @@
-import Expression from "../types/Expression.js";
+import { Expression } from "../schema/Expression.js";
 
 export function evalExpression(
   expr: Expression,

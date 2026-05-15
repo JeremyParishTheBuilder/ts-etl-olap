@@ -1,16 +1,12 @@
-import { Action } from "./Action.js";
-import type { EngineContext } from "../engine/EngineContext.js";
-import { Database } from "../types/Database.js"; 
+import { type Action } from "./Action.js";
+import { type Databases } from "../schema/Databases.js";
 
 export class CreateDatabaseAction implements Action {
   constructor(
-    private name: string
+    private name: string,
   ) {}
 
-  apply(ctx: EngineContext) {
-    ctx.validate.createDatabase(this.name);
-    ctx.resolver
-      .resolveTx()
-      .setDatabase(new Database(this.name));
+  apply(databases: Databases): Databases {
+    return databases.create(this.name);
   }
 }

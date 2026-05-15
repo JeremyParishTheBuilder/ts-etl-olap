@@ -1,17 +1,18 @@
-import { Action } from "./Action.js";
-import type { EngineContext } from "../engine/EngineContext.js";
+import { type Action } from "./Action.js";
+import { type Databases } from "../schema/Databases.js";
 
 export class RenameColumnAction implements Action {
   constructor(
-    private table: string,
+    private dbName: string,
+    private tableName: string,
     private oldColumnName: string,
-    private newColumnName: string
+    private newColumnName: string,
   ) {}
 
-  apply(ctx: EngineContext) {
-    //ctx.validate.dropColumn(this.column);
-    ctx.resolver
-      .requireTable(true, this.table)
-      .renameColumn(this.oldColumnName, this.newColumnName);
+  apply(databases: Databases): Databases {
+    const updatedDb = databases.require(this.dbName)
+      .renameColumn(this.tableName, this.oldColumnName, this.newColumnName);
+    
+    return databases.update(updatedDb);
   }
 }

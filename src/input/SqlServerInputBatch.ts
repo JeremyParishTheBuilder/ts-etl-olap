@@ -1,17 +1,13 @@
 import { InputBatch } from "./InputBatch.js";
-import { type RulesFacadeShape } from "../engine/RulesFacade.js";
-import { type TransactionContext } from "../engine/TransactionContext.js";
-import { InlineColumnSpec } from "../types/Column.js";
-import { ConstraintSpec } from "../types/Constraint.js";
+import { InlineColumnSpec } from "../schema/Column.js";
+import { ConstraintSpec } from "../schema/Constraint.js";
+import { type Statement } from "../statements/Statement.js";
 
 export class SqlServerInputBatch extends InputBatch {
   constructor(
-    rules: RulesFacadeShape,
-    beginTx: () => void,
-    commitTx: () => void,
-    getTx: () => TransactionContext | undefined
+    executeStatement: (stmt: Statement) => void,
   ) {
-    super(rules, beginTx, commitTx, getTx);
+    super(executeStatement);
   }
 
   begin() {

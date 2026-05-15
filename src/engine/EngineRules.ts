@@ -34,6 +34,12 @@ export const ENGINE_RULES: Record<
         DIALECT_RULES[d].constraints?.requireExplicitNames,
       engineDefault: false,
     },
+
+    nullsDistinct: {
+      dialectDefault: (d: Dialect) =>
+        DIALECT_RULES[d].constraints?.nullsDistinct,
+      engineDefault: true,
+    },
   },
 
   transaction: {

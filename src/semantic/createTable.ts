@@ -1,53 +1,208 @@
-import { Action } from "../actions/Action.js";
+import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
+import { type CreateTableStatement } from "../statements/index.js";
+
+import { type Action } from "../actions/Action.js";
 import { CreateTableAction } from "../actions/CreateTableAction.js";
 import { AddColumnAction } from "../actions/AddColumnAction.js";
-import { AddConstraintAction } from "../actions/AddConstraintAction.js";
-import { type Column, type InlineColumnSpec } from "../types/Column.js";
-import { CONSTRAINT_KIND, type ConstraintSpec } from "../types/Constraint.js";
-import { type CreateTableStatement } from "../statements/index.js";
-import { Table } from "../types/Table.js";
-import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
+import { type ColumnSpec, type InlineColumnSpec } from "../schema/Column.js";
+import {
+  CONSTRAINT_KIND,
+  type ConstraintSpec
+} from "../schema/Constraint.js";
+import { AddForeignKeyAction } from "../actions/AddForeignKeyAction.js";
+import { AddPrimaryKeyAction } from "../actions/AddPrimaryKeyAction.js";
+import { AddCheckAction } from "../actions/AddCheckAction.js";
+import { AddIndexAction } from "../actions/AddIndexAction.js";
 
-export function createTableHandler(
+export function bindCreateTable(
   semantic: SemanticAnalyzer,
   stmt: CreateTableStatement
 ) {
+  const ctx = semantic.ctx;
   const stmtActions: Action[] = [];
+
+  const dbName = ctx.requireDatabase().name;
 
   const tableName: string = stmt.table;
 
   // create table
   //validate
-  if(semantic.ctx.resolver.getTable(false, tableName)) {
+  if(semantic.ctx.getTable(tableName)) {
     throw new Error(`Table '${tableName}' already exists`);
   }
+
   //save action
-  stmtActions.push(new CreateTableAction(tableName));
+  stmtActions.push(new CreateTableAction(dbName, tableName));
 
   // add columns and inline constraints 
   const seen = new Set<string>();
-  for (const [colName, colSpec] of Object.entries(stmt.columnSchema)) {
+  for (const [colName, inlineColSpec] of Object.entries(stmt.columnSchema)) {
     //check for duplicate columns
     if (seen.has(colName)) {
       throw new Error(`Duplicate column '${colName}' in CREATE TABLE`);
     }
     seen.add(colName);
 
-    const column: Column = { name: colName, ...colSpec };
-    stmtActions.push(new AddColumnAction(tableName, column));
+    const columnSpec: ColumnSpec = {name: colName, ...inlineColSpec};
+
+    stmtActions.push(new AddColumnAction(dbName, tableName, columnSpec));
 
     //get any inline constraints
-    const allInlineConstraints = constraintSpecsFromColumnSpec(colName, colSpec);
+    const allInlineConstraints = constraintSpecsFromColumnSpec(colName, inlineColSpec);
     for (const spec of allInlineConstraints) {
-      // optionally skip FK if dialect disallows inline FKs
-      if (spec.kind === CONSTRAINT_KIND.foreignKey && !semantic.ctx.rules.ddl.supportsInlineForeignKeys) continue;
-      stmtActions.push(new AddConstraintAction(tableName, spec));
+      let action: Action | undefined = undefined;
+
+      switch (spec.kind) {
+        case CONSTRAINT_KIND.foreignKey:
+          // optionally skip FK if dialect disallows inline FKs
+          if (!semantic.ctx.rules.ddl.supportsInlineForeignKeys) break;
+
+          stmtActions.push(
+              new AddForeignKeyAction(
+              dbName,
+              tableName,
+              spec,
+            )
+          );
+
+          break;
+
+        case CONSTRAINT_KIND.unique:
+          stmtActions.push(
+            new AddIndexAction(
+              dbName,
+              tableName,
+              {
+                ...spec,
+                unique: true,
+                nullsDistinct: ctx.rules.constraints.nullsDistinct
+              }
+            )
+          );
+
+          break;
+
+        case CONSTRAINT_KIND.check:
+          stmtActions.push(
+            new AddCheckAction(
+              dbName,
+              tableName,
+              spec,
+            )
+          );
+
+          break;
+
+        case CONSTRAINT_KIND.primaryKey:
+          const indexName = spec.index ?? spec.name;
+
+          stmtActions.push(
+            new AddIndexAction(
+              dbName,
+              tableName,
+              {
+                name: indexName,
+                columns: spec.columns,
+                unique: true,
+                nullsDistinct: ctx.rules.constraints.nullsDistinct
+              }
+            )
+          );
+
+          stmtActions.push(
+            new AddPrimaryKeyAction(
+              dbName,
+              tableName,
+              spec,
+            )
+          );
+
+          break;
+
+        default:
+          break;
+      }
+
+      if (!action) {
+        throw new Error(`Invalid Inline Constraint Spec`);
+      }
+
+      stmtActions.push(action);
     }
   }
 
   // add constraints
   for (const spec of Object.values(stmt.constraintSchema ?? {})) {
-    stmtActions.push(new AddConstraintAction(tableName, spec));
+    switch (spec.kind) {
+      case CONSTRAINT_KIND.foreignKey:
+        stmtActions.push(
+            new AddForeignKeyAction(
+            dbName,
+            tableName,
+            spec,
+          )
+        );
+
+        break;
+
+      case CONSTRAINT_KIND.unique:
+        stmtActions.push(
+          new AddIndexAction(
+            dbName,
+            tableName,
+            {
+              ...spec,
+              unique: true,
+            },
+          )
+        );
+
+        break;
+
+      case CONSTRAINT_KIND.check:
+        stmtActions.push(
+          new AddCheckAction(
+            dbName,
+            tableName,
+            spec,
+          )
+        );
+
+        break;
+
+      case CONSTRAINT_KIND.primaryKey:
+        const indexName = spec.index ?? spec.name;
+
+        stmtActions.push(
+          new AddIndexAction(
+            dbName,
+            tableName,
+            {
+              name: indexName,
+              columns: spec.columns,
+              unique: true,
+              nullsDistinct: ctx.rules.constraints.nullsDistinct,
+            },
+          )
+        );
+
+        stmtActions.push(
+          new AddPrimaryKeyAction(
+            dbName,
+            tableName,
+            {
+              ...spec,
+              index: indexName
+            },
+          )
+        );
+
+        break;
+
+      default:
+        throw new Error(`Invalid Inline Constraint Spec`);
+    }
+
   }
 
   return stmtActions;
@@ -64,6 +219,7 @@ function constraintSpecsFromColumnSpec(
       kind: CONSTRAINT_KIND.primaryKey,
       name: `${colName}_pk`,
       columns: [colName],
+      index: `${colName}_i`,
     });
   }
 
@@ -89,8 +245,8 @@ function constraintSpecsFromColumnSpec(
     specs.push({
       kind: CONSTRAINT_KIND.check,
       name: `${colName}_chk`,
-      expr: colSpec.check,
       columns: [colName],
+      expression: undefined,//colSpec.check,
     });
   }
 

@@ -1,52 +1,41 @@
-import { DatabaseContainer } from "../types/DatabaseContainer.js";
-import { Database } from "../types/Database.js";
-import { EngineContext } from "../engine/EngineContext.js";
-import {
-  type Statement,
-  type CreateTableStatement,
-} from "../statements/index.js";
-import { type Action } from "../actions/Action.js";
+import { type ExecutionContext } from "../engine/ExecutionContext.js";
+import { type Statement } from "../statements/index.js";
 
-import { createTableHandler } from "./createTable.js";
-//import { insertHandler } from "./insert";
+import { bindCreateDatabase } from "./createDatabase.js";
+import { bindCreateTable } from "./createTable.js";
+import { bindInsertInto } from "./insertInto.js";
+import { bindSelect } from "./select.js";
+import { bindAlterTable } from "./alterTable.js";
+import { type BindResult } from "../engine/BindResult.js";
 
-// planner does:
-// - validate syntax
-// - validate semantic intent against the planner schema
-// - produce corresponding Actions
+// SemanticAnalyzer does:
+// - resolve names (tables, databases, columns)
+// - validate rules (dialect / engine policies)
+// - enforce semantic correctness
+// - produce fully-bound, executable Actions
 export class SemanticAnalyzer {
 
-  constructor(public readonly ctx: EngineContext) {}
+  constructor(public readonly ctx: ExecutionContext) {}
 
-  public bindStatement(stmt: Statement): Action[] {
+  public bindStatement(stmt: Statement): BindResult {
     switch (stmt.kind) {
-      // case "begin":
-      //   return this.begin();
-      // case "commit":
-      //   return this.commit();
-      // case "create_database":
-      //   return this.createDatabase(stmt);
-      // case "use_database":
-      //   return this.useDatabase(stmt);
+      case "create_database":
+        return { kind: "actions", actions: bindCreateDatabase(this, stmt) };
+
       case "create_table":
-        return this.createTable(stmt);
-      //case AlterTableStatement:
-      // case InsertIntoStatement:
-      //   const semanticInsert = convertInsert(stmt, planner);
-      //   actions.push(new InsertRowAction(stmt.table, semanticInsert));
-      //   break;
-      // ...
+        return { kind: "actions", actions: bindCreateTable(this, stmt) };
+
+      case "alter_table":
+        return { kind: "actions", actions: bindAlterTable(this, stmt) };
+
+      case "insert_into":
+        return { kind: "actions", actions: bindInsertInto(this, stmt) };
+
+      case "select":
+        return { kind: "query", plan: bindSelect(this, stmt) };
+
       default:
         throw new Error(`Unsupported statement`);
     }
   }
-
-  private createTable(stmt: CreateTableStatement) {
-    return createTableHandler(this, stmt);
-  }
-
-  // private insert(stmt: InsertIntoStatement) {
-  //   return insertHandler(this, stmt);
-  // }
-
 }

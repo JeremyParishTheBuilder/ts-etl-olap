@@ -1,14 +1,19 @@
 //import ChainRegistry from '../types/ChainRegistry.js';
-import RegistryObject from '../types/RegistryObject.js';
-import RegistryRoot from '../types/RegistryRoot.js';
-import Pointer from '../types/Pointer.js';
+import RegistryObject from '../mapping/RegistryObject.js';
+import RegistryRoot from '../mapping/RegistryRoot.js';
+import Pointer from '../mapping/Pointer.js';
 import { CosmosChainRegistry } from '../registries/CosmosChainRegistry.js';
-import MultiRegistryRoot from '../types/MultiRegistryRoot.js';
+import MultiRegistryRoot from '../mapping/MultiRegistryRoot.js';
 //import { Database } from '../types/Database';
+
+import { EngineRegistry } from '../engine/EngineRegistry.js';
+import { type PostgresInputBatch } from '../input/PostgresInputBatch.js';
 
 const CCR1_PATH: string = '../chain-registry';
 
 //const db: Database = new Database("CCR");
+
+const sql: PostgresInputBatch = EngineRegistry.getInstance().engine().input() as PostgresInputBatch;
 
 export const getChainRegContents = () => {
 
@@ -16,11 +21,16 @@ export const getChainRegContents = () => {
 
   //db.select([]).from("RegistryRoot").where({kind: "pred", fn: (rowId) => rowId === 1 }).query();
 
+  
+
   const chain_reg = new RegistryRoot(CosmosChainRegistry, "Cosmos", CCR1_PATH);
   console.log("started");
-  //console.log(chain_reg);
-  //console.log(chain_reg.pointer);
-  console.log("here is the chain_reg");
+
+  let registryRootReturn = sql.select("*").from("RegistryRoot").execute();
+  console.log("Registry Root Select:");
+  //console.log(registryRootReturn);
+
+  console.log("here is the chain_regk");
   const obj = chain_reg.pointer?.parent?.object as MultiRegistryRoot;
   console.log("here's obj");
   //console.log(obj);

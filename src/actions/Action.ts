@@ -1,5 +1,5 @@
-import { EngineContext } from "../engine/EngineContext.js";
+import { Databases } from "../schema/Databases.js";
 
 export interface Action {
-  apply(ctx: EngineContext): void;
+  apply(databases: Databases): Databases;
 }

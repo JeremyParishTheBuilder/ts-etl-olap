@@ -30,6 +30,7 @@ export const POSTGRES_RULES: DialectRules = {
     allowsMultipleAutoIncrement: false, // SERIAL / IDENTITY only once per table
     allowNullableForeignKeys: true,
     supportsNotValidatedConstraints: true,
+    nullsDistinct: true,
   },
 
   insert: {

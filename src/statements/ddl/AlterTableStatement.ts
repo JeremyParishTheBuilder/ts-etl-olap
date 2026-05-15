@@ -1,6 +1,6 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { Column }  from "../../types/Column.js";
-import { CONSTRAINT_KIND, type ConstraintSpec } from "../../types/Constraint.js";
+import { Column, InlineColumnSpec }  from "../../schema/Column.js";
+import { CONSTRAINT_KIND, type ConstraintSpec } from "../../schema/Constraint.js";
 
 export type AlterTableStatement =
   | AlterAddColumn
@@ -8,7 +8,8 @@ export type AlterTableStatement =
   | AlterRenameColumn
   | AlterModifyColumn
   | AlterAddConstraint
-  | AlterDropConstraint;
+  | AlterDropConstraint
+  | AlterDropPrimaryKey;
 
 interface AlterTableBaseStatement extends BaseStatement {
   kind: "alter_table",
@@ -17,7 +18,8 @@ interface AlterTableBaseStatement extends BaseStatement {
 
 interface AlterAddColumn extends AlterTableBaseStatement {
   op: "add_column";
-  column: Column;
+  columnName: string;
+  inlineColumnSpec: InlineColumnSpec;
 }
 
 interface AlterDropColumn extends AlterTableBaseStatement {
@@ -47,14 +49,19 @@ interface AlterDropConstraint extends AlterTableBaseStatement {
   constraintName: string;
 }
 
+interface AlterDropPrimaryKey extends AlterTableBaseStatement {
+  op: "drop_primary_key";
+}
+
 type AlterTableBuilderState =
   | { state: "init" }
-  | { state: "add_column"; column: Column }
+  | { state: "add_column"; columnName: string; inlineColumnSpec: InlineColumnSpec }
   | { state: "drop_column"; columnName: string }
   | { state: "rename_column"; from: string; to: string }
   | { state: "modify_column"; columnName: string; column: Column }
   | { state: "add_constraint"; partial: Partial<ConstraintSpec>, constraint?: ConstraintSpec }
-  | { state: "drop_constraint"; constraintName: string };
+  | { state: "drop_constraint"; constraintName: string }
+  | { state: "drop_primary_key" };
 
 export class AlterTableBuilder implements StatementBuilder {
   private state: AlterTableBuilderState = { state: "init" };
@@ -76,9 +83,9 @@ export class AlterTableBuilder implements StatementBuilder {
     this.state = next;
   }
   
-  addColumn(column: Column) {
+  addColumn(columnName: string, inlineColumnSpec: InlineColumnSpec) {
     this.assertState("init");
-    this.transitionState({ state: "add_column", column });
+    this.transitionState({ state: "add_column", columnName, inlineColumnSpec });
   }
 
   dropColumn(columnName: string) {
@@ -99,6 +106,11 @@ export class AlterTableBuilder implements StatementBuilder {
   dropConstraint(constraintName: string) {
     this.assertState("init");
     this.transitionState({ state: "drop_constraint", constraintName });
+  }
+
+  dropPrimaryKey() {
+    this.assertState("init");
+    this.transitionState({ state: "drop_primary_key" });
   }
 
   addConstraint(constraintName: string) {
@@ -151,7 +163,7 @@ export class AlterTableBuilder implements StatementBuilder {
       ...partial,
       kind: CONSTRAINT_KIND.check,
       columns: columns,
-      expr: expr/*Expression*/
+      //expr: expr/*Expression*/
     } as ConstraintSpec;
   }
 
@@ -200,7 +212,8 @@ export class AlterTableBuilder implements StatementBuilder {
             "renameColumn",
             "modifyColumn",
             "addConstraint",
-            "dropConstraint"
+            "dropConstraint",
+            "dropPrimaryKey",
           ],
           optional: []
         };
@@ -227,7 +240,8 @@ export class AlterTableBuilder implements StatementBuilder {
           kind: "alter_table",
           op: "add_column",
           table: this.table,
-          column: this.state.column
+          columnName: this.state.columnName,
+          inlineColumnSpec: this.state.inlineColumnSpec,
         };
 
       case "drop_column":
@@ -265,6 +279,13 @@ export class AlterTableBuilder implements StatementBuilder {
           op: "add_constraint",
           table: this.table,
           constraint: this.state.constraint
+        };
+
+      case "drop_primary_key":
+        return {
+          kind: "alter_table",
+          op: "drop_primary_key",
+          table: this.table,
         };
       
       case "drop_constraint":

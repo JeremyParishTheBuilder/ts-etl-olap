@@ -1,17 +1,13 @@
 import { InputBatch } from "./InputBatch.js";
-import { type RulesFacadeShape } from "../engine/RulesFacade.js";
-import { type TransactionContext } from "../engine/TransactionContext.js";
-import { InlineColumnSpec } from "../types/Column.js";
-import { ConstraintSpec } from "../types/Constraint.js";
+import { type InlineColumnSpec } from "../schema/Column.js";
+import { type ConstraintSpec } from "../schema/Constraint.js";
+import { type Statement } from "../statements/Statement.js";
 
 export class PostgresInputBatch extends InputBatch {
   constructor(
-    rules: RulesFacadeShape,
-    beginTx: () => void,
-    commitTx: () => void,
-    getTx: () => TransactionContext | undefined
+    executeStatement: (stmt: Statement) => void,
   ) {
-    super(rules, beginTx, commitTx, getTx);
+    super(executeStatement);
   }
 
   begin() {
@@ -46,6 +42,10 @@ export class PostgresInputBatch extends InputBatch {
     return super.addConstraint(name);
   }
 
+  add(columnName: string, inlineColumnSpec: InlineColumnSpec) {
+    return super.addColumn(columnName, inlineColumnSpec);
+  }
+
   foreignKey(columns: string[]) {
     return super.foreignKey(columns);
   }
@@ -64,5 +64,12 @@ export class PostgresInputBatch extends InputBatch {
 
   returning(cols: string[]) {
     return super.returning(cols);
+  }
+
+  select(columns: string[] | "*") {
+    return super.select(columns);
+  }
+  from(name: string) {
+    return super.from(name);
   }
 }

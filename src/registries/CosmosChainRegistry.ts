@@ -1,8 +1,7 @@
-import FsStructureEntry from '../types/FsStructureEntry.js';
-import Directory from '../types/Directory.js';
-import File from '../types/File.js';
-import CONFIG from '../config.js';
-import Pointer from '../types/Pointer.js';
+import FsStructureEntry from '../mapping/FsStructureEntry.js';
+import Directory from '../mapping/Directory.js';
+import File from '../mapping/File.js';
+import Pointer from '../mapping/Pointer.js';
 import { EngineRegistry } from '../engine/EngineRegistry.js';
 import { Dialect } from "../dialect/Dialect.js";
 import { type PostgresInputBatch } from '../input/PostgresInputBatch.js';
@@ -12,10 +11,22 @@ EngineRegistry.getInstance().newEngine("DEFAULT_POSTGRES", Dialect.Postgres);
 EngineRegistry.getInstance().setDefaultEngine("DEFAULT_POSTGRES");
 const sql: PostgresInputBatch = EngineRegistry.getInstance().engine().input() as PostgresInputBatch;
 
-sql.createDatabase("Cosmos Chain Registry");
+sql.createDatabase("Cosmos Chain Registry").execute();
+console.log("Created CCR");
+
+sql.useDatabase("Cosmos Chain Registry").execute();
+console.log("Set current database");
+
+sql.begin().execute();
+console.log("Begin");
+
 sql.createTable("RegistryRoot", {
-  name: { type: String }
-});
+  name: { type: String, nullable: true }
+}).execute();
+console.log("Created Table");
+
+sql.commit().execute();
+console.log("Commit");
 
 const chainRegistryRoot = new FsStructureEntry(
   "ChainRegistryRoot",
@@ -25,20 +36,87 @@ const chainRegistryRoot = new FsStructureEntry(
   () => "."
 );
 
+console.log("Adding Columns");
+sql
+  .alterTable("RegistryRoot")
+  .add("newCol1", { type: Number, defaultValue: 69 })
+  .execute();
+
+console.log("Adding More Columns");
+sql
+  .alterTable("RegistryRoot")
+  .add("newCol2", { type: Number, defaultValue: 420 })
+  .execute();
+
+console.log("Inserting a record into RegistryRoot");
 sql.
   insertInto("RegistryRoot", ["name"])?.
-  values([["Cosmos Chain Registry"]]);
+  values([["Cosmos Chain Registry"]]).execute();
+console.log("Inserted");
 
+const table = EngineRegistry.getInstance().engine().databases
+  .require("Cosmos Chain Registry")
+  .tables.require("RegistryRoot");
+console.log("Set table");
+console.log(table);
+const predicate = new ComparisonPredicate(
+  /* columnIndex */ 0,
+  "eq",
+  "Cosmos Chain Registry"
+);
+
+const predicate2 = new ComparisonPredicate(
+  /* columnIndex */ 2,
+  "gt",
+  100
+);
+const p3 = new BinaryLogicalPredicate(
+  predicate,
+  predicate2,
+  "and"
+);
+
+console.log("Set Predicate");
+const fnode = new FilterNode(
+  p3,
+  new TableScanNode(table)
+);
+console.log("set Filter");
+
+const projNode = new ProjectNode(
+  [0, 2], // selected columns
+  fnode
+);
+
+const plan = { root: projNode };
+console.log([...plan.root.execute()]);
+
+console.log("Results:");
+const results = [...projNode.execute()];
+console.log(results);
+console.log("End of results");
+
+
+console.log("attempting Select");
+let select = sql.select("*").from("RegistryRoot").execute();
+console.log("Displaying RegistryRoot");
+console.log(select[0]);
+
+sql.begin().execute();
 sql.createTable("NetworkKind", {
   name: { type: String },
   directoryName: { type: String }
-});
+}).execute();
+console.log("added network kind table");
 sql.
   insertInto("NetworkKind", ["name", "directoryName"])?.
-  values([["mainnet", "."]]);
+  values([["mainnet", "."]]).execute();
+console.log("inserted one row into network kind table");
 sql.
   insertInto("NetworkKind", ["name", "directoryName"])?.
-  values([["testnet", "testnets"]]);
+  values([["testnet", "testnets"]]).execute();
+console.log("inserted a second row into network kind table");
+sql.commit().execute();
 //add DirectoryContent as a type? or find some way to indicate that a field corresponds to a Directory??
 
 const networkTypeDirectory = new FsStructureEntry(
@@ -96,7 +174,7 @@ sql.createTable("StorageBinding", {
   storageType: { type: String, enumValues: ["Fs.Directory", "Fs.File", "Json", "Db.Table"] },
   name: { type: "function" },
   keys: { type: "function" }, // or types
-  qualifyFn: { type: "function", defaultValue: { f: () => true }}
+  qualifyFn: { type: "function", defaultValue: "{ f: () => true }"}
 });
 
 sql.
@@ -292,10 +370,17 @@ function isChainDirectory(directory: Directory | File): boolean {
 }
 
 
-import RegistryObject from '../types/RegistryObject.js';
-import RegistryStructureEntry from '../types/RegistryStructureEntry.js';
-import DirectoryContent from '../types/DirectoryContent.js';
+import RegistryObject from '../mapping/RegistryObject.js';
+import RegistryStructureEntry from '../mapping/RegistryStructureEntry.js';
+import DirectoryContent from '../mapping/DirectoryContent.js';
 import { InputBatch } from '../input/InputBatch.js';
+import { SemanticAnalyzer } from '../semantic/SemanticAnalyzer.js';
+import { Engine } from '../engine/Engine.js';
+import { ComparisonPredicate } from '../query/predicate/ComparisonPredicate.js';
+import { FilterNode } from '../query/plan/FilterNode.js';
+import { TableScanNode } from '../query/plan/TableScanNode.js';
+import { ProjectNode } from '../query/plan/ProjectNode.js';
+import { BinaryLogicalPredicate } from '../query/predicate/LogicalPredicate.js';
 
 export const CosmosChainRegistry = new Map();
 

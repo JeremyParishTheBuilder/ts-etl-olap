@@ -30,6 +30,7 @@ export const SQLSERVER_RULES: DialectRules = {
     allowsMultipleAutoIncrement: false, // Only one IDENTITY column per table
     allowNullableForeignKeys: true,
     supportsNotValidatedConstraints: true,
+    nullsDistinct: true,
   },
 
   insert: {

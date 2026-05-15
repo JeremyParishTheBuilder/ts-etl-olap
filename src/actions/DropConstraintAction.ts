@@ -1,19 +1,20 @@
-import { Action } from "./Action.js";
-import type { EngineContext } from "../engine/EngineContext.js";
-import type { DropConstraintSpec } from "../types/Constraint.js";
+import { type Action } from "./Action.js";
+import { type Databases } from "../schema/Databases.js";
 
-export class DropConstraintAction implements Action {
-  constructor(
-    private table: string,
-    private spec: DropConstraintSpec,
-  ) {}
+// export class DropConstraintAction implements Action {
+//   constructor(
+//     private dbName: string,
+//     private tableName: string,
+//     private constraintName: string,
+//   ) {}
 
-  apply(ctx: EngineContext) {   
-    //ctx.validate.dropConstraint(this.table, this.constraint);
-    // TODO: definitely need when other tables have a foreign key referencing this table's primary key
+//   apply(databases: Databases): Databases {
+//     const updatedDb = databases.require(this.dbName)
+//       .dropConstraint(
+//         this.tableName,
+//         this.constraintName
+//       );
 
-    ctx.resolver
-      .requireTable(true, this.table)
-      .dropConstraint(this.spec);
-  }
-}
+//     return databases.update(updatedDb);
+//   }
+// }

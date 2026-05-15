@@ -1,6 +1,6 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { type InlineColumnSpec } from "../../types/Column.js";
-import { type ConstraintSpec } from "../../types/Constraint.js";
+import { type InlineColumnSpec } from "../../schema/Column.js";
+import { type ConstraintSpec } from "../../schema/Constraint.js";
 
 export interface CreateTableStatement extends BaseStatement {
   kind: "create_table",
