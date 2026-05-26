@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
-import { ForeignKey } from '../../src/schema/ForeignKey.js';
-import { CONSTRAINT_KIND } from '../../src/schema/Constraint.js';
 
 describe('Table::renameForeignKey', () => {
   function buildTable(): Table {
@@ -11,15 +9,13 @@ describe('Table::renameForeignKey', () => {
         type: Number,
         nullable: false,
       })
-      .addForeignKey(
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
-          name: "FK_Posts_Users",
-          columns: ["UserId"],
-          parentTable: "Users",
-          parentColumns: ["Id"],
-        })
-      );
+      .createForeignKey({
+        name: "FK_Posts_Users",
+        columns: ["UserId"],
+        parentTable: "Users",
+        parentColumns: ["Id"],
+        parentIndex: "pk_roles",
+      });
   }
 
   it('renames the foreign key', () => {
@@ -106,15 +102,13 @@ describe('Table::renameForeignKey', () => {
         type: Number,
         nullable: false,
       })
-      .addForeignKey(
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
-          name: "FK_Posts_Categories",
-          columns: ["CategoryId"],
-          parentTable: "Categories",
-          parentColumns: ["Id"],
-        })
-      );
+      .createForeignKey({
+        name: "FK_Posts_Categories",
+        columns: ["CategoryId"],
+        parentTable: "Categories",
+        parentColumns: ["Id"],
+        parentIndex: "pk_roles",
+      });
 
     expect(() => {
       table.renameForeignKey(
@@ -133,5 +127,142 @@ describe('Table::renameForeignKey', () => {
     );
 
     expect(updated).toBe(table);
+  });
+
+  it('renames the corresponding reverse index', () => {
+    const table = new Table("Child")
+      .addColumn({
+        name: "ParentId",
+        type: Number,
+      })
+      .createForeignKey({
+        name: "FK_Parent",
+        columns: ["ParentId"],
+        parentTable: "Parent",
+        parentColumns: ["Id"],
+        parentIndex: "pk_roles",
+      });
+
+    const updated =
+      table.renameForeignKey(
+        "FK_Parent",
+        "FK_Parent_New",
+      );
+
+    expect(
+      updated.getIndex("FK_Parent")
+    ).toBeUndefined();
+
+    expect(
+      updated.requireIndex("FK_Parent_New")
+    ).toBeDefined();
+  });
+
+  it('updates foreignKey.reverseIndex during rename', () => {
+    const table = new Table("Child")
+      .addColumn({
+        name: "ParentId",
+        type: Number,
+      })
+      .createForeignKey({
+        name: "FK_Parent",
+        columns: ["ParentId"],
+        parentTable: "Parent",
+        parentColumns: ["Id"],
+        parentIndex: "pk_roles",
+      });
+
+    const updated =
+      table.renameForeignKey(
+        "FK_Parent",
+        "FK_Parent_New",
+      );
+
+    const fk =
+      updated.requireForeignKey(
+        "FK_Parent_New"
+      );
+
+    expect(
+      fk.reverseIndex
+    ).toBe("fk_parent_new");
+  });
+
+  it('preserves reverse index ownership during rename', () => {
+    const table = new Table("Child")
+      .addColumn({
+        name: "ParentId",
+        type: Number,
+      })
+      .createForeignKey({
+        name: "FK_Parent",
+        columns: ["ParentId"],
+        parentTable: "Parent",
+        parentColumns: ["Id"],
+        parentIndex: "pk_roles",
+      });
+
+    const updated =
+      table.renameForeignKey(
+        "FK_Parent",
+        "FK_Parent_New",
+      );
+
+    const index =
+      updated.requireIndex(
+        "FK_Parent_New"
+      );
+
+    expect(
+      index.ownerConstraint
+    ).toBe("fk_parent_new");
+  });
+
+  it('preserves reverse index row mappings during rename', () => {
+    let table = new Table("Child")
+      .addColumn({
+        name: "ParentId",
+        type: Number,
+      })
+      .createForeignKey({
+        name: "FK_Parent",
+        columns: ["ParentId"],
+        parentTable: "Parent",
+        parentColumns: ["Id"],
+        parentIndex: "pk_roles",
+      });
+
+    table = table.addRow([1]);
+    table = table.addRow([2]);
+
+    const originalIndex =
+      table.requireIndex("FK_Parent");
+
+    expect(
+      originalIndex.hasRow([1])
+    ).toBe(true);
+
+    expect(
+      originalIndex.hasRow([2])
+    ).toBe(true);
+
+    const updated =
+      table.renameForeignKey(
+        "FK_Parent",
+        "FK_Parent_New",
+      );
+
+    const updatedIndex =
+      updated.requireIndex(
+        "FK_Parent_New"
+      );
+
+    expect(
+      updatedIndex.hasRow([1])
+    ).toBe(true);
+
+    expect(
+      updatedIndex.hasRow([2])
+    ).toBe(true);
   });
 });

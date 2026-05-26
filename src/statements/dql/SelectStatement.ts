@@ -1,6 +1,5 @@
-import { type ColumnValue } from "../../schema/Column.js";
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { type ComparisonOperator, type WhereClause } from "../WhereClause.js";
+import { type WhereClause } from "../WhereClause.js";
 import { WhereColumnBuilder } from "./WhereColumnBuilder.js";
 
 export interface SelectStatement extends BaseStatement {

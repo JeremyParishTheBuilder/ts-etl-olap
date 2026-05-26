@@ -8,7 +8,7 @@ import { DropForeignKeyAction } from "../actions/DropForeignKeyAction.js";
 
 import { type AlterTableStatement } from "../statements/index.js";
 import { type ColumnSpec } from "../schema/Column.js";
-import { CONSTRAINT_KIND } from "../schema/Constraint.js";
+import { CONSTRAINT_KIND } from "../schema/ConstraintKind.js";
 import { PrimaryKey } from "../schema/PrimaryKey.js";
 import { Index } from "../schema/Index.js";
 import { ForeignKey } from "../schema/ForeignKey.js";
@@ -56,7 +56,11 @@ export function bindAlterTable(
           new AddForeignKeyAction(
             dbName,
             tableName,
-            spec,
+            {
+              ...spec,
+              onDelete: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnDelete,
+              onUpdate: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnUpdate,
+            },
           )
         );
 

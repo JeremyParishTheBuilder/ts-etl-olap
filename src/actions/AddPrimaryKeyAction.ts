@@ -1,7 +1,6 @@
 import { type Action } from "./Action.js";
 import { type Databases } from "../schema/Databases.js";
-import { PrimaryKey } from "../schema/PrimaryKey.js";
-import { CONSTRAINT_KIND, type PrimaryKeySpec } from "../schema/Constraint.js";
+import { type PrimaryKeySpec } from "../schema/Constraint.js";
 
 export class AddPrimaryKeyAction implements Action {
   constructor(
@@ -11,12 +10,14 @@ export class AddPrimaryKeyAction implements Action {
   ) {}
 
   apply(databases: Databases): Databases {
-    const pk = PrimaryKey.fromSpec(this.spec);
+    //const pk = PrimaryKey.fromSpec(this.spec);
 
     const db = databases.require(this.dbName);
 
+    const { kind, ...spec } = this.spec;
+
     const updatedTable = db.requireTable(this.tableName)
-      .addPrimaryKey(pk);
+      .createPrimaryKey(spec);
 
     const updatedDb = db.updateTable(updatedTable);
 

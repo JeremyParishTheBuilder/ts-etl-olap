@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from '../../src/schema/Database.js';
-import { CONSTRAINT_KIND } from '../../src/schema/Constraint.js';
-import { Index } from '../../src/schema/Index.js';
-import { ForeignKey } from '../../src/schema/ForeignKey.js';
+import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
 
 describe('Database::removeTable', () => {
   it('removes a table from the database', () => {
@@ -40,13 +38,11 @@ describe('Database::removeTable', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_Users",
-          columns: ["Id"],
-          unique: true,
-        })
-      );
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id"],
+        unique: true,
+      });
 
     const posts = database.requireTable("Posts")
       .addColumn({
@@ -54,15 +50,15 @@ describe('Database::removeTable', () => {
         type: Number,
         nullable: false,
       })
-      .addForeignKey(
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
-          name: "FK_Posts_Users",
-          columns: ["UserId"],
-          parentTable: "Users",
-          parentColumns: ["Id"],
-        })
-      );
+      .createForeignKey({
+        name: "FK_Posts_Users",
+        columns: ["UserId"],
+        parentTable: "Users",
+        parentColumns: ["Id"],
+        parentIndex: "pk_users",
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
     const updated = database
       .updateTable(users)

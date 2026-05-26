@@ -1,9 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from '../../src/schema/Database.js';
-import { CONSTRAINT_KIND } from '../../src/schema/Constraint';
-import { ForeignKey } from '../../src/schema/ForeignKey';
-import { Table } from '../../src/schema/Table';
-import { Index } from '../../src/schema/Index';
+import { Table } from '../../src/schema/Table.js';
 
 describe('Database::renameTable', () => {
   it('propagates parent table rename to referencing foreign keys', () => {
@@ -13,13 +10,11 @@ describe('Database::renameTable', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_Users",
-          columns: ["Id"],
-          unique: true,
-        })
-      );
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id"],
+        unique: true,
+      });
 
     const posts = new Table("Posts")
       .addColumn({
@@ -27,15 +22,13 @@ describe('Database::renameTable', () => {
         type: Number,
         nullable: false,
       })
-      .addForeignKey(
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
-          name: "FK_Posts_Users",
-          columns: ["UserId"],
-          parentTable: "Users",
-          parentColumns: ["Id"],
-        })
-      );
+      .createForeignKey({
+        name: "FK_Posts_Users",
+        columns: ["UserId"],
+        parentTable: "Users",
+        parentColumns: ["Id"],
+        parentIndex: "pk_users",
+      });
 
     const database = new Database("DB1")
       .addTable(users)

@@ -45,4 +45,16 @@ export class SqlServerInputBatch extends InputBatch {
   output(cols: string[]) {
     return super.returning(cols, "OUTPUT");
   }
+
+  select(columns: string[] | "*") {
+    return super.select(columns);
+  }
+
+  from(name: string) {
+    return super.from(name);
+  }
+
+  where(column: string) {
+    return super.where(column);
+  }
 }

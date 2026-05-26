@@ -15,6 +15,8 @@ export class AddCheckAction implements Action {
 
     const db = databases.require(this.dbName);
 
+    //const { kind, ...spec } = this.spec;
+
     const updatedTable = db.requireTable(this.tableName)
       .addCheck(check);
 

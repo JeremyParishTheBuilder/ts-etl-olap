@@ -95,7 +95,8 @@ export class Engine {
     }
 
     if (stmt.kind === "use_database") {
-      this.currentDb = stmt.dbName;
+      this.setCurrentDatabase(stmt.dbName);
+      //this.currentDb = stmt.dbName;
       return;
     }
 
@@ -113,7 +114,6 @@ export class Engine {
     const result = analyzer.bindStatement(stmt);    
 
     if (result.kind === "actions") {
-      console.log(result.actions); // TODO, remove
       tx.addActions(result.actions);
     }
 
@@ -140,7 +140,6 @@ export class Engine {
       const result = analyzer.bindStatement(stmt);
 
       if (result.kind === "actions") {
-        console.log(result.actions); // TODO, remove
         tx.addActions(result.actions);
       }
 
@@ -161,6 +160,12 @@ export class Engine {
     this.inputBatch = undefined; // clear batch after execution
   }
   //  <input batch>
+
+  //  <current database>
+  public setCurrentDatabase(dbName: string): void {
+    this.currentDb = dbName;
+  }
+  //  </current database>
 
   //  <transaction>
   private latestTxId = 0;
@@ -218,129 +223,4 @@ export class Engine {
     this._currentTransaction = undefined;
   }
   //  </transaction>
-
-  //TODO:
-  //alterDatabase
-  //showDatabases
-
-  // database-level statements
-
-
-  //Query
-  //select(cols: any[]) { return new Select(this.currentDatabase, [], cols); }
-  //with(name: string, subquery: Query) { return new With(this.currentDatabase, [[name, subquery]]); }
-
 }
-
-
-// abstract class Query {
-//   abstract query(): Table | undefined;
-//   print(): void {
-//     console.log(this.query());
-//   }
-// }
-
-
-
-// type Expr = // Expression
-//   | { kind: "pred"; fn: Predicate };
-  //| { kind: "and"; left: Expr; right: Expr }
-  //| { kind: "or"; left: Expr; right: Expr }
-  //| { kind: "not"; expr: Expr;};
-
-//type Predicate = (rowId: RowId, table: Table) => boolean;
-
-// export class With {
-//   constructor(
-//     public db: Database,
-//     public ctes: any[] //CTE = Common table expression
-//   ) {}
-
-//   with(name: string, subquery: Query) {
-//     return new With(this.db, [...this.ctes, [name, subquery]]);
-//   }
-
-//   select(cols: string[]) {
-//     return new Select(this.db, this.ctes, cols);
-//   }
-// }
-
-// export class Select {
-//   constructor(
-//     public db: string | undefined,
-//     public ctes: any[],
-//     public cols: string[]
-//   ) {}
-
-//   from(table: string) {
-//     return new From(this.db, this.ctes, this.cols, table);
-//   }
-// }
-
-
-
-// export class From extends Query {
-//   constructor(
-//     public db: Database,
-//     public ctes: unknown[],
-//     public cols: string[],
-//     public table: string
-// ) {
-//   super();
-// }
-
-//   where(expr: Expr) {
-//     return new Where(this.db, this.ctes, this.cols, this.table, expr);
-//   }
-
-  // query(): Table | undefined {
-  //   return this.db.tables.get(this.table);
-  // }
-
-//}
-
-// export class Where extends Query {
-//   constructor(
-//     public db: Database,
-//     public ctes: any[],
-//     public cols: string[],
-//     public table: string,
-//     public expr: Expr
-//   ) {
-//     super();
-//   }
-
-//   //feeling silly--might delete later ;p
-//   // and(p: Expr): Where {
-//   //   return new Where(
-//   //     this.db,
-//   //     this.ctes,
-//   //     this.cols,
-//   //     this.table,
-//   //     { kind: "and", left: this.expr, right: p }
-//   //   );
-//   // }
-
-//   query(): Table | undefined {
-//     let tableData: Table | undefined = new From(this. db, this.ctes, this.cols, this.table).query();
-//     if (!tableData) return;
-
-    // const filteredRowIds: RowId[] = (tableData.data.get(ID) as RowId[]).filter(rowId =>
-    //   this.expr.fn(rowId, tableData);
-    // );
-
-    //TODO, write query function
-    //Decide whether to create a copy of a table, and then filter that out vs
-    // ...return just an array of ids??
-
-    //copy table
-
-    // (tableData.data.get(ID) as RowId[]).forEach(rowId => {
-    //   if (!this.expr.fn(rowId, tableData)) tableData.deleteRow(rowId);
-    // });
-
-    //return filteredRowIds;
-//     return;
-//   }
-
-// }

@@ -1,6 +1,7 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 import { Column, InlineColumnSpec }  from "../../schema/Column.js";
-import { CONSTRAINT_KIND, type ConstraintSpec } from "../../schema/Constraint.js";
+import { type ConstraintSpec } from "../../schema/Constraint.js";
+import { CONSTRAINT_KIND } from "../../schema/ConstraintKind.js";
 
 export type AlterTableStatement =
   | AlterAddColumn

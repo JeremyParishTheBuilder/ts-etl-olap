@@ -6,13 +6,13 @@ export class UpdateRowAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private updates: Map<number, ColumnValue>,
     private rowNum: number,
+    private updates: Map<number, ColumnValue>,
   ) {}
 
   apply(databases: Databases) {
     const updatedDatabase = databases.require(this.dbName)
-      .updateRow(this.tableName, this.updates, this.rowNum);
+      .updateRow(this.tableName, this.rowNum, this.updates);
 
     return databases.update(updatedDatabase);
   }

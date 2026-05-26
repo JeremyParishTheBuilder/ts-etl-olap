@@ -1,3 +1,4 @@
+import { ReferentialAction } from "../../schema/ReferentialAction.js";
 import { DialectRules } from "../DialectRules.js";
 
 const SQLSERVER_FRAGMENTS: Record<string, string> = {
@@ -28,9 +29,11 @@ export const SQLSERVER_RULES: DialectRules = {
 
   constraints: {
     allowsMultipleAutoIncrement: false, // Only one IDENTITY column per table
-    allowNullableForeignKeys: true,
     supportsNotValidatedConstraints: true,
     nullsDistinct: true,
+    allowNullableForeignKeys: true,
+    foreignKeyDefaultOnDelete: ReferentialAction.restrict,
+    foreignKeyDefaultOnUpdate: ReferentialAction.restrict,
   },
 
   insert: {

@@ -1,11 +1,6 @@
-export enum CONSTRAINT_KIND {
-  primaryKey = "PRIMARY KEY",
-  foreignKey = "FOREIGN KEY",
-  unique = "UNIQUE",
-  check = "CHECK"
-}
-
+import { CONSTRAINT_KIND } from "./ConstraintKind.js";
 import { type ColumnKeyType } from "./Column.js";
+import { ReferentialAction } from "./ReferentialAction.js";
 
 export type PrimaryKeySpec = {
   kind: CONSTRAINT_KIND.primaryKey,
@@ -26,6 +21,8 @@ export type ForeignKeySpec = {
   columns: ColumnKeyType[],
   parentTable: string,
   parentColumns: ColumnKeyType[],
+  onDelete?: ReferentialAction,
+  onUpdate?: ReferentialAction,
 }
 
 export type CheckSpec = {

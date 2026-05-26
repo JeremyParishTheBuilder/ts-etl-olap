@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
-import { Index } from '../../src/schema/Index.js';
-import { PrimaryKey } from '../../src/schema/PrimaryKey.js';
-import { CONSTRAINT_KIND } from '../../src/schema/Constraint.js';
 
 describe('Table::renamePrimaryKey', () => {
   function buildTable(): Table {
@@ -12,21 +9,16 @@ describe('Table::renamePrimaryKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_T1",
-          columns: ["Id"],
-          unique: true,
-        })
-      )
-      .addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_T1",
-          columns: ["Id"],
-          index: "PK_T1",
-        })
-      );
+      .createIndex({
+        name: "PK_T1",
+        columns: ["Id"],
+        unique: true,
+      })
+      .createPrimaryKey({
+        name: "PK_T1",
+        columns: ["Id"],
+        index: "PK_T1",
+      });
   }
 
   it('renames the primary key', () => {
@@ -78,13 +70,11 @@ describe('Table::renamePrimaryKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "UQ_1",
-          columns: ["OtherId"],
-          unique: true,
-        })
-      );
+      .createIndex({
+        name: "UQ_1",
+        columns: ["OtherId"],
+        unique: true,
+      });
 
     expect(() => {
       table.renamePrimaryKey("UQ_1");
@@ -116,21 +106,16 @@ describe('Table::renamePrimaryKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_Index",
-          columns: ["Id"],
-          unique: true,
-        })
-      )
-      .addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_T1",
-          columns: ["Id"],
-          index: "PK_Index",
-        })
-      );
+      .createIndex({
+        name: "PK_Index",
+        columns: ["Id"],
+        unique: true,
+      })
+      .createPrimaryKey({
+        name: "PK_T1",
+        columns: ["Id"],
+        index: "PK_Index",
+      });
 
     const updated = table.renamePrimaryKey("RenamedPK");
 

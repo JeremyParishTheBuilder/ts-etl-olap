@@ -1,15 +1,21 @@
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
-import { type ColumnKeyType } from "./Column.js";
+import { ColumnValue } from "./Column.js";
 import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
 import { type ForeignKeySpec } from "./Constraint.js";
+import { ReferentialAction } from "./ReferentialAction.js";
 
 export class ForeignKey extends ColumnBoundImmutable {
 
   protected constructor(
     public name: string,
-    public columns: ColumnKeyType[],
+    public columns: string[],
+    public readonly columnIndexes: number[],
     public parentTable: string,
-    public parentColumns: ColumnKeyType[], 
+    public parentColumns: string[],
+    public parentIndex: string,
+    public reverseIndex: string,
+    public onDelete: ReferentialAction = ReferentialAction.restrict,
+    public onUpdate: ReferentialAction = ReferentialAction.restrict,
   ) {
     super();
     this.validate();
@@ -19,23 +25,50 @@ export class ForeignKey extends ColumnBoundImmutable {
   validate() {
     super.validateColumns();
 
+    if(this.columns.length !== this.columnIndexes.length) {
+      throw new Error(`Child Column Name-Index length mismatch`);
+    }
+
     if(this.columns.length !== this.parentColumns.length) {
       throw new Error(`Child-Parent Columns length mismatch`);
     }
   }
 
-  public static fromSpec(spec: ForeignKeySpec): ForeignKey {
+  public static create(
+    spec: Omit<ForeignKeySpec, "kind"> & {
+      columnIndexes: number[],
+      parentIndex: string,
+      onDelete?: ReferentialAction,
+      onUpdate?: ReferentialAction,
+    }): ForeignKey {
     return new this(
       spec.name,
       spec.columns.map(normalizeIdentifier),
+      spec.columnIndexes,
       normalizeIdentifier(spec.parentTable),
       spec.parentColumns.map(normalizeIdentifier),
-    )
+      normalizeIdentifier(spec.parentIndex),
+      getReverseIndexFromName(spec.name),
+      spec.onDelete,
+      spec.onUpdate,
+    );
   }
 
   public rename(newName: string): ForeignKey {
     return this.with({
-      name: newName
+      name: newName,
+    } as Partial<this>);
+  }
+
+  public withReverseIndex(newName: string): ForeignKey {
+    return this.with({
+      reverseIndex: getReverseIndexFromName(newName),
+    } as Partial<this>);
+  }
+
+  public withParentIndex(parentIndex: string): ForeignKey {
+    return this.with({
+      parentIndex: normalizeIdentifier(parentIndex),
     } as Partial<this>);
   }
 
@@ -43,7 +76,7 @@ export class ForeignKey extends ColumnBoundImmutable {
     parentTableName: string,
     oldColumnName: string,
     newColumnName: string
-  ): this {
+  ): ForeignKey {
     if (normalizeIdentifier(parentTableName) !== this.parentTable) return this;
 
     const normalizedName = normalizeIdentifier(newColumnName);
@@ -66,7 +99,7 @@ export class ForeignKey extends ColumnBoundImmutable {
   public tryRenameParentTable(
     oldParentTableName: string,
     newParentTableName: string
-  ): this {
+  ): ForeignKey {
     const normalizedName = normalizeIdentifier(newParentTableName);
 
     if (normalizeIdentifier(oldParentTableName) !== this.parentTable) {
@@ -81,4 +114,24 @@ export class ForeignKey extends ColumnBoundImmutable {
       parentTable: normalizedName,
     } as Partial<this>);
   }
+
+  public tryUpdateColumnIndexes(columnNameToIndexMap: Map<string, number>): ForeignKey {
+    const updatedColumnIndexes = [...this.columnIndexes];
+    
+    for (let i = 0; i < this.columns.length; i++) {
+      updatedColumnIndexes[i] = columnNameToIndexMap.get(this.columns[i])!;
+    }
+
+    return this.with({
+      columnIndexes: updatedColumnIndexes
+    } as Partial<this>);
+  }
+
+  public getProjectedValues(values: readonly ColumnValue[]): ColumnValue[] {
+    return this.columnIndexes.map(i => values[i]);
+  }
+}
+
+function getReverseIndexFromName(name: string): string {
+  return normalizeIdentifier(name);
 }

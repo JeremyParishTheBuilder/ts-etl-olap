@@ -17,6 +17,7 @@ export type ColumnValue = PrimitiveColumnValue;
 //   | { readonly f: (...args: any[]) => any };
 
 import { Immutable } from "../infrastructure/Immutable.js";
+import { ReferentialAction } from './ReferentialAction.js';
 
 type ColumnInput = ColumnSpec & {
   position: number;
@@ -113,7 +114,7 @@ export class Column extends Immutable {
 
   public requireDatumAtRow(rowNum: number): ColumnValue {
     const datum = this.getDatumAtRow(rowNum);
-    if (!datum) { throw new Error(`Value undefined.`); }
+    if (datum === undefined) { throw new Error(`Value undefined.`); }
     return datum;
   }
 
@@ -179,6 +180,12 @@ export class Column extends Immutable {
   }
 
   public updateDatum(datum: ColumnValue, rowNum: number): Column {
+    this.requireDatumAtRow(rowNum);
+
+    this.assertDatumTypeMatchesColumnType(datum);
+    this.assertNullabilityConstraint(datum);
+    this.assertEnumValuesConstraint(datum);
+    
     let nextAutoIncrementNext = this.autoIncrementNext;
 
     if (
@@ -196,23 +203,6 @@ export class Column extends Immutable {
     return this.with({
       data: updatedData,
       autoIncrementNext: nextAutoIncrementNext,
-    } as Partial<this>);
-  }
-
-
-
-  public setDatumAtRow(datum: ColumnValue, rowNum: number): Column {
-    this.requireDatumAtRow(rowNum);
-
-    this.assertDatumTypeMatchesColumnType(datum);
-    this.assertNullabilityConstraint(datum);
-    this.assertEnumValuesConstraint(datum);
-
-    const newData: ColumnValue[] = [...this.data];
-    newData[rowNum] = datum;
-
-    return this.with({
-      data: newData,
     } as Partial<this>);
   }
 
@@ -267,7 +257,12 @@ export function validateColumnSpec(spec: ColumnSpec): void {
 export type InlineColumnSpec = Omit<ColumnSpec, 'name'> & {
   unique?: boolean;
   primaryKey?: boolean;
-  references?: { table: string, column: string };
+  references?: {
+    table: string,
+    column: string,
+    onDelete?: ReferentialAction,
+    onUpdate?: ReferentialAction,
+  };
   check?: Expression;
 };
 

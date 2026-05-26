@@ -5,6 +5,7 @@ import { type Column, type ColumnValue } from "../schema/Column.js";
 import { getOrderedColumns, resolveUniqueColumnList } from "./resolveColumnList.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { type SemanticValue, toSemanticValues } from "./values.js";
+import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
 
   // Handles interpretation and completion of user intent:
 
@@ -86,7 +87,7 @@ function resolveSemanticRow(
   const resolvedRow: ColumnValue[] = [];
 
   for (const column of allTableColumns) {
-    const insertIndex = inputIndexMap.get(column.name);
+    const insertIndex = inputIndexMap.get(normalizeIdentifier(column.name));
 
     let resolvedValue;
 
@@ -96,7 +97,7 @@ function resolveSemanticRow(
       } else if (column.nullable !== false) {
         resolvedValue = null;
       } else {
-        throw new Error(`Column ${column.name} is required`);
+        throw new Error(`Value for column: ${column.name} is required`);
       }
     } else {
       const semanticValue = semanticValues[insertIndex];

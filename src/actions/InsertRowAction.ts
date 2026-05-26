@@ -11,7 +11,7 @@ export class InsertRowAction implements Action {
 
   apply(databases: Databases) {
     const updatedDatabase = databases.require(this.dbName)
-      .insertRow(this.tableName, this.resolvedRow);
+      .addRow(this.tableName, this.resolvedRow);
 
     return databases.update(updatedDatabase);
   }

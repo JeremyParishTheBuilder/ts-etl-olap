@@ -1,4 +1,5 @@
 import { Dialect, DIALECT_RULES } from "../dialect/index.js";
+import { ReferentialAction } from "../schema/ReferentialAction.js";
 
 export interface EngineRuleSpec<T> {
   engineDefault: T; // fallback default
@@ -27,6 +28,18 @@ export const ENGINE_RULES: Record<
       dialectDefault: (d: Dialect) =>
         DIALECT_RULES[d].constraints.allowNullableForeignKeys,
       engineDefault: true,
+    },
+
+    foreignKeyDefaultOnDelete: {
+      dialectDefault: (d: Dialect) =>
+        DIALECT_RULES[d].constraints.foreignKeyDefaultOnDelete,
+      engineDefault: ReferentialAction.restrict,
+    },
+
+    foreignKeyDefaultOnUpdate: {
+      dialectDefault: (d: Dialect) =>
+        DIALECT_RULES[d].constraints.foreignKeyDefaultOnUpdate,
+      engineDefault: ReferentialAction.restrict,
     },
 
     requireExplicitNames: {

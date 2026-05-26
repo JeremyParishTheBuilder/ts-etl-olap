@@ -1,3 +1,5 @@
+import { ReferentialAction } from "../schema/ReferentialAction.js";
+
 export interface DialectRules {
   fragments: Record<string, string>;
 
@@ -10,15 +12,17 @@ export interface DialectRules {
   ddl: {
     supportsIfExists: boolean;
     supportsDeferrableConstraints: boolean;
-    supportsInlineForeignKeys: boolean,
+    supportsInlineForeignKeys: boolean;
   };
 
   constraints: {
     allowsMultipleAutoIncrement: boolean;
     supportsNotValidatedConstraints: boolean;
-    allowNullableForeignKeys?: boolean;
     requireExplicitNames?: boolean;
-    nullsDistinct: boolean,
+    nullsDistinct: boolean;
+    allowNullableForeignKeys: boolean;
+    foreignKeyDefaultOnDelete: ReferentialAction;
+    foreignKeyDefaultOnUpdate: ReferentialAction;
   };
 
   insert: {

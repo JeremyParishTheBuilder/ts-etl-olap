@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
-import { Index } from '../../src/schema/Index.js';
-import { PrimaryKey } from '../../src/schema/PrimaryKey.js';
-import { CONSTRAINT_KIND } from '../../src/schema/Constraint.js';
 
 describe('Table::addPrimaryKey', () => {
   it('adds a primary key to the table', () => {
@@ -12,22 +9,17 @@ describe('Table::addPrimaryKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_T1",
-          columns: ["Id"],
-          unique: true,
-        })
-      );
-
-    const updated = table.addPrimaryKey(
-      PrimaryKey.fromSpec({
-        kind: CONSTRAINT_KIND.primaryKey,
+      .createIndex({
         name: "PK_T1",
         columns: ["Id"],
-        index: "PK_T1",
-      })
-    );
+        unique: true,
+      });
+
+    const updated = table.createPrimaryKey({
+      name: "PK_T1",
+      columns: ["Id"],
+      index: "PK_T1",
+    });
 
     expect(
       updated.requirePrimaryKey()
@@ -41,22 +33,17 @@ describe('Table::addPrimaryKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_T1",
-          columns: ["Id"],
-          unique: true,
-        })
-      );
-
-    const updated = table.addPrimaryKey(
-      PrimaryKey.fromSpec({
-        kind: CONSTRAINT_KIND.primaryKey,
+      .createIndex({
         name: "PK_T1",
         columns: ["Id"],
-        index: "PK_T1",
-      })
-    );
+        unique: true,
+      });
+
+    const updated = table.createPrimaryKey({
+      name: "PK_T1",
+      columns: ["Id"],
+      index: "PK_T1",
+    });
 
     expect(table.primaryKey).toBeUndefined();
 
@@ -72,31 +59,23 @@ describe('Table::addPrimaryKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_T1",
-          columns: ["Id"],
-          unique: true,
-        })
-      )
-      .addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_T1",
-          columns: ["Id"],
-          index: "PK_T1",
-        })
-      );
+      .createIndex({
+        name: "PK_T1",
+        columns: ["Id"],
+        unique: true,
+      })
+      .createPrimaryKey({
+        name: "PK_T1",
+        columns: ["Id"],
+        index: "PK_T1",
+      });
 
     expect(() => {
-      table.addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_T2",
-          columns: ["Id"],
-          index: "PK_T1",
-        })
-      );
+      table.createPrimaryKey({
+        name: "PK_T2",
+        columns: ["Id"],
+        index: "PK_T1",
+      });
     }).toThrow();
   });
 
@@ -109,14 +88,11 @@ describe('Table::addPrimaryKey', () => {
       });
 
     expect(() => {
-      table.addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_T1",
-          columns: ["Id"],
-          index: "PK_T1",
-        })
-      );
+      table.createPrimaryKey({
+        name: "PK_T1",
+        columns: ["Id"],
+        index: "PK_T1",
+      });
     }).toThrow();
   });
 
@@ -127,23 +103,18 @@ describe('Table::addPrimaryKey', () => {
         type: Number,
         nullable: true,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_T1",
-          columns: ["Id"],
-          unique: true,
-        })
-      );
+      .createIndex({
+        name: "PK_T1",
+        columns: ["Id"],
+        unique: true,
+      });
 
     expect(() => {
-      table.addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_T1",
-          columns: ["Id"],
-          index: "PK_T1",
-        })
-      );
+      table.createPrimaryKey({
+        name: "PK_T1",
+        columns: ["Id"],
+        index: "PK_T1",
+      });
     }).toThrow();
   });
 
@@ -154,22 +125,17 @@ describe('Table::addPrimaryKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_T1",
-          columns: ["UserId"],
-          unique: true,
-        })
-      );
-
-    const updated = table.addPrimaryKey(
-      PrimaryKey.fromSpec({
-        kind: CONSTRAINT_KIND.primaryKey,
+      .createIndex({
         name: "PK_T1",
         columns: ["UserId"],
-        index: "PK_T1",
-      })
-    );
+        unique: true,
+      });
+
+    const updated = table.createPrimaryKey({
+      name: "PK_T1",
+      columns: ["UserId"],
+      index: "PK_T1",
+    });
 
     expect(
       updated.requirePrimaryKey().columns
@@ -183,23 +149,18 @@ describe('Table::addPrimaryKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_T1",
-          columns: ["Id"],
-          unique: true,
-        })
-      );
+      .createIndex({
+        name: "PK_T1",
+        columns: ["Id"],
+        unique: true,
+      });
 
     expect(() => {
-      table.addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_T1",
-          columns: ["Id"],
-          index: "PK_T1",
-        })
-      );
+      table.createPrimaryKey({
+        name: "PK_T1",
+        columns: ["Id"],
+        index: "PK_T1",
+      });
     }).not.toThrow();
   });
 
@@ -215,30 +176,23 @@ describe('Table::addPrimaryKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "UQ_1",
-          columns: ["OtherId"],
-          unique: true,
-        })
-      )
-      .addIndex(
-        Index.fromSpec({
-          name: "UQ_2",
-          columns: ["Id"],
-          unique: true,
-        })
-      );
+      .createIndex({
+        name: "UQ_1",
+        columns: ["OtherId"],
+        unique: true,
+      })
+      .createIndex({
+        name: "UQ_2",
+        columns: ["Id"],
+        unique: true,
+      });
 
     expect(() => {
-      table.addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "UQ_1",
-          columns: ["Id"],
-          index: "UQ_2",
-        })
-      );
+      table.createPrimaryKey({
+        name: "UQ_1",
+        columns: ["Id"],
+        index: "UQ_2",
+      });
     }).toThrow();
   });
 
@@ -249,23 +203,18 @@ describe('Table::addPrimaryKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_T1",
-          columns: ["Id"],
-          unique: false,
-        })
-      );
+      .createIndex({
+        name: "PK_T1",
+        columns: ["Id"],
+        unique: false,
+      });
 
     expect(() => {
-      table.addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_T1",
-          columns: ["Id"],
-          index: "PK_T1",
-        })
-      );
+      table.createPrimaryKey({
+        name: "PK_T1",
+        columns: ["Id"],
+        index: "PK_T1",
+      });
     }).toThrow();
   });
 
@@ -281,23 +230,18 @@ describe('Table::addPrimaryKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "UQ_1",
-          columns: ["Id"],
-          unique: true,
-        })
-      );
+      .createIndex({
+        name: "UQ_1",
+        columns: ["Id"],
+        unique: true,
+      });
 
     expect(() => {
-      table.addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "UQ_1",
-          columns: ["OtherId"],
-          index: "UQ_1",
-        })
-      );
+      table.createPrimaryKey({
+        name: "UQ_1",
+        columns: ["OtherId"],
+        index: "UQ_1",
+      });
     }).toThrow();
   });
 });

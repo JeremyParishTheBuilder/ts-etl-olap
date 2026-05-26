@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-
 import { Table } from "../../src/schema/Table.js";
 
 describe('Table::addColumn', () => {
@@ -76,7 +75,7 @@ describe('Table::addColumn', () => {
         type: Number,
       });
 
-    const withRow = table.insertNormalizedRow([
+    const withRow = table.addRow([
       1
     ]);
 
@@ -110,7 +109,7 @@ describe('Table::addColumn', () => {
         type: Number,
       });
 
-    const withRow = table.insertNormalizedRow([
+    const withRow = table.addRow([
       1
     ]);
 
@@ -133,7 +132,7 @@ describe('Table::addColumn', () => {
         type: Number,
       });
 
-    const withRow = table.insertNormalizedRow([
+    const withRow = table.addRow([
       1
     ]);
 

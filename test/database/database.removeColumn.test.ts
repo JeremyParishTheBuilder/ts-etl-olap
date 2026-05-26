@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from '../../src/schema/Database.js';
 import { Table } from '../../src/schema/Table.js';
-import { ForeignKey } from '../../src/schema/ForeignKey.js';
-import { Index } from '../../src/schema/Index.js';
-import { CONSTRAINT_KIND } from '../../src/schema/Constraint.js';
+import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
 
 describe('Database::removeColumn', () => {
   it('removes a column from the correct table', () => {
@@ -38,37 +36,90 @@ describe('Database::removeColumn', () => {
     expect(updatedTable2.requireColumn("C1")).toBeDefined();
   });
 
-  it('throws when column is referenced by a foreign key', () => {
+  it('throws when parent column is referenced by a foreign key', () => {
     const parent = new Table("Parent")
-      .addColumn({ name: "id", type: Number })
-      .addIndex(
-        Index.fromSpec({
-          name: "I1",
-          columns: ["id"],
-          unique: true,
-        }),
-      );
+      .addColumn({
+        name: "id",
+        type: Number,
+      })
+      .createIndex({
+        name: "PK_Parent",
+        columns: ["id"],
+        unique: true,
+      });
 
     const child = new Table("Child")
-      .addColumn({ name: "parent_id", type: Number });
+      .addColumn({
+        name: "parentId",
+        type: Number,
+      })
+      .createForeignKey({
+        name: "FK_Child_Parent",
+        columns: ["parentId"],
+        parentTable: "Parent",
+        parentColumns: ["id"],
+        parentIndex: "pk_Parent",
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
     const db = new Database("DB1")
       .addTable(parent)
-      .addTable(child)
-      .addForeignKey(
-        "Child",
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
-          name: "FK1",
-          columns: ["parent_id"],
-          parentTable: "Parent",
-          parentColumns: ["id"],
-        }),
-      );
+      .addTable(child);
 
-    expect(() => {
-      db.removeColumn("Parent", "id");
-    }).toThrow();
+    expect(() =>
+      db.removeColumn(
+        "Parent",
+        "id",
+      )
+    ).toThrow();
+  });
+
+  it('rejects removing parent columns used by composite foreign keys', () => {
+    const parent = new Table("Parent")
+      .addColumn({
+        name: "A",
+        type: Number,
+      })
+      .addColumn({
+        name: "B",
+        type: Number,
+      })
+      .createIndex({
+        name: "PK_Parent",
+        columns: ["A", "B"],
+        unique: true,
+      });
+
+    const child = new Table("Child")
+      .addColumn({
+        name: "FA",
+        type: Number,
+      })
+      .addColumn({
+        name: "FB",
+        type: Number,
+      })
+      .createForeignKey({
+        name: "FK_Composite",
+        columns: ["FA", "FB"],
+        parentTable: "Parent",
+        parentColumns: ["A", "B"],
+        parentIndex: "pk_Parent",
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
+
+    const db = new Database("DB1")
+      .addTable(parent)
+      .addTable(child);
+
+    expect(() =>
+      db.removeColumn(
+        "Parent",
+        "A",
+      )
+    ).toThrow();
   });
 
   it('allows removal when no foreign key references exist', () => {
@@ -107,15 +158,15 @@ describe('Database::removeColumn', () => {
         name: "UserId",
         type: Number,
       })
-      .addForeignKey(
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
-          name: "FK_Posts_Users",
-          columns: ["UserId"],
-          parentTable: "Users",
-          parentColumns: ["Id"],
-        })
-      );
+      .createForeignKey({
+        name: "FK_Posts_Users",
+        columns: ["UserId"],
+        parentTable: "Users",
+        parentColumns: ["Id"],
+        parentIndex: "pk_users",
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
     expect(() => {
       table.removeColumn("UserId");
@@ -129,13 +180,11 @@ describe('Database::removeColumn', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_Users",
-          columns: ["Id"],
-          unique: true,
-        })
-      );
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id"],
+        unique: true,
+      });
 
     const posts = new Table("Posts")
       .addColumn({
@@ -143,15 +192,15 @@ describe('Database::removeColumn', () => {
         type: Number,
         nullable: false,
       })
-      .addForeignKey(
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
-          name: "FK_Posts_Users",
-          columns: ["UserId"],
-          parentTable: "Users",
-          parentColumns: ["Id"],
-        })
-      );
+      .createForeignKey({
+        name: "FK_Posts_Users",
+        columns: ["UserId"],
+        parentTable: "Users",
+        parentColumns: ["Id"],
+        parentIndex: "pk_users",
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
     const database = new Database("DB1")
       .addTable(users)

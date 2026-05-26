@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
-import { ForeignKey } from '../../src/schema/ForeignKey.js';
-import { CONSTRAINT_KIND } from '../../src/schema/Constraint.js';
-import { Index } from '../../src/schema/Index.js';
 
 describe('Table::requireForeignKey', () => {
   function buildTable(): Table {
@@ -12,15 +9,13 @@ describe('Table::requireForeignKey', () => {
         type: Number,
         nullable: false,
       })
-      .addForeignKey(
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
-          name: "FK_Posts_Users",
-          columns: ["UserId"],
-          parentTable: "Users",
-          parentColumns: ["Id"],
-        })
-      );
+      .createForeignKey({
+        name: "FK_Posts_Users",
+        columns: ["UserId"],
+        parentTable: "Users",
+        parentColumns: ["Id"],
+        parentIndex: "pk_roles",
+      });
   }
 
   it('returns the foreign key', () => {

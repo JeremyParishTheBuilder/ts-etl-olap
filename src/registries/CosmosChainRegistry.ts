@@ -56,9 +56,57 @@ console.log("Inserted");
 
 const table = EngineRegistry.getInstance().engine().databases
   .require("Cosmos Chain Registry")
-  .tables.require("RegistryRoot");
+  .requireTable("RegistryRoot");
 console.log("Set table");
-console.log(table);
+//console.log(table);
+
+console.log("trying to create Table");
+//-------------------DELETE this------------------
+const table2 = new Table("Node")
+      .addColumn({ name: "ID", type: Number })
+      .addColumn({
+        name: "RefID",
+        type: Number,
+        nullable: true,
+      })
+      .createIndex({
+        name: "PK_NODE",
+        columns: ["ID"],
+        unique: true,
+      })
+      .addRow([1, 2])
+      .addRow([2, 1]);
+
+      console.log("creating DB");
+    const db = new Database("DB1")
+      .addTable(table2)
+      .createForeignKey(
+        "Node",
+        {
+          name: "FK_NODE_REF",
+          columns: ["RefID"],
+          parentTable: "Node",
+          parentColumns: ["ID"],
+          onDelete: ReferentialAction.cascade,
+          onUpdate: ReferentialAction.cascade,
+        }
+      );
+
+    console.log("Creating map");
+
+    const updates = new Map<number, number>();
+    updates.set(0, 3);
+
+    console.log("Updating Row");
+    const updated = db.updateRow(
+      "Node",
+      0,
+      updates,
+    );
+    console.log("Done");
+    //___________________________________
+
+
 const predicate = new ComparisonPredicate(
   /* columnIndex */ 0,
   "eq",
@@ -185,106 +233,106 @@ sql.
     // addConstraint("FK_StorageBindingParent").
     //   foreignKey(["parentId"]).
     //   references("StorageBinding", ["id"]);
-sql.
-  insertInto("StorageBinding", ["id", "structureId", "storageType", "name"]).
-  values([["RegistryRootDirectory", "RegistryRoot", "Fs.Directory", { f: () => "chain_registry" } ]]);
-sql.
-  insertInto("StorageBinding", ["id", "parentId", "storageType", "name", "keys"]).
-  values([["NetworkTypeDirectory", "RegistryRootDirectory", "Fs.Directory",
-    { f: (networkType: string) => networkType === "mainnet" ? "." : "testnets" },
-    { f: () => ["mainnet", "testnet"] }
-  ]]);
-sql.
-  insertInto("StorageBinding", ["id", "structureId", "storageType", "name"]).
-  values([["ChainDirectory", "Chain", "Fs.Directory", { f: (chainName: string) => chainName } ]]);
-sql.
-  insertInto("StorageBinding", ["id", "structureId", "storageType", "name"]).
-  values([["ChainFile", "Chain", "Fs.File", { f: () => "chain.json" } ]]);
-sql.
-  insertInto("StorageBinding", ["id", "structureId", "storageType"]).
-  values([["AssetlistFile", "Chain", "Fs.File", { f: () => "assetlist.json" }]]);
-sql.
-  insertInto("StorageBinding", ["id", "structureId", "storageType"]).
-  values([["VersionsFile", "Chain", "Fs.File", { f: () => "versions.json" }]]);
+// sql.
+//   insertInto("StorageBinding", ["id", "structureId", "storageType", "name"]).
+//   values([["RegistryRootDirectory", "RegistryRoot", "Fs.Directory", { f: () => "chain_registry" } ]]);
+// sql.
+//   insertInto("StorageBinding", ["id", "parentId", "storageType", "name", "keys"]).
+//   values([["NetworkTypeDirectory", "RegistryRootDirectory", "Fs.Directory",
+//     { f: (networkType: string) => networkType === "mainnet" ? "." : "testnets" },
+//     { f: () => ["mainnet", "testnet"] }
+//   ]]);
+// sql.
+//   insertInto("StorageBinding", ["id", "structureId", "storageType", "name"]).
+//   values([["ChainDirectory", "Chain", "Fs.Directory", { f: (chainName: string) => chainName } ]]);
+// sql.
+//   insertInto("StorageBinding", ["id", "structureId", "storageType", "name"]).
+//   values([["ChainFile", "Chain", "Fs.File", { f: () => "chain.json" } ]]);
+// sql.
+//   insertInto("StorageBinding", ["id", "structureId", "storageType"]).
+//   values([["AssetlistFile", "Chain", "Fs.File", { f: () => "assetlist.json" }]]);
+// sql.
+//   insertInto("StorageBinding", ["id", "structureId", "storageType"]).
+//   values([["VersionsFile", "Chain", "Fs.File", { f: () => "versions.json" }]]);
 
 
 sql.
   insertInto("Structure", ["level", "parentLevel", "dataType"])?.
   values([["RegistryRoot", "Fs.Directory", "RegistryRoot"]]);
-sql.
-  insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
-  values([[
-    "NetworkKind",
-    "Fs.Directory",
-    "RegistryRoot",
-    // {
-    //   kind: "map",
-    //   cases: {
-    //     mainnet: "",
-    //     testnet: "testnets",
-    //     devnet: "testnets "
-    //   },
-    //   default: ""
-    // },
-    { f: (networkKind: string) => networkKind === "mainnet" ? "." : "testnets" },
-  ]]);
-sql.
-  insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
-  values([[
-    "ChainType",
-    "Fs.Directory",
-    "NetworkKind",
-    // {
-    //   kind: "map",
-    //   cases: {
-    //     cosmos: "."
-    //   },
-    //   default: "_non-cosmos"
-    // }
-    { f: (chainType: string) => chainType === "cosmos" ? "." : "_non-cosmos" },
-  ]]);
-sql.
-  insertInto("Structure", ["level", "dataType", "parentLevel", "name", "qualifyFn"])?.
-  values([[
-    "ChainDirectory",
-    "Fs.Directory",
-    "ChainType",
-    { kind: "identity" },
-    //{ fn: (chainName: string) => chainName },
-    { f: (fsItem: DirectoryContent): boolean => {
-      if (!(fsItem instanceof Directory)) return false;
-      return ["assetlist.json", "chain.json"]
-        .some(name => fsItem.find(File, name).length > 0);
-      }
-    }
-  ]]);
-sql.
-  insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
-  values([[
-    "ChainFile",
-    "Fs.File",
-    "ChainDirectory",
-    { kind: "const", value: "chain.json" }
-    //{ fn: () => "chain.json" }
-  ]]);
-sql.
-  insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
-  values([[
-    "AssetlistFile",
-    "Fs.File",
-    "ChainDirectory",
-    { kind: "const", value: "assetlist.json" }
-    //{ fn: () => "assetlist.json" }
-  ]]);
-sql.
-  insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
-  values([[
-    "VersionsFile",
-    "Fs.File",
-    "ChainDirectory",
-    { kind: "const", value: "versions.json" }
-    //{ fn: () => "assetlist.json" }
-  ]]);
+// sql.
+//   insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
+//   values([[
+//     "NetworkKind",
+//     "Fs.Directory",
+//     "RegistryRoot",
+//     // {
+//     //   kind: "map",
+//     //   cases: {
+//     //     mainnet: "",
+//     //     testnet: "testnets",
+//     //     devnet: "testnets "
+//     //   },
+//     //   default: ""
+//     // },
+//     { f: (networkKind: string) => networkKind === "mainnet" ? "." : "testnets" },
+//   ]]);
+// sql.
+//   insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
+//   values([[
+//     "ChainType",
+//     "Fs.Directory",
+//     "NetworkKind",
+//     // {
+//     //   kind: "map",
+//     //   cases: {
+//     //     cosmos: "."
+//     //   },
+//     //   default: "_non-cosmos"
+//     // }
+//     { f: (chainType: string) => chainType === "cosmos" ? "." : "_non-cosmos" },
+//   ]]);
+// sql.
+//   insertInto("Structure", ["level", "dataType", "parentLevel", "name", "qualifyFn"])?.
+//   values([[
+//     "ChainDirectory",
+//     "Fs.Directory",
+//     "ChainType",
+//     { kind: "identity" },
+//     //{ fn: (chainName: string) => chainName },
+//     { f: (fsItem: DirectoryContent): boolean => {
+//       if (!(fsItem instanceof Directory)) return false;
+//       return ["assetlist.json", "chain.json"]
+//         .some(name => fsItem.find(File, name).length > 0);
+//       }
+//     }
+//   ]]);
+// sql.
+//   insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
+//   values([[
+//     "ChainFile",
+//     "Fs.File",
+//     "ChainDirectory",
+//     { kind: "const", value: "chain.json" }
+//     //{ fn: () => "chain.json" }
+//   ]]);
+// sql.
+//   insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
+//   values([[
+//     "AssetlistFile",
+//     "Fs.File",
+//     "ChainDirectory",
+//     { kind: "const", value: "assetlist.json" }
+//     //{ fn: () => "assetlist.json" }
+//   ]]);
+// sql.
+//   insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
+//   values([[
+//     "VersionsFile",
+//     "Fs.File",
+//     "ChainDirectory",
+//     { kind: "const", value: "versions.json" }
+//     //{ fn: () => "assetlist.json" }
+//   ]]);
 
 const chainDirectory = new FsStructureEntry(
   "ChainDirectory",
@@ -381,6 +429,9 @@ import { FilterNode } from '../query/plan/FilterNode.js';
 import { TableScanNode } from '../query/plan/TableScanNode.js';
 import { ProjectNode } from '../query/plan/ProjectNode.js';
 import { BinaryLogicalPredicate } from '../query/predicate/LogicalPredicate.js';
+import { Table } from '../schema/Table.js';
+import { Database } from '../schema/Database.js';
+import { ReferentialAction } from '../schema/ReferentialAction.js';
 
 export const CosmosChainRegistry = new Map();
 

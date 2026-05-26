@@ -45,4 +45,16 @@ export class MySqlInputBatch extends InputBatch {
   returning(cols: string[]) {
     return super.returning(cols);
   }
+
+  select(columns: string[] | "*") {
+    return super.select(columns);
+  }
+
+  from(name: string) {
+    return super.from(name);
+  }
+
+  where(column: string) {
+    return super.where(column);
+  }
 }

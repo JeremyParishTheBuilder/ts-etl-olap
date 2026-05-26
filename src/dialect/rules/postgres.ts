@@ -1,3 +1,4 @@
+import { ReferentialAction } from "../../schema/ReferentialAction.js";
 import { DialectRules } from "../DialectRules.js";
 
 export const POSTGRES_FRAGMENTS: Record<string, string> = {
@@ -28,9 +29,11 @@ export const POSTGRES_RULES: DialectRules = {
 
   constraints: {
     allowsMultipleAutoIncrement: false, // SERIAL / IDENTITY only once per table
-    allowNullableForeignKeys: true,
     supportsNotValidatedConstraints: true,
     nullsDistinct: true,
+    allowNullableForeignKeys: true,
+    foreignKeyDefaultOnDelete: ReferentialAction.restrict,
+    foreignKeyDefaultOnUpdate: ReferentialAction.restrict,
   },
 
   insert: {

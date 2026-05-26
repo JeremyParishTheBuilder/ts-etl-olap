@@ -66,8 +66,8 @@ export function bindUpdateSet(
     stmtActions.push(new UpdateRowAction(
       dbName,
       tableName,
-      resolvedValueMap,
       rowNum,
+      resolvedValueMap,
     ));
   }
 

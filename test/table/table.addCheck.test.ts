@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
 import { Check } from '../../src/schema/Check.js';
-import { CONSTRAINT_KIND } from '../../src/schema/Constraint.js';
+import { CONSTRAINT_KIND } from '../../src/schema/ConstraintKind.js';
 
 describe('Table::addCheck', () => {
   function buildCheck(): Check {

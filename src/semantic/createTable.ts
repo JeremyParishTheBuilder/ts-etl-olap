@@ -5,14 +5,12 @@ import { type Action } from "../actions/Action.js";
 import { CreateTableAction } from "../actions/CreateTableAction.js";
 import { AddColumnAction } from "../actions/AddColumnAction.js";
 import { type ColumnSpec, type InlineColumnSpec } from "../schema/Column.js";
-import {
-  CONSTRAINT_KIND,
-  type ConstraintSpec
-} from "../schema/Constraint.js";
+import { type ConstraintSpec } from "../schema/Constraint.js";
 import { AddForeignKeyAction } from "../actions/AddForeignKeyAction.js";
 import { AddPrimaryKeyAction } from "../actions/AddPrimaryKeyAction.js";
 import { AddCheckAction } from "../actions/AddCheckAction.js";
 import { AddIndexAction } from "../actions/AddIndexAction.js";
+import { CONSTRAINT_KIND } from "../schema/ConstraintKind.js";
 
 export function bindCreateTable(
   semantic: SemanticAnalyzer,
@@ -50,18 +48,22 @@ export function bindCreateTable(
     //get any inline constraints
     const allInlineConstraints = constraintSpecsFromColumnSpec(colName, inlineColSpec);
     for (const spec of allInlineConstraints) {
-      let action: Action | undefined = undefined;
+      //let action: Action | undefined = undefined;
 
       switch (spec.kind) {
         case CONSTRAINT_KIND.foreignKey:
           // optionally skip FK if dialect disallows inline FKs
-          if (!semantic.ctx.rules.ddl.supportsInlineForeignKeys) break;
+          if (!semantic.ctx.rules.ddl.supportsInlineForeignKeys) break; // TODO, need error here?
 
           stmtActions.push(
               new AddForeignKeyAction(
               dbName,
               tableName,
-              spec,
+              {
+                ...spec,
+                onDelete: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnDelete,
+                onUpdate: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnUpdate,
+              },
             )
           );
 
@@ -123,11 +125,11 @@ export function bindCreateTable(
           break;
       }
 
-      if (!action) {
-        throw new Error(`Invalid Inline Constraint Spec`);
-      }
-
-      stmtActions.push(action);
+      // if (!action) {
+      //   throw new Error(`Invalid Inline Constraint Spec`);
+      // }
+      //
+      // stmtActions.push(action);
     }
   }
 
@@ -136,10 +138,14 @@ export function bindCreateTable(
     switch (spec.kind) {
       case CONSTRAINT_KIND.foreignKey:
         stmtActions.push(
-            new AddForeignKeyAction(
+          new AddForeignKeyAction(
             dbName,
             tableName,
-            spec,
+            {
+              ...spec,
+              onDelete: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnDelete,
+              onUpdate: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnUpdate,
+            },
           )
         );
 
@@ -210,7 +216,8 @@ export function bindCreateTable(
 
 function constraintSpecsFromColumnSpec(
   colName: string,
-  colSpec: InlineColumnSpec
+  colSpec: InlineColumnSpec,
+  //ctx: ExecutionContext,
 ): ConstraintSpec[] {
   const specs: ConstraintSpec[] = [];
 

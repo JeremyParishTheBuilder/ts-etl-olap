@@ -1,5 +1,5 @@
 import { InputBatch } from "./InputBatch.js";
-import { type InlineColumnSpec } from "../schema/Column.js";
+import { ColumnValue, type InlineColumnSpec } from "../schema/Column.js";
 import { type ConstraintSpec } from "../schema/Constraint.js";
 import { type Statement } from "../statements/Statement.js";
 
@@ -58,7 +58,7 @@ export class PostgresInputBatch extends InputBatch {
     return super.insertInto(table, columns);
   }
 
-  values(data: any[][]) {
+  values(data: ColumnValue[][]) {
     return super.values(data);
   }
 
@@ -69,7 +69,44 @@ export class PostgresInputBatch extends InputBatch {
   select(columns: string[] | "*") {
     return super.select(columns);
   }
+
   from(name: string) {
     return super.from(name);
+  }
+
+  where(column: string) {
+    return super.where(column);
+  }
+
+  and(column: string) {
+    return super.and(column);
+  }
+
+  or(column: string) {
+    return super.or(column);
+  }
+
+  eq(value: ColumnValue) {
+    return super.eq(value);
+  }
+
+  ne(value: ColumnValue) {
+    return super.ne(value);
+  }
+
+  gt(value: ColumnValue) {
+    return super.gt(value);
+  }
+
+  gte(value: ColumnValue) {
+    return super.gte(value);
+  }
+
+  lt(value: ColumnValue) {
+    return super.lt(value);
+  }
+
+  lte(value: ColumnValue) {
+    return super.lte(value);
   }
 }

@@ -1,12 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from '../../src/schema/Database.js';
 import { Table } from '../../src/schema/Table.js';
-import { Index } from '../../src/schema/Index.js';
 import { PrimaryKey } from '../../src/schema/PrimaryKey.js';
-import { ForeignKey } from '../../src/schema/ForeignKey.js';
-import { CONSTRAINT_KIND } from '../../src/schema/Constraint.js';
+import { CONSTRAINT_KIND } from '../../src/schema/ConstraintKind.js';
 
-describe('Database::addForeignKey', () => {
+describe('Database::createForeignKey', () => {
   function buildDatabase(): Database {
     const users = new Table("Users")
       .addColumn({
@@ -14,13 +12,11 @@ describe('Database::addForeignKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_Users",
-          columns: ["Id"],
-          unique: true,
-        })
-      )
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id"],
+        unique: true,
+      })
       .addPrimaryKey(
         PrimaryKey.fromSpec({
           kind: CONSTRAINT_KIND.primaryKey,
@@ -45,15 +41,14 @@ describe('Database::addForeignKey', () => {
   it('adds a foreign key to the child table', () => {
     const database = buildDatabase();
 
-    const updated = database.addForeignKey(
+    const updated = database.createForeignKey(
       "Posts",
-      ForeignKey.fromSpec({
-        kind: CONSTRAINT_KIND.foreignKey,
+      {
         name: "FK_Posts_Users",
         columns: ["UserId"],
         parentTable: "Users",
         parentColumns: ["Id"],
-      })
+      },
     );
 
     expect(
@@ -66,15 +61,14 @@ describe('Database::addForeignKey', () => {
   it('does not mutate original database (immutability)', () => {
     const database = buildDatabase();
 
-    const updated = database.addForeignKey(
+    const updated = database.createForeignKey(
       "Posts",
-      ForeignKey.fromSpec({
-        kind: CONSTRAINT_KIND.foreignKey,
+      {
         name: "FK_Posts_Users",
         columns: ["UserId"],
         parentTable: "Users",
         parentColumns: ["Id"],
-      })
+      }
     );
 
     expect(() => {
@@ -96,15 +90,14 @@ describe('Database::addForeignKey', () => {
     const originalParent =
       database.requireTable("Users");
 
-    const updated = database.addForeignKey(
+    const updated = database.createForeignKey(
       "Posts",
-      ForeignKey.fromSpec({
-        kind: CONSTRAINT_KIND.foreignKey,
+      {
         name: "FK_Posts_Users",
         columns: ["UserId"],
         parentTable: "Users",
         parentColumns: ["Id"],
-      })
+      }
     );
 
     expect(
@@ -116,15 +109,14 @@ describe('Database::addForeignKey', () => {
     const database = buildDatabase();
 
     expect(() => {
-      database.addForeignKey(
+      database.createForeignKey(
         "MissingTable",
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
+        {
           name: "FK_Posts_Users",
           columns: ["UserId"],
           parentTable: "Users",
           parentColumns: ["Id"],
-        })
+        }
       );
     }).toThrow();
   });
@@ -133,15 +125,14 @@ describe('Database::addForeignKey', () => {
     const database = buildDatabase();
 
     expect(() => {
-      database.addForeignKey(
+      database.createForeignKey(
         "Posts",
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
+        {
           name: "FK_Posts_Users",
           columns: ["UserId"],
           parentTable: "MissingTable",
           parentColumns: ["Id"],
-        })
+        }
       );
     }).toThrow();
   });
@@ -150,15 +141,14 @@ describe('Database::addForeignKey', () => {
     const database = buildDatabase();
 
     expect(() => {
-      database.addForeignKey(
+      database.createForeignKey(
         "Posts",
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
+        {
           name: "FK_Posts_Users",
           columns: ["MissingColumn"],
           parentTable: "Users",
           parentColumns: ["Id"],
-        })
+        }
       );
     }).toThrow();
   });
@@ -167,15 +157,14 @@ describe('Database::addForeignKey', () => {
     const database = buildDatabase();
 
     expect(() => {
-      database.addForeignKey(
+      database.createForeignKey(
         "Posts",
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
+        {
           name: "FK_Posts_Users",
           columns: ["UserId"],
           parentTable: "Users",
           parentColumns: ["MissingColumn"],
-        })
+        }
       );
     }).toThrow();
   });
@@ -200,15 +189,14 @@ describe('Database::addForeignKey', () => {
       .addTable(posts);
 
     expect(() => {
-      database.addForeignKey(
+      database.createForeignKey(
         "Posts",
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
+        {
           name: "FK_Posts_Users",
           columns: ["UserId"],
           parentTable: "Users",
           parentColumns: ["Id"],
-        })
+        }
       );
     }).toThrow();
   });
@@ -225,13 +213,11 @@ describe('Database::addForeignKey', () => {
         type: Number,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_Users",
-          columns: ["Id1", "Id2"],
-          unique: true,
-        })
-      );
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id1", "Id2"],
+        unique: true,
+      });
 
     const posts = new Table("Posts")
       .addColumn({
@@ -245,15 +231,14 @@ describe('Database::addForeignKey', () => {
       .addTable(posts);
 
     expect(() => {
-      database.addForeignKey(
+      database.createForeignKey(
         "Posts",
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
+        {
           name: "FK_Posts_Users",
           columns: ["UserId"],
           parentTable: "Users",
           parentColumns: ["Id1", "Id2"],
-        })
+        }
       );
     }).toThrow();
   });
@@ -265,13 +250,11 @@ describe('Database::addForeignKey', () => {
         type: String,
         nullable: false,
       })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_Users",
-          columns: ["Id"],
-          unique: true,
-        })
-      );
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id"],
+        unique: true,
+      });
 
     const posts = new Table("Posts")
       .addColumn({
@@ -285,15 +268,14 @@ describe('Database::addForeignKey', () => {
       .addTable(posts);
 
     expect(() => {
-      database.addForeignKey(
+      database.createForeignKey(
         "Posts",
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
+        {
           name: "FK_Posts_Users",
           columns: ["UserId"],
           parentTable: "Users",
           parentColumns: ["Id"],
-        })
+        }
       );
     }).toThrow();
   });
@@ -301,15 +283,14 @@ describe('Database::addForeignKey', () => {
   it('supports case-insensitive table and column references', () => {
     const database = buildDatabase();
 
-    const updated = database.addForeignKey(
+    const updated = database.createForeignKey(
       "posts",
-      ForeignKey.fromSpec({
-        kind: CONSTRAINT_KIND.foreignKey,
+      {
         name: "FK_Posts_Users",
         columns: ["userid"],
         parentTable: "users",
         parentColumns: ["id"],
-      })
+      }
     );
 
     expect(
@@ -321,28 +302,142 @@ describe('Database::addForeignKey', () => {
 
   it('throws when foreign key name already exists', () => {
     const database = buildDatabase()
-      .addForeignKey(
+      .createForeignKey(
         "Posts",
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
+        {
           name: "FK_Posts_Users",
           columns: ["UserId"],
           parentTable: "Users",
           parentColumns: ["Id"],
-        })
+        }
       );
 
     expect(() => {
-      database.addForeignKey(
+      database.createForeignKey(
         "Posts",
-        ForeignKey.fromSpec({
-          kind: CONSTRAINT_KIND.foreignKey,
+        {
           name: "FK_Posts_Users",
           columns: ["UserId"],
           parentTable: "Users",
           parentColumns: ["Id"],
-        })
+        }
       );
     }).toThrow();
+  });
+
+  it("throws when existing child rows violate the foreign key", () => {
+    const users = new Table("Users")
+      .addColumn({
+        name: "Id",
+        type: Number,
+        nullable: false,
+      })
+      .addRow([1])
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id"],
+        unique: true,
+      });
+
+    const posts = new Table("Posts")
+      .addColumn({
+        name: "UserId",
+        type: Number,
+        nullable: false,
+      })
+      .addRow([999]);
+
+    const database = new Database("DB1")
+      .addTable(users)
+      .addTable(posts);
+
+    expect(() => {
+      database.createForeignKey(
+        "Posts",
+        {
+          name: "FK_Posts_Users",
+          columns: ["UserId"],
+          parentTable: "Users",
+          parentColumns: ["Id"],
+        }
+      );
+    }).toThrow();
+  });
+
+  it("allows adding a foreign key when existing child rows are valid", () => {
+    const users = new Table("Users")
+      .addColumn({
+        name: "Id",
+        type: Number,
+        nullable: false,
+      })
+      .addRow([1])
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id"],
+        unique: true,
+      });
+
+    const posts = new Table("Posts")
+      .addColumn({
+        name: "UserId",
+        type: Number,
+        nullable: false,
+      })
+      .addRow([1])
+
+    const database = new Database("DB1")
+      .addTable(users)
+      .addTable(posts);
+
+    expect(() => {
+      database.createForeignKey(
+        "Posts",
+        {
+          name: "FK_Posts_Users",
+          columns: ["UserId"],
+          parentTable: "Users",
+          parentColumns: ["Id"],
+        }
+      );
+    }).not.toThrow();
+  });
+
+  it("ignores existing rows with null foreign key components", () => {
+    const users = new Table("Users")
+      .addColumn({
+        name: "Id",
+        type: Number,
+        nullable: false,
+      })
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id"],
+        unique: true,
+      });
+
+    const posts = new Table("Posts")
+      .addColumn({
+        name: "UserId",
+        type: Number,
+        nullable: true,
+      })
+      .addRow([null]);
+
+    const database = new Database("DB1")
+      .addTable(users)
+      .addTable(posts);
+
+    expect(() => {
+      database.createForeignKey(
+        "Posts",
+        {
+          name: "FK_Posts_Users",
+          columns: ["UserId"],
+          parentTable: "Users",
+          parentColumns: ["Id"],
+        }
+      );
+    }).not.toThrow();
   });
 });

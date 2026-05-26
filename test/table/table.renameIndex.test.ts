@@ -1,20 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
-import { Index } from '../../src/schema/Index.js';
-import { PrimaryKey } from '../../src/schema/PrimaryKey.js';
-import { CONSTRAINT_KIND } from '../../src/schema/Constraint.js';
 
 describe('Table::renameIndex', () => {
   it('renames an index', () => {
     const table = new Table("T1")
       .addColumn({ name: "C1", type: Number })
-      .addIndex(
-        Index.fromSpec({
-          name: "I1",
-          columns: ["C1"],
-          unique: false,
-        })
-      );
+      .createIndex({
+        name: "I1",
+        columns: ["C1"],
+        unique: false,
+      });
 
     const updated = table.renameIndex("I1", "I2");
 
@@ -30,13 +25,11 @@ describe('Table::renameIndex', () => {
   it('preserves index properties during rename', () => {
     const table = new Table("T1")
       .addColumn({ name: "C1", type: Number })
-      .addIndex(
-        Index.fromSpec({
-          name: "I1",
-          columns: ["C1"],
-          unique: true,
-        })
-      );
+      .createIndex({
+        name: "I1",
+        columns: ["C1"],
+        unique: true,
+      });
 
     const updated = table.renameIndex("I1", "I2");
 
@@ -49,13 +42,11 @@ describe('Table::renameIndex', () => {
   it('does not mutate original table (immutability)', () => {
     const table = new Table("T1")
       .addColumn({ name: "C1", type: Number })
-      .addIndex(
-        Index.fromSpec({
-          name: "I1",
-          columns: ["C1"],
-          unique: false,
-        })
-      );
+      .createIndex({
+        name: "I1",
+        columns: ["C1"],
+        unique: false,
+      });
 
     const updated = table.renameIndex("I1", "I2");
 
@@ -83,20 +74,16 @@ describe('Table::renameIndex', () => {
   it('throws when target index name already exists', () => {
     const table = new Table("T1")
       .addColumn({ name: "C1", type: Number })
-      .addIndex(
-        Index.fromSpec({
-          name: "I1",
-          columns: ["C1"],
-          unique: false,
-        })
-      )
-      .addIndex(
-        Index.fromSpec({
-          name: "I2",
-          columns: ["C1"],
-          unique: false,
-        })
-      );
+      .createIndex({
+        name: "I1",
+        columns: ["C1"],
+        unique: false,
+      })
+      .createIndex({
+        name: "I2",
+        columns: ["C1"],
+        unique: false,
+      });
 
     expect(() => {
       table.renameIndex("I1", "I2");
@@ -106,13 +93,11 @@ describe('Table::renameIndex', () => {
   it('renames regardless of casing', () => {
     const table = new Table("T1")
       .addColumn({ name: "C1", type: Number })
-      .addIndex(
-        Index.fromSpec({
-          name: "UserLookup",
-          columns: ["C1"],
-          unique: false,
-        })
-      );
+      .createIndex({
+        name: "UserLookup",
+        columns: ["C1"],
+        unique: false,
+      });
 
     const updated = table.renameIndex(
       "userlookup",
@@ -127,21 +112,16 @@ describe('Table::renameIndex', () => {
   it('updates primary key index reference when renaming backing index', () => {
     const table = new Table("T1")
       .addColumn({ name: "Id", type: Number, nullable: false, defaultValue: 0 })
-      .addIndex(
-        Index.fromSpec({
-          name: "PK_Index",
-          columns: ["Id"],
-          unique: true,
-        })
-      )
-      .addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_T1",
-          columns: ["Id"],
-          index: "PK_Index",
-        })
-      );
+      .createIndex({
+        name: "PK_Index",
+        columns: ["Id"],
+        unique: true,
+      })
+      .createPrimaryKey({
+        name: "PK_T1",
+        columns: ["Id"],
+        index: "PK_Index",
+      });
 
     const updated = table.renameIndex(
       "PK_Index",
@@ -151,5 +131,56 @@ describe('Table::renameIndex', () => {
     expect(
       updated.requirePrimaryKey().index
     ).toBe("pk_index_renamed");
+  });
+
+  it('rejects renaming an index owned by a foreign key', () => {
+    const table = new Table("Child")
+      .addColumn({
+        name: "ParentId",
+        type: Number,
+      })
+      .createForeignKey({
+        name: "FK_Parent",
+        columns: ["ParentId"],
+        parentTable: "Parent",
+        parentColumns: ["Id"],
+        parentIndex: "pk_roles",
+      });
+
+    const fk =
+      table.requireForeignKey("FK_Parent");
+
+    expect(() =>
+      table.renameIndex(
+        fk.reverseIndex,
+        "IDX_New"
+      )
+    ).toThrow();
+  });
+
+  it('allows renaming non-owned indexes', () => {
+    const table = new Table("Users")
+      .addColumn({
+        name: "Email",
+        type: String,
+      })
+      .createIndex({
+        name: "IDX_Email",
+        columns: ["Email"],
+      });
+
+    const updated =
+      table.renameIndex(
+        "IDX_Email",
+        "IDX_Email_New",
+      );
+
+    expect(
+      updated.getIndex("IDX_Email")
+    ).toBeUndefined();
+
+    expect(
+      updated.requireIndex("IDX_Email_New")
+    ).toBeDefined();
   });
 });

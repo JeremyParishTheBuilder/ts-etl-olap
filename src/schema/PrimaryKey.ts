@@ -24,6 +24,14 @@ export class PrimaryKey extends ColumnBoundImmutable {
     )
   }
 
+  public static create(spec: Omit<PrimaryKeySpec, "kind">): PrimaryKey {
+    return new this(
+      spec.name,
+      spec.columns.map(normalizeIdentifier),
+      normalizeIdentifier(spec.index ?? spec.name),
+    )
+  }
+
   public rename(newName: string): PrimaryKey {
     return this.with({
       name: newName

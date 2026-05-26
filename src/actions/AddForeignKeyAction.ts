@@ -1,20 +1,23 @@
 import { type Action } from "./Action.js";
 import { type Databases } from "../schema/Databases.js";
-import { ForeignKey } from "../schema/ForeignKey.js";
 import { type ForeignKeySpec } from "../schema/Constraint.js";
+import { ReferentialAction } from "../schema/ReferentialAction.js";
 
 export class AddForeignKeyAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private spec: ForeignKeySpec,
+    private spec: ForeignKeySpec & {
+      onDelete: ReferentialAction,
+      onUpdate: ReferentialAction,
+    },
   ) {}
 
   apply(databases: Databases): Databases {
-    const fk = ForeignKey.fromSpec(this.spec);
+    const { kind, ...spec } = this.spec;
 
     const updatedDatabase = databases.require(this.dbName)
-      .addForeignKey(this.tableName, fk);
+      .createForeignKey(this.tableName, spec);
 
     return databases.update(updatedDatabase);
   }
