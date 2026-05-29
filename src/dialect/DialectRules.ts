@@ -1,4 +1,5 @@
-import { ReferentialAction } from "../schema/ReferentialAction.js";
+import { type ReferentialAction } from "../schema/ReferentialAction.js";
+import { type Keyword } from "./keywords.js";
 
 export interface DialectRules {
   fragments: Record<string, string>;
@@ -45,8 +46,8 @@ export interface DialectRules {
     supportsReturning: boolean;
   };
 
-  values: {
-    keywords: ReadonlySet<string>;
+  input: {
+    keywords: ReadonlySet<Keyword>;
   };
 
   transaction: {

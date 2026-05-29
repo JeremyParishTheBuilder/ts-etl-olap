@@ -201,11 +201,11 @@ export class Index extends ColumnBoundImmutable {
 
   private getKeyFromRow(row: RowView): string {
     return this.getKeyFromProjection(
-      this.getProjectedValues(row.values)
+      this.projectValues(row.values)
     );
   }
 
-  public getProjectedValues(values: readonly ColumnValue[]): ColumnValue[] {
+  public projectValues(values: readonly ColumnValue[]): ColumnValue[] {
     return this.columnIndexes.map(i => values[i]);
   }
 
@@ -218,7 +218,7 @@ export class Index extends ColumnBoundImmutable {
   public hasRow(values: readonly ColumnValue[]): boolean {
     return this.map.has(
       this.getKeyFromProjection(
-        this.getProjectedValues(values)
+        this.projectValues(values)
       )
     );
   }

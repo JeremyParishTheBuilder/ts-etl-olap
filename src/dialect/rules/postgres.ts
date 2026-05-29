@@ -1,5 +1,10 @@
 import { ReferentialAction } from "../../schema/ReferentialAction.js";
 import { DialectRules } from "../DialectRules.js";
+import { CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP, DEFAULT, NOW, type Keyword } from "../keywords.js";
+
+//export const DEFAULT = Symbol("DEFAULT");
+// TODO, implement keyword detection\
+// alternatives: (sql.default(), sql.keyword("default"))
 
 export const POSTGRES_FRAGMENTS: Record<string, string> = {
   createTable: "createTable",
@@ -56,17 +61,21 @@ export const POSTGRES_RULES: DialectRules = {
     supportsReturning: true,
   },
 
-  values: {
-    keywords: new Set([
-      "DEFAULT",
-      "NULL",
-      "CURRENT_TIMESTAMP",
-      "CURRENT_DATE",
-      "CURRENT_TIME",
-      "NOW",
-      "TRUE",
-      "FALSE",
-    ]),
+  input: {
+    // keywords: new Set([
+    //   "DEFAULT",
+    //   "CURRENT_TIMESTAMP",
+    //   "CURRENT_DATE",
+    //   "CURRENT_TIME",
+    //   "NOW",
+    // ]),
+    keywords: new Set<Keyword>([
+      DEFAULT,
+      CURRENT_TIMESTAMP,
+      CURRENT_DATE,
+      CURRENT_TIME,
+      NOW,
+    ])
   },
 
   transaction: {

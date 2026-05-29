@@ -14,6 +14,7 @@ describe('Table::requireForeignKey', () => {
         columns: ["UserId"],
         parentTable: "Users",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
   }

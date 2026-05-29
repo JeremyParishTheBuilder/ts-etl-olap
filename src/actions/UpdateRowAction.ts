@@ -1,18 +1,26 @@
 import { type Action } from "./Action.js";
-import { type ColumnValue } from "../schema/Column.js";
+import { type SemanticValue } from "../semantic/values.js";
 import { type Databases } from "../schema/Databases.js";
+import { type ExplicitInput } from "../types/ExplicitInput.js";
 
 export class UpdateRowAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
     private rowNum: number,
-    private updates: Map<number, ColumnValue>,
+    private inputs: Map<string, ExplicitInput>,
+    //private semanticRow: SemanticValue[],
   ) {}
 
   apply(databases: Databases) {
-    const updatedDatabase = databases.require(this.dbName)
-      .updateRow(this.tableName, this.rowNum, this.updates);
+    const database = databases.require(this.dbName);
+
+    const resolvedRow = database
+      .requireTable(this.tableName)
+      .resolveUpdateInputs(this.inputs, this.rowNum);
+
+    const updatedDatabase = database
+      .updateRow(this.tableName, this.rowNum, resolvedRow/*this.updates*/); // TODO, replace this.updates with a resolvedRow? 
 
     return databases.update(updatedDatabase);
   }

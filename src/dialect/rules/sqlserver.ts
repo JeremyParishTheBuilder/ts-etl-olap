@@ -1,5 +1,6 @@
 import { ReferentialAction } from "../../schema/ReferentialAction.js";
 import { DialectRules } from "../DialectRules.js";
+import { CURRENT_TIMESTAMP, DEFAULT, GETDATE, type Keyword } from "../keywords.js";
 
 const SQLSERVER_FRAGMENTS: Record<string, string> = {
   createTable: "createTable",
@@ -56,15 +57,12 @@ export const SQLSERVER_RULES: DialectRules = {
     supportsReturning: true,           // Can use OUTPUT clause
   },
 
-  values: {
-    keywords: new Set([
-      "DEFAULT",
-      "NULL",
-      "CURRENT_TIMESTAMP",
-      "GETDATE()",
-      "TRUE",
-      "FALSE",
-    ]),
+  input: {
+    keywords: new Set<Keyword>([
+      DEFAULT,
+      CURRENT_TIMESTAMP,
+      GETDATE,
+    ])
   },
 
   transaction: {

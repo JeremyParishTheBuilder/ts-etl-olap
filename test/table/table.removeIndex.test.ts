@@ -57,6 +57,7 @@ describe('Table::removeIndex', () => {
         columns: ["ParentId"],
         parentTable: "Parent",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
 

@@ -86,7 +86,7 @@ describe('Table::removeColumn', () => {
       updated.requireIndex("IDX1");
 
     expect(
-      index.getProjectedValues([10, 30])
+      index.projectValues([10, 30])
     ).toEqual([10, 30]);
   });
 
@@ -104,7 +104,7 @@ describe('Table::removeColumn', () => {
     const index = table.requireIndex("I1");
 
     expect(
-      index.getProjectedValues([10, 20, 30])
+      index.projectValues([10, 20, 30])
     ).toEqual([10, 30]);
 
     const updatedTable = table.removeColumn("C2");
@@ -112,7 +112,7 @@ describe('Table::removeColumn', () => {
     const updatedIndex = updatedTable.requireIndex("I1");
 
     expect(
-      updatedIndex.getProjectedValues([10, 30])
+      updatedIndex.projectValues([10, 30])
     ).toEqual([10, 30]);
   });
 
@@ -126,13 +126,14 @@ describe('Table::removeColumn', () => {
         columns: ["C1", "C3"],
         parentTable: "PT1",
         parentColumns: ["PC1", "PC3"],
+        parentColumnIndexes: [0, 2],
         parentIndex: "pk_roles",
       });
 
     const fk = table.requireForeignKey("FK1");
 
     expect(
-      fk.getProjectedValues([10, 20, 30])
+      fk.projectChildValues([10, 20, 30])
     ).toEqual([10, 30]);
 
     const updatedTable = table.removeColumn("C2");
@@ -140,7 +141,7 @@ describe('Table::removeColumn', () => {
     const updatedFk = updatedTable.requireForeignKey("FK1");
 
     expect(
-      updatedFk.getProjectedValues([10, 30])
+      updatedFk.projectChildValues([10, 30])
     ).toEqual([10, 30]);
   });
 
@@ -163,6 +164,7 @@ describe('Table::removeColumn', () => {
         columns: ["C1", "C3"],
         parentTable: "Parent",
         parentColumns: ["P1", "P3"],
+        parentColumnIndexes: [0, 2],
         parentIndex: "pk_roles",
       });
 
@@ -172,7 +174,7 @@ describe('Table::removeColumn', () => {
       updated.requireForeignKey("FK1");
 
     expect(
-      fk.getProjectedValues([10, 30])
+      fk.projectChildValues([10, 30])
     ).toEqual([10, 30]);
   });
 
@@ -199,6 +201,7 @@ describe('Table::removeColumn', () => {
         columns: ["C1"],
         parentTable: "Parent",
         parentColumns: ["P1"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       })
       .createForeignKey({
@@ -206,6 +209,7 @@ describe('Table::removeColumn', () => {
         columns: ["C4"],
         parentTable: "Parent",
         parentColumns: ["P4"],
+        parentColumnIndexes: [3],
         parentIndex: "pk_roles",
       });
 
@@ -252,5 +256,25 @@ describe('Table::removeColumn', () => {
     expect(
       updated.requireIndex("IDX2")
     ).toBeDefined();
+  });
+  
+  it('throws when column is referenced by a foreign key', () => {
+    const table = new Table("Posts")
+      .addColumn({
+        name: "UserId",
+        type: Number,
+      })
+      .createForeignKey({
+        name: "FK_Posts_Users",
+        columns: ["UserId"],
+        parentTable: "Users",
+        parentColumns: ["Id"],
+        parentColumnIndexes: [1],
+        parentIndex: "pk_users",
+      });
+
+    expect(() => {
+      table.removeColumn("UserId");
+    }).toThrow();
   });
 });

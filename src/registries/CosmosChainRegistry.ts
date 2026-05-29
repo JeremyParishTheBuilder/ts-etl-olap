@@ -62,7 +62,7 @@ console.log("Set table");
 
 console.log("trying to create Table");
 //-------------------DELETE this------------------
-const table2 = new Table("Node")
+ const table1 = new Table("Node")
       .addColumn({ name: "ID", type: Number })
       .addColumn({
         name: "RefID",
@@ -77,9 +77,8 @@ const table2 = new Table("Node")
       .addRow([1, 2])
       .addRow([2, 1]);
 
-      console.log("creating DB");
     const db = new Database("DB1")
-      .addTable(table2)
+      .addTable(table1)
       .createForeignKey(
         "Node",
         {
@@ -92,18 +91,21 @@ const table2 = new Table("Node")
         }
       );
 
-    console.log("Creating map");
+    const updates = [3, 2];
 
-    const updates = new Map<number, number>();
-    updates.set(0, 3);
-
-    console.log("Updating Row");
     const updated = db.updateRow(
       "Node",
       0,
       updates,
     );
-    console.log("Done");
+
+    console.log("THe row is:");
+    console.log(updated.requireTable("Node").requireRow(1));
+
+      console.log("-----It worked!-----");
+
+    //expect(updated.requireTable("A").rowAlive[0]).toBe(false);
+    //expect(updated.requireTable("B").rowAlive[0]).toBe(false);
     //___________________________________
 
 

@@ -14,6 +14,7 @@ describe('Table::renameForeignKey', () => {
         columns: ["UserId"],
         parentTable: "Users",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
   }
@@ -107,6 +108,7 @@ describe('Table::renameForeignKey', () => {
         columns: ["CategoryId"],
         parentTable: "Categories",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
 
@@ -140,6 +142,7 @@ describe('Table::renameForeignKey', () => {
         columns: ["ParentId"],
         parentTable: "Parent",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
 
@@ -169,6 +172,7 @@ describe('Table::renameForeignKey', () => {
         columns: ["ParentId"],
         parentTable: "Parent",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
 
@@ -199,6 +203,7 @@ describe('Table::renameForeignKey', () => {
         columns: ["ParentId"],
         parentTable: "Parent",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
 
@@ -229,6 +234,7 @@ describe('Table::renameForeignKey', () => {
         columns: ["ParentId"],
         parentTable: "Parent",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
 

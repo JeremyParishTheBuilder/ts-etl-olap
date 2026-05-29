@@ -246,9 +246,10 @@ describe('Composite Foreign Keys', () => {
       }
     );
 
-    const updates = new Map()
-      .set(0, 3)
-      .set(1, 4);
+    // const updates = new Map()
+    //   .set(0, 3)
+    //   .set(1, 4);
+    const updates = [3, 4];
 
     const updated = db.updateRow(
       "Child",
@@ -307,9 +308,11 @@ describe('Composite Foreign Keys', () => {
       }
     );
 
-    const updates = new Map()
-      .set(0, 5)
-      .set(1, 6);
+    // const updates = new Map()
+    //   .set(0, 5)
+    //   .set(1, 6);
+
+    const updates = [5, 6];
 
     expect(() =>
       db.updateRow(
@@ -364,9 +367,11 @@ describe('Composite Foreign Keys', () => {
       }
     );
 
-    const updates = new Map()
-      .set(0, 9)
-      .set(1, 9);
+    // const updates = new Map()
+    //   .set(0, 9)
+    //   .set(1, 9);
+
+    const updates = [9, 9];
 
     expect(() =>
       db.updateRow(

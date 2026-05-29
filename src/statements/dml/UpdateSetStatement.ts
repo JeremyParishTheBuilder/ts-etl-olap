@@ -5,16 +5,23 @@ import { WhereColumnBuilder } from "../dql/WhereColumnBuilder.js";
 
 //type WhereClause = { column: string };
 
+
+type Keyword = "DEFAULT";
+//TODO, define in it's own file
+type ExplicitInput =
+  | ColumnValue
+  | Keyword;
+
 export interface UpdateSetStatement extends BaseStatement {
   kind: "update_set",
   table: string,
-  values: {column: string, value: ColumnValue}[],
+  values: Record<string, ExplicitInput>,//{column: string, value: ColumnValue}[],
   where?: WhereClause,
   returning?: string[],
 }
 
 export class UpdateSetBuilder implements StatementBuilder {
-  private values?: {column: string, value: ColumnValue}[];
+  private values?: Record<string, ExplicitInput>;
   private whereClause?: WhereClause;
   private returningCols?: string[];
 
@@ -23,7 +30,7 @@ export class UpdateSetBuilder implements StatementBuilder {
     private columns: string[] = [],
   ) {}
 
-  set(data: {column: string, value: ColumnValue}[]) {
+  set(data: Record<string, ExplicitInput>) {
     this.values = data;
   }
 

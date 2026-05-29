@@ -52,20 +52,19 @@ describe('Database::removeColumn', () => {
       .addColumn({
         name: "parentId",
         type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Child_Parent",
-        columns: ["parentId"],
-        parentTable: "Parent",
-        parentColumns: ["id"],
-        parentIndex: "pk_Parent",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     const db = new Database("DB1")
       .addTable(parent)
-      .addTable(child);
+      .addTable(child)
+      .createForeignKey("child", {
+        name: "FK_Child_Parent",
+        columns: ["parentId"],
+        parentTable: "Parent",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
     expect(() =>
       db.removeColumn(
@@ -99,20 +98,19 @@ describe('Database::removeColumn', () => {
       .addColumn({
         name: "FB",
         type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Composite",
-        columns: ["FA", "FB"],
-        parentTable: "Parent",
-        parentColumns: ["A", "B"],
-        parentIndex: "pk_Parent",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     const db = new Database("DB1")
       .addTable(parent)
-      .addTable(child);
+      .addTable(child)
+      .createForeignKey("child", {
+        name: "FK_Composite",
+        columns: ["FA", "FB"],
+        parentTable: "Parent",
+        parentColumns: ["A", "B"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
     expect(() =>
       db.removeColumn(
@@ -152,64 +150,4 @@ describe('Database::removeColumn', () => {
     expect(() => updatedTable.requireColumn("C1")).toThrow();
   });
 
-  it('throws when column is referenced by a foreign key', () => {
-    const table = new Table("Posts")
-      .addColumn({
-        name: "UserId",
-        type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Posts_Users",
-        columns: ["UserId"],
-        parentTable: "Users",
-        parentColumns: ["Id"],
-        parentIndex: "pk_users",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
-      });
-
-    expect(() => {
-      table.removeColumn("UserId");
-    }).toThrow();
-  });
-
-  it('throws when parent column is referenced by a foreign key', () => {
-    const users = new Table("Users")
-      .addColumn({
-        name: "Id",
-        type: Number,
-        nullable: false,
-      })
-      .createIndex({
-        name: "PK_Users",
-        columns: ["Id"],
-        unique: true,
-      });
-
-    const posts = new Table("Posts")
-      .addColumn({
-        name: "UserId",
-        type: Number,
-        nullable: false,
-      })
-      .createForeignKey({
-        name: "FK_Posts_Users",
-        columns: ["UserId"],
-        parentTable: "Users",
-        parentColumns: ["Id"],
-        parentIndex: "pk_users",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
-      });
-
-    const database = new Database("DB1")
-      .addTable(users)
-      .addTable(posts);
-
-    expect(() => {
-      database
-        .requireTable("Users")
-        .removeColumn("Id");
-    }).toThrow();
-  });
 });

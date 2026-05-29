@@ -1,4 +1,4 @@
-import { Dialect, DIALECT_RULES } from "../dialect/index.js";
+import { DEFAULT, Dialect, DIALECT_RULES, type Keyword } from "../dialect/index.js";
 import { ReferentialAction } from "../schema/ReferentialAction.js";
 
 export interface EngineRuleSpec<T> {
@@ -73,11 +73,11 @@ export const ENGINE_RULES: Record<
     },
   },
 
-  values: {
+  input: {
     keywords: {
       dialectDefault: (d: Dialect) =>
-        DIALECT_RULES[d].values?.keywords,
-      engineDefault: new Set<string>("NULL")
+        DIALECT_RULES[d].input?.keywords,
+      engineDefault: new Set<Keyword>([DEFAULT])
     },
   },
 };

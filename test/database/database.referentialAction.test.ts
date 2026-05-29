@@ -146,8 +146,10 @@ describe("Database Referential Actions", () => {
         }
       );
 
-    const updates = new Map<number, number>();
-    updates.set(0, 2);
+    // const updates = new Map<number, number>();
+    // updates.set(0, 2);
+
+    const updates = [2];
 
     const updated = db.updateRow(
       "Parent",
@@ -231,8 +233,7 @@ describe("Database Referential Actions", () => {
         }
       );
 
-    const updates = new Map<number, number>();
-    updates.set(0, 3);
+    const updates = [3, 2];
 
     const updated = db.updateRow(
       "Node",
@@ -276,9 +277,11 @@ describe("Database Referential Actions", () => {
         }
       );
 
-    const updates = new Map<number, number>();
-    updates.set(0, 10);
-    updates.set(1, 20);
+    // const updates = new Map<number, number>();
+    // updates.set(0, 10);
+    // updates.set(1, 20);
+    
+    const updates = [10, 20];
 
     const updated = db.updateRow(
       "Parent",
@@ -702,7 +705,7 @@ describe("Database Referential Actions", () => {
       .updateRow(
         "A",
         0,
-        new Map([[1, 2]])
+        [1, 2]
       );
 
     const updated = withRows.removeRow("A", 0);

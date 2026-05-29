@@ -6,6 +6,7 @@ import { getOrderedColumns, resolveUniqueColumnList } from "./resolveColumnList.
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { type SemanticValue, toSemanticValues } from "./values.js";
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
+import { ExplicitInput } from "../types/ExplicitInput.js";
 
   // Handles interpretation and completion of user intent:
 
@@ -20,6 +21,10 @@ export function bindInsertInto(
   stmt: InsertIntoStatement
 ) {
   const stmtActions: Action[] = [];
+
+  
+  const database = semantic.ctx.requireDatabase();
+  const dbName: string = database.name;
 
   const tableName: string = stmt.table;
   const table = semantic.ctx.requireTable(tableName);
@@ -36,30 +41,28 @@ export function bindInsertInto(
 
   assertAtLeastOneRowOfValues(stmt.values);
 
-  //Separate values into Rows
   for (const row of stmt.values) {
 
     assertRowLengthMatchesColumnLength(row, effectiveColumnsList);
 
-    const insertValues = toSemanticValues(row, semantic.ctx.rules.values.keywords);
+    const columnIdToValueMap = new Map<string, ExplicitInput>();
 
-    const resolvedRow: ColumnValue[] = resolveSemanticRow(
-      insertValues,
-      allTableColumns,
-      inputIndexMap
+    for (let i = 0; i < effectiveColumnsList.length; i++) {
+      const columnName = effectiveColumnsList[i];
+
+       columnIdToValueMap.set(
+        normalizeIdentifier(columnName),
+        row[i]
+      );
+    }
+
+    stmtActions.push(
+      new InsertRowAction(
+        dbName,
+        tableName,
+        columnIdToValueMap,
+      )
     );
-
-    stmtActions.push(new InsertRowAction(
-      semantic.ctx.requireDatabase().name,
-      tableName,
-      resolvedRow
-    ));
-    // By the time an InsertRowAction is created:
-    // Row length == number of columns
-    // Column order == table schema order
-    // All defaults already applied
-    // Explicit NULLs already decided
-    // No ambiguity remains
   }
 
   return stmtActions;

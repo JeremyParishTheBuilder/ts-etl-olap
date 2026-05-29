@@ -12,6 +12,7 @@ export class ForeignKey extends ColumnBoundImmutable {
     public readonly columnIndexes: number[],
     public parentTable: string,
     public parentColumns: string[],
+    public readonly parentColumnIndexes: number[],
     public parentIndex: string,
     public reverseIndex: string,
     public onDelete: ReferentialAction = ReferentialAction.restrict,
@@ -37,6 +38,7 @@ export class ForeignKey extends ColumnBoundImmutable {
   public static create(
     spec: Omit<ForeignKeySpec, "kind"> & {
       columnIndexes: number[],
+      parentColumnIndexes: number[],
       parentIndex: string,
       onDelete?: ReferentialAction,
       onUpdate?: ReferentialAction,
@@ -47,6 +49,7 @@ export class ForeignKey extends ColumnBoundImmutable {
       spec.columnIndexes,
       normalizeIdentifier(spec.parentTable),
       spec.parentColumns.map(normalizeIdentifier),
+      spec.parentColumnIndexes,
       normalizeIdentifier(spec.parentIndex),
       getReverseIndexFromName(spec.name),
       spec.onDelete,
@@ -127,8 +130,12 @@ export class ForeignKey extends ColumnBoundImmutable {
     } as Partial<this>);
   }
 
-  public getProjectedValues(values: readonly ColumnValue[]): ColumnValue[] {
+  public projectChildValues(values: readonly ColumnValue[]): ColumnValue[] {
     return this.columnIndexes.map(i => values[i]);
+  }
+
+  public projectParentValues(values: readonly ColumnValue[]): ColumnValue[] {
+    return this.parentColumnIndexes.map(i => values[i]);
   }
 }
 

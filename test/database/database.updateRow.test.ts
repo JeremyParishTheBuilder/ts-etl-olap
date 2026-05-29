@@ -25,25 +25,23 @@ describe('Database::updateRow', () => {
       .addColumn({
         name: "roleId",
         type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Users_Roles",
-        columns: ["roleId"],
-        parentTable: "Roles",
-        parentColumns: ["id"],
-        parentIndex: "pk_roles",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     users = users.addRow([1]);
 
     const db = new Database("DB1")
       .addTable(roles)
-      .addTable(users);
+      .addTable(users)
+      .createForeignKey("users", {
+        name: "FK_Users_Roles",
+        columns: ["roleId"],
+        parentTable: "Roles",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
-    const updates = new Map()
-      .set(0, 2);
+    const updates = [2];
 
     const updated = db.updateRow(
       "Users",
@@ -76,25 +74,23 @@ describe('Database::updateRow', () => {
       .addColumn({
         name: "roleId",
         type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Users_Roles",
-        columns: ["roleId"],
-        parentTable: "Roles",
-        parentColumns: ["id"],
-        parentIndex: "pk_roles",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     users = users.addRow([1]);
 
     const db = new Database("DB1")
       .addTable(roles)
-      .addTable(users);
+      .addTable(users)
+      .createForeignKey("users", {
+        name: "FK_Users_Roles",
+        columns: ["roleId"],
+        parentTable: "Roles",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
-    const updates = new Map()
-      .set(0, 999);
+    const updates = [999];
 
     expect(() =>
       db.updateRow(
@@ -123,25 +119,23 @@ describe('Database::updateRow', () => {
       .addColumn({
         name: "roleId",
         type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Users_Roles",
-        columns: ["roleId"],
-        parentTable: "Roles",
-        parentColumns: ["id"],
-        parentIndex: "pk_roles",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     users = users.addRow([1]);
 
     const db = new Database("DB1")
       .addTable(roles)
-      .addTable(users);
+      .addTable(users)
+      .createForeignKey("users", {
+        name: "FK_Users_Roles",
+        columns: ["roleId"],
+        parentTable: "Roles",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
-    const updates = new Map()
-      .set(0, 2);
+    const updates = [2];
 
     expect(() =>
       db.updateRow(
@@ -170,23 +164,21 @@ describe('Database::updateRow', () => {
       .addColumn({
         name: "roleId",
         type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Users_Roles",
-        columns: ["roleId"],
-        parentTable: "Roles",
-        parentColumns: ["id"],
-        parentIndex: "pk_roles",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     const db = new Database("DB1")
       .addTable(roles)
-      .addTable(users);
+      .addTable(users)
+      .createForeignKey("users", {
+        name: "FK_Users_Roles",
+        columns: ["roleId"],
+        parentTable: "Roles",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
-    const updates = new Map()
-      .set(0, 2);
+    const updates = [2];
 
     const updated = db.updateRow(
       "Roles",
@@ -215,26 +207,23 @@ describe('Database::updateRow', () => {
         name: "PK_Employees",
         columns: ["id"],
         unique: true,
-      })
-      .createForeignKey({
-        name: "FK_Manager",
-        columns: ["managerId"],
-        parentTable: "Employees",
-        parentColumns: ["id"],
-        parentIndex: "pk_employees",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     employees = employees.addRow([1, null]);
     employees = employees.addRow([2, 1]);
 
     const db = new Database("DB1")
-      .addTable(employees);
+      .addTable(employees)
+      .createForeignKey("employees", {
+        name: "FK_Manager",
+        columns: ["managerId"],
+        parentTable: "Employees",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
-    const updates = new Map()
-      .set(0, 2)
-      .set(1, 2);
+    const updates = [2, 2];
 
     const updated = db.updateRow(
       "Employees",
@@ -263,25 +252,22 @@ describe('Database::updateRow', () => {
         name: "PK_Employees",
         columns: ["id"],
         unique: true,
-      })
-      .createForeignKey({
-        name: "FK_Manager",
-        columns: ["managerId"],
-        parentTable: "Employees",
-        parentColumns: ["id"],
-        parentIndex: "pk_employees",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     employees = employees.addRow([1, null]);
 
     const db = new Database("DB1")
-      .addTable(employees);
-
-    const updates = new Map()
-      .set(0, 2)
-      .set(1, 999);
+      .addTable(employees)
+      .createForeignKey("employees", {
+        name: "FK_Manager",
+        columns: ["managerId"],
+        parentTable: "Employees",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
+      
+    const updates = [2, 999];
 
     expect(() =>
       db.updateRow(

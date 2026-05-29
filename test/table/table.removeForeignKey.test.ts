@@ -14,6 +14,7 @@ describe('Table::removeForeignKey', () => {
         columns: ["UserId"],
         parentTable: "Users",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "idx_email",
       });
   }
@@ -85,6 +86,7 @@ describe('Table::removeForeignKey', () => {
         columns: ["ParentId"],
         parentTable: "Parent",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "idx_email",
       });
 
@@ -121,6 +123,7 @@ describe('Table::removeForeignKey', () => {
         columns: ["ParentId"],
         parentTable: "Parent",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "idx_email",
       });
 
@@ -151,6 +154,7 @@ describe('Table::removeForeignKey', () => {
         columns: ["ParentId1"],
         parentTable: "Parent1",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       })
       .createForeignKey({
@@ -158,6 +162,7 @@ describe('Table::removeForeignKey', () => {
         columns: ["ParentId2"],
         parentTable: "Parent2",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
 

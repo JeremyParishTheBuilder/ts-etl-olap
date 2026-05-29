@@ -14,7 +14,7 @@ describe('Table::removeRow', () => {
 
     const updated = table.removeRow(0);
 
-    expect(updated.rowAlive[0]).toBe(false);
+    expect(updated.isRowAlive(0)).toBe(false);
   });
 
   it('removes row entries from indexes', () => {

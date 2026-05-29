@@ -21,6 +21,8 @@ import { type RowView } from "./RowView.js";
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
 import { ForeignKeySpec, PrimaryKeySpec } from "./Constraint.js";
 import { ReferentialAction } from "./ReferentialAction.js";
+import { SemanticValue, toSemanticValues } from "../semantic/values.js";
+import { type ExplicitInput } from "../types/ExplicitInput.js";
 
 
 export class Table extends Immutable {
@@ -287,6 +289,7 @@ export class Table extends Immutable {
 
   public createForeignKey(
     spec: Omit<ForeignKeySpec, "kind"> & {
+      parentColumnIndexes: number[],
       parentIndex: string,
       onDelete?: ReferentialAction,
       onUpdate?: ReferentialAction,
@@ -526,13 +529,6 @@ export class Table extends Immutable {
   //  </constraints>
 
   //  <indexes>  
-
-  // private buildIndexPredicate(where?: (rowNum: number) => boolean): ((row: number) => boolean) {
-  //   return (row: number) =>
-  //     (!this.ignoreRowAlive ? this.isRowAlive(row) : true) &&
-  //     (where ? where(row) : true);
-  // }
-
   public requireIndex(name: string): Index {
     return this.indexes.require(normalizeIdentifier(name));
   }
@@ -540,23 +536,6 @@ export class Table extends Immutable {
   public getIndex(name: string): Index | undefined {
     return this.indexes.get(normalizeIdentifier(name));
   }
-
-  // private buildIndex(
-  //   index: Index
-  // ): Index {
-  //   const columns = this.requireColumns(index.columns);
-
-  //   // const getValuesFromColumns = (rowNum: number) =>
-  //   //   columns.map(c => c.data[rowNum]);
-
-  //   return index.build(this.iterateAliveRows());
-  //     // {
-  //     //   rowCount: this.numRows,
-  //     //   predicate: this.buildIndexPredicate(index.where),
-  //     //   getValues: getValuesFromColumns,
-  //     // }
-  //   );
-  // }
 
   public createIndex(spec: IndexSpec): Table {
     if (spec.unique) {
@@ -637,18 +616,25 @@ export class Table extends Immutable {
   }
   //  </indexes>
 
-  //  <select>
+  public isRowAlive(rowNum: number): boolean {
+    return (
+      rowNum >= 0 &&
+      rowNum < this.numRows &&
+      this.rowAlive[rowNum] !== false
+    );
+  }
+
   public assertRowAlive(rowNum: number): void {
-    if (this.numRows <= rowNum || this.rowAlive[rowNum] === false) {
+    if (!this.isRowAlive(rowNum)) {
       throw new Error(`Row ${rowNum} not alive`);
     }
   }
 
   public getRow(rowNum: number): ColumnValue[] | undefined {
-    if (this.rowAlive[rowNum] === false) return undefined;
+    if (!this.isRowAlive(rowNum)) return undefined;
 
     const row: ColumnValue[] = [];
-    for (const column of this.columns.map.values()) {
+    for (const column of this.columns.values()) {
       const value = column.getDatumAtRow(rowNum);
 
       if (value === undefined) {
@@ -689,27 +675,107 @@ export class Table extends Immutable {
   //  </select>
 
   //  <insert/update>
-  private assertRowLength(row: ColumnValue[]): void {
+  private assertRowLength(row: any[]): void {
     if (row.length !== this.columns.map.size) {
       throw new Error(`Resolved row length mismatch with table columns`);
     }
   }
 
+  // public normalizeRow(row: ColumnValue[], mode: "insert" | "update"): ColumnValue[] {
+  //   this.assertRowLength(row);
 
-  public normalizeRow(row: ColumnValue[], mode: "insert" | "update"): ColumnValue[] {
-    this.assertRowLength(row);
+  //   const normalizedRow: ColumnValue[] = new Array(row.length);
 
-    const normalizedRow: ColumnValue[] = new Array(row.length);
+  //   this.columns.forEach(column => {
+  //     const i = column.position;
 
+  //     normalizedRow[i] =
+  //       column.normalizeDatum(row[i], mode);
+  //   });
+
+  //   return normalizedRow;
+  // }
+
+  // public resolveSemanticRow(
+  //   semanticRow: SemanticValue[],
+  //   mode: "insert" | "update",
+  // ): ColumnValue[] {
+  //   this.assertRowLength(semanticRow);
+    
+  //   const resolvedRow: ColumnValue[] = new Array(semanticRow.length);
+
+  //   this.columns.forEach(column => {
+  //     const i = column.position;
+
+  //     resolvedRow[i] =
+  //       column.resolveSemanticValue(semanticRow[i], mode);
+  //   });
+
+  //   return resolvedRow;
+  // }
+
+  public resolveInsertInputs(
+    inputs: Map<string, ExplicitInput>,
+  ): ColumnValue[] {
+    const resolvedRow = new Array<ColumnValue>(this.columns.map.size);
+
+    //for (const column of this.columnsByPosition()) {}
     this.columns.forEach(column => {
       const i = column.position;
 
-      normalizedRow[i] =
-        column.normalizeDatum(row[i], mode);
+      resolvedRow[i] =
+        column.resolveInput(inputs.get(normalizeIdentifier(column.name)) ?? undefined, "insert");
     });
 
-    return normalizedRow;
+    return resolvedRow;
   }
+
+  public resolveUpdateInputs(
+    inputs: Map<string, ExplicitInput>,
+    rowNum: number,
+  ): ColumnValue[] {
+    const existingRow = this.requireRow(rowNum);
+    
+    const resolvedRow = new Array<ColumnValue>(this.columns.map.size);
+
+    this.columns.forEach(column => {
+      const i = column.position; // TODO, replace with iteration of this.columnsByPosition
+
+      const input = inputs.get(normalizeIdentifier(column.name));
+      if (input === undefined) {
+        resolvedRow[i] = existingRow[i];
+        return;
+      }
+
+      resolvedRow[i] = column.resolveInput(input, "update");
+    });
+
+    return resolvedRow;
+  }
+
+  // public resolveUpdateRow(
+  //   semanticRow: SemanticValue[],
+  //   rowNum: number,
+  // ): ColumnValue[] {
+  //   this.assertRowLength(semanticRow);
+
+  //   const existingRow = this.requireRow(rowNum);
+    
+  //   const resolvedRow: ColumnValue[] = new Array(semanticRow.length);
+
+  //   this.columns.forEach(column => {
+  //     const i = column.position;
+
+  //     if (semanticRow[i].kind === "existing") {
+  //       resolvedRow[i] = existingRow[i];
+  //       return;
+  //     }
+
+  //     resolvedRow[i] = column.resolveSemanticValue(semanticRow[i], "update");
+  //   });
+
+  //   return resolvedRow;
+  // }
 
   public addRow(row: ColumnValue[]): Table {
     this.assertRowLength(row);
@@ -719,14 +785,23 @@ export class Table extends Immutable {
       values: row,
     };
 
-    this.verifyRowAgainstTableConstraints(row); // CHECKs
+    this.assertRow(row); // CHECKs
 
     const updatedIndexes = this.indexes.mapValues(i => i.tryAddRow(rowView));
     //TODO, confirm whether it won't add a row with null when unique
+    //Actually, it's ok to store keys will null even when unique
+    // just that if there is a null, then it shan't be considered a unique constraint violation
 
     const updatedColumns = this.columns.mapValues(column =>
       column.addDatum(row[column.position])
     );
+
+    // let updatedTable = this.with({
+    //   columns: updatedColumns,
+    //   numRows: this.numRows + 1,
+    // } as Partial<this>);
+
+    //updatedTable.assertRow();
 
     return this.with({
       indexes: updatedIndexes,
@@ -745,15 +820,18 @@ export class Table extends Immutable {
       values: row
     };
 
-    this.verifyRowAgainstTableConstraints(row);
+    this.assertRow(row);
 
     const updatedIndexes = this.indexes.mapValues(
       index => index.tryUpdateRow(oldRow, newRow)
     );
 
+
     const updatedColumns = this.columns.mapValues(column =>
       column.updateDatum(row[column.position], rowNum)
     );
+
+    //this.assertRow(row);
 
     return this.with({
       indexes: updatedIndexes,
@@ -808,7 +886,7 @@ export class Table extends Immutable {
     );
   }
 
-  private verifyRowAgainstTableConstraints(row: ColumnValue[]) {
+  private assertRow(row: ColumnValue[]) {
     for (const [name, check] of this.checks.map) {
       // evaluate the check expression in the context of the resolved row
       // assuming check.expr is a function (ResolvedRow, Table) => boolean

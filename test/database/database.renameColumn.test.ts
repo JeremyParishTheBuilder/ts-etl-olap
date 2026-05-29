@@ -42,23 +42,25 @@ describe('Database::renameColumn', () => {
 
   it('updates parent columns in foreign keys', () => {
     const parent = new Table("Parent")
-      .addColumn({ name: "id", type: Number });
+      .addColumn({ name: "id", type: Number })
+      .createIndex({ name: "id", columns: ["id"], unique: true });
 
     const child = new Table("Child")
-      .addColumn({ name: "parent_id", type: Number })
-      .createForeignKey({
-        name: "fk_parent",
-        columns: ["parent_id"],
-        parentTable: "Parent",
-        parentColumns: ["id"],
-        parentIndex: "pk_users",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
-      });
+      .addColumn({ name: "parent_id", type: Number });
 
     const db = new Database("DB1")
       .addTable(parent)
-      .addTable(child);
+      .addTable(child)
+      .createForeignKey("child",
+        {
+          name: "fk_parent",
+          columns: ["parent_id"],
+          parentTable: "Parent",
+          parentColumns: ["id"],
+          onDelete: ReferentialAction.restrict,
+          onUpdate: ReferentialAction.restrict,
+        }
+      );
 
     const updatedDb = db.renameColumn("Parent", "id", "id_new");
 
@@ -293,7 +295,7 @@ describe('Database::renameColumn', () => {
       updated.requireIndex("IDX_Email");
 
     expect(
-      index.getProjectedValues([
+      index.projectValues([
         "a@test.com",
       ])
     ).toEqual([
@@ -329,7 +331,7 @@ describe('Database::renameColumn', () => {
       updated.requireIndex("IDX_Name");
 
     expect(
-      index.getProjectedValues([
+      index.projectValues([
         "John",
         "Smith",
       ])

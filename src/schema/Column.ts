@@ -18,6 +18,8 @@ export type ColumnValue = PrimitiveColumnValue;
 
 import { Immutable } from "../infrastructure/Immutable.js";
 import { ReferentialAction } from './ReferentialAction.js';
+import { SemanticValue } from '../semantic/values.js';
+import { ExplicitInput } from '../types/ExplicitInput.js';
 
 type ColumnInput = ColumnSpec & {
   position: number;
@@ -141,9 +143,8 @@ export class Column extends Immutable {
     
     if (
       mode === "insert" &&
-      this.autoIncrementNext !== undefined &&
-      this.autoIncrementStep !== undefined &&
-      datum === null
+      datum === null &&
+      this.isAutoIncrement()
     ) {
       normalizedDatum = this.autoIncrementNext;
     }
@@ -157,16 +158,75 @@ export class Column extends Immutable {
     return normalizedDatum; 
   }
 
-  public addDatum(datum: ColumnValue): Column {
-    let nextAutoIncrementNext = this.autoIncrementNext;
-    
-    if (datum === null && this.nullable === false) {
-      throw new Error(`Cannot add null to not nullable column.`);
+  //resolveDatum(datum, mode) -> ColumnValue   // produces final value
+  //validateDatum(value) -> void               // asserts correctness
+
+  private resolveDefaultOrThrow(mode: "insert" | "update"): ColumnValue {
+    if (this.defaultValue !== undefined) return this.defaultValue;
+    else if (this.isAutoIncrement() && mode === "insert") {
+      return this.autoIncrementNext;
+    }
+    else if (this.nullable) return null;
+    else {
+      throw new Error(`Cannot resolve default the Column ${this.name}`);
+    }
+  }
+
+  // public resolveSemanticValue(
+  //   semanticValue: SemanticValue,
+  //   mode: "insert" | "update",
+  // ): ColumnValue {
+  //   switch (semanticValue.kind) {
+  //     case "value":
+  //       return semanticValue.value;
+  //     case "null":
+  //       return null;
+  //     case "default":
+  //       return this.resolveDefaultOrThrow(mode);
+  //     default:
+  //       throw new Error(`Unsupported semantic value kind: ${semanticValue.kind}`);
+  //   }
+  //   throw new Error(`Cannot resolve semantic value: ${JSON.stringify(semanticValue)}`);
+  // }
+
+  public resolveInput(
+    input: ExplicitInput | undefined,
+    mode: "insert" | "update",
+  ): ColumnValue {
+    if (input === undefined) {
+      return this.resolveDefaultOrThrow(mode);
     }
 
+    if (typeof input === "symbol") {
+      throw new Error("Keyword must be resolved at Table level");
+    }
+    // if (typeof input === "symbol") {
+    //   return this.resolveKeyword(input, mode);
+    // }
+
+    return input;
+  }
+
+  public assertDatum(datum: ColumnValue): void {
+    this.assertDatumTypeMatchesColumnType(datum);
+    this.assertNullabilityConstraint(datum);
+    this.assertEnumValuesConstraint(datum);
+  }
+
+  isAutoIncrement(): this is this & {
+    autoIncrementStep: number;
+    autoIncrementNext: number;
+  } {
+    return  this.autoIncrementStep !== undefined &&
+            this.autoIncrementNext !== undefined;
+  }
+
+  public addDatum(datum: ColumnValue): Column {
+    this.assertDatum(datum);
+
+    let nextAutoIncrementNext = this.autoIncrementNext;
     if (
-      this.autoIncrementNext !== undefined &&
-      this.autoIncrementStep !== undefined &&
+      this.isAutoIncrement() &&
       typeof datum === "number" &&
       datum >= this.autoIncrementNext
     ) {
@@ -182,27 +242,13 @@ export class Column extends Immutable {
   public updateDatum(datum: ColumnValue, rowNum: number): Column {
     this.requireDatumAtRow(rowNum);
 
-    this.assertDatumTypeMatchesColumnType(datum);
-    this.assertNullabilityConstraint(datum);
-    this.assertEnumValuesConstraint(datum);
-    
-    let nextAutoIncrementNext = this.autoIncrementNext;
-
-    if (
-      this.autoIncrementNext !== undefined &&
-      this.autoIncrementStep !== undefined &&
-      typeof datum === "number" &&
-      datum >= this.autoIncrementNext
-    ) {
-      nextAutoIncrementNext = datum + this.autoIncrementStep;
-    }
+    this.assertDatum(datum);
     
     const updatedData = [...this.data];
     updatedData[rowNum] = datum;
 
     return this.with({
       data: updatedData,
-      autoIncrementNext: nextAutoIncrementNext,
     } as Partial<this>);
   }
 
@@ -331,8 +377,4 @@ export function assertTypeIndexable(type: ColumnType): void {
   if (!canBeIndexed(type)) {
     throw new Error(`Type ${type} cannot is not Indexable`);
   }
-}
-
-export function resolveDefault(column: Column): ColumnValue | undefined {
-  return column.defaultValue;
 }

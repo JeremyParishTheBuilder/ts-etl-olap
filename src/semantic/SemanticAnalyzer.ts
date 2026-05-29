@@ -8,11 +8,6 @@ import { bindSelect } from "./select.js";
 import { bindAlterTable } from "./alterTable.js";
 import { type BindResult } from "../engine/BindResult.js";
 
-// SemanticAnalyzer does:
-// - resolve names (tables, databases, columns)
-// - validate rules (dialect / engine policies)
-// - enforce semantic correctness
-// - produce fully-bound, executable Actions
 export class SemanticAnalyzer {
 
   constructor(public readonly ctx: ExecutionContext) {}
@@ -39,3 +34,39 @@ export class SemanticAnalyzer {
     }
   }
 }
+
+// SemanticAnalyzer responsibilities:
+//
+// - resolve schema references
+//   (databases, tables, columns, constraints)
+//
+// - validate semantic correctness
+//   (statement structure, identifier existence,
+//    legal operation forms, dialect rules)
+//
+// - derive operation intent
+//   (insert/update/delete semantics,
+//    target mappings, ordered column mappings)
+//
+// - preserve semantic input states
+//   (value/default/null/missing)
+//
+// - produce fully-bound executable statements/actions
+//
+// Semantic binding does NOT:
+//
+// - resolve runtime values
+//   (defaults, autoIncrement, generated values)
+//
+// - validate runtime data constraints
+//   (NOT NULL, ENUM, CHECK, FK)
+//
+// - mutate execution state
+//
+// Runtime execution responsibilities:
+//
+// - resolve semantic values into concrete runtime values
+//
+// - validate resolved values against schema constraints
+//
+// - execute mutations against immutable state

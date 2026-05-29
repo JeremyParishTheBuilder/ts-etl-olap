@@ -144,6 +144,7 @@ describe('Table::renameIndex', () => {
         columns: ["ParentId"],
         parentTable: "Parent",
         parentColumns: ["Id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
 

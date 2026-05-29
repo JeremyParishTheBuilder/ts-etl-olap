@@ -140,20 +140,19 @@ describe('Database::removeIndex', () => {
       .addColumn({
         name: "roleId",
         type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Users_Roles",
-        columns: ["roleId"],
-        parentTable: "Roles",
-        parentColumns: ["id"],
-        parentIndex: "pk_roles",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     const db = new Database("DB1")
       .addTable(parent)
-      .addTable(child);
+      .addTable(child)
+      .createForeignKey("users", {
+        name: "FK_Users_Roles",
+        columns: ["roleId"],
+        parentTable: "Roles",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
     expect(() =>
       db.removeIndex(
@@ -183,20 +182,19 @@ describe('Database::removeIndex', () => {
       .addColumn({
         name: "roleId",
         type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Users_Roles",
-        columns: ["roleId"],
-        parentTable: "Roles",
-        parentColumns: ["id"],
-        parentIndex: "pk_roles",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     const db = new Database("DB1")
       .addTable(parent)
-      .addTable(child);
+      .addTable(child)
+      .createForeignKey("users", {
+        name: "FK_Users_Roles",
+        columns: ["roleId"],
+        parentTable: "Roles",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
     const updated = db.removeIndex(
       "Roles",
@@ -230,19 +228,18 @@ describe('Database::removeIndex', () => {
         name: "PK_Employees",
         columns: ["id"],
         unique: true,
-      })
-      .createForeignKey({
+      });
+
+    const db = new Database("DB1")
+      .addTable(employees)
+      .createForeignKey("employees", {
         name: "FK_Manager",
         columns: ["managerId"],
         parentTable: "Employees",
         parentColumns: ["id"],
-        parentIndex: "pk_employees",
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
       });
-
-    const db = new Database("DB1")
-      .addTable(employees);
 
     expect(() =>
       db.removeIndex(

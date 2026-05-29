@@ -191,20 +191,19 @@ describe('Database::addRow', () => {
       .addColumn({
         name: "roleId",
         type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Users_Roles",
-        columns: ["roleId"],
-        parentTable: "Roles",
-        parentColumns: ["id"],
-        parentIndex: "pk_roles",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     database = database
       .updateTable(parent)
-      .updateTable(child);
+      .updateTable(child)
+      .createForeignKey("users", {
+        name: "FK_Users_Roles",
+        columns: ["roleId"],
+        parentTable: "Roles",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
     expect(() =>
       database.addRow(
@@ -236,20 +235,19 @@ describe('Database::addRow', () => {
       .addColumn({
         name: "roleId",
         type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Users_Roles",
-        columns: ["roleId"],
-        parentTable: "Roles",
-        parentColumns: ["id"],
-        parentIndex: "pk_roles",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     database = database
       .updateTable(parent)
       .updateTable(child)
+      .createForeignKey("users", {
+        name: "FK_Users_Roles",
+        columns: ["roleId"],
+        parentTable: "Roles",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      })
       .addRow("Users", [1]);
 
     expect(
@@ -279,20 +277,19 @@ describe('Database::addRow', () => {
       .addColumn({
         name: "roleId",
         type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Users_Roles",
-        columns: ["roleId"],
-        parentTable: "Roles",
-        parentColumns: ["id"],
-        parentIndex: "pk_roles",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     database = database
       .updateTable(parent)
-      .updateTable(child);
+      .updateTable(child)
+      .createForeignKey("users", {
+        name: "FK_Users_Roles",
+        columns: ["roleId"],
+        parentTable: "Roles",
+        parentColumns: ["id"],
+        onDelete: ReferentialAction.restrict,
+        onUpdate: ReferentialAction.restrict,
+      });
 
     expect(() =>
       database.addRow(

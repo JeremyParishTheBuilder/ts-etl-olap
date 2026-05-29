@@ -85,7 +85,7 @@ describe('Table::renameColumn', () => {
       updated.requireIndex("IDX_Email");
 
     expect(
-      index.getProjectedValues([
+      index.projectValues([
         "a@test.com",
       ])
     ).toEqual([
@@ -120,7 +120,7 @@ describe('Table::renameColumn', () => {
       updated.requireIndex("IDX_Name");
 
     expect(
-      index.getProjectedValues([
+      index.projectValues([
         "John",
         "Smith",
       ])
@@ -141,6 +141,7 @@ describe('Table::renameColumn', () => {
         columns: ["roleId"],
         parentTable: "Roles",
         parentColumns: ["id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
 
@@ -153,7 +154,7 @@ describe('Table::renameColumn', () => {
       updated.requireForeignKey("FK_Role");
 
     expect(
-      fk.getProjectedValues([123])
+      fk.projectChildValues([123])
     ).toEqual([123]);
   });
 
@@ -172,6 +173,7 @@ describe('Table::renameColumn', () => {
         columns: ["FA", "FB"],
         parentTable: "Parent",
         parentColumns: ["PA", "PB"],
+        parentColumnIndexes: [0, 1],
         parentIndex: "pk_roles",
       });
 
@@ -184,7 +186,7 @@ describe('Table::renameColumn', () => {
       updated.requireForeignKey("FK_Composite");
 
     expect(
-      fk.getProjectedValues([1, 2])
+      fk.projectChildValues([1, 2])
     ).toEqual([1, 2]);
   });
 
@@ -227,6 +229,7 @@ describe('Table::renameColumn', () => {
         columns: ["roleId"],
         parentTable: "Roles",
         parentColumns: ["id"],
+        parentColumnIndexes: [0],
         parentIndex: "pk_roles",
       });
 
@@ -239,7 +242,7 @@ describe('Table::renameColumn', () => {
       updated.requireForeignKey("FK_Role");
 
     expect(
-      fk.getProjectedValues([5])
+      fk.projectChildValues([5])
     ).toEqual([5]);
   });
 });

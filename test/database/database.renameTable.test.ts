@@ -21,18 +21,18 @@ describe('Database::renameTable', () => {
         name: "UserId",
         type: Number,
         nullable: false,
-      })
-      .createForeignKey({
-        name: "FK_Posts_Users",
-        columns: ["UserId"],
-        parentTable: "Users",
-        parentColumns: ["Id"],
-        parentIndex: "pk_users",
       });
 
     const database = new Database("DB1")
       .addTable(users)
-      .addTable(posts);
+      .addTable(posts)
+      .createForeignKey("posts",
+        {
+          name: "FK_Posts_Users",
+          columns: ["UserId"],
+          parentTable: "Users",
+          parentColumns: ["Id"],
+        });
 
     const updated = database.renameTable(
       "Users",

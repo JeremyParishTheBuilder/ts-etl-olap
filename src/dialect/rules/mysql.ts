@@ -1,5 +1,6 @@
 import { ReferentialAction } from "../../schema/ReferentialAction.js";
 import { DialectRules } from "../DialectRules.js";
+import { CURRENT_TIMESTAMP, DEFAULT, type Keyword } from "../keywords.js";
 
 const MYSQL_FRAGMENTS: Record<string, string> = {
   createTable: "createTable",
@@ -56,14 +57,11 @@ export const MYSQL_RULES: DialectRules = {
     supportsReturning: false,           // Not supported
   },
 
-  values: {
-    keywords: new Set([
-      "DEFAULT",
-      "NULL",
-      "CURRENT_TIMESTAMP",
-      "TRUE",
-      "FALSE",
-    ]),
+  input: {
+    keywords: new Set<Keyword>([
+      DEFAULT,
+      CURRENT_TIMESTAMP,
+    ])
   },
 
   transaction: {

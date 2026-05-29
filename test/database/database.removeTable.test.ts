@@ -49,20 +49,22 @@ describe('Database::removeTable', () => {
         name: "UserId",
         type: Number,
         nullable: false,
-      })
-      .createForeignKey({
-        name: "FK_Posts_Users",
-        columns: ["UserId"],
-        parentTable: "Users",
-        parentColumns: ["Id"],
-        parentIndex: "pk_users",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
       });
 
     const updated = database
       .updateTable(users)
-      .updateTable(posts);
+      .updateTable(posts)
+      .createForeignKey(
+        "posts",
+        {
+          name: "FK_Posts_Users",
+          columns: ["UserId"],
+          parentTable: "Users",
+          parentColumns: ["Id"],
+          onDelete: ReferentialAction.restrict,
+          onUpdate: ReferentialAction.restrict,
+        }
+      );
 
     expect(() => {
       updated.removeTable("Users");
