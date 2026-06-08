@@ -1,7 +1,7 @@
 import { type Action } from "../actions/Action.js";
 import { UpdateRowAction } from "../actions/UpdateRowAction.js";
 import { type UpdateSetStatement } from "../statements/index.js";
-import { type Column, type ColumnValue } from "../schema/Column.js";
+import { type ColumnId, type Column, type ColumnValue } from "../schema/Column.js";
 //import { getOrderedColumns, resolveUniqueColumnList } from "./resolveColumnList.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
@@ -31,13 +31,14 @@ export function bindUpdateSet(
   const tableName: string = stmt.table;
   const table = database.requireTable(tableName);
 
-  const columnIdToValueMap = new Map<string, ExplicitInput>();
+  const columnIdToValueMap = new Map<ColumnId, ExplicitInput>();
   const valueRecord = stmt.values;
   for (const columnName in valueRecord) {
-    if (Object.prototype.hasOwnProperty.call(valueRecord, columnName)) {
+    const columnId = table.requireColumnIdByName(columnName);
+    if (Object.prototype.hasOwnProperty.call(valueRecord, columnId)) {
       columnIdToValueMap.set(
         //table.requireColumnIdFromName(columnName),
-        normalizeIdentifier(table.requireColumn(columnName).name),
+        columnId,
         valueRecord[columnName]
       );
     }

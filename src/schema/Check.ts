@@ -1,15 +1,28 @@
 import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
-import { type ColumnType } from "./Column.js"; 
-import { type CheckSpec } from "./Constraint.js";
-import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
+import { type ColumnId, type ColumnType } from "./Column.js"; 
+
+export type CheckId = number & { readonly __brand: "CheckId" };
 
 export class Check extends ColumnBoundImmutable {
-  protected constructor(
-    public name: string,
-    public columns: string[],
-    public expression: undefined,
-  ) {
+
+  public readonly id: CheckId;
+  public readonly name: string;
+  public readonly columns: ColumnId[];
+  public readonly expression: undefined;
+
+  protected constructor(spec: {
+    id: CheckId,
+    name: string,
+    columns: ColumnId[],
+    expression: undefined,
+  }) {
     super();
+
+    this.id = spec.id;
+    this.name = spec.name;
+    this.columns = spec.columns;
+    this.expression = spec.expression;
+
     this.validate();
     this.seal();
   }
@@ -18,12 +31,13 @@ export class Check extends ColumnBoundImmutable {
     //TODO, write validateExpression()
   }
 
-  public static fromSpec(spec: CheckSpec): Check {
-    return new this(
-      spec.name,
-      spec.columns.map(normalizeIdentifier),
-      spec.expression ?? undefined, //TODO
-    )
+  public static create(spec: {
+    id: CheckId,
+    name: string,
+    columns: ColumnId[],
+    expression: undefined,
+  }): Check {
+    return new this(spec);
   }
 
   public rename(newName: string): Check {
@@ -32,8 +46,7 @@ export class Check extends ColumnBoundImmutable {
     } as Partial<this>);
   }
 
-  public tryAlterColumn(name: string, newType: ColumnType): Check {
-    const normalizedName = normalizeIdentifier(name); 
+  public tryAlterColumn(id: ColumnId, newType: ColumnType): Check {
     return this;
   }
 }

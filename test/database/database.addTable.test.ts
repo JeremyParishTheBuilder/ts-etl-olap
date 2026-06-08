@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from '../../src/schema/Database.js';
 import { Table } from '../../src/schema/Table.js';
+import { createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Database::addTable', () => {
   it('adds a table to the database', () => {
@@ -28,13 +29,13 @@ describe('Database::addTable', () => {
     const database = new Database("DB1")
       .addTable(
         new Table("T1")
-          .addColumn({ name: "C1", type: Number })
-      );
+          .createColumn(createColumnTestSpec({ name: "C1", type: Number })
+      ));
 
     const updated = database.updateTable(
       new Table("T1")
-        .addColumn({ name: "C2", type: Number })
-    );
+        .createColumn(createColumnTestSpec({ name: "C2", type: Number })
+    ));
 
     expect(() => {
       updated.requireTable("T1").requireColumn("C1");

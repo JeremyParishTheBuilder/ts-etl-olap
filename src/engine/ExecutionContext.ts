@@ -3,12 +3,14 @@ import type { RulesFacadeShape } from "./RulesFacade.js";
 
 import { type Database } from "../schema/Database.js";
 import { type Table } from "../schema/Table.js";
+import { type IdService } from "../types/IdAllocator.js";
 
 export class ExecutionContext {
   constructor(
     public readonly tx: Transaction,
     public readonly rules: RulesFacadeShape,
-    private currentDb?: string
+    //public ids: IdService,
+    private currentDb?: string,
   ) {}
 
   public getDatabase(name?: string): Database | undefined {

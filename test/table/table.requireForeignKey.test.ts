@@ -1,45 +1,39 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
+import { buildTable } from '../utils/buildSchema.js';
 
 describe('Table::requireForeignKey', () => {
-  function buildTable(): Table {
-    return new Table("Posts")
-      .addColumn({
-        name: "UserId",
-        type: Number,
-        nullable: false,
-      })
-      .createForeignKey({
-        name: "FK_Posts_Users",
-        columns: ["UserId"],
-        parentTable: "Users",
-        parentColumns: ["Id"],
-        parentColumnIndexes: [0],
-        parentIndex: "pk_roles",
-      });
+  function buildTableWithForeignKey(): Table {
+    return buildTable({
+      columns: ["c1"],
+      foreignKeys: [{
+        name: "FK1",
+        columns: ["c1"],
+      }]
+    });
   }
 
   it('returns the foreign key', () => {
-    const table = buildTable();
+    const table = buildTableWithForeignKey();
 
     expect(
-      table.requireForeignKey("FK_Posts_Users")
+      table.requireForeignKey("FK1")
     ).toBeDefined();
   });
 
   it('supports case-insensitive lookup', () => {
-    const table = buildTable();
+    const table = buildTableWithForeignKey();
 
     expect(
-      table.requireForeignKey("fk_posts_users")
+      table.requireForeignKey("fk1")
     ).toBeDefined();
   });
 
   it('throws when foreign key does not exist', () => {
-    const table = new Table("Posts");
+    const table = buildTableWithForeignKey();
 
     expect(() => {
-      table.requireForeignKey("MissingFK");
+      table.requireForeignKey("fk2");
     }).toThrow();
   });
 });

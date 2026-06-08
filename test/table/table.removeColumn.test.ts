@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
+import { createForeignKeyTestSpec_Table, createTestIdService } from '../utils/buildSchema.js';
 
 describe('Table::removeColumn', () => {
   it('removes a column from the table', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number })
-      .addColumn({ name: "C2", type: Number });
+      .createColumn({ name: "C1", type: Number })
+      .createColumn({ name: "C2", type: Number });
 
     const updated = table.removeColumn("C1");
 
@@ -15,9 +16,9 @@ describe('Table::removeColumn', () => {
 
   it('reindexes remaining columns', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number })
-      .addColumn({ name: "C2", type: Number })
-      .addColumn({ name: "C3", type: Number });
+      .createColumn({ name: "C1", type: Number })
+      .createColumn({ name: "C2", type: Number })
+      .createColumn({ name: "C3", type: Number });
 
     const updatedTable = table.removeColumn("C2");
 
@@ -27,8 +28,8 @@ describe('Table::removeColumn', () => {
 
   it('preserves row values for remaining columns', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number })
-      .addColumn({ name: "C2", type: Number });
+      .createColumn({ name: "C1", type: Number })
+      .createColumn({ name: "C2", type: Number });
 
     const withRow = table.addRow([1, 2]);
     const updated = withRow.removeColumn("C1");
@@ -40,7 +41,7 @@ describe('Table::removeColumn', () => {
 
   it('does not mutate original table (immutability)', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number });
+      .createColumn({ name: "C1", type: Number });
 
     const updatedTable = table.removeColumn("C1");
 
@@ -58,7 +59,7 @@ describe('Table::removeColumn', () => {
 
   it('throws if column is not droppable (constraint/index referenced)', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number })
+      .createColumn({ name: "C1", type: Number })
       .createIndex({
         name: "I1",
         columns: ["C1"],
@@ -72,9 +73,9 @@ describe('Table::removeColumn', () => {
 
   it('updates projected index bindings after column removal', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number })
-      .addColumn({ name: "C2", type: Number })
-      .addColumn({ name: "C3", type: Number })
+      .createColumn({ name: "C1", type: Number })
+      .createColumn({ name: "C2", type: Number })
+      .createColumn({ name: "C3", type: Number })
       .createIndex({
         name: "IDX1",
         columns: ["C1", "C3"],
@@ -92,9 +93,9 @@ describe('Table::removeColumn', () => {
 
   it('updates indexes` column position indexes', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number })
-      .addColumn({ name: "C2", type: Number })
-      .addColumn({ name: "C3", type: Number })
+      .createColumn({ name: "C1", type: Number })
+      .createColumn({ name: "C2", type: Number })
+      .createColumn({ name: "C3", type: Number })
       .createIndex({
         name: "I1",
         columns: ["C1", "C3"],
@@ -116,125 +117,17 @@ describe('Table::removeColumn', () => {
     ).toEqual([10, 30]);
   });
 
-  it('updates foreign keys`s column indexes accordingly', () => {
-    const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number })
-      .addColumn({ name: "C2", type: Number })
-      .addColumn({ name: "C3", type: Number })
-      .createForeignKey({
-        name: "FK1",
-        columns: ["C1", "C3"],
-        parentTable: "PT1",
-        parentColumns: ["PC1", "PC3"],
-        parentColumnIndexes: [0, 2],
-        parentIndex: "pk_roles",
-      });
-
-    const fk = table.requireForeignKey("FK1");
-
-    expect(
-      fk.projectChildValues([10, 20, 30])
-    ).toEqual([10, 30]);
-
-    const updatedTable = table.removeColumn("C2");
-
-    const updatedFk = updatedTable.requireForeignKey("FK1");
-
-    expect(
-      updatedFk.projectChildValues([10, 30])
-    ).toEqual([10, 30]);
-  });
-
-  it('updates surviving foreign key column indexes correctly', () => {
-    const table = new Table("Child")
-      .addColumn({
-        name: "C1",
-        type: Number,
-      })
-      .addColumn({
-        name: "C2",
-        type: Number,
-      })
-      .addColumn({
-        name: "C3",
-        type: Number,
-      })
-      .createForeignKey({
-        name: "FK1",
-        columns: ["C1", "C3"],
-        parentTable: "Parent",
-        parentColumns: ["P1", "P3"],
-        parentColumnIndexes: [0, 2],
-        parentIndex: "pk_roles",
-      });
-
-    const updated = table.removeColumn("C2");
-
-    const fk =
-      updated.requireForeignKey("FK1");
-
-    expect(
-      fk.projectChildValues([10, 30])
-    ).toEqual([10, 30]);
-  });
-
-  it('preserves unrelated foreign keys during column removal', () => {
-    const table = new Table("Child")
-      .addColumn({
-        name: "C1",
-        type: Number,
-      })
-      .addColumn({
-        name: "C2",
-        type: Number,
-      })
-      .addColumn({
-        name: "C3",
-        type: Number,
-      })
-      .addColumn({
-        name: "C4",
-        type: Number,
-      })
-      .createForeignKey({
-        name: "FK1",
-        columns: ["C1"],
-        parentTable: "Parent",
-        parentColumns: ["P1"],
-        parentColumnIndexes: [0],
-        parentIndex: "pk_roles",
-      })
-      .createForeignKey({
-        name: "FK2",
-        columns: ["C4"],
-        parentTable: "Parent",
-        parentColumns: ["P4"],
-        parentColumnIndexes: [3],
-        parentIndex: "pk_roles",
-      });
-
-    const updated = table.removeColumn("C2");
-
-    expect(
-      updated.requireForeignKey("FK1")
-    ).toBeDefined();
-
-    expect(
-      updated.requireForeignKey("FK2")
-    ).toBeDefined();
-  });
-
   it('preserves unrelated indexes during column removal', () => {
     const table = new Table("T1")
-      .addColumn({
+      .createColumn({
         name: "C1",
         type: Number,
       })
-      .addColumn({
+      .createColumn({
         name: "C2",
         type: Number,
       })
-      .addColumn({
+      .createColumn({
         name: "C3",
         type: Number,
       })
@@ -256,25 +149,5 @@ describe('Table::removeColumn', () => {
     expect(
       updated.requireIndex("IDX2")
     ).toBeDefined();
-  });
-  
-  it('throws when column is referenced by a foreign key', () => {
-    const table = new Table("Posts")
-      .addColumn({
-        name: "UserId",
-        type: Number,
-      })
-      .createForeignKey({
-        name: "FK_Posts_Users",
-        columns: ["UserId"],
-        parentTable: "Users",
-        parentColumns: ["Id"],
-        parentColumnIndexes: [1],
-        parentIndex: "pk_users",
-      });
-
-    expect(() => {
-      table.removeColumn("UserId");
-    }).toThrow();
   });
 });

@@ -1,8 +1,5 @@
-import { type ExecutionContext } from "./ExecutionContext.js";
 import { type Statement } from "../statements/Statement.js";
-
-import { SemanticAnalyzer } from "../semantic/SemanticAnalyzer.js";
-import { Databases } from "../schema/Databases.js";
+import { type Databases } from "../schema/Databases.js";
 import { type Action } from "../actions/Action.js";
 
 export class Transaction {

@@ -2,13 +2,14 @@ import { type Action } from "./Action.js";
 import { type SemanticValue } from "../semantic/values.js";
 import { type Databases } from "../schema/Databases.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
+import { type ColumnId } from "../schema/Column.js";
 
 export class UpdateRowAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
     private rowNum: number,
-    private inputs: Map<string, ExplicitInput>,
+    private inputs: Map<ColumnId, ExplicitInput>,
     //private semanticRow: SemanticValue[],
   ) {}
 

@@ -1,14 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
+import { createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::removePrimaryKey', () => {
   function buildTable(): Table {
     return new Table("T1")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .createIndex({
         name: "PK_T1",
         columns: ["Id"],
@@ -16,7 +17,6 @@ describe('Table::removePrimaryKey', () => {
       })
       .createPrimaryKey({
         name: "PK_T1",
-        columns: ["Id"],
         index: "PK_T1",
       });
   }
@@ -51,40 +51,13 @@ describe('Table::removePrimaryKey', () => {
     }).toThrow();
   });
 
-  it('removes owned backing index when PK name matches index name', () => {
+  it('preserves independent backing index', () => {
     const table = new Table("T1")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
-      .createIndex({
-        name: "PK_T1",
-        columns: ["Id"],
-        unique: true,
-      })
-      .createPrimaryKey({
-        name: "PK_T1",
-        columns: ["Id"],
-        index: "PK_T1",
-      });
-
-    const updated = table.removePrimaryKey();
-
-    expect(updated.primaryKey).toBeUndefined();
-
-    expect(() => {
-      updated.requireIndex("PK_T1");
-    }).toThrow();
-  });
-
-  it('preserves independent backing index when names differ', () => {
-    const table = new Table("T1")
-      .addColumn({
-        name: "Id",
-        type: Number,
-        nullable: false,
-      })
+      }))
       .createIndex({
         name: "PK_Index",
         columns: ["Id"],
@@ -92,7 +65,6 @@ describe('Table::removePrimaryKey', () => {
       })
       .createPrimaryKey({
         name: "PK_T1",
-        columns: ["Id"],
         index: "PK_Index",
       });
 

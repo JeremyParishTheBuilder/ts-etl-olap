@@ -6,14 +6,14 @@ export class AddColumnAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private columnSpec: ColumnSpec
+    private columnSpec: ColumnSpec,
   ) {}
 
   apply(databases: Databases) {
     const db = databases.require(this.dbName);
 
     const updatedTable = db.requireTable(this.tableName)
-      .addColumn(this.columnSpec);
+      .createColumn(this.columnSpec);
 
     return databases.update(
       db.updateTable(updatedTable)

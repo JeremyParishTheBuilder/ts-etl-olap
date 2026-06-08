@@ -1,27 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
-import { Check } from '../../src/schema/Check.js';
-import { CONSTRAINT_KIND } from '../../src/schema/ConstraintKind.js';
+import { buildTable, createCheckTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::requireCheck', () => {
-  function buildTable(): Table {
-    return new Table("Users")
-      .addColumn({
-        name: "Age",
-        type: Number,
-      })
-      .addCheck(
-        Check.fromSpec({
-          kind: CONSTRAINT_KIND.check,
-          name: "CHK_PositiveAge",
-          columns: ["Age"],
-          expression: undefined,
-        })
-      );
-  }
 
   it('returns the check constraint', () => {
-    const table = buildTable();
+    const table = buildTable({
+      columns: ["Age"]
+    })
+    .createCheck(createCheckTestSpec({
+      name: "CHK_PositiveAge",
+      columns: ["Age"]
+    }));
 
     expect(
       table.requireCheck("CHK_PositiveAge")
@@ -29,10 +19,21 @@ describe('Table::requireCheck', () => {
   });
 
   it('supports case-insensitive lookup', () => {
-    const table = buildTable();
+    const table = buildTable({
+      columns: ["Age"]
+    });
+
+    const tableWithCheck = table
+    .createCheck(createCheckTestSpec({
+      name: "CHK_PositiveAge",
+      columns: ["Age"]
+    }));
+
+    console.log(tableWithCheck);
+    console.log(tableWithCheck.requireCheck("chk_positiveage"));
 
     expect(
-      table.requireCheck("chk_positiveage")
+      tableWithCheck.requireCheck("chk_positiveage")
     ).toBeDefined();
   });
 

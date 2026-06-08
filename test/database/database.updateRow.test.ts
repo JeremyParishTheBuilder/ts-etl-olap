@@ -3,15 +3,16 @@ import { describe, it, expect } from 'vitest';
 import { Database } from "../../src/schema/Database.js";
 import { Table } from "../../src/schema/Table.js";
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
+import { createColumnTestSpec, createForeignKeyTestSpec_Database } from '../utils/buildSchema.js';
 
 describe('Database::updateRow', () => {
 
   it('allows updating a child row to another valid parent reference', () => {
     let roles = new Table("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["id"],
@@ -22,24 +23,30 @@ describe('Database::updateRow', () => {
     roles = roles.addRow([2]);
 
     let users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
-      });
+      }))
+      .createIndex({
+        name: "FKRI_Users",
+        columns: ["roleId"],
+        unique: false,
+      });;
 
     users = users.addRow([1]);
 
     const db = new Database("DB1")
       .addTable(roles)
       .addTable(users)
-      .createForeignKey("users", {
+      .createForeignKey("users", createForeignKeyTestSpec_Database({
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKRI_Users",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
 
     const updates = [2];
 
@@ -58,10 +65,10 @@ describe('Database::updateRow', () => {
 
   it('rejects updating a child row to an invalid foreign key reference', () => {
     let roles = new Table("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["id"],
@@ -71,24 +78,30 @@ describe('Database::updateRow', () => {
     roles = roles.addRow([1]);
 
     let users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
-      });
+      }))
+      .createIndex({
+        name: "FKRI_Users",
+        columns: ["roleId"],
+        unique: false,
+      });;
 
     users = users.addRow([1]);
 
     const db = new Database("DB1")
       .addTable(roles)
       .addTable(users)
-      .createForeignKey("users", {
+      .createForeignKey("users", createForeignKeyTestSpec_Database({
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKRI_Users",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
 
     const updates = [999];
 
@@ -103,10 +116,10 @@ describe('Database::updateRow', () => {
 
   it('rejects updating a parent row that would orphan child rows', () => {
     let roles = new Table("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["id"],
@@ -116,24 +129,30 @@ describe('Database::updateRow', () => {
     roles = roles.addRow([1]);
 
     let users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
-      });
+      }))
+      .createIndex({
+        name: "FKRI_Users",
+        columns: ["roleId"],
+        unique: false,
+      });;
 
     users = users.addRow([1]);
 
     const db = new Database("DB1")
       .addTable(roles)
       .addTable(users)
-      .createForeignKey("users", {
+      .createForeignKey("users", createForeignKeyTestSpec_Database({
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKRI_Users",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
 
     const updates = [2];
 
@@ -148,10 +167,10 @@ describe('Database::updateRow', () => {
 
   it('allows updating a parent row when no child rows reference it', () => {
     let roles = new Table("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["id"],
@@ -161,22 +180,28 @@ describe('Database::updateRow', () => {
     roles = roles.addRow([1]);
 
     let users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_Users",
+        columns: ["roleId"],
+        unique: false,
       });
 
     const db = new Database("DB1")
       .addTable(roles)
       .addTable(users)
-      .createForeignKey("users", {
+      .createForeignKey("users", createForeignKeyTestSpec_Database({
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKRI_Users",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
 
     const updates = [2];
 
@@ -195,33 +220,39 @@ describe('Database::updateRow', () => {
 
   it('allows self-referencing foreign key updates that remain valid', () => {
     let employees = new Table("Employees")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "managerId",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Employees",
         columns: ["id"],
         unique: true,
-      });
+      })
+      .createIndex({
+        name: "FKRI_Employees",
+        columns: ["managerId"],
+        unique: false,
+      });;
 
     employees = employees.addRow([1, null]);
     employees = employees.addRow([2, 1]);
 
     const db = new Database("DB1")
       .addTable(employees)
-      .createForeignKey("employees", {
+      .createForeignKey("employees", createForeignKeyTestSpec_Database({
         name: "FK_Manager",
         columns: ["managerId"],
+        reverseIndex: "FKRI_Employees",
         parentTable: "Employees",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
 
     const updates = [2, 2];
 
@@ -240,32 +271,38 @@ describe('Database::updateRow', () => {
 
   it('rejects self-referencing foreign key updates that become invalid', () => {
     let employees = new Table("Employees")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "managerId",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Employees",
         columns: ["id"],
         unique: true,
+      })
+      .createIndex({
+        name: "FKR_Employees",
+        columns: ["managerId"],
+        unique: false,
       });
 
     employees = employees.addRow([1, null]);
 
     const db = new Database("DB1")
       .addTable(employees)
-      .createForeignKey("employees", {
+      .createForeignKey("employees", createForeignKeyTestSpec_Database({
         name: "FK_Manager",
         columns: ["managerId"],
         parentTable: "Employees",
         parentColumns: ["id"],
+        reverseIndex: "FKR_Employees",
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
       
     const updates = [2, 999];
 

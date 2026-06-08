@@ -1,15 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { Database } from '../../src/schema/Database.js';
-import { Table } from '../../src/schema/Table.js';
-import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
+import { buildCompositeKeyDatabase, buildDatabase, buildParentChildDatabase, buildTable } from '../utils/buildSchema.js';
 
 describe('Database::removeColumn', () => {
-  it('removes a column from the correct table', () => {
-    const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number });
 
-    const db = new Database("DB1")
-      .addTable(table);
+  it('removes a column from the correct table', () => {
+    // const table = new Table("T1")
+    //   .addColumn({ name: "C1", type: Number });
+
+    // const db = new Database("DB1")
+    //   .addTable(table);
+
+    const db = buildDatabase();
 
     const updatedDb = db.removeColumn("T1", "C1");
 
@@ -19,15 +20,17 @@ describe('Database::removeColumn', () => {
   });
 
   it('does not affect other tables', () => {
-    const table1 = new Table("T1")
-      .addColumn({ name: "C1", type: Number });
+    // const table1 = new Table("T1")
+    //   .addColumn({ name: "C1", type: Number });
 
-    const table2 = new Table("T2")
-      .addColumn({ name: "C1", type: Number });
+    // const table2 = new Table("T2")
+    //   .addColumn({ name: "C1", type: Number });
 
-    const db = new Database("DB1")
-      .addTable(table1)
-      .addTable(table2);
+    // const db = new Database("DB1")
+    //   .addTable(table1)
+    //   .addTable(table2);
+
+    const db = buildDatabase({tables: 2});
 
     const updatedDb = db.removeColumn("T1", "C1");
 
@@ -37,34 +40,7 @@ describe('Database::removeColumn', () => {
   });
 
   it('throws when parent column is referenced by a foreign key', () => {
-    const parent = new Table("Parent")
-      .addColumn({
-        name: "id",
-        type: Number,
-      })
-      .createIndex({
-        name: "PK_Parent",
-        columns: ["id"],
-        unique: true,
-      });
-
-    const child = new Table("Child")
-      .addColumn({
-        name: "parentId",
-        type: Number,
-      });
-
-    const db = new Database("DB1")
-      .addTable(parent)
-      .addTable(child)
-      .createForeignKey("child", {
-        name: "FK_Child_Parent",
-        columns: ["parentId"],
-        parentTable: "Parent",
-        parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
-      });
+    const db = buildParentChildDatabase();
 
     expect(() =>
       db.removeColumn(
@@ -74,80 +50,68 @@ describe('Database::removeColumn', () => {
     ).toThrow();
   });
 
+  it('throws when child column is referenced by a foreign key', () => {
+    const db = buildParentChildDatabase();
+
+    expect(() =>
+      db.removeColumn(
+        "Child",
+        "ref",
+      )
+    ).toThrow();
+  });
+
   it('rejects removing parent columns used by composite foreign keys', () => {
-    const parent = new Table("Parent")
-      .addColumn({
-        name: "A",
-        type: Number,
-      })
-      .addColumn({
-        name: "B",
-        type: Number,
-      })
-      .createIndex({
-        name: "PK_Parent",
-        columns: ["A", "B"],
-        unique: true,
-      });
 
-    const child = new Table("Child")
-      .addColumn({
-        name: "FA",
-        type: Number,
-      })
-      .addColumn({
-        name: "FB",
-        type: Number,
-      });
-
-    const db = new Database("DB1")
-      .addTable(parent)
-      .addTable(child)
-      .createForeignKey("child", {
-        name: "FK_Composite",
-        columns: ["FA", "FB"],
-        parentTable: "Parent",
-        parentColumns: ["A", "B"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
-      });
+    const db = buildCompositeKeyDatabase();
 
     expect(() =>
       db.removeColumn(
         "Parent",
-        "A",
+        "c1",
+      )
+    ).toThrow();
+  });
+
+  it('rejects removing parent columns used by composite foreign keys', () => {
+
+    const db = buildCompositeKeyDatabase();
+
+    expect(() =>
+      db.removeColumn(
+        "Child",
+        "c1",
       )
     ).toThrow();
   });
 
   it('allows removal when no foreign key references exist', () => {
-    const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number });
 
-    const db = new Database("DB1")
-      .addTable(table);
+    const db = buildDatabase();
 
-    const updatedDb = db.removeColumn("T1", "C1");
+    const updatedDb = db.removeColumn("t1", "c1");
 
-    const updatedTable = updatedDb.requireTable("T1");
+    const updatedTable = updatedDb.requireTable("t1");
 
-    expect(() => updatedTable.requireColumn("C1")).toThrow();
+    expect(() => updatedTable.requireColumn("a")).toThrow();
   });
 
   it('does not mutate original database (immutability)', () => {
-    const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number });
+    // const table = new Table("T1")
+    //   .addColumn({ name: "C1", type: Number });
 
-    const db = new Database("DB1")
-      .addTable(table);
+    // const db = new Database("DB1")
+    //   .addTable(table);
 
-    const updatedDb = db.removeColumn("T1", "C1");
+    const db = buildDatabase();
 
-    const originalTable = db.requireTable("T1");
-    const updatedTable = updatedDb.requireTable("T1");
+    const updatedDb = db.removeColumn("t1", "c1");
 
-    expect(originalTable.requireColumn("C1")).toBeDefined();
-    expect(() => updatedTable.requireColumn("C1")).toThrow();
+    const originalTable = db.requireTable("t1");
+    const updatedTable = updatedDb.requireTable("t1");
+
+    expect(originalTable.requireColumn("c1")).toBeDefined();
+    expect(() => updatedTable.requireColumn("c1")).toThrow();
   });
 
 });

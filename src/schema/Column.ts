@@ -18,57 +18,62 @@ export type ColumnValue = PrimitiveColumnValue;
 
 import { Immutable } from "../infrastructure/Immutable.js";
 import { ReferentialAction } from './ReferentialAction.js';
-import { SemanticValue } from '../semantic/values.js';
 import { ExplicitInput } from '../types/ExplicitInput.js';
 
-type ColumnInput = ColumnSpec & {
-  position: number;
-};
+export type ColumnId = number & { readonly __brand: "ColumnId" };
 
 export class Column extends Immutable {
 
-  public name: string;
-  public type: ColumnType;
-  public nullable: boolean;
-  public defaultValue?: ColumnValue;
-  public enumValues?: readonly ColumnValue[];
-  public autoIncrementStep?: number;
-  public autoIncrementStart?: number;
+  public readonly name: string;
+  public readonly type: ColumnType;
+  public readonly nullable: boolean;
+  public readonly defaultValue?: ColumnValue;
+  public readonly enumValues?: readonly ColumnValue[];
+  public readonly autoIncrementStep?: number;
+  public readonly autoIncrementStart?: number;
 
-  public position: number; //0-index
+  public readonly id: ColumnId;
+  public readonly position: number; //0-index
 
-  public readonly data: ColumnValue[] = [];
+  public readonly data: ColumnValue[];
   public readonly autoIncrementNext?: number;
 
   validate(): void {}
 
-  private constructor(input: ColumnInput) {
+  private constructor(spec:
+    ColumnSpec & {
+    id: ColumnId,
+    position: number,
+  }) {
     super();
 
-    this.name = input.name;
-    this.type = input.type;
-    this.nullable = input.nullable ?? true;
-    this.defaultValue = input.defaultValue;
-    this.enumValues = input.enumValues;
-    this.autoIncrementStep = input.autoIncrementStep;
-    this.autoIncrementStart = input.autoIncrementStart;
-    this.position = input.position;
-    
-    if (input.autoIncrementStep !== undefined) {
-      this.autoIncrementNext = input.autoIncrementStart ?? 1;
+    this.name = spec.name;
+    this.type = spec.type;
+    this.nullable = spec.nullable ?? true;
+    this.defaultValue = spec.defaultValue;
+    this.enumValues = spec.enumValues;
+    this.autoIncrementStep = spec.autoIncrementStep;
+    this.autoIncrementStart = spec.autoIncrementStart;
+
+    this.id = spec.id;
+    this.position = spec.position;
+    if (this.autoIncrementStep !== undefined) {
+      this.autoIncrementNext = this.autoIncrementStart ?? 1;
     }
+    this.data = [];
 
     this.validate();
     this.seal();
   }
 
-  public static fromSpec(spec: ColumnSpec, position: number): Column {
+  public static create(spec:
+    ColumnSpec & {
+    id: ColumnId,
+    position: number
+  }): Column {
     validateColumnSpec(spec);
 
-    return new this({
-      ...spec,
-      position,
-    });
+    return new this(spec);
   }
 
   public alter(newType: ColumnType): Column {
@@ -281,8 +286,6 @@ function matchesColumnType(value: any, type: ColumnType): boolean {
       return false;
   }
 }
-
-export type ColumnKeyType = string;
 
 export type ColumnSpec = {
   name: string;

@@ -7,7 +7,6 @@ import { DropForeignKeyAction } from "../actions/DropForeignKeyAction.js";
 
 
 import { type AlterTableStatement } from "../statements/index.js";
-import { type ColumnSpec } from "../schema/Column.js";
 import { CONSTRAINT_KIND } from "../schema/ConstraintKind.js";
 import { PrimaryKey } from "../schema/PrimaryKey.js";
 import { Index } from "../schema/Index.js";
@@ -27,23 +26,23 @@ export function bindAlterTable(
   const stmtActions: Action[] = [];
 
   const dbName = ctx.requireDatabase().name;
-  const table = ctx.requireTable(stmt.table);
   const tableName = stmt.table;
+  const table = ctx.requireTable(tableName);
   
 
   if (stmt.op === "add_constraint") {
     const spec = stmt.constraint;
 
-    const childColumns = table.requireColumns(spec.columns);
+    const columns = spec.columns.map(c => table.requireColumn(c));
 
     switch (spec.kind) {
       case CONSTRAINT_KIND.foreignKey:
 
         const parentTable = ctx.requireTable(spec.parentTable);
-        const parentColumns = parentTable.requireColumns(spec.parentColumns);
+        const parentColumns = spec.parentColumns.map(c => parentTable.requireColumnIdByName(c));
 
         if (!ctx.rules.constraints.allowNullableForeignKeys) {
-          for (const col of childColumns) {
+          for (const col of columns) {
             if (col.nullable) {
               throw new Error(
                 `Foreign key column '${col.name}' cannot be nullable`
@@ -52,14 +51,36 @@ export function bindAlterTable(
           }
         }
 
+        const reverseIndexName = ForeignKey.defaultIndexName(spec.name);
+
+        stmtActions.push(
+          new AddIndexAction(
+            dbName,
+            tableName,
+            {
+              name: reverseIndexName,
+              columns: spec.columns,
+              unique: false,
+              nullsDistinct: ctx.rules.constraints.nullsDistinct,
+              internal: true,
+            },
+          )
+        );
+
+        const onDelete = spec.onDelete ??
+          ctx.rules.constraints.foreignKeyDefaultOnDelete;
+        const onUpdate = spec.onDelete ??
+          ctx.rules.constraints.foreignKeyDefaultOnUpdate
+
         stmtActions.push(
           new AddForeignKeyAction(
             dbName,
             tableName,
             {
               ...spec,
-              onDelete: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnDelete,
-              onUpdate: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnUpdate,
+              onDelete,
+              onUpdate,
+              reverseIndex: reverseIndexName,
             },
           )
         );
@@ -67,29 +88,33 @@ export function bindAlterTable(
         break;
 
       case CONSTRAINT_KIND.primaryKey:
-        const indexName = spec.index ?? spec.name;
+        // let indexName = spec.index;
+
+        // if (spec.index) {
+        //   table.requireIndex(spec.index);
+        // } else {
+        //   indexName = spec.name.concat("_PKIDX");
 
         stmtActions.push(
           new AddIndexAction(
             dbName,
             tableName,
             {
-              name: indexName,
+              name: PrimaryKey.defaultIndexName(spec.name),
               columns: spec.columns,
               unique: true,
               nullsDistinct: ctx.rules.constraints.nullsDistinct,
             },
           )
         );
+        //}
+        
 
         stmtActions.push(
           new AddPrimaryKeyAction(
             dbName,
             tableName,
-            {
-              ...spec,
-              index: indexName
-            },
+            spec,
           )
         );
       
@@ -139,15 +164,25 @@ export function bindAlterTable(
         new DropIndexAction(
           dbName,
           tableName,
-          constraintName,
+          constraint.id,
         )
       );
     } else if (constraint instanceof ForeignKey) {
+      //const reverseIndexName = table.requireIndexById(constraint.reverseIndex).name;
+      //reverseIndexName = spec.name.concat("_PKIDX");
+
       stmtActions.push(
         new DropForeignKeyAction(
           dbName,
           tableName,
-          constraintName,
+          constraint.id,
+        )
+      );
+      stmtActions.push(
+        new DropIndexAction(
+          dbName,
+          tableName,
+          constraint.reverseIndex,
         )
       );
     } else if (constraint instanceof Check) {
@@ -173,7 +208,11 @@ export function bindAlterTable(
       new AddColumnAction(
         dbName,
         tableName,
-        { name: stmt.columnName, ...stmt.inlineColumnSpec } as ColumnSpec,
+        {
+          //id: ctx.ids.nextColumnId(),
+          name: stmt.columnName,
+          ...stmt.inlineColumnSpec
+        },
       )
     );
   }

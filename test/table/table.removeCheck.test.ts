@@ -1,23 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
 import { Check } from '../../src/schema/Check.js';
-import { CONSTRAINT_KIND } from '../../src/schema/ConstraintKind.js';
 
 describe('Table::removeCheck', () => {
   function buildTable(): Table {
     return new Table("Users")
-      .addColumn({
+      .createColumn({
         name: "Age",
         type: Number,
       })
-      .addCheck(
-        Check.fromSpec({
-          kind: CONSTRAINT_KIND.check,
-          name: "CHK_PositiveAge",
-          columns: ["Age"],
-          expression: undefined,
-        })
-      );
+      .createCheck({
+        name: "CHK_PositiveAge",
+        columns: ["Age"],
+        expression: undefined,
+      });
   }
 
   it('removes the check constraint', () => {

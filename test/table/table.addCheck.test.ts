@@ -1,28 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
-import { Check } from '../../src/schema/Check.js';
-import { CONSTRAINT_KIND } from '../../src/schema/ConstraintKind.js';
+import { createCheckTestSpec, createColumnTestSpec } from '../utils/buildSchema.js';
 
-describe('Table::addCheck', () => {
-  function buildCheck(): Check {
-    return Check.fromSpec({
-      kind: CONSTRAINT_KIND.check,
-      name: "CHK_PositiveAge",
-      columns: ["Age"],
-      expression: undefined,
-    });
-  }
+describe('Table::createCheck', () => {
 
   it('adds a check constraint', () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Age",
         type: Number,
-      });
+      }));
 
-    const updated = table.addCheck(
-      buildCheck()
-    );
+
+    const updated = table
+      .createCheck(createCheckTestSpec({
+        name: "CHK_PositiveAge",
+        columns: ["Age"],
+      }));
 
     expect(
       updated.requireCheck("CHK_PositiveAge")
@@ -31,13 +25,16 @@ describe('Table::addCheck', () => {
 
   it('does not mutate original table (immutability)', () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn({
         name: "Age",
         type: Number,
       });
 
-    const updated = table.addCheck(
-      buildCheck()
+    const updated = table.createCheck(
+      createCheckTestSpec({
+        name: "CHK_PositiveAge",
+        columns: ["Age"],
+      })
     );
 
     expect(() => {
@@ -53,42 +50,49 @@ describe('Table::addCheck', () => {
     const table = new Table("Users");
 
     expect(() => {
-      table.addCheck(
-        buildCheck()
+      table.createCheck(
+        createCheckTestSpec({
+          name: "CHK_PositiveAge",
+          columns: ["Age"],
+        })
       );
     }).toThrow();
   });
 
   it('throws when another constraint already uses the same name', () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn({
         name: "Age",
         type: Number,
       })
-      .addCheck(
-        buildCheck()
+      .createCheck(
+        createCheckTestSpec({
+          name: "CHK_PositiveAge",
+          columns: ["Age"],
+        })
       );
 
     expect(() => {
-      table.addCheck(
-        buildCheck()
+      table.createCheck(
+        createCheckTestSpec({
+          name: "CHK_PositiveAge",
+          columns: ["Age"],
+        })
       );
     }).toThrow();
   });
 
   it('supports case-insensitive referenced columns', () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn({
         name: "Age",
         type: Number,
       });
 
-    const updated = table.addCheck(
-      Check.fromSpec({
-        kind: CONSTRAINT_KIND.check,
+    const updated = table.createCheck(
+      createCheckTestSpec({
         name: "CHK_PositiveAge",
-        columns: ["age"],
-        expression: undefined,
+        columns: ["Age"],
       })
     );
 

@@ -61,10 +61,167 @@ console.log("Set table");
 //console.log(table);
 
 console.log("trying to create Table");
+let table0 = new Table("T1")
+      .createColumn({
+        name: "Id",
+        type: Number,
+        nullable: false,
+      })
+      .createIndex({
+        name: "PK_T1_I",
+        columns: ["Id"],
+        unique: true,
+      })
+      .createPrimaryKey({
+        name: "PK_T1",
+        index: "PK_T1_I",
+      });
+      console.log("TABLE 0");
 //-------------------DELETE this------------------
- const table1 = new Table("Node")
-      .addColumn({ name: "ID", type: Number })
-      .addColumn({
+
+console.log("THIS IS WHAT WE'RE TESTING");
+
+const db3 = new Database("DB1")
+      .addTable(
+        new Table("A")
+          .createColumn({ name: "ID", type: Number, nullable: false })
+          .createColumn({ name: "B_ID", type: Number })
+          .createIndex({
+            name: "pk_a",
+            columns: ["id"],
+            unique: true,
+          })
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["b_id"],
+            unique: false,
+          })
+      )
+      .addTable(
+        new Table("B")
+          .createColumn({ name: "ID", type: Number, nullable: false })
+          .createColumn({ name: "A_ID", type: Number })
+          .createIndex({
+            name: "pk_b",
+            columns: ["id"],
+            unique: true,
+          })
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["a_id"],
+            unique: false,
+          })
+      )
+
+      .createForeignKey("A", {
+        name: "FK_A_B",
+        columns: ["B_ID"],
+        reverseIndex: "FKRI_CHILD",
+        parentTable: "B",
+        parentColumns: ["ID"],
+        onDelete: ReferentialAction.cascade,
+        onUpdate: ReferentialAction.restrict,
+      })
+
+      .createForeignKey("B", {
+        name: "FK_B_A",
+        columns: ["A_ID"],
+        reverseIndex: "FKRI_CHILD",
+        parentTable: "A",
+        parentColumns: ["ID"],
+        onDelete: ReferentialAction.cascade,
+        onUpdate: ReferentialAction.restrict,
+      });
+
+    const withRows = db3
+      .addRow("A", [1, null])
+      .addRow("B", [2, 1])
+      .updateRow(
+        "A",
+        0,
+        [1, 2]
+      );
+
+      console.log("WithRows is fine, yes?");
+
+    const updated2 = withRows.removeRow("A", 0);
+
+      console.log("THIS IS WHAT WE'RE TESTING");
+
+  //---
+
+
+sql.createTable("Users", {
+      Id: {
+        type: Number,
+        nullable: false,
+        primaryKey: true,
+      },
+    }).execute();
+
+    sql.createTable("Posts", {
+      Id: {
+        type: Number,
+        nullable: false,
+        primaryKey: true,
+      },
+      UserId: {
+        type: Number,
+        nullable: false,
+      },
+    }).execute();
+
+    console.log("NOW ALTERING");
+
+    sql.alterTable("Posts")
+      .addConstraint("Posts_FK")
+      .foreignKey(["UserId"])
+      .references("Users", ["Id"])
+      .execute();
+
+      console.log("ALTERED");
+
+      
+
+    sql.commit().execute();
+    
+
+let tableCheck = new Table("Check");
+tableCheck = tableCheck.createColumn({
+  name: "C1",
+  type: Number,
+});
+tableCheck = tableCheck.createCheck({
+  name: "CHK_1",
+  columns: ["C1"],
+  expression: undefined,
+})
+console.log(tableCheck.checkNames); // DELETE
+console.log("now to require check:");
+console.log(tableCheck.requireCheck("CHK_1"));
+
+
+    let table4 = new Table("users");
+    table4 = table4.createColumn({
+      name: "Age",
+      type: Number,
+    });
+
+    const tableWithCheck = table4
+    .createCheck({
+      name: "CHK_PositiveAge",
+      columns: ["Age"],
+      expression: undefined,
+    });
+
+    console.log(tableWithCheck);
+    console.log(tableWithCheck.requireCheck("chk_positiveage"));
+
+
+  let table1 = new Table("Node");
+
+  table1 = table1.createColumn({name: "ID", type: Number })
+      .createColumn({
         name: "RefID",
         type: Number,
         nullable: true,
@@ -84,6 +241,7 @@ console.log("trying to create Table");
         {
           name: "FK_NODE_REF",
           columns: ["RefID"],
+          reverseIndex: "PK_NODE",
           parentTable: "Node",
           parentColumns: ["ID"],
           onDelete: ReferentialAction.cascade,
@@ -181,7 +339,7 @@ const networkTypeDirectory = new FsStructureEntry(
 sql.createTable("ChainTypeDirectory", {
   name: { type: String },
   directoryName: { type: String }
-});
+}).execute();
 
 const chainTypeDirectory = new FsStructureEntry(
   "ChainTypeDirectory",
@@ -194,18 +352,26 @@ const chainTypeDirectory = new FsStructureEntry(
 
 sql.
   insertInto("ChainTypeDirectory", ["name", "directoryName"])?.
-  values([["cosmos", "."]]);
+  values([["cosmos", "."]])
+  .execute();
 sql.
   insertInto("ChainTypeDirectory", ["name", "directoryName"])?.
-  values([["non-cosmos", "_non-cosmos"]]);
+  values([["non-cosmos", "_non-cosmos"]])
+  .execute();
+
+console.log("NOW WHAT");
 
 sql.createTable("ConceptStructure", {
-  id: { type: String, primaryKey: true },
+  id: { type: String, nullable: false, primaryKey: true },
   parentId: { type: String },
 
   //key: { type: "function", defaultValue: { f: () => {} } },
   //qualifyFn: { type: "function", defaultValue: { f: () => true }}
-});
+}).execute();
+
+console.log("NOW WHAT");
+
+//sql.commit().execute();
 
 sql.
   insertInto("ConceptStructure", ["id", "parentId"]).
@@ -218,7 +384,7 @@ sql.
   values([["Asset", "Chain"]]);
 
 sql.createTable("StorageBinding", {
-  id: { type: String, primaryKey: true },
+  id: { type: String, nullable: false, primaryKey: true },
   parentId: { type: String }, // FK -> StorageBinding
   structureId: { type: String }, // FK -> ConceptStructure
   storageType: { type: String, enumValues: ["Fs.Directory", "Fs.File", "Json", "Db.Table"] },
@@ -434,6 +600,7 @@ import { BinaryLogicalPredicate } from '../query/predicate/LogicalPredicate.js';
 import { Table } from '../schema/Table.js';
 import { Database } from '../schema/Database.js';
 import { ReferentialAction } from '../schema/ReferentialAction.js';
+import { type ColumnId } from '../schema/Column.js';
 
 export const CosmosChainRegistry = new Map();
 

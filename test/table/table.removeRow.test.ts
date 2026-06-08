@@ -1,14 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from "../../src/schema/Table.js";
+import { createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::removeRow', () => {
 
   it('marks a row as not alive', () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     table = table.addRow([1]);
 
@@ -19,10 +20,10 @@ describe('Table::removeRow', () => {
 
   it('removes row entries from indexes', () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
-      })
+      }))
       .createIndex({
         name: "UQ_Email",
         columns: ["email"],
@@ -43,10 +44,10 @@ describe('Table::removeRow', () => {
 
   it('preserves unrelated index entries', () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
-      })
+      }))
       .createIndex({
         name: "UQ_Email",
         columns: ["email"],
@@ -77,10 +78,10 @@ describe('Table::removeRow', () => {
 
   it('preserves row numbers of remaining rows', () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     table = table.addRow([1]);
     table = table.addRow([2]);
@@ -99,10 +100,10 @@ describe('Table::removeRow', () => {
 
   it('rejects removing already deleted rows', () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     table = table.addRow([1]);
 
@@ -115,10 +116,10 @@ describe('Table::removeRow', () => {
 
   it('rejects invalid row indexes', () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     expect(() =>
       table.removeRow(99)
@@ -127,10 +128,10 @@ describe('Table::removeRow', () => {
 
   it('prevents deleted rows from being fetched', () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     table = table.addRow([1]);
 
@@ -155,10 +156,10 @@ describe('Table::removeRow', () => {
 
   it('prevents deleted rows from being iterated', () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     table = table.addRow([1]);
     table = table.addRow([2]);
@@ -184,10 +185,10 @@ describe('Table::removeRow', () => {
 
   it('preserves immutable table state during removal', () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     table = table.addRow([1]);
 
@@ -208,10 +209,10 @@ describe('Table::removeRow', () => {
 
   it('does not decrement numRows after deletion', () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     table = table.addRow([1]);
 
@@ -224,10 +225,10 @@ describe('Table::removeRow', () => {
 
   it('allows new rows after deletion using new row numbers', () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     table = table.addRow([1]);
     table = table.addRow([2]);

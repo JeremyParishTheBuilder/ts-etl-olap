@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from '../../src/schema/Database.js';
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
+import { createColumnTestSpec, createForeignKeyTestSpec_Database } from '../utils/buildSchema.js';
 
 describe('Database::removeTable', () => {
   it('removes a table from the database', () => {
@@ -33,11 +34,11 @@ describe('Database::removeTable', () => {
       .createTable("Posts");
       
     const users = database.requireTable("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .createIndex({
         name: "PK_Users",
         columns: ["Id"],
@@ -45,10 +46,15 @@ describe('Database::removeTable', () => {
       });
 
     const posts = database.requireTable("Posts")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "UserId",
         type: Number,
         nullable: false,
+      }))
+      .createIndex({
+        name: "FKRI_Posts",
+        columns: ["UserId"],
+        unique: false,
       });
 
     const updated = database
@@ -56,15 +62,14 @@ describe('Database::removeTable', () => {
       .updateTable(posts)
       .createForeignKey(
         "posts",
-        {
+        createForeignKeyTestSpec_Database({
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI_Posts",
           parentTable: "Users",
           parentColumns: ["Id"],
-          onDelete: ReferentialAction.restrict,
-          onUpdate: ReferentialAction.restrict,
         }
-      );
+      ));
 
     expect(() => {
       updated.removeTable("Users");

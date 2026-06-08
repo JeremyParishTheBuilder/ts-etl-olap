@@ -1,15 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
 import { TableScanNode } from '../../src/query/plan/TableScanNode.js';
+import { createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Query::tableScanNode', () => {
   it("returns alive rows from the table", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1])
       .addRow([2]);
 
@@ -31,11 +32,11 @@ describe('Query::tableScanNode', () => {
 
   it("preserves deterministic row ordering", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([10])
       .addRow([20])
       .addRow([30]);
@@ -55,11 +56,11 @@ describe('Query::tableScanNode', () => {
 
   it("skips non-alive rows", () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1])
       .addRow([2])
       .addRow([3]);
@@ -84,16 +85,16 @@ describe('Query::tableScanNode', () => {
 
   it("returns RowViews with correct indexes and values", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "Name",
         type: String,
         nullable: false,
-      })
+      }))
       .addRow([1, "Alice"]);
 
     const scan = new TableScanNode(table);
@@ -110,11 +111,11 @@ describe('Query::tableScanNode', () => {
 
   it("does not mutate the table", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1]);
 
     const scan = new TableScanNode(table);
@@ -133,11 +134,11 @@ describe('Query::tableScanNode', () => {
 
   it("evaluates deterministically", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1])
       .addRow([2]);
 
@@ -151,11 +152,11 @@ describe('Query::tableScanNode', () => {
 
   it("returns no rows for an empty table", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      });
+      }));
 
     const scan = new TableScanNode(table);
 

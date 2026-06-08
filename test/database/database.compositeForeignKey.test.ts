@@ -1,19 +1,21 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from "../../src/schema/Database.js";
 import { Table } from "../../src/schema/Table.js";
+import { testColumnId } from '../utils/testIds.js';
+import { createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Composite Foreign Keys', () => {
 
   it('rejects foreign keys whose parent columns lack an exact ordered unique index', () => {
     const parent = new Table("Parent")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "B",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "IDX_Parent",
         columns: ["B", "A"],
@@ -25,20 +27,26 @@ describe('Composite Foreign Keys', () => {
         .addTable(parent)
         .addTable(
           new Table("Child")
-            .addColumn({
+            .createColumn(createColumnTestSpec({
               name: "FA",
               type: Number,
-            })
-            .addColumn({
+            }))
+            .createColumn(createColumnTestSpec({
               name: "FB",
               type: Number,
-            })
+            }))
+            .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["FA", "FB"],
+            unique: false,
+          })
         )
         .createForeignKey(
           "Child",
           {
             name: "FK1",
             columns: ["FA", "FB"],
+            reverseIndex: "FKRI_CHILD",
             parentTable: "Parent",
             parentColumns: ["A", "B"],
           }
@@ -48,14 +56,14 @@ describe('Composite Foreign Keys', () => {
 
   it('allows inserting rows with valid composite foreign keys', () => {
     let parent = new Table("Parent")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "B",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Parent",
         columns: ["A", "B"],
@@ -68,13 +76,18 @@ describe('Composite Foreign Keys', () => {
       .addTable(parent)
       .addTable(
         new Table("Child")
-          .addColumn({
+          .createColumn(createColumnTestSpec({
             name: "FA",
             type: Number,
-          })
-          .addColumn({
+          }))
+          .createColumn(createColumnTestSpec({
             name: "FB",
             type: Number,
+          }))
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["FA", "FB"],
+            unique: false,
           })
       );
 
@@ -83,6 +96,7 @@ describe('Composite Foreign Keys', () => {
       {
         name: "FK1",
         columns: ["FA", "FB"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "Parent",
         parentColumns: ["A", "B"],
       }
@@ -102,14 +116,14 @@ describe('Composite Foreign Keys', () => {
 
   it('rejects inserting rows with invalid composite foreign keys', () => {
     let parent = new Table("Parent")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "B",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Parent",
         columns: ["A", "B"],
@@ -122,13 +136,18 @@ describe('Composite Foreign Keys', () => {
       .addTable(parent)
       .addTable(
         new Table("Child")
-          .addColumn({
+          .createColumn(createColumnTestSpec({
             name: "FA",
             type: Number,
-          })
-          .addColumn({
+          }))
+          .createColumn(createColumnTestSpec({
             name: "FB",
             type: Number,
+          }))
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["FA", "FB"],
+            unique: false,
           })
       );
 
@@ -137,6 +156,7 @@ describe('Composite Foreign Keys', () => {
       {
         name: "FK1",
         columns: ["FA", "FB"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "Parent",
         parentColumns: ["A", "B"],
       }
@@ -152,14 +172,14 @@ describe('Composite Foreign Keys', () => {
 
   it('rejects partial composite matches', () => {
     let parent = new Table("Parent")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "B",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Parent",
         columns: ["A", "B"],
@@ -173,13 +193,18 @@ describe('Composite Foreign Keys', () => {
       .addTable(parent)
       .addTable(
         new Table("Child")
-          .addColumn({
+          .createColumn(createColumnTestSpec({
             name: "FA",
             type: Number,
-          })
-          .addColumn({
+          }))
+          .createColumn(createColumnTestSpec({
             name: "FB",
             type: Number,
+          }))
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["FA", "FB"],
+            unique: false,
           })
       );
 
@@ -188,6 +213,7 @@ describe('Composite Foreign Keys', () => {
       {
         name: "FK1",
         columns: ["FA", "FB"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "Parent",
         parentColumns: ["A", "B"],
       }
@@ -203,14 +229,14 @@ describe('Composite Foreign Keys', () => {
 
   it('allows updating to another valid composite foreign key', () => {
     let parent = new Table("Parent")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "B",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Parent",
         columns: ["A", "B"],
@@ -221,13 +247,18 @@ describe('Composite Foreign Keys', () => {
     parent = parent.addRow([3, 4]);
 
     let child = new Table("Child")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "FA",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "FB",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_CHILD",
+        columns: ["FA", "FB"],
+        unique: false,
       });
 
     child = child.addRow([1, 2]);
@@ -241,14 +272,12 @@ describe('Composite Foreign Keys', () => {
       {
         name: "FK1",
         columns: ["FA", "FB"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "Parent",
         parentColumns: ["A", "B"],
       }
     );
 
-    // const updates = new Map()
-    //   .set(0, 3)
-    //   .set(1, 4);
     const updates = [3, 4];
 
     const updated = db.updateRow(
@@ -266,14 +295,14 @@ describe('Composite Foreign Keys', () => {
 
   it('rejects updating to invalid composite foreign key', () => {
     let parent = new Table("Parent")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "B",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Parent",
         columns: ["A", "B"],
@@ -283,13 +312,18 @@ describe('Composite Foreign Keys', () => {
     parent = parent.addRow([1, 2]);
 
     let child = new Table("Child")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "FA",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "FB",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_CHILD",
+        columns: ["FA", "FB"],
+        unique: false,
       });
 
     child = child.addRow([1, 2]);
@@ -303,14 +337,11 @@ describe('Composite Foreign Keys', () => {
       {
         name: "FK1",
         columns: ["FA", "FB"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "Parent",
         parentColumns: ["A", "B"],
       }
     );
-
-    // const updates = new Map()
-    //   .set(0, 5)
-    //   .set(1, 6);
 
     const updates = [5, 6];
 
@@ -325,14 +356,14 @@ describe('Composite Foreign Keys', () => {
 
   it('rejects parent updates that orphan composite child rows', () => {
     let parent = new Table("Parent")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "B",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Parent",
         columns: ["A", "B"],
@@ -342,13 +373,18 @@ describe('Composite Foreign Keys', () => {
     parent = parent.addRow([1, 2]);
 
     let child = new Table("Child")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "FA",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "FB",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_CHILD",
+        columns: ["FA", "FB"],
+        unique: false,
       });
 
     child = child.addRow([1, 2]);
@@ -362,14 +398,11 @@ describe('Composite Foreign Keys', () => {
       {
         name: "FK1",
         columns: ["FA", "FB"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "Parent",
         parentColumns: ["A", "B"],
       }
     );
-
-    // const updates = new Map()
-    //   .set(0, 9)
-    //   .set(1, 9);
 
     const updates = [9, 9];
 
@@ -384,14 +417,14 @@ describe('Composite Foreign Keys', () => {
 
   it('bypasses validation when any composite foreign key component is NULL', () => {
     let parent = new Table("Parent")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "B",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Parent",
         columns: ["A", "B"],
@@ -404,13 +437,18 @@ describe('Composite Foreign Keys', () => {
       .addTable(parent)
       .addTable(
         new Table("Child")
-          .addColumn({
+          .createColumn(createColumnTestSpec({
             name: "FA",
             type: Number,
-          })
-          .addColumn({
+          }))
+          .createColumn(createColumnTestSpec({
             name: "FB",
             type: Number,
+          }))
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["FA", "FB"],
+            unique: false,
           })
       );
 
@@ -419,6 +457,7 @@ describe('Composite Foreign Keys', () => {
       {
         name: "FK1",
         columns: ["FA", "FB"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "Parent",
         parentColumns: ["A", "B"],
       }
@@ -434,14 +473,14 @@ describe('Composite Foreign Keys', () => {
 
   it('requires exact ordered parent index match for composite foreign keys', () => {
     const parent = new Table("Parent")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "B",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "IDX_Parent",
         columns: ["B", "A"],
@@ -453,13 +492,18 @@ describe('Composite Foreign Keys', () => {
         .addTable(parent)
         .addTable(
           new Table("Child")
-            .addColumn({
+            .createColumn(createColumnTestSpec({
               name: "FA",
               type: Number,
-            })
-            .addColumn({
+            }))
+            .createColumn(createColumnTestSpec({
               name: "FB",
               type: Number,
+            }))
+            .createIndex({
+              name: "FKRI_CHILD",
+              columns: ["FA", "FB"],
+              unique: false,
             })
         )
         .createForeignKey(
@@ -467,6 +511,7 @@ describe('Composite Foreign Keys', () => {
           {
             name: "FK1",
             columns: ["FA", "FB"],
+            reverseIndex: "FKRI_CHILD",
             parentTable: "Parent",
             parentColumns: ["A", "B"],
           }

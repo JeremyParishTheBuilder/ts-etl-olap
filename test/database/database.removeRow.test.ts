@@ -3,15 +3,16 @@ import { describe, it, expect } from 'vitest';
 import { Database } from "../../src/schema/Database.js";
 import { Table } from "../../src/schema/Table.js";
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
+import { createColumnTestSpec, createForeignKeyTestSpec_Database } from '../utils/buildSchema.js';
 
 describe('Database::removeRow', () => {
 
   it('removes an unreferenced row', () => {
     let users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     users = users.addRow([1]);
 
@@ -32,10 +33,10 @@ describe('Database::removeRow', () => {
 
   it('rejects deleting a parent row referenced by a child row', () => {
     let roles = new Table("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["id"],
@@ -45,9 +46,14 @@ describe('Database::removeRow', () => {
     roles = roles.addRow([1]);
 
     let users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_Roles",
+        columns: ["roleId"],
+        unique: false,
       });
 
     users = users.addRow([1]);
@@ -55,14 +61,15 @@ describe('Database::removeRow', () => {
     const db = new Database("DB1")
       .addTable(roles)
       .addTable(users)
-      .createForeignKey("users", {
+      .createForeignKey("users", createForeignKeyTestSpec_Database({
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
 
     expect(() =>
       db.removeRow(
@@ -74,10 +81,10 @@ describe('Database::removeRow', () => {
 
   it('allows deleting a parent row once referencing child rows are deleted', () => {
     let roles = new Table("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["id"],
@@ -87,9 +94,14 @@ describe('Database::removeRow', () => {
     roles = roles.addRow([1]);
 
     let users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_Roles",
+        columns: ["roleId"],
+        unique: false,
       });
 
     users = users.addRow([1]);
@@ -97,14 +109,15 @@ describe('Database::removeRow', () => {
     let db = new Database("DB1")
       .addTable(roles)
       .addTable(users)
-      .createForeignKey("users", {
+      .createForeignKey("users", createForeignKeyTestSpec_Database({
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
 
     db = db.removeRow(
       "Users",
@@ -125,10 +138,10 @@ describe('Database::removeRow', () => {
 
   it('ignores deleted child rows during FK delete checks', () => {
     let roles = new Table("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["id"],
@@ -138,9 +151,14 @@ describe('Database::removeRow', () => {
     roles = roles.addRow([1]);
 
     let users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_Roles",
+        columns: ["roleId"],
+        unique: false,
       });
 
     users = users.addRow([1]);
@@ -150,14 +168,15 @@ describe('Database::removeRow', () => {
     const db = new Database("DB1")
       .addTable(roles)
       .addTable(users)
-      .createForeignKey("users", {
+      .createForeignKey("users", createForeignKeyTestSpec_Database({
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
 
     expect(() =>
       db.removeRow(
@@ -169,10 +188,10 @@ describe('Database::removeRow', () => {
 
   it('rejects deleting invalid row numbers', () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     const db = new Database("DB1")
       .addTable(users);
@@ -187,10 +206,10 @@ describe('Database::removeRow', () => {
 
   it('rejects deleting already deleted rows', () => {
     let users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     users = users.addRow([1]);
 
@@ -212,10 +231,10 @@ describe('Database::removeRow', () => {
 
   it('preserves immutable database state during deletion', () => {
     let users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     users = users.addRow([1]);
 
@@ -249,18 +268,18 @@ describe('Database::removeRow', () => {
 
   it('preserves unrelated tables during deletion', () => {
     let users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     users = users.addRow([1]);
 
     let roles = new Table("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     roles = roles.addRow([10]);
 

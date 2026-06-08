@@ -3,15 +3,16 @@ import { Table } from '../../src/schema/Table.js';
 import { TableScanNode } from '../../src/query/plan/TableScanNode.js';
 import { ComparisonPredicate } from '../../src/query/predicate/ComparisonPredicate.js';
 import { FilterNode } from '../../src/query/plan/FilterNode.js';
+import { createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Query::filterNode', () => {
   it("returns rows matching the predicate", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Age",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([10])
       .addRow([20])
       .addRow([30]);
@@ -42,11 +43,11 @@ describe('Query::filterNode', () => {
 
   it("returns no rows when no rows match the predicate", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Age",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([10])
       .addRow([20]);
 
@@ -65,11 +66,11 @@ describe('Query::filterNode', () => {
 
   it("returns all rows when all rows match the predicate", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Age",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([10])
       .addRow([20]);
 
@@ -90,11 +91,11 @@ describe('Query::filterNode', () => {
 
   it("preserves deterministic row ordering", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Value",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([5])
       .addRow([10])
       .addRow([15]);
@@ -119,11 +120,11 @@ describe('Query::filterNode', () => {
 
   it("supports nested filter composition", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Value",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([5])
       .addRow([10])
       .addRow([15])
@@ -160,11 +161,11 @@ describe('Query::filterNode', () => {
 
   it("does not mutate source rows", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Value",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1]);
 
     const scan = new TableScanNode(table);
@@ -189,11 +190,11 @@ describe('Query::filterNode', () => {
 
   it("evaluates deterministically", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Value",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1])
       .addRow([2]);
 

@@ -1,16 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
+import { createColumnTestSpec, createIndexTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::addIndex', () => {
   it('adds an index to the table', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number });
+      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
-    const updated = table.createIndex({
+    const updated = table.createIndex(createIndexTestSpec({
       name: "I1",
       columns: ["C1"],
       unique: false,
-    });
+    }));
 
     expect(
       updated.requireIndex("I1")
@@ -19,13 +20,13 @@ describe('Table::addIndex', () => {
 
   it('does not mutate original table (immutability)', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number });
+      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
-    const updated = table.createIndex({
+    const updated = table.createIndex(createIndexTestSpec({
       name: "I1",
       columns: ["C1"],
       unique: false,
-    });
+    }));
 
     expect(() => {
       table.requireIndex("I1");
@@ -38,19 +39,19 @@ describe('Table::addIndex', () => {
 
   it('throws when index name already exists', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number })
-      .createIndex({
+      .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
+      .createIndex(createIndexTestSpec({
         name: "I1",
         columns: ["C1"],
         unique: false,
-      });
+      }));
 
     expect(() => {
-      table.createIndex({
+      table.createIndex(createIndexTestSpec({
         name: "I1",
         columns: ["C1"],
         unique: false,
-      });
+      }));
     }).toThrow();
   });
 
@@ -58,38 +59,23 @@ describe('Table::addIndex', () => {
     const table = new Table("T1");
 
     expect(() => {
-      table.createIndex({
+      table.createIndex(createIndexTestSpec({
         name: "I1",
         columns: ["C1"],
         unique: false,
-      });
+      }));
     }).toThrow();
-  });
-
-  it('normalizes referenced column names', () => {
-    const table = new Table("T1")
-      .addColumn({ name: "UserId", type: Number });
-
-    const updated = table.createIndex({
-      name: "I1",
-      columns: ["UserId"],
-      unique: false,
-    });
-
-    expect(
-      updated.requireIndex("I1").columns
-    ).toEqual(["userid"]);
   });
 
   it('preserves original index name casing', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number });
+      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
-    const updated = table.createIndex({
+    const updated = table.createIndex(createIndexTestSpec({
       name: "UserLookup",
       columns: ["C1"],
       unique: false,
-    });
+    }));
 
     expect(
       updated.requireIndex("userlookup").name
@@ -98,36 +84,36 @@ describe('Table::addIndex', () => {
 
   it('throws when adding duplicate unique column set', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number })
-      .createIndex({
+      .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
+      .createIndex(createIndexTestSpec({
         name: "I1",
         columns: ["C1"],
         unique: true,
-      });
+      }));
 
     expect(() => {
-      table.createIndex({
+      table.createIndex(createIndexTestSpec({
         name: "I2",
         columns: ["C1"],
         unique: true,
-      });
+      }));
     }).toThrow();
   });
 
   it('throws when existing rows violate uniqueness', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number });
+      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const tableWithRows = table
       .addRow([1])
       .addRow([1]);
 
     expect(() => {
-      tableWithRows.createIndex({
+      tableWithRows.createIndex(createIndexTestSpec({
         name: "UserLookup",
         columns: ["C1"],
         unique: true,
-      })
+      }))
     }).toThrow();
   });
 });

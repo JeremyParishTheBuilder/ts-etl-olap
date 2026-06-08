@@ -15,7 +15,11 @@ import { Transaction } from "./Transaction.js";
 import { type Statement } from "../statements/index.js";
 import { Databases } from "../schema/Databases.js";
 import { SemanticAnalyzer } from "../semantic/SemanticAnalyzer.js";
-
+import { IdAllocator, IdService } from "../types/IdAllocator.js";
+import { type ColumnId } from "../schema/Column.js";
+import { type ForeignKeyId } from "../schema/ForeignKey.js";
+import { type IndexId } from "../schema/Index.js";
+//import { EngineIdService } from "./EngineIdService.js";
 
 export class Engine {
 
@@ -29,6 +33,16 @@ export class Engine {
 
   readonly rules: RulesFacadeShape;
   private readonly ruleResolver: RuleResolver;
+
+  // private allocators = {
+  //   column: new IdAllocator<ColumnId>(),
+  //   foreignKey: new IdAllocator<ForeignKeyId>(),
+  //   index: new IdAllocator<IndexId>(),
+  // };
+
+  //public idService: EngineIdService = new EngineIdService(this.allocators);
+  
+  //private allocators: new Map<string, IdAllocator>;
 
   //  <construction>
   constructor(dialect: Dialect, policy?: Partial<EnginePolicy>) {
@@ -106,7 +120,12 @@ export class Engine {
       return this.tryExecuteAutoCommit(stmt);
     }
 
-    const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
+    const ctx = new ExecutionContext(
+      tx,
+      this.rules,
+      //this.idService,
+      this.currentDb
+    );
     const analyzer = new SemanticAnalyzer(ctx);
 
     tx.addStatement(stmt);
@@ -132,7 +151,12 @@ export class Engine {
     try {
       const tx = this.requireTx();
 
-      const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
+      const ctx = new ExecutionContext(
+        tx,
+        this.rules,
+        //this.idService,
+        this.currentDb
+      );
       const analyzer = new SemanticAnalyzer(ctx);
 
       tx.addStatement(stmt);
@@ -193,6 +217,7 @@ export class Engine {
     this._currentTransaction = new Transaction(
       this.nextTxId(),
       this.databases,
+      //this.allocators, // add this?
     );
   }
 

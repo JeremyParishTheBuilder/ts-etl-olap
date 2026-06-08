@@ -1,6 +1,5 @@
 import { Predicate } from "../query/predicate/Predicate.js";
-import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
-import { type ColumnType, type ColumnValue } from "./Column.js";
+import { type ColumnId, type ColumnType, type ColumnValue } from "./Column.js";
 import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
 import { RowView } from "./RowView.js";
 
@@ -12,19 +11,42 @@ export type IndexSpec = {
   predicate?: Predicate;//(row: number) => boolean;
 };
 
-export class Index extends ColumnBoundImmutable {
-  public map: Map<string, number[]> = new Map();
+export type IndexId = number & { readonly __brand: "IndexId" };
 
-  protected constructor(
-    public name: string,
-    public columns: string[],
-    public readonly columnIndexes: number[],
-    public unique?: boolean,
-    public nullsDistinct: boolean = true,
-    public predicate?: Predicate,//(rowNum: number) => boolean,
-    public ownerConstraint?: string,
-  ) {
+export class Index extends ColumnBoundImmutable {
+
+  public readonly name: string;
+  public readonly columns: ColumnId[];
+  public readonly columnIndexes: number[];
+  public readonly unique: boolean;
+  public readonly nullsDistinct: boolean;
+  public readonly internal: boolean;
+  public readonly predicate?: Predicate;
+
+  public readonly id: IndexId;
+  public readonly map: Map<string, number[]> = new Map();
+
+  protected constructor(spec: {
+    name: string,
+    columns: ColumnId[],
+    columnIndexes: number[],
+    unique?: boolean,
+    nullsDistinct?: boolean,
+    internal?: boolean,
+    predicate?: Predicate,
+    id: IndexId,
+  }) {
     super();
+    
+    this.name = spec.name;
+    this.columns = spec.columns;
+    this.columnIndexes = spec.columnIndexes;
+    this.unique = spec.unique ?? false;
+    this.nullsDistinct = spec.nullsDistinct ?? true;
+    this.internal = spec.internal ?? false;
+    this.predicate = spec.predicate;
+
+    this.id = spec.id;
 
     this.validate();
     this.seal();
@@ -34,16 +56,17 @@ export class Index extends ColumnBoundImmutable {
     super.validateColumns();
   }
 
-  public static create(spec: IndexSpec & {columnIndexes: number[], ownerConstraint?: string}): Index {
-    return new this(
-      spec.name,
-      spec.columns.map(normalizeIdentifier),
-      spec.columnIndexes,
-      spec.unique,
-      spec.nullsDistinct,
-      spec.predicate,
-      spec.ownerConstraint,
-    );
+  public static create(spec: {
+    id: IndexId,
+    name: string,
+    columns: ColumnId[],
+    columnIndexes: number[],
+    unique?: boolean,
+    nullsDistinct?: boolean,
+    internal?: boolean,
+    predicate?: Predicate
+  }): Index {
+    return new this(spec);
   }
 
   public build(rows: Iterable<RowView>): Index {
@@ -76,11 +99,11 @@ export class Index extends ColumnBoundImmutable {
     } as Partial<this>);
   }
 
-  public withOwnerConstraint(ownerConstraint: string): Index {
-    return this.with({
-      ownerConstraint: normalizeIdentifier(ownerConstraint),
-    } as Partial<this>);
-  }
+  // public withOwnerConstraint(ownerConstraint: string): Index {
+  //   return this.with({
+  //     ownerConstraint: normalizeIdentifier(ownerConstraint),
+  //   } as Partial<this>);
+  // }
 
   private matches(row: RowView): boolean {
     return this.predicate
@@ -88,9 +111,9 @@ export class Index extends ColumnBoundImmutable {
       : true;
   }
 
-  public assertColumnNameUnreferenced(name: string): void {
-    if (this.referencesColumn(name)) {
-      throw new Error(`Column name ${name} referenced`);
+  public assertColumnUnreferenced(id: ColumnId): void {
+    if (this.referencesColumn(id)) {
+      throw new Error(`Column id: ${id} referenced`);
     }
   }
 
@@ -183,11 +206,11 @@ export class Index extends ColumnBoundImmutable {
     return this.tryRemoveRow(oldRow).tryAddRow(newRow);
   }
 
-  public tryUpdateColumnIndexes(columnNameToIndexMap: Map<string, number>): Index {
+  public tryUpdateColumnIndexes(columnIdToIndexMap: Map<ColumnId, number>): Index {
     const updatedColumnIndexes = [...this.columnIndexes];
     
     for (let i = 0; i < this.columns.length; i++) {
-      updatedColumnIndexes[i] = columnNameToIndexMap.get(this.columns[i])!;
+      updatedColumnIndexes[i] = columnIdToIndexMap.get(this.columns[i])!;
     }
 
     return this.with({

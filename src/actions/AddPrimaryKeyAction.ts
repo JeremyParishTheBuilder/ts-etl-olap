@@ -6,18 +6,33 @@ export class AddPrimaryKeyAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private spec: PrimaryKeySpec,
+    private spec: Omit<PrimaryKeySpec, "kind">,
   ) {}
 
   apply(databases: Databases): Databases {
-    //const pk = PrimaryKey.fromSpec(this.spec);
-
     const db = databases.require(this.dbName);
+    const table = db.requireTable(this.tableName);
 
-    const { kind, ...spec } = this.spec;
+    const columnIds = this.spec.columns.map(c => table.requireColumnIdByName(c));
+    const index = table.requireUniqueIndexByColumns(columnIds);
 
-    const updatedTable = db.requireTable(this.tableName)
-      .createPrimaryKey(spec);
+    // const index = this.spec.index ?
+    //   table.requireIndex(this.spec.index) :
+    //   table.requireUniqueIndexByColumns(
+    //     this.spec.columns.map(c => table.requireColumnIdByName(c))
+    //   );
+    //const columns = this.spec.columns.map(c => table.requireColumnIdByName(c));
+    // TODO, make semantic analyzer dertime whether to use this?
+    // should foreignKey spec even still accept a column array?
+
+    //const index = table.requireUniqueIndexByColumns(columns);
+
+
+    const updatedTable = table
+      .createPrimaryKeyById({
+        ...this.spec,
+        index: index.id
+      });
 
     const updatedDb = db.updateTable(updatedTable);
 

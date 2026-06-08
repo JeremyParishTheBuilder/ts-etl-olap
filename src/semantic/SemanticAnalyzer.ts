@@ -37,7 +37,7 @@ export class SemanticAnalyzer {
 
 // SemanticAnalyzer responsibilities:
 //
-// - resolve schema references
+// - resolve existing schema references when available
 //   (databases, tables, columns, constraints)
 //
 // - validate semantic correctness
@@ -51,9 +51,16 @@ export class SemanticAnalyzer {
 // - preserve semantic input states
 //   (value/default/null/missing)
 //
-// - produce fully-bound executable statements/actions
+// - produce executable queries/actions
+//   (may contain unresolved references to
+//    objects created within the same statement)
 //
 // Semantic binding does NOT:
+//
+// - allocate runtime identities
+//   (column ids, index ids, foreign key ids)
+//
+// - resolve references to objects not yet created
 //
 // - resolve runtime values
 //   (defaults, autoIncrement, generated values)
@@ -64,6 +71,11 @@ export class SemanticAnalyzer {
 // - mutate execution state
 //
 // Runtime execution responsibilities:
+//
+// - materialize schema objects and allocate ids
+//
+// - resolve deferred references
+//   (name -> id)
 //
 // - resolve semantic values into concrete runtime values
 //

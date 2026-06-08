@@ -1,10 +1,13 @@
 import { Table } from './Table.js';
 import { normalizeIdentifier } from '../utils/normalizeIdentifier.js';
-import { type Column, type ColumnValue, isTypeCompatible } from './Column.js';
-import { ForeignKey } from './ForeignKey.js';
+import { type Column, type ColumnId, type ColumnValue, isTypeCompatible } from './Column.js';
+import { 
+  CompiledForeignKey,
+  type ForeignKey,
+  type ForeignKeyId
+} from './ForeignKey.js';
 import { Immutable } from "../infrastructure/Immutable.js";
 import { PersistentMap } from '../infrastructure/PersistentMap.js';
-import { ForeignKeySpec } from './Constraint.js';
 import { ReferentialAction } from './ReferentialAction.js';
 import { RowView } from './RowView.js';
 
@@ -78,21 +81,42 @@ export class Database extends Immutable {
     } as Partial<this>);
   }
 
-  public createForeignKey(tableName: string, spec: Omit<ForeignKeySpec, "kind">): Database {
+  //Database is where ForeignKey should resolve names to ids
+  public createForeignKey(
+    tableName: string,
+    spec: {
+      name: string,
+      columns: string[],
+      reverseIndex: string,
+      parentTable: string,
+      parentColumns: string[],
+      onDelete?: ReferentialAction,
+      onUpdate?: ReferentialAction,
+  }): Database {
     const childTable = this.requireTable(tableName);
-    const childColumns = childTable.requireColumns(spec.columns);
+
+    const childColumnIds = spec.columns.map(c => childTable.requireColumnIdByName(c));
+    const childColumns = childColumnIds.map(c => childTable.requireColumnById(c));
+
+    console.log("DID WE GET THIS FAR?");
+
+    const reverseIndex = childTable.requireIndex(spec.reverseIndex);
 
     const parentTable = this.requireTable(spec.parentTable);
-    const parentColumns = parentTable.requireColumns(spec.parentColumns);
-    const parentColumnIndexes = parentColumns.map(c => c.position);
-    const parentIndex = parentTable.requireUniqueIndexByColumns(spec.parentColumns);
+
+    const parentColumnIds = spec.parentColumns.map(c => parentTable.requireColumnIdByName(c));
+    const parentColumns = parentColumnIds.map(c => parentTable.requireColumnById(c));
+
+    const parentIndex = parentTable.requireUniqueIndexByColumns(parentColumnIds);
 
     assertForeignKeyColumnCompatibility(childColumns, parentColumns);
 
     const updatedChildTable = childTable.createForeignKey({
       ...spec,
-      parentColumnIndexes,
-      parentIndex: parentIndex.name,
+      columns: childColumnIds,
+      reverseIndex: reverseIndex.id,
+      parentColumns: parentColumnIds,
+      parentIndex: parentIndex.id,
     });
 
     const foreignKey = updatedChildTable.requireForeignKey(spec.name);
@@ -100,7 +124,6 @@ export class Database extends Immutable {
     this.assertExistingRowsSatisfyForeignKey(
       childTable,
       foreignKey,
-      //parentIndex
     );
 
     return this.updateTable(updatedChildTable);
@@ -112,10 +135,18 @@ export class Database extends Immutable {
   ) {
     const parentIndex = this
       .requireTable(foreignKey.parentTable)
-      .requireIndex(foreignKey.parentIndex);
+      .requireIndexById(foreignKey.parentIndex);
+
+    const reverseIndex = childTable
+      .requireIndexById(foreignKey.reverseIndex);
+
+    console.log("asserting...");
+    console.log(childTable.name);
+    console.log(foreignKey);
 
     for(const row of childTable.iterateAliveRows()) {
-      const projected = foreignKey.projectChildValues(row.values);
+      console.log(row);
+      const projected = reverseIndex.projectValues(row.values);
 
       if (projected.includes(null)) continue;
 
@@ -129,9 +160,9 @@ export class Database extends Immutable {
   //Used in Database::removeColumn()
   public assertNoForeignKeyReferencesAny(
     tableName: string,
-    columnNames: string[]
+    columns: ColumnId[]
   ): void {
-    const target = new Set(columnNames);
+    const target = new Set(columns);
 
     this.tables.forEach(table => {
       table.foreignKeys.forEach(fk => {
@@ -180,7 +211,7 @@ export class Database extends Immutable {
 
   private findImpactedChildRowReferences(
     parentTableName: string,
-    oldRow: RowView,
+    parentRow: RowView,
   ): Array<{
     foreignKey: ForeignKey,
     childTableName: string,
@@ -189,29 +220,48 @@ export class Database extends Immutable {
     const childRowReferences = [];
 
     const parentTable = this.requireTable(parentTableName);
+
     for (const table of this.tables.values()) {
       const childTableName = normalizeIdentifier(table.name);
-      for (const fk of table.foreignKeys.values()) {
-        if (fk.parentTable !== normalizeIdentifier(parentTableName)) continue;
 
-        const projection = fk.projectParentValues(oldRow.values);
-        const reverseIndex = table.requireIndex(fk.reverseIndex);
+      for (const foreignKey of table.foreignKeys.values()) {
+        if (foreignKey.parentTable !== normalizeIdentifier(parentTableName)) continue;
+
+        const reverseIndex = table.requireIndexById(foreignKey.reverseIndex);
+
+        const parentIndex = parentTable.requireIndexById(foreignKey.parentIndex);
+        const projection = parentIndex.projectValues(parentRow.values);
+
+        // console.log("finding references....");
+        // console.log(foreignKey);
+        // console.log(reverseIndex);
+        // console.log(parentRow);
+        // console.log(projection);
+
+        
         const currentRows = reverseIndex.getRowNumsFromProjection(projection);
+
+        // console.log("currentRows");
+        // console.log(currentRows);
 
         if (!currentRows?.length) continue;
         for (const childRowNum of currentRows) {
 
           // No-op when no impact to parent projection
-          if (parentTable.isRowAlive(oldRow.index)) {
-            const replacementRow = parentTable.requireRow(oldRow.index);
+          if (parentTable.isRowAlive(parentRow.index)) {
+            const replacementRow = parentTable.requireRow(parentRow.index);
             const replacementRowProjection =
-              fk.projectParentValues(replacementRow);
+              parentIndex.projectValues(replacementRow);
+
+            // console.log("Replace?");
+            // console.log(parentRow);
+            // console.log(projection);
 
             if (arraysEqual(projection, replacementRowProjection)) continue;
           }
 
           childRowReferences.push({
-            foreignKey: fk,
+            foreignKey,
             childTableName,
             childRowNum,
           });
@@ -222,10 +272,10 @@ export class Database extends Immutable {
     return childRowReferences;
   }
 
-  private applyReferentialActionToRow(
+  private applyReferentialActionToRowOld(
     existingChildRow: ColumnValue[],
     replacementParentRow: readonly ColumnValue[],
-    fk: ForeignKey,
+    compiledFk: CompiledForeignKey,
     action: ReferentialAction,
   ): ColumnValue[] {
     let next: ColumnValue[];
@@ -236,7 +286,7 @@ export class Database extends Immutable {
       case ReferentialAction.setNull:
         next = [...existingChildRow];
 
-        fk.columnIndexes.forEach(idx => {
+        compiledFk.columnIndexes.forEach(idx => {
           next[idx] = null;
         });
 
@@ -244,8 +294,8 @@ export class Database extends Immutable {
       case ReferentialAction.cascade:
         next = [...existingChildRow];
 
-        fk.columnIndexes.forEach((childIdx, i) => {         
-          const parentIdx = fk.parentColumnIndexes[i];
+        compiledFk.columnIndexes.forEach((childIdx, i) => {         
+          const parentIdx = compiledFk.parentColumnIndexes[i];
           next[childIdx] = replacementParentRow[parentIdx];
         });
 
@@ -257,7 +307,7 @@ export class Database extends Immutable {
 
   private tryApplyReferentialAction(spec: {
     childRowReference: {
-      foreignKey: ForeignKey,
+      foreignKey: CompiledForeignKey,
       childTableName: string,
       childRowNum: number,
     },
@@ -270,12 +320,12 @@ export class Database extends Immutable {
       throw new Error(`Replacement Row missing on update`);
     }
 
-    const fk = spec.childRowReference.foreignKey;
+    const compiledFk = spec.childRowReference.foreignKey;
 
     const action =
       spec.mode === "delete"
-        ? fk.onDelete
-        : fk.onUpdate;
+        ? compiledFk.fk.onDelete
+        : compiledFk.fk.onUpdate;
 
     const childTable = this.requireTable(spec.childRowReference.childTableName);
     const childRow = childTable.requireRow(spec.childRowReference.childRowNum);
@@ -287,16 +337,23 @@ export class Database extends Immutable {
       action === ReferentialAction.setNull;
 
     if (requiresRowRewrite) {
-      updatedChildRow = this.applyReferentialActionToRow(
+      // updatedChildRow = this.applyReferentialActionToRow(
+      //   childRow,
+      //   spec.replacementRow!,
+      //   compiledFk.projectChildValues,
+      //   action,
+      // )
+      updatedChildRow = compiledFk.applyReferentialActionToRow(
         childRow,
         spec.replacementRow!,
-        fk,
         action,
       )
       
       // No-op where child row wouldn't be impacted
       const requiresMutation = !arraysEqual(
-        spec.oldRow,
+        spec.oldRow, // should this be childRow, not oldRow? TODO, change and test
+        // I think old Row is actually the parent?
+        // and why should parent === child?
         updatedChildRow,
       ); 
 
@@ -351,22 +408,22 @@ export class Database extends Immutable {
     const childReferenceUpdates = new Map<number, ColumnValue>();
 
     const parentTable = this.requireTable(foreignKey.parentTable);
-    const parentColumns = parentTable.requireColumns(foreignKey.parentColumns);
+    const parentColumns = foreignKey.parentColumns.map(parentTable.requireColumnById);
 
-    const parentColumnNameToParentColumnIndex = new Map<string, number>();
+    const parentColumnIdToParentColumnIndex = new Map<ColumnId, number>();
     parentColumns.forEach(column => {
       if (
-        !foreignKey.parentColumns.includes(normalizeIdentifier(column.name))
+        !foreignKey.parentColumns.includes(column.id)
       ) return;
-      parentColumnNameToParentColumnIndex.set(
-        normalizeIdentifier(column.name),
+      parentColumnIdToParentColumnIndex.set(
+        column.id,
         column.position
       )
     });
 
-    const childColumnNameToParentColumnName = new Map<string, string>();
+    const childColumnIdToParentColumnId = new Map<ColumnId, ColumnId>();
     for (let i = 0; i < foreignKey.columns.length; i++) {
-      childColumnNameToParentColumnName.set(
+      childColumnIdToParentColumnId.set(
         foreignKey.columns[i],
         foreignKey.parentColumns[i]
       );
@@ -374,12 +431,12 @@ export class Database extends Immutable {
     
     const childTable = this.requireTable(childTableName);
     
-    for (const childColumnName of foreignKey.columns) {
-      const childColumn = childTable.requireColumn(childColumnName);
+    for (const childColumnId of foreignKey.columns) {
+      const childColumn = childTable.requireColumnById(childColumnId);
       const childColumnIndex = childColumn.position;
-      const parentColumnName = childColumnNameToParentColumnName.get(childColumnName);
-      if (!parentColumnName) throw new Error(`No corresponding parentColumnName`);
-      const parentColumnIndex = parentColumnNameToParentColumnIndex.get(parentColumnName);
+      const parentColumnId = childColumnIdToParentColumnId.get(childColumnId);
+      if (!parentColumnId) throw new Error(`No corresponding parentColumn`);
+      const parentColumnIndex = parentColumnIdToParentColumnIndex.get(parentColumnId);
       if (parentColumnIndex === undefined) throw new Error(`No corresponding parentColumnIndex`);
       if (!parentRowUpdates.has(parentColumnIndex)) continue; // no update to cascade
       const updateValue = parentRowUpdates.get(parentColumnIndex);
@@ -413,6 +470,8 @@ export class Database extends Immutable {
     
     let dbWithReferenceUpdated;
 
+    const compiledFks = new Map<ForeignKey, CompiledForeignKey>();
+
     while (true) {
       const childRowReferences = updatedDatabase.findImpactedChildRowReferences(
         tableName,
@@ -429,8 +488,30 @@ export class Database extends Immutable {
           continue;
         }
 
+        const fk = childRowReference.foreignKey;
+        let compiledFk = compiledFks.get(fk);
+
+        //if compiled fk not yet found in structure,
+        if (!compiledFk) {
+          // compile the referenced fk and store it in the map
+          const childReferenceTable = this.requireTable(childRowReference.childTableName);
+          compiledFk = new CompiledForeignKey(
+            fk,
+            fk.columns.map(c => childReferenceTable.requireColumnById(c).position),
+            fk.parentColumns.map(pc => table.requireColumnById(pc).position),
+          );
+          compiledFks.set(fk, compiledFk);
+
+        }
+        // create a compiled child row reference object
+
+        const compiledChildRowReference = {
+          ...childRowReference,
+          foreignKey: compiledFk,
+        }
+
         dbWithReferenceUpdated = updatedDatabase.tryApplyReferentialAction({
-          childRowReference,
+          childRowReference: compiledChildRowReference,
           oldRow: removedRow.values,
           mode: "delete",
           depth,
@@ -490,22 +571,27 @@ export class Database extends Immutable {
       throw new Error(`Reached max recursion depth ${MAX_DEPTH}`);
     }
 
+    console.log("Trying update:"); // TODO
+    console.log(tableName);
+    console.log(rowNum);
+    console.log(replacementRow);
+
     const table: Table = this.requireTable(tableName);
 
     if (!table.isRowAlive(rowNum)) return this;
+    console.log("alive");
 
     const existingRow: RowView = table.requireRowView(rowNum);
 
-    //const mergedRow: ColumnValue[] = table.mergeRow(existingRow.values, row/*updates*/); // TODO, make sure if have indexes
-
-    //const normalizedRow = table.normalizeRow(mergedRow, "update");
-
-    const tableWithRowUpdated = table.updateRow(/*normalizedRow*/replacementRow, rowNum);
+    const tableWithRowUpdated = table.updateRow(replacementRow, rowNum);
 
     const dbWithRowUpdated: Database = this.updateTable(tableWithRowUpdated);
 
     let updatedDatabase = dbWithRowUpdated;
     let dbWithReferenceUpdated;
+
+    //create structure of compiled foreign keys
+    const compiledFks = new Map<ForeignKey, CompiledForeignKey>();
 
     while (true) {
 
@@ -515,6 +601,7 @@ export class Database extends Immutable {
       );
 
       let mutation = false;
+
       for (const childRowReference of childRowReferences) {
         if (
           normalizeIdentifier(tableName) ===
@@ -524,8 +611,33 @@ export class Database extends Immutable {
           continue;
         }
 
+        const fk = childRowReference.foreignKey;
+        let compiledFk = compiledFks.get(fk);
+
+        //if compiled fk not yet found in structure,
+        if (!compiledFk) {
+          // compile the referenced fk and store it in the map
+          const childReferenceTable = this.requireTable(childRowReference.childTableName);
+          compiledFk = new CompiledForeignKey(
+            fk,
+            childReferenceTable.requireIndexById(fk.reverseIndex).columnIndexes,
+            //fk.columns.map(c => childReferenceTable.requireColumnById(c).position),
+            //fk.parentColumns.map(pc => table.requireColumnById(pc).position),
+            table.requireIndexById(fk.parentIndex).columnIndexes,
+          );
+          compiledFks.set(fk, compiledFk);
+
+        }
+        // create a compiled child row reference object
+
+        const compiledChildRowReference = {
+          ...childRowReference,
+          foreignKey: compiledFk,
+        }
+
         dbWithReferenceUpdated = updatedDatabase.tryApplyReferentialAction({
-          childRowReference,
+          //childRowReference, // send the compiled reference here instead of non-compiled
+          childRowReference: compiledChildRowReference,
           mode: "update",
           oldRow: existingRow.values,
           replacementRow,
@@ -550,7 +662,8 @@ export class Database extends Immutable {
 
   private validateChildRowAgainstForeignKeys(row: ColumnValue[], childTable: Table): void {
      childTable.foreignKeys.forEach(fk => {
-      const projected = fk.projectChildValues(row);
+      const childIndex = childTable.requireIndexById(fk.reverseIndex);
+      const projected = childIndex.projectValues(row);
 
       if (projected.includes(null)) return;
 
@@ -559,7 +672,7 @@ export class Database extends Immutable {
         childTable :
         this.requireTable(fk.parentTable);
 
-      const parentIndex = latestParentTable.requireIndex(fk.parentIndex);
+      const parentIndex = latestParentTable.requireIndexById(fk.parentIndex);
 
       if (!parentIndex.hasProjectedValues(projected)) {
         throw new Error(
@@ -578,34 +691,34 @@ export class Database extends Immutable {
     });
   }
 
-  public renameColumn(
-    tableName: string,
-    oldColumnName: string,
-    newColumnName: string,
-  ): Database {
-    const normalizedName = normalizeIdentifier(newColumnName);
+  // public renameColumn(
+  //   tableName: string,
+  //   oldColumnName: string,
+  //   newColumnName: string,
+  // ): Database {
+  //   const normalizedName = normalizeIdentifier(newColumnName);
 
-    if (normalizeIdentifier(oldColumnName) === normalizedName) return this;
+  //   if (normalizeIdentifier(oldColumnName) === normalizedName) return this;
 
-    const tablesWithUpdatedFkReferences = this.tables.mapValues(t => 
-      t.tryRenameForeignKeyParentColumn(
-        tableName,
-        oldColumnName,
-        newColumnName,
-      )
-    );
+  //   const tablesWithUpdatedFkReferences = this.tables.mapValues(t => 
+  //     t.tryRenameForeignKeyParentColumn(
+  //       tableName,
+  //       oldColumnName,
+  //       newColumnName,
+  //     )
+  //   );
 
-    const tableWithRenamedColumn = tablesWithUpdatedFkReferences
-      .require(normalizeIdentifier(tableName))
-      .renameColumn(oldColumnName, newColumnName);
+  //   const tableWithRenamedColumn = tablesWithUpdatedFkReferences
+  //     .require(normalizeIdentifier(tableName))
+  //     .renameColumn(oldColumnName, newColumnName);
 
-    const updatedTables = tablesWithUpdatedFkReferences
-     .update(normalizeIdentifier(tableName), tableWithRenamedColumn);
+  //   const updatedTables = tablesWithUpdatedFkReferences
+  //    .update(normalizeIdentifier(tableName), tableWithRenamedColumn);
 
-    return this.with({
-      tables: updatedTables,
-    } as Partial<this>);
-  }
+  //   return this.with({
+  //     tables: updatedTables,
+  //   } as Partial<this>);
+  // }
 
   public removeColumn(
     tableName: string,
@@ -613,11 +726,14 @@ export class Database extends Immutable {
   ): Database {
     const table = this.requireTable(tableName);
 
-    this.assertNoForeignKeyReferencesAny(tableName, [columnName])
+    const columnId = table.requireColumnIdByName(columnName);
 
-    const updatedTable = table.removeColumn(columnName);
+    this.assertNoForeignKeyReferencesAny(tableName, [columnId])
+
+    const updatedTable = table.removeColumnById(columnId);
 
     return this.updateTable(updatedTable);
+    //uh oh, remove column doesn't update positions columnIndexes for each foreign key that references the table.
   }
 
   public removeIndex(tableName: string, indexName: string): Database {
@@ -630,7 +746,7 @@ export class Database extends Immutable {
         if (
           fk.parentTable === normalizeIdentifier(tableName)
         ) {
-          const fkParentIndex = table.requireIndex(fk.parentIndex);
+          const fkParentIndex = table.requireIndexById(fk.parentIndex);
           if (fkParentIndex === index) {
             throw new Error(
               `Index is Parent for Foreign Key: ${fk.name} of Child Table: ${childTable.name}`
@@ -648,39 +764,41 @@ export class Database extends Immutable {
   public renameIndex(tableName: string, oldName: string, newName: string): Database {
     if (oldName === newName) return this;
 
-    const tableWithRenamedIndex = this.requireTable(tableName)
+    const updatedTable = this.requireTable(tableName)
       .renameIndex(oldName, newName);
 
-    let updatedTables = this.tables;
+    return this.updateTable(updatedTable);
 
-    const normalizedOldName = normalizeIdentifier(oldName);
-    const normalizedNewName = normalizeIdentifier(newName);
+    // let updatedTables = this.tables;
 
-    this.tables.forEach(table => {
-      const latestTable =
-        normalizeIdentifier(table.name) ===
-        normalizeIdentifier(tableWithRenamedIndex.name) ?
-        tableWithRenamedIndex :
-        table;
+    // const normalizedOldName = normalizeIdentifier(oldName);
+    // const normalizedNewName = normalizeIdentifier(newName);
 
-      let updatedTable = latestTable;
-      latestTable.foreignKeys.forEach(fk => {
-        if (fk.parentIndex === normalizedOldName) {
-          const updatedFk = fk.withParentIndex(normalizedNewName);
-          updatedTable = updatedTable.updateForeignKey(updatedFk);
-        }
-      });
+    // this.tables.forEach(table => {
+    //   const latestTable =
+    //     normalizeIdentifier(table.name) ===
+    //     normalizeIdentifier(tableWithRenamedIndex.name) ?
+    //     tableWithRenamedIndex :
+    //     table;
 
-      if (table !== updatedTable) {
-        updatedTables
-          .remove(normalizedOldName)
-          .add(normalizedNewName, updatedTable);
-      }
-    });
+    //   let updatedTable = latestTable;
+    //   latestTable.foreignKeys.forEach(fk => {
+    //     if (fk.parentIndex === normalizedOldName) {
+    //       const updatedFk = fk.withParentIndex(normalizedNewName);
+    //       updatedTable = updatedTable.updateForeignKey(updatedFk);
+    //     }
+    //   });
 
-    return this.with({
-      tables: updatedTables,
-    } as Partial<this>);
+    //   if (table !== updatedTable) {
+    //     updatedTables
+    //       .remove(normalizedOldName)
+    //       .add(normalizedNewName, updatedTable);
+    //   }
+    // });
+
+    // return this.with({
+    //   tables: updatedTables,
+    // } as Partial<this>);
   }
 }
 

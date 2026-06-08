@@ -11,6 +11,8 @@ import { AddPrimaryKeyAction } from "../actions/AddPrimaryKeyAction.js";
 import { AddCheckAction } from "../actions/AddCheckAction.js";
 import { AddIndexAction } from "../actions/AddIndexAction.js";
 import { CONSTRAINT_KIND } from "../schema/ConstraintKind.js";
+import { PrimaryKey } from "../schema/PrimaryKey.js";
+import { ForeignKey } from "../schema/ForeignKey.js";
 
 export function bindCreateTable(
   semantic: SemanticAnalyzer,
@@ -43,7 +45,16 @@ export function bindCreateTable(
 
     const columnSpec: ColumnSpec = {name: colName, ...inlineColSpec};
 
-    stmtActions.push(new AddColumnAction(dbName, tableName, columnSpec));
+    stmtActions.push(
+      new AddColumnAction(
+        dbName,
+        tableName,
+        { 
+          //id: ctx.ids.nextColumnId(),
+          ...columnSpec,
+        }
+      )
+    );
 
     //get any inline constraints
     const allInlineConstraints = constraintSpecsFromColumnSpec(colName, inlineColSpec);
@@ -55,6 +66,22 @@ export function bindCreateTable(
           // optionally skip FK if dialect disallows inline FKs
           if (!semantic.ctx.rules.ddl.supportsInlineForeignKeys) break; // TODO, need error here?
 
+          const reverseIndexName = ForeignKey.defaultIndexName(spec.name);
+
+          stmtActions.push(
+            new AddIndexAction(
+              dbName,
+              tableName,
+              {
+                name: reverseIndexName,
+                columns: spec.columns,
+                unique: false,
+                nullsDistinct: ctx.rules.constraints.nullsDistinct,
+                internal: true,
+              },
+            )
+          );
+
           stmtActions.push(
               new AddForeignKeyAction(
               dbName,
@@ -63,6 +90,7 @@ export function bindCreateTable(
                 ...spec,
                 onDelete: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnDelete,
                 onUpdate: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnUpdate,
+                reverseIndex: reverseIndexName,
               },
             )
           );
@@ -96,18 +124,16 @@ export function bindCreateTable(
           break;
 
         case CONSTRAINT_KIND.primaryKey:
-          const indexName = spec.index ?? spec.name;
-
           stmtActions.push(
             new AddIndexAction(
               dbName,
               tableName,
               {
-                name: indexName,
+                name:  PrimaryKey.defaultIndexName(spec.name),
                 columns: spec.columns,
                 unique: true,
-                nullsDistinct: ctx.rules.constraints.nullsDistinct
-              }
+                nullsDistinct: ctx.rules.constraints.nullsDistinct,
+              },
             )
           );
 
@@ -124,12 +150,6 @@ export function bindCreateTable(
         default:
           break;
       }
-
-      // if (!action) {
-      //   throw new Error(`Invalid Inline Constraint Spec`);
-      // }
-      //
-      // stmtActions.push(action);
     }
   }
 
@@ -137,6 +157,22 @@ export function bindCreateTable(
   for (const spec of Object.values(stmt.constraintSchema ?? {})) {
     switch (spec.kind) {
       case CONSTRAINT_KIND.foreignKey:
+        const reverseIndexName = ForeignKey.defaultIndexName(spec.name);
+
+        stmtActions.push(
+          new AddIndexAction(
+            dbName,
+            tableName,
+            {
+              name: reverseIndexName,
+              columns: spec.columns,
+              unique: false,
+              nullsDistinct: ctx.rules.constraints.nullsDistinct,
+              internal: true,
+            },
+          )
+        );
+
         stmtActions.push(
           new AddForeignKeyAction(
             dbName,
@@ -145,6 +181,7 @@ export function bindCreateTable(
               ...spec,
               onDelete: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnDelete,
               onUpdate: spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnUpdate,
+              reverseIndex: reverseIndexName,
             },
           )
         );
@@ -177,14 +214,13 @@ export function bindCreateTable(
         break;
 
       case CONSTRAINT_KIND.primaryKey:
-        const indexName = spec.index ?? spec.name;
 
         stmtActions.push(
           new AddIndexAction(
             dbName,
             tableName,
             {
-              name: indexName,
+              name: PrimaryKey.defaultIndexName(spec.name),
               columns: spec.columns,
               unique: true,
               nullsDistinct: ctx.rules.constraints.nullsDistinct,
@@ -196,10 +232,7 @@ export function bindCreateTable(
           new AddPrimaryKeyAction(
             dbName,
             tableName,
-            {
-              ...spec,
-              index: indexName
-            },
+            spec,
           )
         );
 
@@ -217,7 +250,6 @@ export function bindCreateTable(
 function constraintSpecsFromColumnSpec(
   colName: string,
   colSpec: InlineColumnSpec,
-  //ctx: ExecutionContext,
 ): ConstraintSpec[] {
   const specs: ConstraintSpec[] = [];
 
@@ -226,7 +258,7 @@ function constraintSpecsFromColumnSpec(
       kind: CONSTRAINT_KIND.primaryKey,
       name: `${colName}_pk`,
       columns: [colName],
-      index: `${colName}_i`,
+      //index: `${colName}_i`,
     });
   }
 

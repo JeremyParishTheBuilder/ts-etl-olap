@@ -1,93 +1,90 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import { Database } from "../../src/schema/Database.js";
 import { Table } from "../../src/schema/Table.js";
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
+import { buildTable, createColumnTestSpec, createForeignKeyTestSpec_Database, createIndexTestSpec, createTestIdService } from '../utils/buildSchema.js';
+import { IdService } from '../../src/types/IdAllocator.js';
 
 describe('Database::removeIndex', () => {
 
-  it('removes an index from a table', () => {
-    const table = new Table("Users")
-      .addColumn({
-        name: "email",
-        type: String,
-      })
-      .createIndex({
-        name: "IDX_Email",
-        columns: ["email"],
-      });
+  let ids: IdService;
 
+  beforeEach(() => {
+    ids = createTestIdService();
+  });
+
+  it('removes an index from a table', () => {
     const db = new Database("DB1")
-      .addTable(table);
+      .addTable(
+        buildTable()
+          .createIndex(createIndexTestSpec({
+            name: "i1",
+            columns: ["c1"],
+          })));
 
     const updated = db.removeIndex(
-      "Users",
-      "IDX_Email",
+      "t1",
+      "i1",
     );
 
     expect(
       updated
-        .requireTable("Users")
-        .getIndex("IDX_Email")
+        .requireTable("t1")
+        .getIndex("i1")
     ).toBeUndefined();
   });
 
   it('does not mutate original database state', () => {
-    const table = new Table("Users")
-      .addColumn({
-        name: "email",
-        type: String,
-      })
-      .createIndex({
-        name: "IDX_Email",
-        columns: ["email"],
-      });
-
     const db = new Database("DB1")
-      .addTable(table);
+      .addTable(
+        buildTable()
+          .createIndex(createIndexTestSpec({name: "i1", columns: ["c1"]}))
+      );
 
     const updated = db.removeIndex(
-      "Users",
-      "IDX_Email",
+      "t1",
+      "i1",
     );
 
     expect(
       db
-        .requireTable("Users")
-        .requireIndex("IDX_Email")
+        .requireTable("t1")
+        .requireIndex("i1")
     ).toBeDefined();
 
     expect(
       updated
-        .requireTable("Users")
-        .getIndex("IDX_Email")
+        .requireTable("t1")
+        .getIndex("i1")
     ).toBeUndefined();
 
     expect(updated).not.toBe(db);
 
     expect(
-      updated.requireTable("Users")
+      updated.requireTable("t1")
     ).not.toBe(
-      db.requireTable("Users")
+      db.requireTable("t1")
     );
   });
 
   it('preserves unrelated tables during index removal', () => {
+
     const users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
-      })
-      .createIndex({
+      }))
+      .createIndex(createIndexTestSpec({
         name: "IDX_Email",
         columns: ["email"],
-      });
+      }));
 
     const roles = new Table("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      });
+      }));
 
     const db = new Database("DB1")
       .addTable(users)
@@ -108,10 +105,10 @@ describe('Database::removeIndex', () => {
 
   it('throws when removing a non-existent index', () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
-      });
+      }));
 
     const db = new Database("DB1")
       .addTable(table);
@@ -126,33 +123,39 @@ describe('Database::removeIndex', () => {
 
   it('rejects removing an index referenced by a foreign key', () => {
     const parent = new Table("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
-      .createIndex({
+      }))
+      .createIndex(createIndexTestSpec({
         name: "PK_Roles",
         columns: ["id"],
         unique: true,
-      });
+      }));
 
     const child = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
-      });
+      }))
+      .createIndex(createIndexTestSpec({
+        name: "FKR_Id",
+        columns: ["roleId"],
+        unique: false,
+      }));
 
     const db = new Database("DB1")
       .addTable(parent)
       .addTable(child)
-      .createForeignKey("users", {
+      .createForeignKey("users", createForeignKeyTestSpec_Database({
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKR_Id",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
 
     expect(() =>
       db.removeIndex(
@@ -164,37 +167,43 @@ describe('Database::removeIndex', () => {
 
   it('allows removing an index not referenced by a foreign key', () => {
     const parent = new Table("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
-      .createIndex({
+      }))
+      .createIndex(createIndexTestSpec({
         name: "PK_Roles",
         columns: ["id"],
         unique: true,
-      })
-      .createIndex({
+      }))
+      .createIndex(createIndexTestSpec({
         name: "IDX_Extra",
         columns: ["id"],
-      });
+      }));
 
     const child = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
-      });
+      }))
+      .createIndex(createIndexTestSpec({
+        name: "FKR_Id",
+        columns: ["roleId"],
+        unique: false,
+      }));
 
     const db = new Database("DB1")
       .addTable(parent)
       .addTable(child)
-      .createForeignKey("users", {
+      .createForeignKey("users", createForeignKeyTestSpec_Database({
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKR_Id",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
 
     const updated = db.removeIndex(
       "Roles",
@@ -216,30 +225,36 @@ describe('Database::removeIndex', () => {
 
   it('rejects removing indexes required by self-referencing foreign keys', () => {
     const employees = new Table("Employees")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "managerId",
         type: Number,
-      })
-      .createIndex({
+      }))
+      .createIndex(createIndexTestSpec({
         name: "PK_Employees",
         columns: ["id"],
         unique: true,
-      });
+      }))
+      .createIndex(createIndexTestSpec({
+        name: "FKR_Employees",
+        columns: ["managerId"],
+        unique: false,
+      }));
 
     const db = new Database("DB1")
       .addTable(employees)
-      .createForeignKey("employees", {
+      .createForeignKey("employees", createForeignKeyTestSpec_Database({
         name: "FK_Manager",
         columns: ["managerId"],
+        reverseIndex: "FKR_Employees",
         parentTable: "Employees",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
         onUpdate: ReferentialAction.restrict,
-      });
+      }));
 
     expect(() =>
       db.removeIndex(
@@ -251,14 +266,14 @@ describe('Database::removeIndex', () => {
 
   it('preserves existing rows after index removal', () => {
     let table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
-      })
-      .createIndex({
+      }))
+      .createIndex(createIndexTestSpec({
         name: "IDX_Email",
         columns: ["email"],
-      });
+      }));
 
     table = table.addRow(["a@test.com"]);
 
@@ -279,18 +294,18 @@ describe('Database::removeIndex', () => {
 
   it('preserves remaining indexes after index removal', () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
-      })
-      .createIndex({
+      }))
+      .createIndex(createIndexTestSpec({
         name: "IDX_Email",
         columns: ["email"],
-      })
-      .createIndex({
+      }))
+      .createIndex(createIndexTestSpec({
         name: "IDX_Email_2",
         columns: ["email"],
-      });
+      }));
 
     const db = new Database("DB1")
       .addTable(table);

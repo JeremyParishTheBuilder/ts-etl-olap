@@ -4,25 +4,26 @@ import { TableScanNode } from '../../src/query/plan/TableScanNode.js';
 import { ProjectNode } from '../../src/query/plan/ProjectNode.js';
 import { FilterNode } from '../../src/query/plan/FilterNode.js';
 import { ComparisonPredicate } from '../../src/query/predicate/ComparisonPredicate.js';
+import { createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Query::projectNode', () => {
   it("projects selected columns", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "Name",
         type: String,
         nullable: false,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "Age",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1, "Alice", 30]);
 
     const scan = new TableScanNode(table);
@@ -44,11 +45,11 @@ describe('Query::projectNode', () => {
 
   it("preserves original row indexes", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Value",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([10])
       .addRow([20]);
 
@@ -69,16 +70,16 @@ describe('Query::projectNode', () => {
 
   it("preserves deterministic row ordering", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
         nullable: false,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "B",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1, 100])
       .addRow([2, 200])
       .addRow([3, 300]);
@@ -101,16 +102,16 @@ describe('Query::projectNode', () => {
 
   it("supports composition with filter nodes", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "Age",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1, 10])
       .addRow([2, 20])
       .addRow([3, 30]);
@@ -143,11 +144,11 @@ describe('Query::projectNode', () => {
 
   it("supports projecting no columns", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1]);
 
     const scan = new TableScanNode(table);
@@ -169,11 +170,11 @@ describe('Query::projectNode', () => {
 
   it("returns no rows when the source is empty", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      });
+      }));
 
     const scan = new TableScanNode(table);
 
@@ -187,16 +188,16 @@ describe('Query::projectNode', () => {
 
   it("does not mutate source rows", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "Name",
         type: String,
         nullable: false,
-      })
+      }))
       .addRow([1, "Alice"]);
 
     const scan = new TableScanNode(table);
@@ -218,11 +219,11 @@ describe('Query::projectNode', () => {
 
   it("evaluates deterministically", () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Value",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1])
       .addRow([2]);
 

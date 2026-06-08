@@ -3,8 +3,8 @@ import { Table } from '../../src/schema/Table.js';
 
 describe('Table::requirePrimaryKey', () => {
   it('returns the primary key', () => {
-    const table = new Table("T1")
-      .addColumn({
+    let table = new Table("T1")
+      .createColumn({
         name: "Id",
         type: Number,
         nullable: false,
@@ -16,7 +16,6 @@ describe('Table::requirePrimaryKey', () => {
       })
       .createPrimaryKey({
         name: "PK_T1",
-        columns: ["Id"],
         index: "PK_T1",
       });
 

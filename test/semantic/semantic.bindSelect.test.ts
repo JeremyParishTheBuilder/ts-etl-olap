@@ -7,6 +7,7 @@ import { SelectBuilder } from '../../src/statements/index.js';
 import { bindSelect } from '../../src/semantic/select.js';
 import { freshEngine } from '../engine/freshEngine.js';
 import { Engine } from '../../src/engine/Engine.js';
+import { createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('SemanticAnalyzer::bindSelect', () => {
   let engine: Engine;
@@ -29,16 +30,16 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
   it("binds selected columns correctly", () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "Name",
         type: String,
         nullable: false,
-      })
+      }))
       .addRow([1, "Alice"]);
 
     
@@ -69,16 +70,16 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
   it("supports wildcard selection", () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "Name",
         type: String,
         nullable: false,
-      })
+      }))
       .addRow([1, "Alice"]);
 
     const database = new Database("DB1")
@@ -108,11 +109,11 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
   it("binds where predicates correctly", () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Age",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([10])
       .addRow([20])
       .addRow([30]);
@@ -150,11 +151,11 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
   it("resolves column identifiers case-insensitively", () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "UserId",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1]);
 
     const database = new Database("DB1")
@@ -184,11 +185,11 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
   it("throws for missing selected columns", () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      });
+      }));
 
     const database = new Database("DB1")
       .addTable(users);
@@ -210,11 +211,11 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
   it("throws for missing where columns", () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      });
+      }));
 
     const database = new Database("DB1")
       .addTable(users);
@@ -237,11 +238,11 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
   it("produces deterministic execution results", () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .addRow([1])
       .addRow([2]);
 

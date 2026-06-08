@@ -3,6 +3,8 @@ import { Database } from '../../src/schema/Database.js';
 import { CONSTRAINT_KIND } from '../../src/schema/ConstraintKind.js';
 import { PrimaryKey } from '../../src/schema/PrimaryKey.js';
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
+import { testColumnId } from '../utils/testIds.js';
+import { createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Database::addRow', () => {
   it('allows inserting row with valid foreign key reference', () => {
@@ -11,29 +13,26 @@ describe('Database::addRow', () => {
       .createTable("Users");
 
     let roles = database.requireTable("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["Id"],
         unique: true,
-      })
-      .addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_Roles",
-          columns: ["Id"],
-          index: "PK_Roles",
-        })
-      );
+      });
 
     let users = database.requireTable("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "RoleId",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_Roles",
+        columns: ["roleId"],
+        unique: false,
       });
 
     database = database
@@ -45,6 +44,7 @@ describe('Database::addRow', () => {
       {
         name: "FK_Users_Roles",
         columns: ["RoleId"],
+        reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["Id"],
       }
@@ -69,29 +69,26 @@ describe('Database::addRow', () => {
       .createTable("Users");
 
     let roles = database.requireTable("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["Id"],
         unique: true,
-      })
-      .addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_Roles",
-          columns: ["Id"],
-          index: "PK_Roles",
-        })
-      );
+      });
 
     let users = database.requireTable("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "RoleId",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_Roles",
+        columns: ["roleId"],
+        unique: false,
       });
 
     database = database
@@ -103,6 +100,7 @@ describe('Database::addRow', () => {
       {
         name: "FK_Users_Roles",
         columns: ["RoleId"],
+        reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["Id"],
       }
@@ -122,29 +120,26 @@ describe('Database::addRow', () => {
       .createTable("Users");
 
     let roles = database.requireTable("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["Id"],
         unique: true,
-      })
-      .addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_Roles",
-          columns: ["Id"],
-          index: "PK_Roles",
-        })
-      );
+      });
 
     let users = database.requireTable("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "RoleId",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_Roles",
+        columns: ["roleId"],
+        unique: false,
       });
 
     database = database
@@ -156,6 +151,7 @@ describe('Database::addRow', () => {
       {
         name: "FK_Users_Roles",
         columns: ["RoleId"],
+        reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["Id"],
       }
@@ -175,10 +171,10 @@ describe('Database::addRow', () => {
       .createTable("Users");
 
     let parent = database.requireTable("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["id"],
@@ -188,9 +184,14 @@ describe('Database::addRow', () => {
     parent = parent.addRow([1]);
 
     let child = database.requireTable("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_Roles",
+        columns: ["roleId"],
+        unique: false,
       });
 
     database = database
@@ -199,6 +200,7 @@ describe('Database::addRow', () => {
       .createForeignKey("users", {
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
@@ -219,10 +221,10 @@ describe('Database::addRow', () => {
       .createTable("Users");
 
     let parent = database.requireTable("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["id"],
@@ -232,9 +234,14 @@ describe('Database::addRow', () => {
     parent = parent.addRow([1]);
 
     let child = database.requireTable("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_Roles",
+        columns: ["roleId"],
+        unique: false,
       });
 
     database = database
@@ -243,6 +250,7 @@ describe('Database::addRow', () => {
       .createForeignKey("users", {
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,
@@ -263,10 +271,10 @@ describe('Database::addRow', () => {
       .createTable("Users");
 
     let parent = database.requireTable("Roles")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      })
+      }))
       .createIndex({
         name: "PK_Roles",
         columns: ["id"],
@@ -274,9 +282,14 @@ describe('Database::addRow', () => {
       });
 
     let child = database.requireTable("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_Roles",
+        columns: ["roleId"],
+        unique: false,
       });
 
     database = database
@@ -285,6 +298,7 @@ describe('Database::addRow', () => {
       .createForeignKey("users", {
         name: "FK_Users_Roles",
         columns: ["roleId"],
+        reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
         onDelete: ReferentialAction.restrict,

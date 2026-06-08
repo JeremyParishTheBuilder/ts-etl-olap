@@ -10,8 +10,13 @@ export class RenameColumnAction implements Action {
   ) {}
 
   apply(databases: Databases): Databases {
-    const updatedDb = databases.require(this.dbName)
-      .renameColumn(this.tableName, this.oldColumnName, this.newColumnName);
+    const db = databases.require(this.dbName);
+    
+    const updatedTable = db
+      .requireTable(this.tableName)
+      .renameColumn(this.oldColumnName, this.newColumnName);
+
+    const updatedDb = db.updateTable(updatedTable);
     
     return databases.update(updatedDb);
   }

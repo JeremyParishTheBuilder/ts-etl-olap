@@ -6,13 +6,16 @@ export class AddIndexAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private spec: IndexSpec,
+    private spec: IndexSpec & {
+      internal?: boolean
+    },
   ) {}
 
   apply(databases: Databases): Databases {
     const db = databases.require(this.dbName);
 
-    const updatedTable = db.requireTable(this.tableName)
+    const updatedTable = db
+      .requireTable(this.tableName)
       .createIndex(this.spec);
 
     return databases.update(

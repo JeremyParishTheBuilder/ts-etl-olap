@@ -1,23 +1,30 @@
 import { type Action } from "./Action.js";
 import { type Databases } from "../schema/Databases.js";
 import { type ForeignKeySpec } from "../schema/Constraint.js";
-import { ReferentialAction } from "../schema/ReferentialAction.js";
+import { type ReferentialAction } from "../schema/ReferentialAction.js";
 
 export class AddForeignKeyAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private spec: ForeignKeySpec & {
+    private spec: Omit<ForeignKeySpec, "kind"> & {
+      // name: string,
+      // columns: string[],
+      // parentTable: string,
+      // parentColumns: string[],
       onDelete: ReferentialAction,
       onUpdate: ReferentialAction,
+      reverseIndex: string,
     },
   ) {}
 
   apply(databases: Databases): Databases {
-    const { kind, ...spec } = this.spec;
-
-    const updatedDatabase = databases.require(this.dbName)
-      .createForeignKey(this.tableName, spec);
+    const updatedDatabase = databases
+      .require(this.dbName)
+      .createForeignKey(
+        this.tableName,
+        this.spec,
+      );
 
     return databases.update(updatedDatabase);
   }

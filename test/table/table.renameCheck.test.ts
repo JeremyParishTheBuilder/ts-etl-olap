@@ -1,18 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
-import { Check } from '../../src/schema/Check.js';
-import { CONSTRAINT_KIND } from '../../src/schema/ConstraintKind.js';
+import { createCheckTestSpec, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::renameCheck', () => {
   function buildTable(): Table {
     return new Table("Users")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Age",
         type: Number,
-      })
-      .addCheck(
-        Check.fromSpec({
-          kind: CONSTRAINT_KIND.check,
+      }))
+      .createCheck(
+        createCheckTestSpec({
           name: "CHK_PositiveAge",
           columns: ["Age"],
           expression: undefined,
@@ -99,9 +97,8 @@ describe('Table::renameCheck', () => {
 
   it('throws when another constraint already uses the new name', () => {
     const table = buildTable()
-      .addCheck(
-        Check.fromSpec({
-          kind: CONSTRAINT_KIND.check,
+      .createCheck(
+        createCheckTestSpec({
           name: "CHK_AdultAge",
           columns: ["Age"],
           expression: undefined,

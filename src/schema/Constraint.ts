@@ -1,26 +1,26 @@
 import { CONSTRAINT_KIND } from "./ConstraintKind.js";
-import { type ColumnKeyType } from "./Column.js";
+import { type ColumnId } from "./Column.js";
 import { ReferentialAction } from "./ReferentialAction.js";
 
 export type PrimaryKeySpec = {
   kind: CONSTRAINT_KIND.primaryKey,
   name: string,
-  columns: ColumnKeyType[],
-  index?: string,
+  columns: string[],
+  //index?: string,
 }
 
 export type UniqueSpec = {
   kind: CONSTRAINT_KIND.unique,
   name: string,
-  columns: ColumnKeyType[]
+  columns: string[]
 }
     
 export type ForeignKeySpec = {
   kind: CONSTRAINT_KIND.foreignKey,
   name: string,
-  columns: ColumnKeyType[],
+  columns: string[],
   parentTable: string,
-  parentColumns: ColumnKeyType[],
+  parentColumns: string[],
   onDelete?: ReferentialAction,
   onUpdate?: ReferentialAction,
 }
@@ -28,7 +28,7 @@ export type ForeignKeySpec = {
 export type CheckSpec = {
   kind: CONSTRAINT_KIND.check,
   name: string,
-  columns: ColumnKeyType[],
+  columns: string[],
   expression: undefined//Expression,
 }
 

@@ -1,11 +1,13 @@
 import { type Action } from "./Action.js";
 import { type Databases } from "../schema/Databases.js";
+import { ForeignKeyId } from "../schema/ForeignKey.js";
 
 export class DropForeignKeyAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private foreignKeyName: string,
+    private foreignKeyId: ForeignKeyId,
+    //private foreignKeyName: string,
   ) {}
 
   apply(databases: Databases): Databases {
@@ -13,7 +15,8 @@ export class DropForeignKeyAction implements Action {
 
     const updatedTable = db
       .requireTable(this.tableName)
-      .removeForeignKey(this.foreignKeyName);
+      //.removeForeignKey(this.foreignKeyName);
+      .removeForeignKeyById(this.foreignKeyId);
 
     const updatedDb = db.updateTable(updatedTable);
 

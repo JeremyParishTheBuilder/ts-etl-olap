@@ -1,13 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from '../../src/schema/Database.js';
 import { Table } from '../../src/schema/Table.js';
-import { PrimaryKey } from '../../src/schema/PrimaryKey.js';
-import { CONSTRAINT_KIND } from '../../src/schema/ConstraintKind.js';
+import { createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Database::createForeignKey', () => {
-  function buildDatabase(): Database {
-    const users = new Table("Users")
-      .addColumn({
+  function buildDatabase() {
+    let users = new Table("Users")
+      .createColumn({
         name: "Id",
         type: Number,
         nullable: false,
@@ -16,21 +15,18 @@ describe('Database::createForeignKey', () => {
         name: "PK_Users",
         columns: ["Id"],
         unique: true,
-      })
-      .addPrimaryKey(
-        PrimaryKey.fromSpec({
-          kind: CONSTRAINT_KIND.primaryKey,
-          name: "PK_Users",
-          columns: ["Id"],
-          index: "PK_Users",
-        })
-      );
+      });
 
     const posts = new Table("Posts")
-      .addColumn({
+      .createColumn({
         name: "UserId",
         type: Number,
         nullable: false,
+      })
+      .createIndex({
+        name: "FKRI",
+        columns: ["UserId"],
+        unique: false,
       });
 
     return new Database("DB1")
@@ -46,6 +42,7 @@ describe('Database::createForeignKey', () => {
       {
         name: "FK_Posts_Users",
         columns: ["UserId"],
+        reverseIndex: "FKRI",
         parentTable: "Users",
         parentColumns: ["Id"],
       },
@@ -66,6 +63,7 @@ describe('Database::createForeignKey', () => {
       {
         name: "FK_Posts_Users",
         columns: ["UserId"],
+        reverseIndex: "FKRI",
         parentTable: "Users",
         parentColumns: ["Id"],
       }
@@ -95,6 +93,7 @@ describe('Database::createForeignKey', () => {
       {
         name: "FK_Posts_Users",
         columns: ["UserId"],
+        reverseIndex: "FKRI",
         parentTable: "Users",
         parentColumns: ["Id"],
       }
@@ -114,6 +113,7 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI",
           parentTable: "Users",
           parentColumns: ["Id"],
         }
@@ -130,6 +130,7 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI",
           parentTable: "MissingTable",
           parentColumns: ["Id"],
         }
@@ -146,6 +147,7 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["MissingColumn"],
+          reverseIndex: "FKRI",
           parentTable: "Users",
           parentColumns: ["Id"],
         }
@@ -162,6 +164,7 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI",
           parentTable: "Users",
           parentColumns: ["MissingColumn"],
         }
@@ -170,18 +173,28 @@ describe('Database::createForeignKey', () => {
   });
 
   it('throws when parent columns are not uniquely indexed', () => {
-    const users = new Table("Users")
-      .addColumn({
+    let users = new Table("Users")
+      .createColumn({
         name: "Id",
         type: Number,
         nullable: false,
+      })
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id"],
+        unique: false,
       });
 
     const posts = new Table("Posts")
-      .addColumn({
+      .createColumn({
         name: "UserId",
         type: Number,
         nullable: false,
+      })
+      .createIndex({
+        name: "FKRI",
+        columns: ["UserId"],
+        unique: false,
       });
 
     const database = new Database("DB1")
@@ -194,6 +207,7 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI",
           parentTable: "Users",
           parentColumns: ["Id"],
         }
@@ -202,33 +216,18 @@ describe('Database::createForeignKey', () => {
   });
 
   it('throws when child and parent column counts differ', () => {
-    const users = new Table("Users")
-      .addColumn({
-        name: "Id1",
-        type: Number,
-        nullable: false,
-      })
-      .addColumn({
-        name: "Id2",
-        type: Number,
-        nullable: false,
-      })
+    let database = buildDatabase();
+    
+    let users = database.requireTable("Users");
+    users = users
+      .createColumn(createColumnTestSpec({name: "Id2"}))
       .createIndex({
-        name: "PK_Users",
-        columns: ["Id1", "Id2"],
+        name: "PK_Users2",
+        columns: ["Id", "Id2"],
         unique: true,
       });
 
-    const posts = new Table("Posts")
-      .addColumn({
-        name: "UserId",
-        type: Number,
-        nullable: false,
-      });
-
-    const database = new Database("DB1")
-      .addTable(users)
-      .addTable(posts);
+    database = database.updateTable(users);
 
     expect(() => {
       database.createForeignKey(
@@ -236,8 +235,9 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI",
           parentTable: "Users",
-          parentColumns: ["Id1", "Id2"],
+          parentColumns: ["Id", "Id2"],
         }
       );
     }).toThrow();
@@ -245,7 +245,7 @@ describe('Database::createForeignKey', () => {
 
   it('throws when child and parent column types differ', () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn({
         name: "Id",
         type: String,
         nullable: false,
@@ -257,7 +257,7 @@ describe('Database::createForeignKey', () => {
       });
 
     const posts = new Table("Posts")
-      .addColumn({
+      .createColumn({
         name: "UserId",
         type: Number,
         nullable: false,
@@ -273,6 +273,7 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI",
           parentTable: "Users",
           parentColumns: ["Id"],
         }
@@ -288,6 +289,7 @@ describe('Database::createForeignKey', () => {
       {
         name: "FK_Posts_Users",
         columns: ["userid"],
+        reverseIndex: "FKRI",
         parentTable: "users",
         parentColumns: ["id"],
       }
@@ -307,6 +309,7 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI",
           parentTable: "Users",
           parentColumns: ["Id"],
         }
@@ -318,6 +321,7 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI",
           parentTable: "Users",
           parentColumns: ["Id"],
         }
@@ -327,7 +331,7 @@ describe('Database::createForeignKey', () => {
 
   it("throws when existing child rows violate the foreign key", () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn({
         name: "Id",
         type: Number,
         nullable: false,
@@ -340,10 +344,15 @@ describe('Database::createForeignKey', () => {
       });
 
     const posts = new Table("Posts")
-      .addColumn({
+      .createColumn({
         name: "UserId",
         type: Number,
         nullable: false,
+      })
+      .createIndex({
+        name: "FKRI",
+        columns: ["UserId"],
+        unique: false,
       })
       .addRow([999]);
 
@@ -357,6 +366,7 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI",
           parentTable: "Users",
           parentColumns: ["Id"],
         }
@@ -366,7 +376,7 @@ describe('Database::createForeignKey', () => {
 
   it("allows adding a foreign key when existing child rows are valid", () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn({
         name: "Id",
         type: Number,
         nullable: false,
@@ -379,10 +389,15 @@ describe('Database::createForeignKey', () => {
       });
 
     const posts = new Table("Posts")
-      .addColumn({
+      .createColumn({
         name: "UserId",
         type: Number,
         nullable: false,
+      })
+      .createIndex({
+        name: "FKRI",
+        columns: ["UserId"],
+        unique: false,
       })
       .addRow([1])
 
@@ -396,6 +411,7 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI",
           parentTable: "Users",
           parentColumns: ["Id"],
         }
@@ -405,7 +421,7 @@ describe('Database::createForeignKey', () => {
 
   it("ignores existing rows with null foreign key components", () => {
     const users = new Table("Users")
-      .addColumn({
+      .createColumn({
         name: "Id",
         type: Number,
         nullable: false,
@@ -417,10 +433,15 @@ describe('Database::createForeignKey', () => {
       });
 
     const posts = new Table("Posts")
-      .addColumn({
+      .createColumn({
         name: "UserId",
         type: Number,
         nullable: true,
+      })
+      .createIndex({
+        name: "FKRI",
+        columns: ["UserId"],
+        unique: false,
       })
       .addRow([null]);
 
@@ -434,6 +455,7 @@ describe('Database::createForeignKey', () => {
         {
           name: "FK_Posts_Users",
           columns: ["UserId"],
+          reverseIndex: "FKRI",
           parentTable: "Users",
           parentColumns: ["Id"],
         }

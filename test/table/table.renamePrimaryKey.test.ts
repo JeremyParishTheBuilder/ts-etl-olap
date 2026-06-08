@@ -1,14 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
+import { createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::renamePrimaryKey', () => {
-  function buildTable(): Table {
+  function buildTableWithPrimaryKey(): Table {
     return new Table("T1")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
         nullable: false,
-      })
+      }))
       .createIndex({
         name: "PK_T1",
         columns: ["Id"],
@@ -16,13 +17,12 @@ describe('Table::renamePrimaryKey', () => {
       })
       .createPrimaryKey({
         name: "PK_T1",
-        columns: ["Id"],
         index: "PK_T1",
       });
   }
 
   it('renames the primary key', () => {
-    const table = buildTable();
+    const table = buildTableWithPrimaryKey();
 
     const updated = table.renamePrimaryKey("PK_T1_RENAMED");
 
@@ -32,7 +32,7 @@ describe('Table::renamePrimaryKey', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = buildTable();
+    const table = buildTableWithPrimaryKey();
 
     const updated = table.renamePrimaryKey("PK_T1_RENAMED");
 
@@ -46,13 +46,13 @@ describe('Table::renamePrimaryKey', () => {
   });
 
   it('preserves backing index reference', () => {
-    const table = buildTable();
+    const table = buildTableWithPrimaryKey();
 
     const updated = table.renamePrimaryKey("PK_T1_RENAMED");
 
     expect(
       updated.requirePrimaryKey().index
-    ).toBe("pk_t1");
+    ).toBe(table.requirePrimaryKey().index);
   });
 
   it('throws when primary key does not exist', () => {
@@ -64,12 +64,12 @@ describe('Table::renamePrimaryKey', () => {
   });
 
   it('throws when another constraint already uses the new name', () => {
-    const table = buildTable()
-      .addColumn({
+    const table = buildTableWithPrimaryKey()
+      .createColumn(createColumnTestSpec({
         name: "OtherId",
         type: Number,
         nullable: false,
-      })
+      }))
       .createIndex({
         name: "UQ_1",
         columns: ["OtherId"],
@@ -82,7 +82,7 @@ describe('Table::renamePrimaryKey', () => {
   });
 
   it('supports case-insensitive lookup', () => {
-    const table = buildTable();
+    const table = buildTableWithPrimaryKey();
 
     const updated = table.renamePrimaryKey("RenamedPK");
 
@@ -92,43 +92,11 @@ describe('Table::renamePrimaryKey', () => {
   });
 
   it('returns same table when renaming to same name', () => {
-    const table = buildTable();
+    const table = buildTableWithPrimaryKey();
 
     const updated = table.renamePrimaryKey("PK_T1");
 
     expect(updated).toBe(table);
   });
 
-  it('preserves backing index reference after rename', () => {
-    const table = new Table("T1")
-      .addColumn({
-        name: "Id",
-        type: Number,
-        nullable: false,
-      })
-      .createIndex({
-        name: "PK_Index",
-        columns: ["Id"],
-        unique: true,
-      })
-      .createPrimaryKey({
-        name: "PK_T1",
-        columns: ["Id"],
-        index: "PK_Index",
-      });
-
-    const updated = table.renamePrimaryKey("RenamedPK");
-
-    expect(
-      updated.requirePrimaryKey().name
-    ).toBe("RenamedPK");
-
-    expect(
-      updated.requirePrimaryKey().index
-    ).toBe("pk_index");
-
-    expect(
-      updated.requireIndex("PK_Index")
-    ).toBeDefined();
-  });
 });

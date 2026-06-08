@@ -1,15 +1,14 @@
 import { describe, it, expect } from "vitest";
-
 import { Database } from "../../src/schema/Database.js";
 import { Table } from "../../src/schema/Table.js";
-
 import { ReferentialAction } from "../../src/schema/ReferentialAction.js";
+import { createColumnTestSpec } from "../utils/buildSchema.js";
 
 describe("Database Referential Actions", () => {
 
   it("rejects deleting parent row under RESTRICT", () => {
     const parent = new Table("Parent")
-      .addColumn({ name: "ID", type: Number })
+      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
       .createIndex({
         name: "PK_PARENT",
         columns: ["ID"],
@@ -18,7 +17,12 @@ describe("Database Referential Actions", () => {
       .addRow([1]);
 
     const child = new Table("Child")
-      .addColumn({ name: "ParentID", type: Number })
+      .createColumn(createColumnTestSpec({ name: "ParentID", type: Number }))
+      .createIndex({
+        name: "FKRI_Id",
+        columns: ["ParentID"],
+        unique: false,
+      })
       .addRow([1]);
 
     const db = new Database("DB1")
@@ -29,6 +33,7 @@ describe("Database Referential Actions", () => {
         {
           name: "FK_CHILD_PARENT",
           columns: ["ParentID"],
+          reverseIndex: "FKRI_Id",
           parentTable: "Parent",
           parentColumns: ["ID"],
           onDelete: ReferentialAction.restrict,
@@ -43,7 +48,7 @@ describe("Database Referential Actions", () => {
 
   it("cascades delete to child rows", () => {
     const parent = new Table("Parent")
-      .addColumn({ name: "ID", type: Number })
+      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
       .createIndex({
         name: "PK_PARENT",
         columns: ["ID"],
@@ -52,7 +57,12 @@ describe("Database Referential Actions", () => {
       .addRow([1]);
 
     const child = new Table("Child")
-      .addColumn({ name: "ParentID", type: Number })
+      .createColumn(createColumnTestSpec({ name: "ParentID", type: Number }))
+      .createIndex({
+        name: "FKRI_Id",
+        columns: ["ParentID"],
+        unique: false,
+      })
       .addRow([1]);
 
     const db = new Database("DB1")
@@ -63,6 +73,7 @@ describe("Database Referential Actions", () => {
         {
           name: "FK_CHILD_PARENT",
           columns: ["ParentID"],
+          reverseIndex: "FKRI_Id",
           parentTable: "Parent",
           parentColumns: ["ID"],
           onDelete: ReferentialAction.cascade,
@@ -79,19 +90,24 @@ describe("Database Referential Actions", () => {
 
   it("sets child foreign key values to null during SET NULL delete", () => {
     const parent = new Table("Parent")
-      .addColumn({ name: "ID", type: Number })
+      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
       .createIndex({
-        name: "PK_PARENT",
-        columns: ["ID"],
+        name: "PK_Roles",
+        columns: ["id"],
         unique: true,
       })
       .addRow([1]);
 
     const child = new Table("Child")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "ParentID",
         type: Number,
         nullable: true,
+      }))
+      .createIndex({
+        name: "FKRI_Id",
+        columns: ["ParentID"],
+        unique: false,
       })
       .addRow([1]);
 
@@ -103,6 +119,7 @@ describe("Database Referential Actions", () => {
         {
           name: "FK_CHILD_PARENT",
           columns: ["ParentID"],
+          reverseIndex: "FKRI_Id",
           parentTable: "Parent",
           parentColumns: ["ID"],
           onDelete: ReferentialAction.setNull,
@@ -119,7 +136,7 @@ describe("Database Referential Actions", () => {
 
   it("cascades updates to child rows", () => {
     const parent = new Table("Parent")
-      .addColumn({ name: "ID", type: Number })
+      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
       .createIndex({
         name: "PK_PARENT",
         columns: ["ID"],
@@ -128,7 +145,12 @@ describe("Database Referential Actions", () => {
       .addRow([1]);
 
     const child = new Table("Child")
-      .addColumn({ name: "ParentID", type: Number })
+      .createColumn(createColumnTestSpec({ name: "ParentID", type: Number }))
+      .createIndex({
+        name: "FKRI_Id",
+        columns: ["ParentID"],
+        unique: false,
+      })
       .addRow([1]);
 
     const db = new Database("DB1")
@@ -139,15 +161,13 @@ describe("Database Referential Actions", () => {
         {
           name: "FK_CHILD_PARENT",
           columns: ["ParentID"],
+          reverseIndex: "FKRI_Id",
           parentTable: "Parent",
           parentColumns: ["ID"],
           onDelete: ReferentialAction.restrict,
           onUpdate: ReferentialAction.cascade,
         }
       );
-
-    // const updates = new Map<number, number>();
-    // updates.set(0, 2);
 
     const updates = [2];
 
@@ -164,16 +184,21 @@ describe("Database Referential Actions", () => {
 
   it("supports self-referencing cascade deletes", () => {
     const table = new Table("Node")
-      .addColumn({ name: "ID", type: Number })
-      .addColumn({
+      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
+      .createColumn(createColumnTestSpec({
         name: "ParentID",
         type: Number,
         nullable: true,
-      })
+      }))
       .createIndex({
         name: "PK_NODE",
         columns: ["ID"],
         unique: true,
+      })
+      .createIndex({
+        name: "FKRI_Id",
+        columns: ["ParentID"],
+        unique: false,
       })
       .addRow([1, null])
       .addRow([2, 1]);
@@ -185,6 +210,7 @@ describe("Database Referential Actions", () => {
         {
           name: "FK_NODE_PARENT",
           columns: ["ParentID"],
+          reverseIndex: "FKRI_Id",
           parentTable: "Node",
           parentColumns: ["ID"],
           onDelete: ReferentialAction.cascade,
@@ -205,16 +231,21 @@ describe("Database Referential Actions", () => {
 
   it("supports cyclic cascading updates", () => {
     const table = new Table("Node")
-      .addColumn({ name: "ID", type: Number })
-      .addColumn({
+      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
+      .createColumn(createColumnTestSpec({
         name: "RefID",
         type: Number,
         nullable: true,
-      })
+      }))
       .createIndex({
         name: "PK_NODE",
         columns: ["ID"],
         unique: true,
+      })
+      .createIndex({
+        name: "FKRI_Id",
+        columns: ["RefID"],
+        unique: false,
       })
       .addRow([1, 2])
       .addRow([2, 1]);
@@ -226,6 +257,7 @@ describe("Database Referential Actions", () => {
         {
           name: "FK_NODE_REF",
           columns: ["RefID"],
+          reverseIndex: "FKRI_Id",
           parentTable: "Node",
           parentColumns: ["ID"],
           onDelete: ReferentialAction.cascade,
@@ -248,8 +280,8 @@ describe("Database Referential Actions", () => {
 
   it("supports composite foreign key cascading updates", () => {
     const parent = new Table("Parent")
-      .addColumn({ name: "A", type: Number })
-      .addColumn({ name: "B", type: Number })
+      .createColumn(createColumnTestSpec({ name: "A", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "B", type: Number }))
       .createIndex({
         name: "PK_PARENT",
         columns: ["A", "B"],
@@ -258,8 +290,13 @@ describe("Database Referential Actions", () => {
       .addRow([1, 2]);
 
     const child = new Table("Child")
-      .addColumn({ name: "FA", type: Number })
-      .addColumn({ name: "FB", type: Number })
+      .createColumn(createColumnTestSpec({ name: "FA", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "FB", type: Number }))
+      .createIndex({
+        name: "FKRI_CHILD",
+        columns: ["FA", "FB"],
+        unique: false,
+      })
       .addRow([1, 2]);
 
     const db = new Database("DB1")
@@ -270,16 +307,13 @@ describe("Database Referential Actions", () => {
         {
           name: "FK_CHILD_PARENT",
           columns: ["FA", "FB"],
+          reverseIndex: "FKRI_CHILD",
           parentTable: "Parent",
           parentColumns: ["A", "B"],
           onDelete: ReferentialAction.cascade,
           onUpdate: ReferentialAction.cascade,
         }
       );
-
-    // const updates = new Map<number, number>();
-    // updates.set(0, 10);
-    // updates.set(1, 20);
     
     const updates = [10, 20];
 
@@ -296,8 +330,8 @@ describe("Database Referential Actions", () => {
 
   it("sets all composite foreign key columns to null during SET NULL", () => {
     const parent = new Table("Parent")
-      .addColumn({ name: "A", type: Number })
-      .addColumn({ name: "B", type: Number })
+      .createColumn(createColumnTestSpec({ name: "A", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "B", type: Number }))
       .createIndex({
         name: "PK_PARENT",
         columns: ["A", "B"],
@@ -306,15 +340,20 @@ describe("Database Referential Actions", () => {
       .addRow([1, 2]);
 
     const child = new Table("Child")
-      .addColumn({
+      .createColumn(createColumnTestSpec({
         name: "FA",
         type: Number,
         nullable: true,
-      })
-      .addColumn({
+      }))
+      .createColumn(createColumnTestSpec({
         name: "FB",
         type: Number,
         nullable: true,
+      }))
+      .createIndex({
+        name: "FKRI_CHILD",
+        columns: ["FA", "FB"],
+        unique: false,
       })
       .addRow([1, 2]);
 
@@ -326,6 +365,7 @@ describe("Database Referential Actions", () => {
         {
           name: "FK_CHILD_PARENT",
           columns: ["FA", "FB"],
+          reverseIndex: "FKRI_CHILD",
           parentTable: "Parent",
           parentColumns: ["A", "B"],
           onDelete: ReferentialAction.setNull,
@@ -342,7 +382,7 @@ describe("Database Referential Actions", () => {
 
   it("supports multi-level cascade chains", () => {
     const a = new Table("A")
-      .addColumn({ name: "ID", type: Number })
+      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
       .createIndex({
         name: "PK_A",
         columns: ["ID"],
@@ -351,16 +391,26 @@ describe("Database Referential Actions", () => {
       .addRow([1]);
 
     const b = new Table("B")
-      .addColumn({ name: "AID", type: Number })
+      .createColumn(createColumnTestSpec({ name: "AID", type: Number }))
       .createIndex({
         name: "PK_B",
         columns: ["AID"],
         unique: true,
       })
+      .createIndex({
+        name: "FKRI_CHILD",
+        columns: ["AID"],
+        unique: false,
+      })
       .addRow([1]);
 
     const c = new Table("C")
-      .addColumn({ name: "BID", type: Number })
+      .createColumn(createColumnTestSpec({ name: "BID", type: Number }))
+      .createIndex({
+        name: "FKRI_CHILD",
+        columns: ["BID"],
+        unique: false,
+      })
       .addRow([1]);
 
     const db = new Database("DB1")
@@ -372,6 +422,7 @@ describe("Database Referential Actions", () => {
         {
           name: "FK_B_A",
           columns: ["AID"],
+          reverseIndex: "FKRI_CHILD",
           parentTable: "A",
           parentColumns: ["ID"],
           onDelete: ReferentialAction.cascade,
@@ -383,6 +434,7 @@ describe("Database Referential Actions", () => {
         {
           name: "FK_C_B",
           columns: ["BID"],
+          reverseIndex: "FKRI_CHILD",
           parentTable: "B",
           parentColumns: ["AID"],
           onDelete: ReferentialAction.cascade,
@@ -403,16 +455,17 @@ describe("Database Referential Actions", () => {
 
   it("preserves immutable database state during cascading operations", () => {
     const parent = new Table("Parent")
-      .addColumn({ name: "ID", type: Number, nullable: false })
+      .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
       .createIndex({name: "pk_parent", columns: ["id"], unique: true})
-      .createPrimaryKey({
-        name: "PK_PARENT",
-        columns: ["ID"],
-      })
       .addRow([1]);
 
     const child = new Table("Child")
-      .addColumn({ name: "ParentID", type: Number })
+      .createColumn(createColumnTestSpec({ name: "ParentID", type: Number }))
+      .createIndex({
+        name: "FKRI_CHILD",
+        columns: ["ParentID"],
+        unique: false,
+      })
       .addRow([1]);
 
     const db = new Database("DB1")
@@ -423,6 +476,7 @@ describe("Database Referential Actions", () => {
         {
           name: "FK_CHILD_PARENT",
           columns: ["ParentID"],
+          reverseIndex: "FKRI_CHILD",
           parentTable: "Parent",
           parentColumns: ["ID"],
           onDelete: ReferentialAction.cascade,
@@ -449,17 +503,6 @@ describe("Database Referential Actions", () => {
     ).toBe(false);
   });
 
-//});
-
-// import { describe, it, expect } from "vitest";
-
-// import { Database } from "../../src/schema/Database.js";
-// import { Table } from "../../src/schema/Table.js";
-
-// import { ReferentialAction } from "../../src/schema/ReferentialAction.js";
-
-// describe("Database::referentialActions", () => {
-
   it("handles overlapping propagation paths deterministically", () => {
     /*
       A -> B
@@ -475,58 +518,78 @@ describe("Database Referential Actions", () => {
     const db = new Database("DB1")
       .addTable(
         new Table("A")
-          .addColumn({ name: "ID", type: Number, nullable: false })
+          .createColumn(createColumnTestSpec({
+            name: "ID",
+            type: Number,
+            nullable: false
+          }))
           .createIndex({
             name: "pk_a",
             columns: ["id"],
             unique: true,
           })
-          .createPrimaryKey({
-            name: "PK_A",
-            columns: ["ID"],
-          })
           .addRow([1])
       )
       .addTable(
         new Table("B")
-          .addColumn({ name: "ID", type: Number, nullable: false })
-          .addColumn({ name: "A_ID", type: Number })
+          .createColumn(createColumnTestSpec({
+            name: "ID",
+            type: Number,
+            nullable: false
+          }))
+          .createColumn(createColumnTestSpec({ name: "A_ID", type: Number }))
           .createIndex({
             name: "pk_b",
             columns: ["id"],
             unique: true,
           })
-          .createPrimaryKey({
-            name: "PK_B",
-            columns: ["ID"],
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["a_id"],
+            unique: false,
           })
           .addRow([10, 1])
       )
       .addTable(
         new Table("C")
-          .addColumn({ name: "ID", type: Number, nullable: false })
-          .addColumn({ name: "A_ID", type: Number })
+          .createColumn(createColumnTestSpec({
+            name: "ID",
+            type: Number,
+            nullable: false }))
+          .createColumn(createColumnTestSpec({ name: "A_ID", type: Number }))
           .createIndex({
             name: "pk_c",
             columns: ["id"],
             unique: true,
           })
-          .createPrimaryKey({
-            name: "PK_C",
-            columns: ["ID"],
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["a_id"],
+            unique: false,
           })
           .addRow([20, 1])
       )
       .addTable(
         new Table("D")
-          .addColumn({ name: "B_ID", type: Number })
-          .addColumn({ name: "C_ID", type: Number })
+          .createColumn(createColumnTestSpec({ name: "B_ID", type: Number }))
+          .createColumn(createColumnTestSpec({ name: "C_ID", type: Number }))
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["b_id"],
+            unique: false,
+          })
+          .createIndex({
+            name: "FKRI_CHILD2",
+            columns: ["c_id"],
+            unique: false,
+          })
           .addRow([10, 20])
       )
 
       .createForeignKey("B", {
         name: "FK_B_A",
         columns: ["A_ID"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "A",
         parentColumns: ["ID"],
         onDelete: ReferentialAction.cascade,
@@ -536,6 +599,7 @@ describe("Database Referential Actions", () => {
       .createForeignKey("C", {
         name: "FK_C_A",
         columns: ["A_ID"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "A",
         parentColumns: ["ID"],
         onDelete: ReferentialAction.cascade,
@@ -545,6 +609,7 @@ describe("Database Referential Actions", () => {
       .createForeignKey("D", {
         name: "FK_D_B",
         columns: ["B_ID"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "B",
         parentColumns: ["ID"],
         onDelete: ReferentialAction.cascade,
@@ -554,6 +619,7 @@ describe("Database Referential Actions", () => {
       .createForeignKey("D", {
         name: "FK_D_C",
         columns: ["C_ID"],
+        reverseIndex: "FKRI_CHILD2",
         parentTable: "C",
         parentColumns: ["ID"],
         onDelete: ReferentialAction.cascade,
@@ -583,42 +649,45 @@ describe("Database Referential Actions", () => {
     const db = new Database("DB1")
       .addTable(
         new Table("A")
-          .addColumn({ name: "ID", type: Number, nullable: false })
+          .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
           .createIndex({
             name: "pk_a",
             columns: ["id"],
             unique: true,
           })
-          .createPrimaryKey({
-            name: "PK_A",
-            columns: ["ID"],
-          })
           .addRow([1])
       )
       .addTable(
         new Table("B")
-          .addColumn({ name: "ID", type: Number, nullable: false })
-          .addColumn({ name: "A_ID", type: Number })
+          .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
+          .createColumn(createColumnTestSpec({ name: "A_ID", type: Number }))
           .createIndex({
             name: "pk_b",
             columns: ["id"],
             unique: true,
           })
-          .createPrimaryKey({
-            name: "PK_B",
-            columns: ["ID"],
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["a_id"],
+            unique: false,
           })
           .addRow([2, 1])
       )
       .addTable(
         new Table("C")
-          .addColumn({ name: "B_ID", type: Number })
+          .createColumn(createColumnTestSpec({ name: "B_ID", type: Number }))
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["b_id"],
+            unique: false,
+          })
           .addRow([2])
       )
 
       .createForeignKey("B", {
         name: "FK_B_A",
         columns: ["A_ID"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "A",
         parentColumns: ["ID"],
         onDelete: ReferentialAction.cascade,
@@ -628,6 +697,7 @@ describe("Database Referential Actions", () => {
       .createForeignKey("C", {
         name: "FK_C_B",
         columns: ["B_ID"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "B",
         parentColumns: ["ID"],
         onDelete: ReferentialAction.cascade,
@@ -654,36 +724,39 @@ describe("Database Referential Actions", () => {
     const db = new Database("DB1")
       .addTable(
         new Table("A")
-          .addColumn({ name: "ID", type: Number, nullable: false })
-          .addColumn({ name: "B_ID", type: Number })
+          .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
+          .createColumn(createColumnTestSpec({ name: "B_ID", type: Number }))
           .createIndex({
             name: "pk_a",
             columns: ["id"],
             unique: true,
           })
-          .createPrimaryKey({
-            name: "PK_A",
-            columns: ["ID"],
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["b_id"],
+            unique: false,
           })
       )
       .addTable(
         new Table("B")
-          .addColumn({ name: "ID", type: Number, nullable: false })
-          .addColumn({ name: "A_ID", type: Number })
+          .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
+          .createColumn(createColumnTestSpec({ name: "A_ID", type: Number }))
           .createIndex({
             name: "pk_b",
             columns: ["id"],
             unique: true,
           })
-          .createPrimaryKey({
-            name: "PK_B",
-            columns: ["ID"],
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["a_id"],
+            unique: false,
           })
       )
 
       .createForeignKey("A", {
         name: "FK_A_B",
         columns: ["B_ID"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "B",
         parentColumns: ["ID"],
         onDelete: ReferentialAction.cascade,
@@ -693,6 +766,7 @@ describe("Database Referential Actions", () => {
       .createForeignKey("B", {
         name: "FK_B_A",
         columns: ["A_ID"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "A",
         parentColumns: ["ID"],
         onDelete: ReferentialAction.cascade,
@@ -718,27 +792,29 @@ describe("Database Referential Actions", () => {
     const db = new Database("DB1")
       .addTable(
         new Table("Parent")
-          .addColumn({ name: "ID", type: Number, nullable: false })
+          .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
           .createIndex({
             name: "pk_parent",
             columns: ["id"],
             unique: true,
           })
-          .createPrimaryKey({
-            name: "PK_PARENT",
-            columns: ["ID"],
-          })
           .addRow([1])
       )
       .addTable(
         new Table("Child")
-          .addColumn({ name: "PARENT_ID", type: Number })
+          .createColumn(createColumnTestSpec({ name: "PARENT_ID", type: Number }))
+          .createIndex({
+            name: "FKRI_CHILD",
+            columns: ["Parent_ID"],
+            unique: false,
+          })
           .addRow([1])
       )
 
       .createForeignKey("Child", {
         name: "FK_CHILD_PARENT",
         columns: ["PARENT_ID"],
+        reverseIndex: "FKRI_CHILD",
         parentTable: "Parent",
         parentColumns: ["ID"],
         onDelete: ReferentialAction.cascade,
@@ -750,7 +826,7 @@ describe("Database Referential Actions", () => {
     const child = updated.requireTable("Child");
 
     const reverseIndex =
-      child.requireIndex("fk_child_parent");
+      child.requireIndex("FKRI_CHILD");
 
     expect(
       reverseIndex.getRowNumsFromProjection([1])

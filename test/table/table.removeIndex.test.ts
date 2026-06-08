@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
+import { addForeignKeyByName, createForeignKeyTestSpec_Table, createIndexTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::removeIndex', () => {
   it('removes an index from the table', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number })
+      .createColumn({ name: "C1", type: Number })
       .createIndex({
         name: "I1",
         columns: ["C1"],
@@ -20,7 +21,7 @@ describe('Table::removeIndex', () => {
 
   it('does not mutate original table (immutability)', () => {
     const table = new Table("T1")
-      .addColumn({ name: "C1", type: Number })
+      .createColumn({ name: "C1", type: Number })
       .createIndex({
         name: "I1",
         columns: ["C1"],
@@ -48,30 +49,30 @@ describe('Table::removeIndex', () => {
 
   it('rejects removing an index owned by a foreign key', () => {
     const table = new Table("Child")
-      .addColumn({
-        name: "ParentId",
+      .createColumn({
+        name: "c1",
         type: Number,
       })
-      .createForeignKey({
-        name: "FK_Parent",
-        columns: ["ParentId"],
-        parentTable: "Parent",
-        parentColumns: ["Id"],
-        parentColumnIndexes: [0],
-        parentIndex: "pk_roles",
-      });
+      .createIndex(createIndexTestSpec({
+        name: "i1",
+      }));
 
-    const fk =
-      table.requireForeignKey("FK_Parent");
+    const tableWithFk = addForeignKeyByName(table,
+      {
+        name: "FK_Parent",
+        columns: ["c1"],
+        reverseIndex: "i1",
+      }
+    );
 
     expect(() =>
-      table.removeIndex(fk.reverseIndex)
+      tableWithFk.removeIndex("i1")
     ).toThrow();
   });
 
   it('allows removing non-owned indexes', () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn({
         name: "Email",
         type: String,
       })
@@ -89,22 +90,25 @@ describe('Table::removeIndex', () => {
   });
 
   // Enable later if PK indexes gain ownership semantics
-  it.skip('rejects removing an index owned by a primary key', () => {
+  it('rejects removing an index owned by a primary key', () => {
     const table = new Table("Users")
-      .addColumn({
+      .createColumn({
         name: "Id",
         type: Number,
+        nullable: false,
       })
+      .createIndex(createIndexTestSpec({
+        name: "i1",
+        columns: ["Id"],
+        unique: true,
+      }))
       .createPrimaryKey({
         name: "PK_Users",
-        columns: ["Id"],
+        index: "i1",
       });
 
-    const pk =
-      table.requirePrimaryKey();
-
     expect(() =>
-      table.removeIndex(pk.index)
+      table.removeIndex("i1")
     ).toThrow();
   });
 });

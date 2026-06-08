@@ -7,20 +7,17 @@ export class AddCheckAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private spec: CheckSpec,
+    private spec: Omit<CheckSpec, "kind">,
   ) {}
 
   apply(databases: Databases): Databases {
-    const check = Check.fromSpec(this.spec);
-
     const db = databases.require(this.dbName);
 
-    //const { kind, ...spec } = this.spec;
+    const updatedTable = db
+      .requireTable(this.tableName)
+      .createCheck(this.spec);
 
-    const updatedTable = db.requireTable(this.tableName)
-      .addCheck(check);
-
-      const updatedDb = db.updateTable(updatedTable);
+    const updatedDb = db.updateTable(updatedTable);
 
     return databases.update(updatedDb);
   }
