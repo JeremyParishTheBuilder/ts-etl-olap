@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from "../../src/schema/Table.js";
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::addRow', () => {
   it('inserts a row into a table with defined columns', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
 
@@ -16,7 +15,7 @@ describe('Table::addRow', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const updated = table.addRow([1]);
@@ -26,7 +25,7 @@ describe('Table::addRow', () => {
   });
 
   it('throws when row length does not match schema (too few values)', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
 
@@ -36,7 +35,7 @@ describe('Table::addRow', () => {
   });
 
   it('throws when row length does not match schema (too many values)', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
 
@@ -46,7 +45,7 @@ describe('Table::addRow', () => {
   });
 
   it('throws when inserting NULL into non-nullable column', () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -59,7 +58,7 @@ describe('Table::addRow', () => {
   });
 
   it('throws when inserting duplicate unique values', () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Email",
         type: String,
@@ -77,7 +76,7 @@ describe('Table::addRow', () => {
   });
 
   it('allows distinct unique values', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Email",
         type: String,
@@ -96,7 +95,7 @@ describe('Table::addRow', () => {
   });
 
   it('throws when inserting duplicate primary key values', () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -119,7 +118,7 @@ describe('Table::addRow', () => {
   });
 
   it('throws when inserting duplicate composite unique values', () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "FirstName",
         type: String,
@@ -141,7 +140,7 @@ describe('Table::addRow', () => {
   });
 
   it('allows multiple NULL values when nullsDistinct is true', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Email",
         type: String,
@@ -161,7 +160,7 @@ describe('Table::addRow', () => {
   });
 
   it('rejects multiple NULL values when nullsDistinct is false', () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Email",
         type: String,
@@ -180,7 +179,7 @@ describe('Table::addRow', () => {
   });
 
   it('allows NULL mixed with distinct non-null values', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Email",
         type: String,
@@ -200,7 +199,7 @@ describe('Table::addRow', () => {
   });
 
   it('allows composite rows differing only by NULL when nullsDistinct is true', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({ name: "a", type: String }))
       .createColumn(createColumnTestSpec({ name: "b", type: String }))
       .createIndex({
@@ -220,7 +219,7 @@ describe('Table::addRow', () => {
   });
 
   it('enforces index synchronization across multiple indexes', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({ name: "id", type: Number }))
       .createColumn(createColumnTestSpec({ name: "email", type: String }))
       .createIndex({
@@ -244,7 +243,7 @@ describe('Table::addRow', () => {
   });
 
   it('maintains correct rowNum assignment under repeated inserts', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({ name: "id", type: Number }));
 
     table = table.addRow([1]);
@@ -257,7 +256,7 @@ describe('Table::addRow', () => {
   });
 
   it('does not reuse deleted row numbers', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -279,7 +278,7 @@ describe('Table::addRow', () => {
   });
 
   it('preserves existing rows during insertion', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -304,7 +303,7 @@ describe('Table::addRow', () => {
   });
 
   it('preserves existing index entries during insertion', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
@@ -332,7 +331,7 @@ describe('Table::addRow', () => {
   });
 
   it('increments numRows after insertion', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,

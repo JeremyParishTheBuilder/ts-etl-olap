@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
 import { buildTable } from '../utils/buildSchema.js';
 
 describe('Table::requireForeignKey', () => {
-  function buildTableWithForeignKey(): Table {
+  function buildTableWithForeignKey() {
     return buildTable({
       columns: ["c1"],
       foreignKeys: [{

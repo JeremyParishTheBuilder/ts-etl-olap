@@ -7,7 +7,7 @@ import {
   type ColumnId,
 } from "./Column.js";
 import { PrimaryKey } from "./PrimaryKey.js";
-import { ForeignKey, getReverseIndexFromName, type ForeignKeyId } from "./ForeignKey.js";
+import { ForeignKey, type ForeignKeyId } from "./ForeignKey.js";
 import { Check, type CheckId } from "./Check.js";
 import {
   Index,
@@ -26,37 +26,78 @@ import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { IdAllocator, IdService } from "../types/IdAllocator.js";
 import { Predicate } from "../query/predicate/Predicate.js";
 
+export type TableId = number & { readonly __brand: "TableId" };
 
 export class Table extends Immutable {
-  public columns: PersistentMap<ColumnId, Column> = new PersistentMap();
-  public columnNames: PersistentMap<string, ColumnId> = new PersistentMap();
-  public columnPositions: PersistentMap<number, ColumnId> = new PersistentMap();
+  public id: TableId;
+  public name: string;
+
+  public columns: PersistentMap<ColumnId, Column> //= new PersistentMap();
+  public columnNames: PersistentMap<string, ColumnId> //= new PersistentMap();
+  public columnPositions: PersistentMap<number, ColumnId> //= new PersistentMap();
 
   public primaryKey: PrimaryKey | undefined;
 
-  public indexes: PersistentMap<IndexId, Index> = new PersistentMap();
-  public indexNames: PersistentMap<string, IndexId> = new PersistentMap();
+  public indexes: PersistentMap<IndexId, Index> //= new PersistentMap();
+  public indexNames: PersistentMap<string, IndexId> //= new PersistentMap();
 
-  public foreignKeys: PersistentMap<ForeignKeyId, ForeignKey> = new PersistentMap();
-  public foreignKeyNames: PersistentMap<string, ForeignKeyId> = new PersistentMap();
+  public foreignKeys: PersistentMap<ForeignKeyId, ForeignKey> //= new PersistentMap();
+  public foreignKeyNames: PersistentMap<string, ForeignKeyId> //= new PersistentMap();
 
-  public checks: PersistentMap<CheckId, Check> = new PersistentMap();
-  public checkNames: PersistentMap<string, CheckId> = new PersistentMap();
+  public checks: PersistentMap<CheckId, Check> //= new PersistentMap();
+  public checkNames: PersistentMap<string, CheckId> //= new PersistentMap();
 
-  public rowAlive: boolean[] = [];
-  public numRows: number = 0;
+  public rowAlive: boolean[] //= [];
+  public numRows: number //= 0;
 
-  public readonly columnIds = new IdAllocator<ColumnId>();
-  public readonly indexIds = new IdAllocator<IndexId>();
-  public readonly foreignKeyIds = new IdAllocator<ForeignKeyId>();
-  public readonly checkIds = new IdAllocator<CheckId>();
+  public readonly columnIds //= new IdAllocator<ColumnId>();
+  public readonly indexIds //= new IdAllocator<IndexId>();
+  public readonly foreignKeyIds //= new IdAllocator<ForeignKeyId>();
+  public readonly checkIds //= new IdAllocator<CheckId>();
   
   public validate(): void {}
 
-  constructor(public name: string) {
+  constructor(spec: {
+    id: TableId,
+    name: string,
+  }/*public name: string*/) {
     super();
+
+    this.id = spec.id;
+    this.name = spec.name;
+
+    this.columns = new PersistentMap();
+    this.columnNames = new PersistentMap();
+    this.columnPositions = new PersistentMap();
+
+    this.primaryKey = undefined;
+
+    this.indexes = new PersistentMap();
+    this.indexNames = new PersistentMap();
+
+    this.foreignKeys = new PersistentMap();
+    this.foreignKeyNames = new PersistentMap();
+
+    this.checks = new PersistentMap();
+    this.checkNames = new PersistentMap();
+
+    this.rowAlive = [];
+    this.numRows = 0;
+
+    this.columnIds = new IdAllocator<ColumnId>();
+    this.indexIds = new IdAllocator<IndexId>();
+    this.foreignKeyIds = new IdAllocator<ForeignKeyId>();
+    this.checkIds = new IdAllocator<CheckId>();
+
     this.validate();
     this.seal();
+  }
+
+  public static create(spec: {
+    id: TableId,
+    name: string,
+  }): Table {
+    return new Table(spec);
   }
 
   public rename(newName: string): Table {
@@ -469,7 +510,8 @@ export class Table extends Immutable {
       name: string,
       columns: ColumnId[],
       reverseIndex: IndexId,
-      parentTable: string, // TableId
+      //parentTable: string, // TableId
+      parentTable: TableId,
       parentColumns: ColumnId[],
       //parentColumnIndexes: number[],
       parentIndex: IndexId,
@@ -794,12 +836,20 @@ export class Table extends Immutable {
     }
   }
 
-  public assertTableNameUnreferenced(name: string): void {
+  // public assertTableNameUnreferenced(name: string): void {
+  //   this.foreignKeys.forEach(fk => {
+  //     if (fk.parentTable === normalizeIdentifier(name)) {
+  //       throw new Error(`Foreign Key ${fk.name} references table ${name}`);
+  //     }}
+  //   );
+  // }
+
+  public assertTableUnreferenced(id: TableId): void {
     this.foreignKeys.forEach(fk => {
-      if (fk.parentTable === normalizeIdentifier(name)) {
-        throw new Error(`Foreign Key ${fk.name} references table ${name}`);
-      }}
-    );
+      if (fk.parentTable === id) {
+        throw new Error(`Foreign Key ${fk.name} references table: ${id}`);
+      }
+    });
   }
 
   public getIndex(name: string): Index | undefined {
@@ -1309,22 +1359,22 @@ export class Table extends Immutable {
   //   } as Partial<this>);
   // }
 
-  public tryRenameForeignKeyParentTable(
-    oldParentTableName: string,
-    newParentTableName: string,
-  ): this {
-    if (
-      normalizeIdentifier(oldParentTableName)
-      === normalizeIdentifier(newParentTableName)
-    ) {
-      return this;
-    }
+  // public tryRenameForeignKeyParentTable(
+  //   oldParentTableName: string,
+  //   newParentTableName: string,
+  // ): this {
+  //   if (
+  //     normalizeIdentifier(oldParentTableName)
+  //     === normalizeIdentifier(newParentTableName)
+  //   ) {
+  //     return this;
+  //   }
 
-    return this.with({
-      foreignKeys: this.foreignKeys.mapValues(fk =>
-        fk.tryRenameParentTable(oldParentTableName, newParentTableName)),
-    } as Partial<this>);
-  }
+  //   return this.with({
+  //     foreignKeys: this.foreignKeys.mapValues(fk =>
+  //       fk.tryRenameParentTable(oldParentTableName, newParentTableName)),
+  //   } as Partial<this>);
+  // }
 }
 
 //used for: findUniqueIndexByColumns() 

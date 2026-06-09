@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
 import { addForeignKeyByName, buildTable } from '../utils/buildSchema.js';
 
 describe('Table::renameForeignKey', () => {
@@ -91,7 +90,7 @@ describe('Table::renameForeignKey', () => {
   });
 
   it('throws when foreign key does not exist', () => {
-    const table = new Table("Posts");
+    const table = buildTable();
 
     expect(() => {
       table.renameForeignKey(

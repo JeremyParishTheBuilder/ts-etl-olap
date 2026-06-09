@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
-import { Check } from '../../src/schema/Check.js';
+import { buildTable } from '../utils/buildSchema.js';
 
 describe('Table::removeCheck', () => {
-  function buildTable(): Table {
-    return new Table("Users")
+  function buildTableWithCheck(): Table {
+    return buildTable()
       .createColumn({
         name: "Age",
         type: Number,
@@ -17,7 +17,7 @@ describe('Table::removeCheck', () => {
   }
 
   it('removes the check constraint', () => {
-    const table = buildTable();
+    const table = buildTableWithCheck();
 
     const updated = table.removeCheck(
       "CHK_PositiveAge"
@@ -31,7 +31,7 @@ describe('Table::removeCheck', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = buildTable();
+    const table = buildTableWithCheck();
 
     const updated = table.removeCheck(
       "CHK_PositiveAge"
@@ -51,7 +51,7 @@ describe('Table::removeCheck', () => {
   });
 
   it('supports case-insensitive lookup', () => {
-    const table = buildTable();
+    const table = buildTableWithCheck();
 
     const updated = table.removeCheck(
       "chk_positiveage"
@@ -65,7 +65,7 @@ describe('Table::removeCheck', () => {
   });
 
   it('throws when check constraint does not exist', () => {
-    const table = new Table("Users");
+    const table = buildTableWithCheck();
 
     expect(() => {
       table.removeCheck("MissingCheck");

@@ -1,28 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { Databases } from '../../src/schema/Databases.js';
 import { Database } from '../../src/schema/Database.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
-describe('Databases::update', () => {
-  it('updates an existing database', () => {
-    const databases = new Databases()
-      .add(
-        new Database("DB1")
-          .createTable("T1")
-      );
+describe('Database::updateTable', () => {
+  it('replaces an existing table with using same name', () => {
+    const table = buildTable({name: "T1"})
+      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
-    const updated = databases.update(
-      new Database("DB1")
-        .createTable("T2")
-    );
+    const updatedTable = table
+      .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
 
-    expect(() => {
-      updated.require("DB1")
-        .requireTable("T1");
-    }).toThrow();
+    const database = new Database("DB1")
+      .addTable(table);
+
+    const updatedDb = database.updateTable(updatedTable);
 
     expect(
-      updated.require("DB1")
-        .requireTable("T2")
+      updatedDb.requireTable("T1").requireColumn("C2")
     ).toBeDefined();
   });
 });

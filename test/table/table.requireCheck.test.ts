@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
 import { buildTable, createCheckTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::requireCheck', () => {
@@ -38,7 +37,7 @@ describe('Table::requireCheck', () => {
   });
 
   it('throws when check constraint does not exist', () => {
-    const table = new Table("Users");
+    const table = buildTable();
 
     expect(() => {
       table.requireCheck("MissingCheck");

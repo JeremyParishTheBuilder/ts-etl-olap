@@ -1,23 +1,20 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 import { Database } from "../../src/schema/Database.js";
-import { Table } from "../../src/schema/Table.js";
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
-import { buildTable, createColumnTestSpec, createForeignKeyTestSpec_Database, createIndexTestSpec, createTestIdService } from '../utils/buildSchema.js';
-import { IdService } from '../../src/types/IdAllocator.js';
+import { 
+  buildTable,
+  createColumnTestSpec,
+  createForeignKeyTestSpec_Database,
+  createIndexTestSpec
+} from '../utils/buildSchema.js';
 
 describe('Database::removeIndex', () => {
-
-  let ids: IdService;
-
-  beforeEach(() => {
-    ids = createTestIdService();
-  });
 
   it('removes an index from a table', () => {
     const db = new Database("DB1")
       .addTable(
-        buildTable()
+        buildTable({columns: ["c1"]})
           .createIndex(createIndexTestSpec({
             name: "i1",
             columns: ["c1"],
@@ -38,7 +35,7 @@ describe('Database::removeIndex', () => {
   it('does not mutate original database state', () => {
     const db = new Database("DB1")
       .addTable(
-        buildTable()
+        buildTable({columns: ["c1"]})
           .createIndex(createIndexTestSpec({name: "i1", columns: ["c1"]}))
       );
 
@@ -70,7 +67,7 @@ describe('Database::removeIndex', () => {
 
   it('preserves unrelated tables during index removal', () => {
 
-    const users = new Table("Users")
+    const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
@@ -80,7 +77,7 @@ describe('Database::removeIndex', () => {
         columns: ["email"],
       }));
 
-    const roles = new Table("Roles")
+    const roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -104,7 +101,7 @@ describe('Database::removeIndex', () => {
   });
 
   it('throws when removing a non-existent index', () => {
-    const table = new Table("Users")
+    const table = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
@@ -122,7 +119,7 @@ describe('Database::removeIndex', () => {
   });
 
   it('rejects removing an index referenced by a foreign key', () => {
-    const parent = new Table("Roles")
+    const parent = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -133,7 +130,7 @@ describe('Database::removeIndex', () => {
         unique: true,
       }));
 
-    const child = new Table("Users")
+    const child = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
@@ -166,7 +163,7 @@ describe('Database::removeIndex', () => {
   });
 
   it('allows removing an index not referenced by a foreign key', () => {
-    const parent = new Table("Roles")
+    const parent = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -181,7 +178,7 @@ describe('Database::removeIndex', () => {
         columns: ["id"],
       }));
 
-    const child = new Table("Users")
+    const child = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
@@ -224,7 +221,7 @@ describe('Database::removeIndex', () => {
   });
 
   it('rejects removing indexes required by self-referencing foreign keys', () => {
-    const employees = new Table("Employees")
+    const employees = buildTable({name: "Employees"})
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -265,7 +262,7 @@ describe('Database::removeIndex', () => {
   });
 
   it('preserves existing rows after index removal', () => {
-    let table = new Table("Users")
+    let table = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
@@ -293,7 +290,7 @@ describe('Database::removeIndex', () => {
   });
 
   it('preserves remaining indexes after index removal', () => {
-    const table = new Table("Users")
+    const table = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "email",
         type: String,

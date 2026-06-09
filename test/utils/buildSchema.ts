@@ -1,34 +1,36 @@
-import { Table } from "../../src/schema/Table";
-import { Database } from "../../src/schema/Database";
-import { type ColumnSpec, type ColumnId } from "../../src/schema/Column";
-import { type ForeignKey, type ForeignKeyId } from "../../src/schema/ForeignKey";
-import { IndexSpec, type IndexId } from "../../src/schema/Index";
+import { Table, type TableId } from "../../src/schema/Table.js";
+import { Database } from "../../src/schema/Database.js";
+import { type ColumnSpec, type ColumnId } from "../../src/schema/Column.js";
+import { type ForeignKeyId } from "../../src/schema/ForeignKey.js";
+import { type IndexSpec, type IndexId } from "../../src/schema/Index.js";
 import { type IdService } from "../../src/types/IdAllocator.js";
-import { CheckSpec, ForeignKeySpec } from "../../src/schema/Constraint.js";
+import { type CheckSpec, ForeignKeySpec } from "../../src/schema/Constraint.js";
+
+let nextId = 1;
 
 export function createTestIdService(): IdService {
-  let nextId = 1;
 
   return {
+    nextTableId: () => nextId++ as TableId,
     nextColumnId: () => nextId++ as ColumnId,
     nextIndexId: () => nextId++ as IndexId,
     nextForeignKeyId: () => nextId++ as ForeignKeyId,
   };
 }
 
-export function makeResolvedForeignKey(overrides = {}): ForeignKey {
-  const ids = createTestIdService();
+// export function makeResolvedForeignKey(overrides = {}): ForeignKey {
+//   const ids = createTestIdService();
 
-  return {
-    id: ids.nextForeignKeyId(),
-    name: "FK_Test",
-    columns: [ids.nextColumnId()],
-    parentTable: "Parent",
-    parentColumns: [ids.nextColumnId()],
-    reverseIndex: ids.nextIndexId(),
-    ...overrides,
-  } as ForeignKey;
-}
+//   return {
+//     id: ids.nextForeignKeyId(),
+//     name: "FK_Test",
+//     columns: [ids.nextColumnId()],
+//     parentTable: "Parent",
+//     parentColumns: [ids.nextColumnId()],
+//     reverseIndex: ids.nextIndexId(),
+//     ...overrides,
+//   } as ForeignKey;
+// }
 
 export function createColumnTestSpec(
   overrides: Partial<ColumnSpec> = {},
@@ -68,7 +70,7 @@ export function createForeignKeyTestSpec_Table(
     name: string,
     columns: ColumnId[],
     reverseIndex: IndexId,
-    parentTable: string,
+    parentTable: TableId,
     parentColumns: ColumnId[],
     parentIndex: IndexId,
   }> = {},
@@ -76,7 +78,7 @@ export function createForeignKeyTestSpec_Table(
   name: string,
   columns: ColumnId[],
   reverseIndex: IndexId,
-  parentTable: string,
+  parentTable: TableId,
   parentColumns: ColumnId[],
   parentIndex: IndexId,
 } {
@@ -85,7 +87,7 @@ export function createForeignKeyTestSpec_Table(
     name: "fk1",
     columns: [ids.nextColumnId()],
     reverseIndex: ids.nextIndexId(),
-    parentTable: "t1",
+    parentTable: ids.nextTableId(),
     parentColumns: [ids.nextColumnId()],
     parentIndex: ids.nextIndexId(),
     ...overrides,
@@ -155,12 +157,16 @@ export function buildTable(
 ): Table {
   const {
     name = "t1",
-    columns = ["c1"],
+    columns = [],
     //index = [],
     foreignKeys = [],
   } = options;
 
-  let table = new Table(name);
+  const ids = createTestIdService();
+
+  const tableId = ids.nextTableId();
+
+  let table = Table.create({id: tableId, name});
 
   const columnNames =
     typeof columns === "number"
@@ -198,48 +204,48 @@ export function buildTable(
   return table;
 }
 
-type TableHandle = {
-  table: Table;
-  cols: Record<string, ColumnId>;
-};
+// type TableHandle = {
+//   table: Table;
+//   cols: Record<string, ColumnId>;
+// };
 
-type ColumnHandles = Record<string, ColumnId>;
+// type ColumnHandles = Record<string, ColumnId>;
 
-export function getColumnHandles(table: Table): ColumnHandles {
-  const result: ColumnHandles = {};
+// export function getColumnHandles(table: Table): ColumnHandles {
+//   const result: ColumnHandles = {};
 
-  for (const col of table.columns.values()) {
-    result[col.name] = col.id;
-  }
+//   for (const col of table.columns.values()) {
+//     result[col.name] = col.id;
+//   }
 
-  return result;
-}
+//   return result;
+// }
 
-export function buildTableWithHandles(
-  spec: {
-    name?: string;
-    columns: string[];
-  },
-  ids: IdService = createTestIdService(),
-): TableHandle {
-  const table = new Table(spec.name ?? "T1");
+// export function buildTableWithHandles(
+//   spec: {
+//     name?: string;
+//     columns: string[];
+//   },
+//   ids: IdService = createTestIdService(),
+// ): TableHandle {
+//   const table = new Table(spec.name ?? "T1");
 
-  const cols: Record<string, ColumnId> = {};
+//   const cols: Record<string, ColumnId> = {};
 
-  for (const name of spec.columns) {
-    const id = ids.nextColumnId();
+//   for (const name of spec.columns) {
+//     const id = ids.nextColumnId();
 
-    table.createColumn({
-      name,
-      type: Number,
-      nullable: true,
-    });
+//     table.createColumn({
+//       name,
+//       type: Number,
+//       nullable: true,
+//     });
 
-    cols[name] = id;
-  }
+//     cols[name] = id;
+//   }
 
-  return { table, cols };
-}
+//   return { table, cols };
+// }
 
 interface BuildDatabaseOptions {
   ids?: IdService;

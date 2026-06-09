@@ -15,15 +15,9 @@ import { Transaction } from "./Transaction.js";
 import { type Statement } from "../statements/index.js";
 import { Databases } from "../schema/Databases.js";
 import { SemanticAnalyzer } from "../semantic/SemanticAnalyzer.js";
-import { IdAllocator, IdService } from "../types/IdAllocator.js";
-import { type ColumnId } from "../schema/Column.js";
-import { type ForeignKeyId } from "../schema/ForeignKey.js";
-import { type IndexId } from "../schema/Index.js";
-//import { EngineIdService } from "./EngineIdService.js";
 
 export class Engine {
 
-  //TODO, put back to private
   public databases: Databases = new Databases();
   private currentDb?: string;
 
@@ -34,17 +28,6 @@ export class Engine {
   readonly rules: RulesFacadeShape;
   private readonly ruleResolver: RuleResolver;
 
-  // private allocators = {
-  //   column: new IdAllocator<ColumnId>(),
-  //   foreignKey: new IdAllocator<ForeignKeyId>(),
-  //   index: new IdAllocator<IndexId>(),
-  // };
-
-  //public idService: EngineIdService = new EngineIdService(this.allocators);
-  
-  //private allocators: new Map<string, IdAllocator>;
-
-  //  <construction>
   constructor(dialect: Dialect, policy?: Partial<EnginePolicy>) {
     this.dialect = dialect;
     this.dialectRules = DIALECT_RULES[dialect];

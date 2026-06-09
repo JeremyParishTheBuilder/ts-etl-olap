@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { addForeignKeyByName, createColumnTestSpec, createForeignKeyTestSpec_Table } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::renameColumn', () => {
   it('renames an existing column', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const updated = table.renameColumn("C1", "C1_new");
@@ -14,7 +13,7 @@ describe('Table::renameColumn', () => {
   });
 
   it('preserves column position after rename', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
 
@@ -25,7 +24,7 @@ describe('Table::renameColumn', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const updated = table.renameColumn("C1", "C1_new");
@@ -37,7 +36,7 @@ describe('Table::renameColumn', () => {
   });
 
   it('throws when renaming non-existent column', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     expect(() => {
       table.renameColumn("C1", "C2");
@@ -45,7 +44,7 @@ describe('Table::renameColumn', () => {
   });
 
   it('throws when new name already exists', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
 
@@ -55,7 +54,7 @@ describe('Table::renameColumn', () => {
   });
 
   it('preserves row data after rename', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const withRow = table.addRow([123]);

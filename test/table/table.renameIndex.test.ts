@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::renameIndex', () => {
   it('renames an index', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createIndex({
         name: "I1",
@@ -24,7 +23,7 @@ describe('Table::renameIndex', () => {
   });
 
   it('preserves index properties during rename', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createIndex({
         name: "I1",
@@ -43,7 +42,7 @@ describe('Table::renameIndex', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createIndex({
         name: "I1",
@@ -67,7 +66,7 @@ describe('Table::renameIndex', () => {
   });
 
   it('throws when renaming non-existent index', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     expect(() => {
       table.renameIndex("I1", "I2");
@@ -75,7 +74,7 @@ describe('Table::renameIndex', () => {
   });
 
   it('throws when target index name already exists', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createIndex({
         name: "I1",
@@ -94,7 +93,7 @@ describe('Table::renameIndex', () => {
   });
 
   it('renames regardless of casing', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createIndex({
         name: "UserLookup",

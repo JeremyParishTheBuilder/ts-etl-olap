@@ -1,16 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { buildCompositeKeyDatabase, buildDatabase, buildParentChildDatabase, buildTable } from '../utils/buildSchema.js';
+import { buildCompositeKeyDatabase, buildParentChildDatabase, buildTable } from '../utils/buildSchema.js';
+import { Database } from '../../src/schema/Database.js';
 
 describe('Database::removeColumn', () => {
 
   it('removes a column from the correct table', () => {
-    // const table = new Table("T1")
-    //   .addColumn({ name: "C1", type: Number });
 
-    // const db = new Database("DB1")
-    //   .addTable(table);
+    const table = buildTable({name: "t1", columns: ["c1"]});
 
-    const db = buildDatabase();
+    const db = new Database("DB1").addTable(table);
 
     const updatedDb = db.removeColumn("T1", "C1");
 
@@ -20,17 +18,13 @@ describe('Database::removeColumn', () => {
   });
 
   it('does not affect other tables', () => {
-    // const table1 = new Table("T1")
-    //   .addColumn({ name: "C1", type: Number });
 
-    // const table2 = new Table("T2")
-    //   .addColumn({ name: "C1", type: Number });
+    const table1 = buildTable({name: "t1", columns: ["c1"]});
+    const table2 = buildTable({name: "t2", columns: ["c1"]});
 
-    // const db = new Database("DB1")
-    //   .addTable(table1)
-    //   .addTable(table2);
-
-    const db = buildDatabase({tables: 2});
+    const db = new Database("DB1")
+      .addTable(table1)
+      .addTable(table2);
 
     const updatedDb = db.removeColumn("T1", "C1");
 
@@ -87,7 +81,9 @@ describe('Database::removeColumn', () => {
 
   it('allows removal when no foreign key references exist', () => {
 
-    const db = buildDatabase();
+    const table = buildTable({name: "t1", columns: ["c1"]});
+
+    const db = new Database("DB1").addTable(table);
 
     const updatedDb = db.removeColumn("t1", "c1");
 
@@ -97,13 +93,10 @@ describe('Database::removeColumn', () => {
   });
 
   it('does not mutate original database (immutability)', () => {
-    // const table = new Table("T1")
-    //   .addColumn({ name: "C1", type: Number });
 
-    // const db = new Database("DB1")
-    //   .addTable(table);
+    const table = buildTable({name: "t1", columns: ["c1"]});
 
-    const db = buildDatabase();
+    const db = new Database("DB1").addTable(table);
 
     const updatedDb = db.removeColumn("t1", "c1");
 

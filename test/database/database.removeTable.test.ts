@@ -1,12 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from '../../src/schema/Database.js';
-import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
 import { createColumnTestSpec, createForeignKeyTestSpec_Database } from '../utils/buildSchema.js';
 
 describe('Database::removeTable', () => {
   it('removes a table from the database', () => {
     const database = new Database("DB1")
-      .createTable("T1");
+      .createTable({name: "T1"});
 
     const updated = database.removeTable("T1");
 
@@ -17,7 +16,7 @@ describe('Database::removeTable', () => {
 
   it('does not mutate original database (immutability)', () => {
     const database = new Database("DB1")
-      .createTable("T1");
+      .createTable({name: "T1"});
 
     const updated = database.removeTable("T1");
 
@@ -30,8 +29,8 @@ describe('Database::removeTable', () => {
 
   it('throws when table is referenced by a foreign key', () => {
     const database = new Database("DB1")
-      .createTable("Users")
-      .createTable("Posts");
+      .createTable({name: "Users"})
+      .createTable({name: "Posts"});
       
     const users = database.requireTable("Users")
       .createColumn(createColumnTestSpec({

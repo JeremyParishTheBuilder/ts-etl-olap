@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
+import { buildTable } from '../utils/buildSchema';
 
 describe('Table::requirePrimaryKey', () => {
   it('returns the primary key', () => {
-    let table = new Table("T1")
+    let table = buildTable()
       .createColumn({
         name: "Id",
         type: Number,
@@ -25,7 +25,7 @@ describe('Table::requirePrimaryKey', () => {
   });
 
   it('throws when no primary key exists', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     expect(() => {
       table.requirePrimaryKey();

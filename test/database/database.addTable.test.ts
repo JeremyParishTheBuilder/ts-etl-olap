@@ -1,14 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from '../../src/schema/Database.js';
-import { Table } from '../../src/schema/Table.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable } from '../utils/buildSchema.js';
 
 describe('Database::addTable', () => {
   it('adds a table to the database', () => {
     const database = new Database("DB1");
 
     const updated = database.addTable(
-      new Table("T1")
+      buildTable({name: "T1"})
     );
 
     expect(updated.requireTable("T1")).toBeDefined();
@@ -18,37 +17,16 @@ describe('Database::addTable', () => {
     const database = new Database("DB1");
 
     const updated = database.addTable(
-      new Table("T1")
+      buildTable({name: "T1"})
     );
 
     expect(() => database.requireTable("T1")).toThrow();
     expect(updated.requireTable("T1")).toBeDefined();
   });
 
-  it('replaces table when updating existing table', () => {
-    const database = new Database("DB1")
-      .addTable(
-        new Table("T1")
-          .createColumn(createColumnTestSpec({ name: "C1", type: Number })
-      ));
-
-    const updated = database.updateTable(
-      new Table("T1")
-        .createColumn(createColumnTestSpec({ name: "C2", type: Number })
-    ));
-
-    expect(() => {
-      updated.requireTable("T1").requireColumn("C1");
-    }).toThrow();
-
-    expect(
-      updated.requireTable("T1").requireColumn("C2")
-    ).toBeDefined();
-  });
-
   it('preserves original table casing', () => {
     const database = new Database("DB1")
-      .createTable("Users");
+      .createTable({name: "Users"});
 
     expect(
       database.requireTable("users").name

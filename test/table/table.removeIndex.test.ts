@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { addForeignKeyByName, createForeignKeyTestSpec_Table, createIndexTestSpec } from '../utils/buildSchema.js';
+import { addForeignKeyByName, buildTable, createIndexTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::removeIndex', () => {
   it('removes an index from the table', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn({ name: "C1", type: Number })
       .createIndex({
         name: "I1",
@@ -20,7 +19,7 @@ describe('Table::removeIndex', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn({ name: "C1", type: Number })
       .createIndex({
         name: "I1",
@@ -40,7 +39,7 @@ describe('Table::removeIndex', () => {
   });
 
   it('throws when removing non-existent index', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     expect(() => {
       table.removeIndex("I1");
@@ -48,7 +47,7 @@ describe('Table::removeIndex', () => {
   });
 
   it('rejects removing an index owned by a foreign key', () => {
-    const table = new Table("Child")
+    const table = buildTable()
       .createColumn({
         name: "c1",
         type: Number,
@@ -71,7 +70,7 @@ describe('Table::removeIndex', () => {
   });
 
   it('allows removing non-owned indexes', () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn({
         name: "Email",
         type: String,
@@ -91,7 +90,7 @@ describe('Table::removeIndex', () => {
 
   // Enable later if PK indexes gain ownership semantics
   it('rejects removing an index owned by a primary key', () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn({
         name: "Id",
         type: Number,

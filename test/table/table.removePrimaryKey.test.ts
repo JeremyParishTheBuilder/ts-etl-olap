@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::removePrimaryKey', () => {
-  function buildTable(): Table {
-    return new Table("T1")
+  function buildTableWithPrimaryKey() {
+    return buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -22,7 +21,7 @@ describe('Table::removePrimaryKey', () => {
   }
 
   it('removes the primary key', () => {
-    const table = buildTable();
+    const table = buildTableWithPrimaryKey();
 
     const updated = table.removePrimaryKey();
 
@@ -30,7 +29,7 @@ describe('Table::removePrimaryKey', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = buildTable();
+    const table = buildTableWithPrimaryKey();
 
     const updated = table.removePrimaryKey();
 
@@ -44,7 +43,7 @@ describe('Table::removePrimaryKey', () => {
   });
 
   it('throws when no primary key exists', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     expect(() => {
       table.removePrimaryKey();
@@ -52,28 +51,14 @@ describe('Table::removePrimaryKey', () => {
   });
 
   it('preserves independent backing index', () => {
-    const table = new Table("T1")
-      .createColumn(createColumnTestSpec({
-        name: "Id",
-        type: Number,
-        nullable: false,
-      }))
-      .createIndex({
-        name: "PK_Index",
-        columns: ["Id"],
-        unique: true,
-      })
-      .createPrimaryKey({
-        name: "PK_T1",
-        index: "PK_Index",
-      });
+    const table = buildTableWithPrimaryKey()
 
     const updated = table.removePrimaryKey();
 
     expect(updated.primaryKey).toBeUndefined();
 
     expect(
-      updated.requireIndex("PK_Index")
+      updated.requireIndex("PK_T1")
     ).toBeDefined();
   });
 });

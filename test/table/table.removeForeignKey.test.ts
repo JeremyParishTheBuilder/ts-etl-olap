@@ -1,25 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
 import { buildTable, createForeignKeyTestSpec_Table, createTestIdService } from '../utils/buildSchema.js';
 
 describe('Table::removeForeignKey', () => {
-  const ids = createTestIdService();
-
-  function buildTableWithForeignKey(): Table {
-    const table = new Table("Posts")
+  function buildTableWithForeignKey() {
+    const table = buildTable()
       .createColumn({
         name: "UserId",
         type: Number,
         nullable: false,
       })
-      .createForeignKey({
+      .createForeignKey(createForeignKeyTestSpec_Table({
         name: "FK_Posts_Users",
-        columns: [ids.nextColumnId()],
-        reverseIndex: ids.nextIndexId(),
-        parentTable: "Users",
-        parentColumns: [ids.nextColumnId()],
-        parentIndex: ids.nextIndexId(),
-      });
+        //columns: [ids.nextColumnId()],
+        //reverseIndex: ids.nextIndexId(),
+      }));
     return table;
   }
 
@@ -72,7 +66,7 @@ describe('Table::removeForeignKey', () => {
   });
 
   it('throws when foreign key does not exist', () => {
-    const table = new Table("Posts");
+    const table = buildTable();
 
     expect(() => {
       table.removeForeignKey("MissingFK");

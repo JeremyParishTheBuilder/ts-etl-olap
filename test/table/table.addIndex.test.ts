@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { createColumnTestSpec, createIndexTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec, createIndexTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::addIndex', () => {
   it('adds an index to the table', () => {
-    const table = new Table("T1")
+    const table = buildTable() // TODO, replace new with build in this case
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const updated = table.createIndex(createIndexTestSpec({
@@ -19,7 +18,7 @@ describe('Table::addIndex', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const updated = table.createIndex(createIndexTestSpec({
@@ -38,7 +37,7 @@ describe('Table::addIndex', () => {
   });
 
   it('throws when index name already exists', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createIndex(createIndexTestSpec({
         name: "I1",
@@ -56,7 +55,7 @@ describe('Table::addIndex', () => {
   });
 
   it('throws when index references missing columns', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     expect(() => {
       table.createIndex(createIndexTestSpec({
@@ -68,7 +67,7 @@ describe('Table::addIndex', () => {
   });
 
   it('preserves original index name casing', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const updated = table.createIndex(createIndexTestSpec({
@@ -83,7 +82,7 @@ describe('Table::addIndex', () => {
   });
 
   it('throws when adding duplicate unique column set', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createIndex(createIndexTestSpec({
         name: "I1",
@@ -101,7 +100,7 @@ describe('Table::addIndex', () => {
   });
 
   it('throws when existing rows violate uniqueness', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const tableWithRows = table

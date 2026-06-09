@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from "../../src/schema/Table.js";
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::updateRow', () => {
 
   it('updates an existing row', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -24,7 +23,7 @@ describe('Table::updateRow', () => {
   });
 
   it('does not mutate original table state', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -49,7 +48,7 @@ describe('Table::updateRow', () => {
   });
 
   it('rejects invalid row indexes', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -63,7 +62,7 @@ describe('Table::updateRow', () => {
   });
 
   it('throws when updated row length is too small', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -84,7 +83,7 @@ describe('Table::updateRow', () => {
   });
 
   it('throws when updated row length is too large', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -101,7 +100,7 @@ describe('Table::updateRow', () => {
   });
 
   it('throws when updating a non-nullable column to NULL', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -119,7 +118,7 @@ describe('Table::updateRow', () => {
   });
 
   it('updates unique index entries when indexed values change', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
@@ -150,7 +149,7 @@ describe('Table::updateRow', () => {
   });
 
   it('preserves unique index entries when indexed values are unchanged', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
@@ -177,7 +176,7 @@ describe('Table::updateRow', () => {
   });
 
   it('rejects updates that violate unique constraints', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "email",
         type: String,
@@ -200,7 +199,7 @@ describe('Table::updateRow', () => {
   });
 
   it('preserves unrelated rows during update', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -220,7 +219,7 @@ describe('Table::updateRow', () => {
   });
 
   it('preserves row identity during updates', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -242,7 +241,7 @@ describe('Table::updateRow', () => {
   });
 
   it('does not change numRows during updates', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -259,7 +258,7 @@ describe('Table::updateRow', () => {
   });
 
   it('updates unique indexes when an indexed value changes', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -314,7 +313,7 @@ describe('Table::updateRow', () => {
   });
 
   it('preserves unique index entries when indexed values are unchanged', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -380,7 +379,7 @@ describe('Table::updateRow', () => {
   });
 
   it('rejects updates that violate unique constraints', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -412,7 +411,7 @@ describe('Table::updateRow', () => {
   });
 
   it('updates non-indexed columns without changing indexed membership', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -457,7 +456,7 @@ describe('Table::updateRow', () => {
   });
 
   it('preserves unrelated rows and index entries during update', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -502,7 +501,7 @@ describe('Table::updateRow', () => {
   });
 
   it('rejects updates against deleted rows', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -518,7 +517,7 @@ describe('Table::updateRow', () => {
   });
 
   it('preserves immutable table state during updates', () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,

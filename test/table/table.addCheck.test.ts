@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { createCheckTestSpec, createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createCheckTestSpec, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::createCheck', () => {
 
   it('adds a check constraint', () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Age",
         type: Number,
@@ -24,7 +23,7 @@ describe('Table::createCheck', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn({
         name: "Age",
         type: Number,
@@ -47,7 +46,7 @@ describe('Table::createCheck', () => {
   });
 
   it('throws when referenced columns do not exist', () => {
-    const table = new Table("Users");
+    const table = buildTable();
 
     expect(() => {
       table.createCheck(
@@ -60,7 +59,7 @@ describe('Table::createCheck', () => {
   });
 
   it('throws when another constraint already uses the same name', () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn({
         name: "Age",
         type: Number,
@@ -83,7 +82,7 @@ describe('Table::createCheck', () => {
   });
 
   it('supports case-insensitive referenced columns', () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn({
         name: "Age",
         type: Number,

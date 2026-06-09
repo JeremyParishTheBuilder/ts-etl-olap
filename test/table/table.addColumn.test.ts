@@ -1,11 +1,10 @@
 import { describe, it, expect, } from 'vitest';
-import { Table } from "../../src/schema/Table.js";
 import { buildTable, createColumnTestSpec, } from '../utils/buildSchema.js';
 
 describe('Table::addColumn', () => {
 
   it('adds a column to an empty table', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     const updated = table.createColumn(createColumnTestSpec({
       name: "C1",
@@ -19,7 +18,7 @@ describe('Table::addColumn', () => {
   });
 
   it('assigns increasing column positions', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
 
@@ -28,7 +27,7 @@ describe('Table::addColumn', () => {
   });
 
   it('does not mutate the original table (immutability)', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     const updated = table.createColumn(createColumnTestSpec({
       name: "C1",
@@ -40,7 +39,7 @@ describe('Table::addColumn', () => {
   });
 
   it('throws when adding a duplicate column name', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     expect(() => {
@@ -49,7 +48,7 @@ describe('Table::addColumn', () => {
   });
 
   it('preserves existing columns when adding a new one', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const updated = table.createColumn(createColumnTestSpec({ name: "C2", type: Number }));
@@ -59,7 +58,7 @@ describe('Table::addColumn', () => {
   });
 
   it('throws when adding duplicate column names with different casing', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "UserId", type: Number }));
 
     expect(() => {
@@ -68,7 +67,7 @@ describe('Table::addColumn', () => {
   });
 
   it('throws when adding a non-nullable column without default to a populated table', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "C1",
         type: Number,
@@ -88,7 +87,7 @@ describe('Table::addColumn', () => {
   });
 
   it('allows adding a non-nullable column without default to an empty table', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     const updated = table.createColumn({
       name: "C1",
@@ -102,7 +101,7 @@ describe('Table::addColumn', () => {
   });
 
   it('allows adding a non-nullable column with default to a populated table', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn({
         name: "C1",
         type: Number,

@@ -4,7 +4,7 @@ import { Database } from '../../src/schema/Database.js';
 describe('Database::requireTable', () => {
   it('returns an existing table', () => {
     const database = new Database("DB1")
-      .createTable("T1");
+      .createTable({name: "T1"});
 
     const table = database.requireTable("T1");
 
@@ -22,7 +22,7 @@ describe('Database::requireTable', () => {
 
   it('retrieves a table regardless of casing', () => {
     const database = new Database("DB1")
-      .createTable("Users");
+      .createTable({name: "Users"});
 
     expect(
       database.requireTable("users")

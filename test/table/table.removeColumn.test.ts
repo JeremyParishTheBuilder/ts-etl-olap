@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { createForeignKeyTestSpec_Table, createTestIdService } from '../utils/buildSchema.js';
+import { buildTable } from '../utils/buildSchema.js';
 
 describe('Table::removeColumn', () => {
   it('removes a column from the table', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn({ name: "C1", type: Number })
       .createColumn({ name: "C2", type: Number });
 
@@ -15,7 +14,7 @@ describe('Table::removeColumn', () => {
   });
 
   it('reindexes remaining columns', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn({ name: "C1", type: Number })
       .createColumn({ name: "C2", type: Number })
       .createColumn({ name: "C3", type: Number });
@@ -27,7 +26,7 @@ describe('Table::removeColumn', () => {
   });
 
   it('preserves row values for remaining columns', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn({ name: "C1", type: Number })
       .createColumn({ name: "C2", type: Number });
 
@@ -40,7 +39,7 @@ describe('Table::removeColumn', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn({ name: "C1", type: Number });
 
     const updatedTable = table.removeColumn("C1");
@@ -50,7 +49,7 @@ describe('Table::removeColumn', () => {
   });
 
   it('throws when removing non-existent column', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     expect(() => {
       table.removeColumn("C1");
@@ -58,7 +57,7 @@ describe('Table::removeColumn', () => {
   });
 
   it('throws if column is not droppable (constraint/index referenced)', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn({ name: "C1", type: Number })
       .createIndex({
         name: "I1",
@@ -72,7 +71,7 @@ describe('Table::removeColumn', () => {
   });
 
   it('updates projected index bindings after column removal', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn({ name: "C1", type: Number })
       .createColumn({ name: "C2", type: Number })
       .createColumn({ name: "C3", type: Number })
@@ -92,7 +91,7 @@ describe('Table::removeColumn', () => {
   });
 
   it('updates indexes` column position indexes', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn({ name: "C1", type: Number })
       .createColumn({ name: "C2", type: Number })
       .createColumn({ name: "C3", type: Number })
@@ -118,7 +117,7 @@ describe('Table::removeColumn', () => {
   });
 
   it('preserves unrelated indexes during column removal', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn({
         name: "C1",
         type: Number,

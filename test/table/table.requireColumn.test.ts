@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::requireColumn', () => {
   it('returns an existing column', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const column = table.requireColumn("C1");
@@ -14,7 +13,7 @@ describe('Table::requireColumn', () => {
   });
 
   it('throws when column does not exist', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     expect(() => {
       table.requireColumn("C1");
@@ -22,7 +21,7 @@ describe('Table::requireColumn', () => {
   });
 
   it('retrieves a column regardless of casing', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "UserId", type: Number }));
 
     expect(
@@ -39,7 +38,7 @@ describe('Table::requireColumn', () => {
   });
 
   it('preserves original column casing', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "UserId", type: Number }));
 
     expect(

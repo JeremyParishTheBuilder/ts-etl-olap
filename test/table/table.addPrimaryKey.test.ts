@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::addPrimaryKey', () => {
   it('adds a primary key to the table', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -27,7 +26,7 @@ describe('Table::addPrimaryKey', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -52,7 +51,7 @@ describe('Table::addPrimaryKey', () => {
   });
 
   it('throws when a primary key already exists', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -77,7 +76,7 @@ describe('Table::addPrimaryKey', () => {
   });
 
   it('throws when referenced index does not exist', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -93,7 +92,7 @@ describe('Table::addPrimaryKey', () => {
   });
 
   it('throws when primary key columns are nullable', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -114,7 +113,7 @@ describe('Table::addPrimaryKey', () => {
   });
 
   it('allows primary key name to match backing index name', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -135,7 +134,7 @@ describe('Table::addPrimaryKey', () => {
   });
 
   it('throws when another constraint with the same name exists', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -166,7 +165,7 @@ describe('Table::addPrimaryKey', () => {
   });
 
   it('throws when primary key index is not unique', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,

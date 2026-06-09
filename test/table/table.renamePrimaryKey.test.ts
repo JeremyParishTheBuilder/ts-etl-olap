@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::renamePrimaryKey', () => {
-  function buildTableWithPrimaryKey(): Table {
-    return new Table("T1")
+  function buildTableWithPrimaryKey() {
+    return buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -56,7 +55,7 @@ describe('Table::renamePrimaryKey', () => {
   });
 
   it('throws when primary key does not exist', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     expect(() => {
       table.renamePrimaryKey("PK_T1_RENAMED");

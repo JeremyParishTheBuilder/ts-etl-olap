@@ -1,14 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
 import { TableScanNode } from '../../src/query/plan/TableScanNode.js';
 import { ProjectNode } from '../../src/query/plan/ProjectNode.js';
 import { FilterNode } from '../../src/query/plan/FilterNode.js';
 import { ComparisonPredicate } from '../../src/query/predicate/ComparisonPredicate.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Query::projectNode', () => {
   it("projects selected columns", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -44,7 +43,7 @@ describe('Query::projectNode', () => {
   });
 
   it("preserves original row indexes", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Value",
         type: Number,
@@ -69,7 +68,7 @@ describe('Query::projectNode', () => {
   });
 
   it("preserves deterministic row ordering", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
@@ -101,7 +100,7 @@ describe('Query::projectNode', () => {
   });
 
   it("supports composition with filter nodes", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -143,7 +142,7 @@ describe('Query::projectNode', () => {
   });
 
   it("supports projecting no columns", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -169,7 +168,7 @@ describe('Query::projectNode', () => {
   });
 
   it("returns no rows when the source is empty", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -187,7 +186,7 @@ describe('Query::projectNode', () => {
   });
 
   it("does not mutate source rows", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -218,7 +217,7 @@ describe('Query::projectNode', () => {
   });
 
   it("evaluates deterministically", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Value",
         type: Number,

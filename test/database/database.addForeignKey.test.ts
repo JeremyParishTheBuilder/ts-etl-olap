@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from '../../src/schema/Database.js';
-import { Table } from '../../src/schema/Table.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Database::createForeignKey', () => {
   function buildDatabase() {
-    let users = new Table("Users")
+    let users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
         type: Number,
@@ -17,7 +16,7 @@ describe('Database::createForeignKey', () => {
         unique: true,
       });
 
-    const posts = new Table("Posts")
+    const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
         type: Number,
@@ -173,7 +172,7 @@ describe('Database::createForeignKey', () => {
   });
 
   it('throws when parent columns are not uniquely indexed', () => {
-    let users = new Table("Users")
+    let users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
         type: Number,
@@ -185,7 +184,7 @@ describe('Database::createForeignKey', () => {
         unique: false,
       });
 
-    const posts = new Table("Posts")
+    const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
         type: Number,
@@ -244,7 +243,7 @@ describe('Database::createForeignKey', () => {
   });
 
   it('throws when child and parent column types differ', () => {
-    const users = new Table("Users")
+    const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
         type: String,
@@ -256,7 +255,7 @@ describe('Database::createForeignKey', () => {
         unique: true,
       });
 
-    const posts = new Table("Posts")
+    const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
         type: Number,
@@ -330,7 +329,7 @@ describe('Database::createForeignKey', () => {
   });
 
   it("throws when existing child rows violate the foreign key", () => {
-    const users = new Table("Users")
+    const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
         type: Number,
@@ -343,7 +342,7 @@ describe('Database::createForeignKey', () => {
         unique: true,
       });
 
-    const posts = new Table("Posts")
+    const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
         type: Number,
@@ -375,7 +374,7 @@ describe('Database::createForeignKey', () => {
   });
 
   it("allows adding a foreign key when existing child rows are valid", () => {
-    const users = new Table("Users")
+    const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
         type: Number,
@@ -388,7 +387,7 @@ describe('Database::createForeignKey', () => {
         unique: true,
       });
 
-    const posts = new Table("Posts")
+    const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
         type: Number,
@@ -420,7 +419,7 @@ describe('Database::createForeignKey', () => {
   });
 
   it("ignores existing rows with null foreign key components", () => {
-    const users = new Table("Users")
+    const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
         type: Number,
@@ -432,7 +431,7 @@ describe('Database::createForeignKey', () => {
         unique: true,
       });
 
-    const posts = new Table("Posts")
+    const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
         type: Number,

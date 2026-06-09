@@ -61,7 +61,7 @@ console.log("Set table");
 //console.log(table);
 
 console.log("trying to create Table");
-let table0 = new Table("T1")
+let table0 = Table.create({id: 0 as TableId, name: "T1"})
       .createColumn({
         name: "Id",
         type: Number,
@@ -597,7 +597,7 @@ import { FilterNode } from '../query/plan/FilterNode.js';
 import { TableScanNode } from '../query/plan/TableScanNode.js';
 import { ProjectNode } from '../query/plan/ProjectNode.js';
 import { BinaryLogicalPredicate } from '../query/predicate/LogicalPredicate.js';
-import { Table } from '../schema/Table.js';
+import { Table, TableId } from '../schema/Table.js';
 import { Database } from '../schema/Database.js';
 import { ReferentialAction } from '../schema/ReferentialAction.js';
 import { type ColumnId } from '../schema/Column.js';

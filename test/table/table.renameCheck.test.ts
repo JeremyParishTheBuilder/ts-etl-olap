@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { createCheckTestSpec, createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createCheckTestSpec, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::renameCheck', () => {
-  function buildTable(): Table {
-    return new Table("Users")
+  function buildTableWithCheck() {
+    return buildTable()
       .createColumn(createColumnTestSpec({
         name: "Age",
         type: Number,
@@ -19,7 +18,7 @@ describe('Table::renameCheck', () => {
   }
 
   it('renames the check constraint', () => {
-    const table = buildTable();
+    const table = buildTableWithCheck();
 
     const updated = table.renameCheck(
       "CHK_PositiveAge",
@@ -34,7 +33,7 @@ describe('Table::renameCheck', () => {
   });
 
   it('removes old check name', () => {
-    const table = buildTable();
+    const table = buildTableWithCheck();
 
     const updated = table.renameCheck(
       "CHK_PositiveAge",
@@ -49,7 +48,7 @@ describe('Table::renameCheck', () => {
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = buildTable();
+    const table = buildTableWithCheck();
 
     const updated = table.renameCheck(
       "CHK_PositiveAge",
@@ -70,7 +69,7 @@ describe('Table::renameCheck', () => {
   });
 
   it('supports case-insensitive lookup', () => {
-    const table = buildTable();
+    const table = buildTableWithCheck();
 
     const updated = table.renameCheck(
       "chk_positiveage",
@@ -85,7 +84,7 @@ describe('Table::renameCheck', () => {
   });
 
   it('throws when check constraint does not exist', () => {
-    const table = new Table("Users");
+    const table = buildTableWithCheck();
 
     expect(() => {
       table.renameCheck(
@@ -96,7 +95,7 @@ describe('Table::renameCheck', () => {
   });
 
   it('throws when another constraint already uses the new name', () => {
-    const table = buildTable()
+    const table = buildTableWithCheck()
       .createCheck(
         createCheckTestSpec({
           name: "CHK_AdultAge",
@@ -114,7 +113,7 @@ describe('Table::renameCheck', () => {
   });
 
   it('returns same table when renaming to same name', () => {
-    const table = buildTable();
+    const table = buildTableWithCheck();
 
     const updated = table.renameCheck(
       "CHK_PositiveAge",

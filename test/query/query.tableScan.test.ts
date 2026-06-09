@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
 import { TableScanNode } from '../../src/query/plan/TableScanNode.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Query::tableScanNode', () => {
   it("returns alive rows from the table", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -31,7 +30,7 @@ describe('Query::tableScanNode', () => {
   });
 
   it("preserves deterministic row ordering", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -55,7 +54,7 @@ describe('Query::tableScanNode', () => {
   });
 
   it("skips non-alive rows", () => {
-    let table = new Table("Users")
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -84,7 +83,7 @@ describe('Query::tableScanNode', () => {
   });
 
   it("returns RowViews with correct indexes and values", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -110,7 +109,7 @@ describe('Query::tableScanNode', () => {
   });
 
   it("does not mutate the table", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -133,7 +132,7 @@ describe('Query::tableScanNode', () => {
   });
 
   it("evaluates deterministically", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -151,7 +150,7 @@ describe('Query::tableScanNode', () => {
   });
 
   it("returns no rows for an empty table", () => {
-    const table = new Table("Users")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,

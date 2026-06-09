@@ -1,14 +1,13 @@
 import { describe, it, expect } from 'vitest';
 
 import { Database } from "../../src/schema/Database.js";
-import { Table } from "../../src/schema/Table.js";
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
-import { createColumnTestSpec, createForeignKeyTestSpec_Database } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec, createForeignKeyTestSpec_Database } from '../utils/buildSchema.js';
 
 describe('Database::updateRow', () => {
 
   it('allows updating a child row to another valid parent reference', () => {
-    let roles = new Table("Roles")
+    let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -22,7 +21,7 @@ describe('Database::updateRow', () => {
     roles = roles.addRow([1]);
     roles = roles.addRow([2]);
 
-    let users = new Table("Users")
+    let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
@@ -64,7 +63,7 @@ describe('Database::updateRow', () => {
   });
 
   it('rejects updating a child row to an invalid foreign key reference', () => {
-    let roles = new Table("Roles")
+    let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -77,7 +76,7 @@ describe('Database::updateRow', () => {
 
     roles = roles.addRow([1]);
 
-    let users = new Table("Users")
+    let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
@@ -115,7 +114,7 @@ describe('Database::updateRow', () => {
   });
 
   it('rejects updating a parent row that would orphan child rows', () => {
-    let roles = new Table("Roles")
+    let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -128,7 +127,7 @@ describe('Database::updateRow', () => {
 
     roles = roles.addRow([1]);
 
-    let users = new Table("Users")
+    let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
@@ -166,7 +165,7 @@ describe('Database::updateRow', () => {
   });
 
   it('allows updating a parent row when no child rows reference it', () => {
-    let roles = new Table("Roles")
+    let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -179,7 +178,7 @@ describe('Database::updateRow', () => {
 
     roles = roles.addRow([1]);
 
-    let users = new Table("Users")
+    let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
@@ -219,7 +218,7 @@ describe('Database::updateRow', () => {
   });
 
   it('allows self-referencing foreign key updates that remain valid', () => {
-    let employees = new Table("Employees")
+    let employees = buildTable({name: "Employees"})
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -270,7 +269,7 @@ describe('Database::updateRow', () => {
   });
 
   it('rejects self-referencing foreign key updates that become invalid', () => {
-    let employees = new Table("Employees")
+    let employees = buildTable({name: "Employees"})
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,

@@ -1,13 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { Database } from "../../src/schema/Database.js";
-import { Table } from "../../src/schema/Table.js";
-import { testColumnId } from '../utils/testIds.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Composite Foreign Keys', () => {
 
   it('rejects foreign keys whose parent columns lack an exact ordered unique index', () => {
-    const parent = new Table("Parent")
+    const parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
@@ -26,7 +24,7 @@ describe('Composite Foreign Keys', () => {
       new Database("DB1")
         .addTable(parent)
         .addTable(
-          new Table("Child")
+          buildTable({name: "Child"})
             .createColumn(createColumnTestSpec({
               name: "FA",
               type: Number,
@@ -55,7 +53,7 @@ describe('Composite Foreign Keys', () => {
   });
 
   it('allows inserting rows with valid composite foreign keys', () => {
-    let parent = new Table("Parent")
+    let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
@@ -75,7 +73,7 @@ describe('Composite Foreign Keys', () => {
     let db = new Database("DB1")
       .addTable(parent)
       .addTable(
-        new Table("Child")
+        buildTable({name: "Child"})
           .createColumn(createColumnTestSpec({
             name: "FA",
             type: Number,
@@ -115,7 +113,7 @@ describe('Composite Foreign Keys', () => {
   });
 
   it('rejects inserting rows with invalid composite foreign keys', () => {
-    let parent = new Table("Parent")
+    let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
@@ -135,7 +133,7 @@ describe('Composite Foreign Keys', () => {
     let db = new Database("DB1")
       .addTable(parent)
       .addTable(
-        new Table("Child")
+        buildTable({name: "Child"})
           .createColumn(createColumnTestSpec({
             name: "FA",
             type: Number,
@@ -171,7 +169,7 @@ describe('Composite Foreign Keys', () => {
   });
 
   it('rejects partial composite matches', () => {
-    let parent = new Table("Parent")
+    let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
@@ -192,7 +190,7 @@ describe('Composite Foreign Keys', () => {
     let db = new Database("DB1")
       .addTable(parent)
       .addTable(
-        new Table("Child")
+        buildTable({name: "Child"})
           .createColumn(createColumnTestSpec({
             name: "FA",
             type: Number,
@@ -228,7 +226,7 @@ describe('Composite Foreign Keys', () => {
   });
 
   it('allows updating to another valid composite foreign key', () => {
-    let parent = new Table("Parent")
+    let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
@@ -246,7 +244,7 @@ describe('Composite Foreign Keys', () => {
     parent = parent.addRow([1, 2]);
     parent = parent.addRow([3, 4]);
 
-    let child = new Table("Child")
+    let child = buildTable({name: "Child"})
       .createColumn(createColumnTestSpec({
         name: "FA",
         type: Number,
@@ -294,7 +292,7 @@ describe('Composite Foreign Keys', () => {
   });
 
   it('rejects updating to invalid composite foreign key', () => {
-    let parent = new Table("Parent")
+    let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
@@ -311,7 +309,7 @@ describe('Composite Foreign Keys', () => {
 
     parent = parent.addRow([1, 2]);
 
-    let child = new Table("Child")
+    let child = buildTable({name: "Child"})
       .createColumn(createColumnTestSpec({
         name: "FA",
         type: Number,
@@ -355,7 +353,7 @@ describe('Composite Foreign Keys', () => {
   });
 
   it('rejects parent updates that orphan composite child rows', () => {
-    let parent = new Table("Parent")
+    let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
@@ -372,7 +370,7 @@ describe('Composite Foreign Keys', () => {
 
     parent = parent.addRow([1, 2]);
 
-    let child = new Table("Child")
+    let child = buildTable({name: "Child"})
       .createColumn(createColumnTestSpec({
         name: "FA",
         type: Number,
@@ -416,7 +414,7 @@ describe('Composite Foreign Keys', () => {
   });
 
   it('bypasses validation when any composite foreign key component is NULL', () => {
-    let parent = new Table("Parent")
+    let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
@@ -436,7 +434,7 @@ describe('Composite Foreign Keys', () => {
     let db = new Database("DB1")
       .addTable(parent)
       .addTable(
-        new Table("Child")
+        buildTable({name: "Child"})
           .createColumn(createColumnTestSpec({
             name: "FA",
             type: Number,
@@ -472,7 +470,7 @@ describe('Composite Foreign Keys', () => {
   });
 
   it('requires exact ordered parent index match for composite foreign keys', () => {
-    const parent = new Table("Parent")
+    const parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
         type: Number,
@@ -491,7 +489,7 @@ describe('Composite Foreign Keys', () => {
       new Database("DB1")
         .addTable(parent)
         .addTable(
-          new Table("Child")
+          buildTable({name: "Child"})
             .createColumn(createColumnTestSpec({
               name: "FA",
               type: Number,

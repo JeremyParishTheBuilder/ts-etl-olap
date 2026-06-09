@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::requireIndex', () => {
   it('returns an existing index', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createIndex({
         name: "I1",
@@ -19,7 +18,7 @@ describe('Table::requireIndex', () => {
   });
 
   it('throws when index does not exist', () => {
-    const table = new Table("T1");
+    const table = buildTable();
 
     expect(() => {
       table.requireIndex("I1");
@@ -27,7 +26,7 @@ describe('Table::requireIndex', () => {
   });
 
   it('retrieves an index regardless of casing', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createIndex({
         name: "UserLookup",
@@ -49,7 +48,7 @@ describe('Table::requireIndex', () => {
   });
 
   it('preserves original index casing', () => {
-    const table = new Table("T1")
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createIndex({
         name: "UserLookup",
