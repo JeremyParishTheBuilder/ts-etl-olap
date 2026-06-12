@@ -57,7 +57,7 @@ describe('Database::updateRow', () => {
 
     expect(
       updated
-        .requireTable("Users")
+        .tables.requireByName("Users")
         .requireRow(0)
     ).toEqual([2]);
   });
@@ -212,7 +212,7 @@ describe('Database::updateRow', () => {
 
     expect(
       updated
-        .requireTable("Roles")
+        .tables.requireByName("Roles")
         .requireRow(0)
     ).toEqual([2]);
   });
@@ -263,7 +263,7 @@ describe('Database::updateRow', () => {
 
     expect(
       updated
-        .requireTable("Employees")
+        .tables.requireByName("Employees")
         .requireRow(1)
     ).toEqual([2, 2]);
   });

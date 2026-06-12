@@ -32,11 +32,10 @@ export class ExecutionContext {
   }
 
   public getTable(name: string, dbName?: string): Table | undefined {
-    //return this.getDatabase(dbName)?.tables.get(name); // TODO, write getTable
-    return this.getDatabase(dbName)?.getTable(name);
+    return this.getDatabase(dbName)?.tables.getByName(name);
   }
 
   public requireTable(name: string, dbName?: string): Table {
-    return this.requireDatabase(dbName).requireTable(name);
+    return this.requireDatabase(dbName).tables.requireByName(name);
   }
 }

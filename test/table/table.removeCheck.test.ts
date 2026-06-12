@@ -24,7 +24,7 @@ describe('Table::removeCheck', () => {
     );
 
     expect(() => {
-      updated.requireCheck(
+      updated.checks.requireByName(
         "CHK_PositiveAge"
       );
     }).toThrow();
@@ -38,13 +38,13 @@ describe('Table::removeCheck', () => {
     );
 
     expect(
-      table.requireCheck(
+      table.checks.requireByName(
         "CHK_PositiveAge"
       )
     ).toBeDefined();
 
     expect(() => {
-      updated.requireCheck(
+      updated.checks.requireByName(
         "CHK_PositiveAge"
       );
     }).toThrow();
@@ -58,7 +58,7 @@ describe('Table::removeCheck', () => {
     );
 
     expect(() => {
-      updated.requireCheck(
+      updated.checks.requireByName(
         "CHK_PositiveAge"
       );
     }).toThrow();

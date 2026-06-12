@@ -18,7 +18,7 @@ describe('Table::createCheck', () => {
       }));
 
     expect(
-      updated.requireCheck("CHK_PositiveAge")
+      updated.checks.requireByName("CHK_PositiveAge")
     ).toBeDefined();
   });
 
@@ -37,11 +37,11 @@ describe('Table::createCheck', () => {
     );
 
     expect(() => {
-      table.requireCheck("CHK_PositiveAge");
+      table.checks.requireByName("CHK_PositiveAge");
     }).toThrow();
 
     expect(
-      updated.requireCheck("CHK_PositiveAge")
+      updated.checks.requireByName("CHK_PositiveAge")
     ).toBeDefined();
   });
 
@@ -96,7 +96,7 @@ describe('Table::createCheck', () => {
     );
 
     expect(
-      updated.requireCheck("CHK_PositiveAge")
+      updated.checks.requireByName("CHK_PositiveAge")
     ).toBeDefined();
   });
 });

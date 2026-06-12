@@ -8,8 +8,8 @@ describe('Table::renameColumn', () => {
 
     const updated = table.renameColumn("C1", "C1_new");
 
-    expect(updated.requireColumn("C1_new")).toBeDefined();
-    expect(() => updated.requireColumn("C1")).toThrow();
+    expect(updated.columns.requireByName("C1_new")).toBeDefined();
+    expect(() => updated.columns.requireByName("C1")).toThrow();
   });
 
   it('preserves column position after rename', () => {
@@ -19,8 +19,8 @@ describe('Table::renameColumn', () => {
 
     const updated = table.renameColumn("C1", "C1_new");
 
-    expect(updated.requireColumn("C1_new").position).toBe(0);
-    expect(updated.requireColumn("C2").position).toBe(1);
+    expect(updated.columns.requireByName("C1_new").position).toBe(0);
+    expect(updated.columns.requireByName("C2").position).toBe(1);
   });
 
   it('does not mutate original table (immutability)', () => {
@@ -29,10 +29,10 @@ describe('Table::renameColumn', () => {
 
     const updated = table.renameColumn("C1", "C1_new");
 
-    expect(table.requireColumn("C1")).toBeDefined();
-    expect(() => table.requireColumn("C1_new")).toThrow();
+    expect(table.columns.requireByName("C1")).toBeDefined();
+    expect(() => table.columns.requireByName("C1_new")).toThrow();
 
-    expect(updated.requireColumn("C1_new")).toBeDefined();
+    expect(updated.columns.requireByName("C1_new")).toBeDefined();
   });
 
   it('throws when renaming non-existent column', () => {

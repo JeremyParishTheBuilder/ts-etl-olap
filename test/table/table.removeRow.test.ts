@@ -34,7 +34,7 @@ describe('Table::removeRow', () => {
     const updated = table.removeRow(0);
 
     const index =
-      updated.requireIndex("UQ_Email");
+      updated.indexes.requireByName("UQ_Email");
 
     expect(
       index.hasProjectedValues(["a@test.com"])
@@ -60,7 +60,7 @@ describe('Table::removeRow', () => {
     const updated = table.removeRow(1);
 
     const index =
-      updated.requireIndex("UQ_Email");
+      updated.indexes.requireByName("UQ_Email");
 
     expect(
       index.hasProjectedValues(["a@test.com"])

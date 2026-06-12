@@ -137,7 +137,7 @@ describe('Table::updateRow', () => {
     );
 
     const index =
-      updated.requireIndex("UQ_Email");
+      updated.indexes.requireByName("UQ_Email");
 
     expect(
       index.hasProjectedValues(["a@test.com"])
@@ -168,7 +168,7 @@ describe('Table::updateRow', () => {
     );
 
     const index =
-      updated.requireIndex("UQ_Email");
+      updated.indexes.requireByName("UQ_Email");
 
     expect(
       index.hasProjectedValues(["a@test.com"])
@@ -287,10 +287,10 @@ describe('Table::updateRow', () => {
     );
 
     const originalIndex =
-      table.requireIndex("UQ_Users_Email");
+      table.indexes.requireByName("UQ_Users_Email");
 
     const updatedIndex =
-      updated.requireIndex("UQ_Users_Email");
+      updated.indexes.requireByName("UQ_Users_Email");
 
     expect(
       originalIndex.hasProjectedValues(["b@test.com"])
@@ -353,10 +353,10 @@ describe('Table::updateRow', () => {
     );
 
     const originalIndex =
-      table.requireIndex("UQ_Users_Email");
+      table.indexes.requireByName("UQ_Users_Email");
 
     const updatedIndex =
-      updated.requireIndex("UQ_Users_Email");
+      updated.indexes.requireByName("UQ_Users_Email");
 
     expect(
       originalIndex.hasProjectedValues(["a@test.com"])
@@ -446,7 +446,7 @@ describe('Table::updateRow', () => {
     );
 
     const index =
-      updated.requireIndex("UQ_Users_Email");
+      updated.indexes.requireByName("UQ_Users_Email");
 
     expect(
       index.hasProjectedValues(["a@test.com"])
@@ -481,7 +481,7 @@ describe('Table::updateRow', () => {
     );
 
     const index =
-      updated.requireIndex("UQ_Users_Email");
+      updated.indexes.requireByName("UQ_Users_Email");
 
     expect(
       index.hasProjectedValues(["a@test.com"])

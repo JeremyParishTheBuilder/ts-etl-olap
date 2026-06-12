@@ -84,6 +84,10 @@ export class PersistentMap<K, V> {
     return this.map.values();
   }
 
+  public entries(): IterableIterator<[K, V]> {
+    return this.map.entries();
+  }
+
   public forEach(fn: (value: V, key: K) => void): void {
     for (const [k, v] of this.map) {
       fn(v, k);

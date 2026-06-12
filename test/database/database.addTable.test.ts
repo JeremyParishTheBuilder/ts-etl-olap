@@ -10,7 +10,7 @@ describe('Database::addTable', () => {
       buildTable({name: "T1"})
     );
 
-    expect(updated.requireTable("T1")).toBeDefined();
+    expect(updated.tables.requireByName("T1")).toBeDefined();
   });
 
   it('does not mutate original database (immutability)', () => {
@@ -20,8 +20,8 @@ describe('Database::addTable', () => {
       buildTable({name: "T1"})
     );
 
-    expect(() => database.requireTable("T1")).toThrow();
-    expect(updated.requireTable("T1")).toBeDefined();
+    expect(() => database.tables.requireByName("T1")).toThrow();
+    expect(updated.tables.requireByName("T1")).toBeDefined();
   });
 
   it('preserves original table casing', () => {
@@ -29,7 +29,7 @@ describe('Database::addTable', () => {
       .createTable({name: "Users"});
 
     expect(
-      database.requireTable("users").name
+      database.tables.requireByName("users").name
     ).toBe("Users");
   });
 });

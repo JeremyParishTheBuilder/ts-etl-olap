@@ -12,7 +12,7 @@ export class AlterColumnAction implements Action {
 
   apply(databases: Databases): Databases {
     const db = databases.require(this.dbName);
-    const table = db.requireTable(this.tableName);
+    const table = db.tables.requireByName(this.tableName);
     //const columnId = table.requireColumnIdByName(this.columnName);
 
     //TODO: altering a column needs to check FKs, so should go to Database, not Table.

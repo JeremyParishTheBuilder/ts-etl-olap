@@ -17,12 +17,12 @@ describe('Databases::update', () => {
 
     expect(() => {
       updated.require("DB1")
-        .requireTable("T1");
+        .tables.requireByName("T1");
     }).toThrow();
 
     expect(
       updated.require("DB1")
-        .requireTable("T2")
+        .tables.requireByName("T2")
     ).toBeDefined();
   });
 });

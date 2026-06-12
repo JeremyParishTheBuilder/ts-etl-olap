@@ -6,7 +6,7 @@ describe('Database::requireTable', () => {
     const database = new Database("DB1")
       .createTable({name: "T1"});
 
-    const table = database.requireTable("T1");
+    const table = database.tables.requireByName("T1");
 
     expect(table).toBeDefined();
     expect(table.name).toBe("T1");
@@ -16,7 +16,7 @@ describe('Database::requireTable', () => {
     const database = new Database("DB1");
 
     expect(() => {
-      database.requireTable("T1");
+      database.tables.requireByName("T1");
     }).toThrow();
   });
 
@@ -25,15 +25,15 @@ describe('Database::requireTable', () => {
       .createTable({name: "Users"});
 
     expect(
-      database.requireTable("users")
+      database.tables.requireByName("users")
     ).toBeDefined();
 
     expect(
-      database.requireTable("USERS")
+      database.tables.requireByName("USERS")
     ).toBeDefined();
 
     expect(
-      database.requireTable("UsErS")
+      database.tables.requireByName("UsErS")
     ).toBeDefined();
   });
 });

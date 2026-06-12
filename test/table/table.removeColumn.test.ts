@@ -9,8 +9,8 @@ describe('Table::removeColumn', () => {
 
     const updated = table.removeColumn("C1");
 
-    expect(() => updated.requireColumn("C1")).toThrow();
-    expect(updated.requireColumn("C2")).toBeDefined();
+    expect(() => updated.columns.requireByName("C1")).toThrow();
+    expect(updated.columns.requireByName("C2")).toBeDefined();
   });
 
   it('reindexes remaining columns', () => {
@@ -21,8 +21,8 @@ describe('Table::removeColumn', () => {
 
     const updatedTable = table.removeColumn("C2");
 
-    expect(updatedTable.requireColumn("C1").position).toBe(0);
-    expect(updatedTable.requireColumn("C3").position).toBe(1);
+    expect(updatedTable.columns.requireByName("C1").position).toBe(0);
+    expect(updatedTable.columns.requireByName("C3").position).toBe(1);
   });
 
   it('preserves row values for remaining columns', () => {
@@ -44,8 +44,8 @@ describe('Table::removeColumn', () => {
 
     const updatedTable = table.removeColumn("C1");
 
-    expect(table.requireColumn("C1")).toBeDefined();
-    expect(() => updatedTable.requireColumn("C1")).toThrow();
+    expect(table.columns.requireByName("C1")).toBeDefined();
+    expect(() => updatedTable.columns.requireByName("C1")).toThrow();
   });
 
   it('throws when removing non-existent column', () => {
@@ -83,7 +83,7 @@ describe('Table::removeColumn', () => {
     const updated = table.removeColumn("C2");
 
     const index =
-      updated.requireIndex("IDX1");
+      updated.indexes.requireByName("IDX1");
 
     expect(
       index.projectValues([10, 30])
@@ -101,7 +101,7 @@ describe('Table::removeColumn', () => {
         unique: true,
       });
 
-    const index = table.requireIndex("I1");
+    const index = table.indexes.requireByName("I1");
 
     expect(
       index.projectValues([10, 20, 30])
@@ -109,7 +109,7 @@ describe('Table::removeColumn', () => {
 
     const updatedTable = table.removeColumn("C2");
 
-    const updatedIndex = updatedTable.requireIndex("I1");
+    const updatedIndex = updatedTable.indexes.requireByName("I1");
 
     expect(
       updatedIndex.projectValues([10, 30])
@@ -142,11 +142,11 @@ describe('Table::removeColumn', () => {
     const updated = table.removeColumn("C2");
 
     expect(
-      updated.requireIndex("IDX1")
+      updated.indexes.requireByName("IDX1")
     ).toBeDefined();
 
     expect(
-      updated.requireIndex("IDX2")
+      updated.indexes.requireByName("IDX2")
     ).toBeDefined();
   });
 });

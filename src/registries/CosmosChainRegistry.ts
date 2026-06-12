@@ -56,7 +56,7 @@ console.log("Inserted");
 
 const table = EngineRegistry.getInstance().engine().databases
   .require("Cosmos Chain Registry")
-  .requireTable("RegistryRoot");
+  .tables.requireByName("RegistryRoot");
 console.log("Set table");
 //console.log(table);
 
@@ -81,9 +81,11 @@ let table0 = Table.create({id: 0 as TableId, name: "T1"})
 
 console.log("THIS IS WHAT WE'RE TESTING");
 
-const db3 = new Database("DB1")
-      .addTable(
-        new Table("A")
+let db3 = new Database("DB1")
+      .createTable({name: "A"})
+      .createTable({name: "B"});
+
+  const a = db3.tables.requireByName("A")
           .createColumn({ name: "ID", type: Number, nullable: false })
           .createColumn({ name: "B_ID", type: Number })
           .createIndex({
@@ -95,10 +97,10 @@ const db3 = new Database("DB1")
             name: "FKRI_CHILD",
             columns: ["b_id"],
             unique: false,
-          })
-      )
-      .addTable(
-        new Table("B")
+          });
+          db3 = db3.updateTable(a);
+
+   const b = db3.tables.requireByName("B")
           .createColumn({ name: "ID", type: Number, nullable: false })
           .createColumn({ name: "A_ID", type: Number })
           .createIndex({
@@ -110,10 +112,14 @@ const db3 = new Database("DB1")
             name: "FKRI_CHILD",
             columns: ["a_id"],
             unique: false,
-          })
-      )
+          });
+          db3 = db3.updateTable(b);
 
-      .createForeignKey("A", {
+          //a and b don't exactually get updated to db3...
+          //so this will fail
+
+
+      db3 = db3.createForeignKey("A", {
         name: "FK_A_B",
         columns: ["B_ID"],
         reverseIndex: "FKRI_CHILD",
@@ -185,86 +191,6 @@ sql.createTable("Users", {
 
     sql.commit().execute();
     
-
-let tableCheck = new Table("Check");
-tableCheck = tableCheck.createColumn({
-  name: "C1",
-  type: Number,
-});
-tableCheck = tableCheck.createCheck({
-  name: "CHK_1",
-  columns: ["C1"],
-  expression: undefined,
-})
-console.log(tableCheck.checkNames); // DELETE
-console.log("now to require check:");
-console.log(tableCheck.requireCheck("CHK_1"));
-
-
-    let table4 = new Table("users");
-    table4 = table4.createColumn({
-      name: "Age",
-      type: Number,
-    });
-
-    const tableWithCheck = table4
-    .createCheck({
-      name: "CHK_PositiveAge",
-      columns: ["Age"],
-      expression: undefined,
-    });
-
-    console.log(tableWithCheck);
-    console.log(tableWithCheck.requireCheck("chk_positiveage"));
-
-
-  let table1 = new Table("Node");
-
-  table1 = table1.createColumn({name: "ID", type: Number })
-      .createColumn({
-        name: "RefID",
-        type: Number,
-        nullable: true,
-      })
-      .createIndex({
-        name: "PK_NODE",
-        columns: ["ID"],
-        unique: true,
-      })
-      .addRow([1, 2])
-      .addRow([2, 1]);
-
-    const db = new Database("DB1")
-      .addTable(table1)
-      .createForeignKey(
-        "Node",
-        {
-          name: "FK_NODE_REF",
-          columns: ["RefID"],
-          reverseIndex: "PK_NODE",
-          parentTable: "Node",
-          parentColumns: ["ID"],
-          onDelete: ReferentialAction.cascade,
-          onUpdate: ReferentialAction.cascade,
-        }
-      );
-
-    const updates = [3, 2];
-
-    const updated = db.updateRow(
-      "Node",
-      0,
-      updates,
-    );
-
-    console.log("THe row is:");
-    console.log(updated.requireTable("Node").requireRow(1));
-
-      console.log("-----It worked!-----");
-
-    //expect(updated.requireTable("A").rowAlive[0]).toBe(false);
-    //expect(updated.requireTable("B").rowAlive[0]).toBe(false);
-    //___________________________________
 
 
 const predicate = new ComparisonPredicate(

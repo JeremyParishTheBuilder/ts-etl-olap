@@ -123,10 +123,10 @@ export function addForeignKeyByName(
     createForeignKeyTestSpec_Table({
       name: spec.name,
       columns: spec.columns.map(c =>
-        table.requireColumnIdByName(c)
+        table.columns.requireIdByName(c)
       ),
       reverseIndex: spec.reverseIndex
-      ? table.requireIndexIdByName(spec.reverseIndex)
+      ? table.indexes.requireIdByName(spec.reverseIndex)
       : undefined,
     })
   );
@@ -195,7 +195,7 @@ export function buildTable(
       createForeignKeyTestSpec_Table({
         name,
         columns: fkColumns.map(c =>
-          table.requireColumnIdByName(c)
+          table.columns.requireIdByName(c)
         ),
       })
     );

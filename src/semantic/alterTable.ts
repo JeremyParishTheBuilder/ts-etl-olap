@@ -33,13 +33,13 @@ export function bindAlterTable(
   if (stmt.op === "add_constraint") {
     const spec = stmt.constraint;
 
-    const columns = spec.columns.map(c => table.requireColumn(c));
+    const columns = spec.columns.map(c => table.columns.requireByName(c));
 
     switch (spec.kind) {
       case CONSTRAINT_KIND.foreignKey:
 
         const parentTable = ctx.requireTable(spec.parentTable);
-        const parentColumns = spec.parentColumns.map(c => parentTable.requireColumnIdByName(c));
+        const parentColumns = spec.parentColumns.map(c => parentTable.columns.requireIdByName(c));
 
         if (!ctx.rules.constraints.allowNullableForeignKeys) {
           for (const col of columns) {

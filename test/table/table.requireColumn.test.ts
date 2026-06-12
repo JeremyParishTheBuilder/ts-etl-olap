@@ -6,7 +6,7 @@ describe('Table::requireColumn', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
-    const column = table.requireColumn("C1");
+    const column = table.columns.requireByName("C1");
 
     expect(column).toBeDefined();
     expect(column.name).toBe("C1");
@@ -16,7 +16,7 @@ describe('Table::requireColumn', () => {
     const table = buildTable();
 
     expect(() => {
-      table.requireColumn("C1");
+      table.columns.requireByName("C1");
     }).toThrow();
   });
 
@@ -25,15 +25,15 @@ describe('Table::requireColumn', () => {
       .createColumn(createColumnTestSpec({ name: "UserId", type: Number }));
 
     expect(
-      table.requireColumn("userid")
+      table.columns.requireByName("userid")
     ).toBeDefined();
 
     expect(
-      table.requireColumn("USERID")
+      table.columns.requireByName("USERID")
     ).toBeDefined();
 
     expect(
-      table.requireColumn("UsErId")
+      table.columns.requireByName("UsErId")
     ).toBeDefined();
   });
 
@@ -42,7 +42,7 @@ describe('Table::requireColumn', () => {
       .createColumn(createColumnTestSpec({ name: "UserId", type: Number }));
 
     expect(
-      table.requireColumn("userid").name
+      table.columns.requireByName("userid").name
     ).toBe("UserId");
   });
 });

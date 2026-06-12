@@ -12,9 +12,9 @@ describe('Database::removeColumn', () => {
 
     const updatedDb = db.removeColumn("T1", "C1");
 
-    const updatedTable = updatedDb.requireTable("T1");
+    const updatedTable = updatedDb.tables.requireByName("T1");
 
-    expect(() => updatedTable.requireColumn("C1")).toThrow();
+    expect(() => updatedTable.columns.requireByName("C1")).toThrow();
   });
 
   it('does not affect other tables', () => {
@@ -28,9 +28,9 @@ describe('Database::removeColumn', () => {
 
     const updatedDb = db.removeColumn("T1", "C1");
 
-    const updatedTable2 = updatedDb.requireTable("T2");
+    const updatedTable2 = updatedDb.tables.requireByName("T2");
 
-    expect(updatedTable2.requireColumn("C1")).toBeDefined();
+    expect(updatedTable2.columns.requireByName("C1")).toBeDefined();
   });
 
   it('throws when parent column is referenced by a foreign key', () => {
@@ -87,9 +87,9 @@ describe('Database::removeColumn', () => {
 
     const updatedDb = db.removeColumn("t1", "c1");
 
-    const updatedTable = updatedDb.requireTable("t1");
+    const updatedTable = updatedDb.tables.requireByName("t1");
 
-    expect(() => updatedTable.requireColumn("a")).toThrow();
+    expect(() => updatedTable.columns.requireByName("a")).toThrow();
   });
 
   it('does not mutate original database (immutability)', () => {
@@ -100,11 +100,11 @@ describe('Database::removeColumn', () => {
 
     const updatedDb = db.removeColumn("t1", "c1");
 
-    const originalTable = db.requireTable("t1");
-    const updatedTable = updatedDb.requireTable("t1");
+    const originalTable = db.tables.requireByName("t1");
+    const updatedTable = updatedDb.tables.requireByName("t1");
 
-    expect(originalTable.requireColumn("c1")).toBeDefined();
-    expect(() => updatedTable.requireColumn("c1")).toThrow();
+    expect(originalTable.columns.requireByName("c1")).toBeDefined();
+    expect(() => updatedTable.columns.requireByName("c1")).toThrow();
   });
 
 });

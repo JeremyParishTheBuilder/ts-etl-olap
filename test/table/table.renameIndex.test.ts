@@ -14,11 +14,11 @@ describe('Table::renameIndex', () => {
     const updated = table.renameIndex("I1", "I2");
 
     expect(() => {
-      updated.requireIndex("I1");
+      updated.indexes.requireByName("I1");
     }).toThrow();
 
     expect(
-      updated.requireIndex("I2")
+      updated.indexes.requireByName("I2")
     ).toBeDefined();
   });
 
@@ -31,11 +31,11 @@ describe('Table::renameIndex', () => {
         unique: true,
       });
 
-    const columnsBeforeUpdate = table.requireIndex("I1").columns;
+    const columnsBeforeUpdate = table.indexes.requireByName("I1").columns;
 
     const updated = table.renameIndex("I1", "I2");
 
-    const index = updated.requireIndex("I2");
+    const index = updated.indexes.requireByName("I2");
 
     expect(index.unique).toBe(true);
     expect(index.columns).toEqual(columnsBeforeUpdate);
@@ -53,15 +53,15 @@ describe('Table::renameIndex', () => {
     const updated = table.renameIndex("I1", "I2");
 
     expect(
-      table.requireIndex("I1")
+      table.indexes.requireByName("I1")
     ).toBeDefined();
 
     expect(() => {
-      table.requireIndex("I2");
+      table.indexes.requireByName("I2");
     }).toThrow();
 
     expect(
-      updated.requireIndex("I2")
+      updated.indexes.requireByName("I2")
     ).toBeDefined();
   });
 
@@ -107,7 +107,7 @@ describe('Table::renameIndex', () => {
     );
 
     expect(
-      updated.requireIndex("I2")
+      updated.indexes.requireByName("I2")
     ).toBeDefined();
   });
 

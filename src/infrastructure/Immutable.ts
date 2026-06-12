@@ -20,10 +20,14 @@ export abstract class Immutable {
 
     Object.assign(clone, this, changes);
 
+    (clone as any).afterClone?.(clone);
+
     clone.validate();
 
     return clone.seal();
   }
+
+  protected afterClone(instance: this): void {} // hook
 
   protected seal(): this {
     return Object.freeze(this);

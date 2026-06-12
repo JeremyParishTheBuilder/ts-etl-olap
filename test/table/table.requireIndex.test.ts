@@ -11,7 +11,7 @@ describe('Table::requireIndex', () => {
         unique: false,
       });
 
-    const index = table.requireIndex("I1");
+    const index = table.indexes.requireByName("I1");
 
     expect(index).toBeDefined();
     expect(index.name).toBe("I1");
@@ -21,7 +21,7 @@ describe('Table::requireIndex', () => {
     const table = buildTable();
 
     expect(() => {
-      table.requireIndex("I1");
+      table.indexes.requireByName("I1");
     }).toThrow();
   });
 
@@ -35,15 +35,15 @@ describe('Table::requireIndex', () => {
       });
 
     expect(
-      table.requireIndex("userlookup")
+      table.indexes.requireByName("userlookup")
     ).toBeDefined();
 
     expect(
-      table.requireIndex("USERLOOKUP")
+      table.indexes.requireByName("USERLOOKUP")
     ).toBeDefined();
 
     expect(
-      table.requireIndex("UsErLoOkUp")
+      table.indexes.requireByName("UsErLoOkUp")
     ).toBeDefined();
   });
 
@@ -57,7 +57,7 @@ describe('Table::requireIndex', () => {
       });
 
     expect(
-      table.requireIndex("userlookup").name
+      table.indexes.requireByName("userlookup").name
     ).toBe("UserLookup");
   });
 });

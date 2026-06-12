@@ -11,7 +11,7 @@ describe('Table::addColumn', () => {
       type: Number,
     }));
 
-    const col = updated.requireColumn("C1");
+    const col = updated.columns.requireByName("C1");
 
     expect(col).toBeDefined();
     expect(col.position).toBe(0);
@@ -22,8 +22,8 @@ describe('Table::addColumn', () => {
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
       .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
 
-    expect(table.requireColumn("C1").position).toBe(0);
-    expect(table.requireColumn("C2").position).toBe(1);
+    expect(table.columns.requireByName("C1").position).toBe(0);
+    expect(table.columns.requireByName("C2").position).toBe(1);
   });
 
   it('does not mutate the original table (immutability)', () => {
@@ -34,8 +34,8 @@ describe('Table::addColumn', () => {
       type: Number,
     }));
 
-    expect(() => table.requireColumn("C1")).toThrow();
-    expect(updated.requireColumn("C1")).toBeDefined();
+    expect(() => table.columns.requireByName("C1")).toThrow();
+    expect(updated.columns.requireByName("C1")).toBeDefined();
   });
 
   it('throws when adding a duplicate column name', () => {
@@ -53,8 +53,8 @@ describe('Table::addColumn', () => {
 
     const updated = table.createColumn(createColumnTestSpec({ name: "C2", type: Number }));
 
-    expect(updated.requireColumn("C1").position).toBe(0);
-    expect(updated.requireColumn("C2").position).toBe(1);
+    expect(updated.columns.requireByName("C1").position).toBe(0);
+    expect(updated.columns.requireByName("C2").position).toBe(1);
   });
 
   it('throws when adding duplicate column names with different casing', () => {
@@ -96,7 +96,7 @@ describe('Table::addColumn', () => {
     });
 
     expect(
-      updated.requireColumn("C1")
+      updated.columns.requireByName("C1")
     ).toBeDefined();
   });
 
@@ -119,7 +119,7 @@ describe('Table::addColumn', () => {
     });
 
     expect(
-      updated.requireColumn("C2")
+      updated.columns.requireByName("C2")
     ).toBeDefined();
   });
 

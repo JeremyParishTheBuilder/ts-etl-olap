@@ -13,7 +13,7 @@ describe('Table::requireCheck', () => {
     }));
 
     expect(
-      table.requireCheck("CHK_PositiveAge")
+      table.checks.requireByName("CHK_PositiveAge")
     ).toBeDefined();
   });
 
@@ -29,10 +29,10 @@ describe('Table::requireCheck', () => {
     }));
 
     console.log(tableWithCheck);
-    console.log(tableWithCheck.requireCheck("chk_positiveage"));
+    console.log(tableWithCheck.checks.requireByName("chk_positiveage"));
 
     expect(
-      tableWithCheck.requireCheck("chk_positiveage")
+      tableWithCheck.checks.requireByName("chk_positiveage")
     ).toBeDefined();
   });
 
@@ -40,7 +40,7 @@ describe('Table::requireCheck', () => {
     const table = buildTable();
 
     expect(() => {
-      table.requireCheck("MissingCheck");
+      table.checks.requireByName("MissingCheck");
     }).toThrow();
   });
 });

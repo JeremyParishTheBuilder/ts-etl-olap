@@ -3,11 +3,9 @@ import { Immutable } from "../infrastructure/Immutable.js";
 import { type ColumnId } from "./Column.js";
 
 interface ColumnBoundObject {
-  //readonly columns: string[];
   readonly columns: ColumnId[];
   
   referencesColumn(id: ColumnId): boolean;
-  //tryRenameColumn(oldName: string, newName: string): this;
 }
 
 export abstract class ColumnBoundImmutable
@@ -28,22 +26,6 @@ export abstract class ColumnBoundImmutable
   }
 
   public referencesColumn(id: ColumnId): boolean {
-    //return this.columns.includes(normalizeIdentifier(name));
     return this.columns.includes(id);
   }
-
-  // public tryRenameColumn(oldName: string, newName: string): this {
-  //   if (!this.referencesColumn(oldName)) {
-  //     return this;
-  //   }
-
-  //   const normalizedOldName = normalizeIdentifier(oldName);
-  //   const normalizedNewName = normalizeIdentifier(newName);
-
-  //   return this.with({
-  //     columns: this.columns.map(c => 
-  //       c === normalizedOldName ? normalizedNewName : c
-  //     )
-  //   } as Partial<this>);
-  // }
 }

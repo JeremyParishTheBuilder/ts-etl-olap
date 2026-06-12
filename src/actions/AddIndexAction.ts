@@ -15,7 +15,7 @@ export class AddIndexAction implements Action {
     const db = databases.require(this.dbName);
 
     const updatedTable = db
-      .requireTable(this.tableName)
+      .tables.requireByName(this.tableName)
       .createIndex(this.spec);
 
     return databases.update(

@@ -107,7 +107,7 @@ describe('Composite Foreign Keys', () => {
 
     expect(
       db
-        .requireTable("Child")
+        .tables.requireByName("Child")
         .requireRow(0)
     ).toEqual([1, 2]);
   });
@@ -286,7 +286,7 @@ describe('Composite Foreign Keys', () => {
 
     expect(
       updated
-        .requireTable("Child")
+        .tables.requireByName("Child")
         .requireRow(0)
     ).toEqual([3, 4]);
   });

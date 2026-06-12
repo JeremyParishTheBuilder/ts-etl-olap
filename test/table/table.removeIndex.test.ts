@@ -14,7 +14,7 @@ describe('Table::removeIndex', () => {
     const updated = table.removeIndex("I1");
 
     expect(() => {
-      updated.requireIndex("I1");
+      updated.indexes.requireByName("I1");
     }).toThrow();
   });
 
@@ -30,11 +30,11 @@ describe('Table::removeIndex', () => {
     const updated = table.removeIndex("I1");
 
     expect(
-      table.requireIndex("I1")
+      table.indexes.requireByName("I1")
     ).toBeDefined();
 
     expect(() => {
-      updated.requireIndex("I1");
+      updated.indexes.requireByName("I1");
     }).toThrow();
   });
 
@@ -84,7 +84,7 @@ describe('Table::removeIndex', () => {
       table.removeIndex("IDX_Email");
 
     expect(
-      updated.getIndex("IDX_Email")
+      updated.indexes.getByName("IDX_Email")
     ).toBeUndefined();
   });
 

@@ -13,7 +13,7 @@ describe('Table::addIndex', () => {
     }));
 
     expect(
-      updated.requireIndex("I1")
+      updated.indexes.requireByName("I1")
     ).toBeDefined();
   });
 
@@ -28,11 +28,11 @@ describe('Table::addIndex', () => {
     }));
 
     expect(() => {
-      table.requireIndex("I1");
+      table.indexes.requireByName("I1");
     }).toThrow();
 
     expect(
-      updated.requireIndex("I1")
+      updated.indexes.requireByName("I1")
     ).toBeDefined();
   });
 
@@ -77,7 +77,7 @@ describe('Table::addIndex', () => {
     }));
 
     expect(
-      updated.requireIndex("userlookup").name
+      updated.indexes.requireByName("userlookup").name
     ).toBe("UserLookup");
   });
 

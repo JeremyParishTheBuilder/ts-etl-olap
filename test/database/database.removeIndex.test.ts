@@ -27,8 +27,8 @@ describe('Database::removeIndex', () => {
 
     expect(
       updated
-        .requireTable("t1")
-        .getIndex("i1")
+        .tables.requireByName("t1")
+        .indexes.getByName("i1")
     ).toBeUndefined();
   });
 
@@ -46,22 +46,22 @@ describe('Database::removeIndex', () => {
 
     expect(
       db
-        .requireTable("t1")
-        .requireIndex("i1")
+        .tables.requireByName("t1")
+        .indexes.requireByName("i1")
     ).toBeDefined();
 
     expect(
       updated
-        .requireTable("t1")
-        .getIndex("i1")
+        .tables.requireByName("t1")
+        .indexes.getByName("i1")
     ).toBeUndefined();
 
     expect(updated).not.toBe(db);
 
     expect(
-      updated.requireTable("t1")
+      updated.tables.requireByName("t1")
     ).not.toBe(
-      db.requireTable("t1")
+      db.tables.requireByName("t1")
     );
   });
 
@@ -94,9 +94,9 @@ describe('Database::removeIndex', () => {
 
     expect(
       updated
-        .requireTable("Roles")
+        .tables.requireByName("Roles")
     ).toBe(
-      db.requireTable("Roles")
+      db.tables.requireByName("Roles")
     );
   });
 
@@ -209,14 +209,14 @@ describe('Database::removeIndex', () => {
 
     expect(
       updated
-        .requireTable("Roles")
-        .getIndex("IDX_Extra")
+        .tables.requireByName("Roles")
+        .indexes.getByName("IDX_Extra")
     ).toBeUndefined();
 
     expect(
       updated
-        .requireTable("Roles")
-        .requireIndex("PK_Roles")
+        .tables.requireByName("Roles")
+        .indexes.requireByName("PK_Roles")
     ).toBeDefined();
   });
 
@@ -284,7 +284,7 @@ describe('Database::removeIndex', () => {
 
     expect(
       updated
-        .requireTable("Users")
+        .tables.requireByName("Users")
         .requireRow(0)
     ).toEqual(["a@test.com"]);
   });
@@ -314,14 +314,14 @@ describe('Database::removeIndex', () => {
 
     expect(
       updated
-        .requireTable("Users")
-        .getIndex("IDX_Email")
+        .tables.requireByName("Users")
+        .indexes.getByName("IDX_Email")
     ).toBeUndefined();
 
     expect(
       updated
-        .requireTable("Users")
-        .requireIndex("IDX_Email_2")
+        .tables.requireByName("Users")
+        .indexes.requireByName("IDX_Email_2")
     ).toBeDefined();
   });
 

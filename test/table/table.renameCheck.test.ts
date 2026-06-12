@@ -26,7 +26,7 @@ describe('Table::renameCheck', () => {
     );
 
     expect(
-      updated.requireCheck(
+      updated.checks.requireByName(
         "CHK_AdultAge"
       )
     ).toBeDefined();
@@ -41,7 +41,7 @@ describe('Table::renameCheck', () => {
     );
 
     expect(() => {
-      updated.requireCheck(
+      updated.checks.requireByName(
         "CHK_PositiveAge"
       );
     }).toThrow();
@@ -56,13 +56,13 @@ describe('Table::renameCheck', () => {
     );
 
     expect(
-      table.requireCheck(
+      table.checks.requireByName(
         "CHK_PositiveAge"
       )
     ).toBeDefined();
 
     expect(
-      updated.requireCheck(
+      updated.checks.requireByName(
         "CHK_AdultAge"
       )
     ).toBeDefined();
@@ -77,7 +77,7 @@ describe('Table::renameCheck', () => {
     );
 
     expect(
-      updated.requireCheck(
+      updated.checks.requireByName(
         "CHK_AdultAge"
       )
     ).toBeDefined();

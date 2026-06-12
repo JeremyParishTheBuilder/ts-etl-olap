@@ -12,7 +12,7 @@ export class AddColumnAction implements Action {
   apply(databases: Databases) {
     const db = databases.require(this.dbName);
 
-    const updatedTable = db.requireTable(this.tableName)
+    const updatedTable = db.tables.requireByName(this.tableName)
       .createColumn(this.columnSpec);
 
     return databases.update(

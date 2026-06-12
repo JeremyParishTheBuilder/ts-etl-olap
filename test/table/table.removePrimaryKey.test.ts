@@ -58,7 +58,7 @@ describe('Table::removePrimaryKey', () => {
     expect(updated.primaryKey).toBeUndefined();
 
     expect(
-      updated.requireIndex("PK_T1")
+      updated.indexes.requireByName("PK_T1")
     ).toBeDefined();
   });
 });

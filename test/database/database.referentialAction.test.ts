@@ -83,7 +83,7 @@ describe("Database Referential Actions", () => {
     const updated = db.removeRow("Parent", 0);
 
     expect(
-      updated.requireTable("Child").rowAlive[0]
+      updated.tables.requireByName("Child").rowAlive[0]
     ).toBe(false);
   });
 
@@ -129,7 +129,7 @@ describe("Database Referential Actions", () => {
     const updated = db.removeRow("Parent", 0);
 
     expect(
-      updated.requireTable("Child").requireRow(0)
+      updated.tables.requireByName("Child").requireRow(0)
     ).toEqual([null]);
   });
 
@@ -177,7 +177,7 @@ describe("Database Referential Actions", () => {
     );
 
     expect(
-      updated.requireTable("Child").requireRow(0)
+      updated.tables.requireByName("Child").requireRow(0)
     ).toEqual([2]);
   });
 
@@ -220,11 +220,11 @@ describe("Database Referential Actions", () => {
     const updated = db.removeRow("Node", 0);
 
     expect(
-      updated.requireTable("Node").rowAlive[0]
+      updated.tables.requireByName("Node").rowAlive[0]
     ).toBe(false);
 
     expect(
-      updated.requireTable("Node").rowAlive[1]
+      updated.tables.requireByName("Node").rowAlive[1]
     ).toBe(false);
   });
 
@@ -273,7 +273,7 @@ describe("Database Referential Actions", () => {
     );
 
     expect(
-      updated.requireTable("Node").requireRow(1)
+      updated.tables.requireByName("Node").requireRow(1)
     ).toEqual([2, 3]);
   });
 
@@ -323,7 +323,7 @@ describe("Database Referential Actions", () => {
     );
 
     expect(
-      updated.requireTable("Child").requireRow(0)
+      updated.tables.requireByName("Child").requireRow(0)
     ).toEqual([10, 20]);
   });
 
@@ -375,7 +375,7 @@ describe("Database Referential Actions", () => {
     const updated = db.removeRow("Parent", 0);
 
     expect(
-      updated.requireTable("Child").requireRow(0)
+      updated.tables.requireByName("Child").requireRow(0)
     ).toEqual([null, null]);
   });
 
@@ -444,11 +444,11 @@ describe("Database Referential Actions", () => {
     const updated = db.removeRow("A", 0);
 
     expect(
-      updated.requireTable("B").rowAlive[0]
+      updated.tables.requireByName("B").rowAlive[0]
     ).toBe(false);
 
     expect(
-      updated.requireTable("C").rowAlive[0]
+      updated.tables.requireByName("C").rowAlive[0]
     ).toBe(false);
   });
 
@@ -486,19 +486,19 @@ describe("Database Referential Actions", () => {
     const updated = db.removeRow("Parent", 0);
 
     expect(() => {
-      db.requireTable("Parent").assertRowAlive(0)
+      db.tables.requireByName("Parent").assertRowAlive(0)
     }).not.toThrow();
 
     expect(() => {
-      db.requireTable("Child").assertRowAlive(0)
+      db.tables.requireByName("Child").assertRowAlive(0)
     }).not.toThrow();
 
     expect(
-      updated.requireTable("Parent").rowAlive[0]
+      updated.tables.requireByName("Parent").rowAlive[0]
     ).toBe(false);
 
     expect(
-      updated.requireTable("Child").rowAlive[0]
+      updated.tables.requireByName("Child").rowAlive[0]
     ).toBe(false);
   });
 
@@ -627,10 +627,10 @@ describe("Database Referential Actions", () => {
 
     const updated = db.removeRow("A", 0);
 
-    expect(updated.requireTable("A").rowAlive[0]).toBe(false);
-    expect(updated.requireTable("B").rowAlive[0]).toBe(false);
-    expect(updated.requireTable("C").rowAlive[0]).toBe(false);
-    expect(updated.requireTable("D").rowAlive[0]).toBe(false);
+    expect(updated.tables.requireByName("A").rowAlive[0]).toBe(false);
+    expect(updated.tables.requireByName("B").rowAlive[0]).toBe(false);
+    expect(updated.tables.requireByName("C").rowAlive[0]).toBe(false);
+    expect(updated.tables.requireByName("D").rowAlive[0]).toBe(false);
   });
 
   it("converges propagation without stale references", () => {
@@ -705,9 +705,9 @@ describe("Database Referential Actions", () => {
 
     const updated = db.removeRow("A", 0);
 
-    expect(updated.requireTable("A").rowAlive[0]).toBe(false);
-    expect(updated.requireTable("B").rowAlive[0]).toBe(false);
-    expect(updated.requireTable("C").rowAlive[0]).toBe(false);
+    expect(updated.tables.requireByName("A").rowAlive[0]).toBe(false);
+    expect(updated.tables.requireByName("B").rowAlive[0]).toBe(false);
+    expect(updated.tables.requireByName("C").rowAlive[0]).toBe(false);
   });
 
   it("prevents infinite recursion during cyclic propagation", () => {
@@ -783,8 +783,8 @@ describe("Database Referential Actions", () => {
 
     const updated = withRows.removeRow("A", 0);
 
-    expect(updated.requireTable("A").rowAlive[0]).toBe(false);
-    expect(updated.requireTable("B").rowAlive[0]).toBe(false);
+    expect(updated.tables.requireByName("A").rowAlive[0]).toBe(false);
+    expect(updated.tables.requireByName("B").rowAlive[0]).toBe(false);
   });
 
   it("keeps reverse indexes synchronized during cascading deletes", () => {
@@ -822,10 +822,10 @@ describe("Database Referential Actions", () => {
 
     const updated = db.removeRow("Parent", 0);
 
-    const child = updated.requireTable("Child");
+    const child = updated.tables.requireByName("Child");
 
     const reverseIndex =
-      child.requireIndex("FKRI_CHILD");
+      child.indexes.requireByName("FKRI_CHILD");
 
     expect(
       reverseIndex.getRowNumsFromProjection([1])

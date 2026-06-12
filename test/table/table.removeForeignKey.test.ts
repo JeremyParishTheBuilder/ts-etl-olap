@@ -25,7 +25,7 @@ describe('Table::removeForeignKey', () => {
     );
 
     expect(() => {
-      updated.requireForeignKey(
+      updated.foreignKeys.requireByName(
         "FK_Posts_Users"
       );
     }).toThrow();
@@ -39,13 +39,13 @@ describe('Table::removeForeignKey', () => {
     );
 
     expect(
-      table.requireForeignKey(
+      table.foreignKeys.requireByName(
         "FK_Posts_Users"
       )
     ).toBeDefined();
 
     expect(() => {
-      updated.requireForeignKey(
+      updated.foreignKeys.requireByName(
         "FK_Posts_Users"
       );
     }).toThrow();
@@ -59,7 +59,7 @@ describe('Table::removeForeignKey', () => {
     );
 
     expect(() => {
-      updated.requireForeignKey(
+      updated.foreignKeys.requireByName(
         "FK_Posts_Users"
       );
     }).toThrow();
@@ -90,11 +90,11 @@ describe('Table::removeForeignKey', () => {
       );
 
     expect(() => {
-      updated.requireForeignKey("FK_Parent1");
+      updated.foreignKeys.requireByName("FK_Parent1");
     }).toThrow();
 
     expect(
-      updated.requireForeignKey("FK_Parent2")
+      updated.foreignKeys.requireByName("FK_Parent2")
     ).toBeDefined();
   });
 

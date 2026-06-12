@@ -9,7 +9,7 @@ describe('Database::addRow', () => {
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
-    let roles = database.requireTable("Roles")
+    let roles = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -21,7 +21,7 @@ describe('Database::addRow', () => {
         unique: true,
       });
 
-    let users = database.requireTable("Users")
+    let users = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "RoleId",
         type: Number,
@@ -65,7 +65,7 @@ describe('Database::addRow', () => {
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
-    let roles = database.requireTable("Roles")
+    let roles = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -77,7 +77,7 @@ describe('Database::addRow', () => {
         unique: true,
       });
 
-    let users = database.requireTable("Users")
+    let users = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "RoleId",
         type: Number,
@@ -116,7 +116,7 @@ describe('Database::addRow', () => {
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
-    let roles = database.requireTable("Roles")
+    let roles = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -128,7 +128,7 @@ describe('Database::addRow', () => {
         unique: true,
       });
 
-    let users = database.requireTable("Users")
+    let users = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "RoleId",
         type: Number,
@@ -167,7 +167,7 @@ describe('Database::addRow', () => {
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
-    let parent = database.requireTable("Roles")
+    let parent = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -180,7 +180,7 @@ describe('Database::addRow', () => {
 
     parent = parent.addRow([1]);
 
-    let child = database.requireTable("Users")
+    let child = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
@@ -217,7 +217,7 @@ describe('Database::addRow', () => {
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
-    let parent = database.requireTable("Roles")
+    let parent = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -230,7 +230,7 @@ describe('Database::addRow', () => {
 
     parent = parent.addRow([1]);
 
-    let child = database.requireTable("Users")
+    let child = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
@@ -257,7 +257,7 @@ describe('Database::addRow', () => {
 
     expect(
       database
-        .requireTable("Users")
+        .tables.requireByName("Users")
         .requireRow(0)
     ).toEqual([1]);
   });
@@ -267,7 +267,7 @@ describe('Database::addRow', () => {
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
-    let parent = database.requireTable("Roles")
+    let parent = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -278,7 +278,7 @@ describe('Database::addRow', () => {
         unique: true,
       });
 
-    let child = database.requireTable("Users")
+    let child = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,

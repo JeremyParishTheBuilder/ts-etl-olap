@@ -12,7 +12,7 @@ export function bindPredicate(
 ): Predicate {
   switch (clause.type) {
     case "comparison": {
-      const column = table.requireColumn(clause.column);
+      const column = table.columns.requireByName(clause.column);
 
       return new ComparisonPredicate(
         column.position,

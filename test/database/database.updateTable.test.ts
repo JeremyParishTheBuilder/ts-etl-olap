@@ -16,7 +16,7 @@ describe('Database::updateTable', () => {
     const updatedDb = database.updateTable(updatedTable);
 
     expect(
-      updatedDb.requireTable("T1").requireColumn("C2")
+      updatedDb.tables.requireByName("T1").columns.requireByName("C2")
     ).toBeDefined();
   });
 });

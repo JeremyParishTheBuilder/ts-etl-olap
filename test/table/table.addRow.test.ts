@@ -212,7 +212,7 @@ describe('Table::addRow', () => {
     table = table.addRow(["X", null]);
     table = table.addRow(["X", "Y"]);
 
-    const index = table.requireIndex("UQ_Composite");
+    const index = table.indexes.requireByName("UQ_Composite");
 
     expect(index.hasProjectedValues(["X", null])).toBe(true);
     expect(index.hasProjectedValues(["X", "Y"])).toBe(true);
@@ -235,8 +235,8 @@ describe('Table::addRow', () => {
 
     table = table.addRow([1, "a@test.com"]);
 
-    const pk = table.requireIndex("PK");
-    const uq = table.requireIndex("UQ_Email");
+    const pk = table.indexes.requireByName("PK");
+    const uq = table.indexes.requireByName("UQ_Email");
 
     expect(pk.hasProjectedValues([1])).toBe(true);
     expect(uq.hasProjectedValues(["a@test.com"])).toBe(true);
@@ -319,7 +319,7 @@ describe('Table::addRow', () => {
     const updated = table.addRow(["b@test.com"]);
 
     const index =
-      updated.requireIndex("UQ_Email");
+      updated.indexes.requireByName("UQ_Email");
 
     expect(
       index.hasProjectedValues(["a@test.com"])

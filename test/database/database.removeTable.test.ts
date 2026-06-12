@@ -10,7 +10,7 @@ describe('Database::removeTable', () => {
     const updated = database.removeTable("T1");
 
     expect(() => {
-      updated.requireTable("T1");
+      updated.tables.requireByName("T1");
     }).toThrow();
   });
 
@@ -20,10 +20,10 @@ describe('Database::removeTable', () => {
 
     const updated = database.removeTable("T1");
 
-    expect(database.requireTable("T1")).toBeDefined();
+    expect(database.tables.requireByName("T1")).toBeDefined();
 
     expect(() => {
-      updated.requireTable("T1");
+      updated.tables.requireByName("T1");
     }).toThrow();
   });
 
@@ -32,7 +32,7 @@ describe('Database::removeTable', () => {
       .createTable({name: "Users"})
       .createTable({name: "Posts"});
       
-    const users = database.requireTable("Users")
+    const users = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -44,7 +44,7 @@ describe('Database::removeTable', () => {
         unique: true,
       });
 
-    const posts = database.requireTable("Posts")
+    const posts = database.tables.requireByName("Posts")
       .createColumn(createColumnTestSpec({
         name: "UserId",
         type: Number,

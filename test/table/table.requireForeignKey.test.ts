@@ -16,7 +16,7 @@ describe('Table::requireForeignKey', () => {
     const table = buildTableWithForeignKey();
 
     expect(
-      table.requireForeignKey("FK1")
+      table.foreignKeys.requireByName("FK1")
     ).toBeDefined();
   });
 
@@ -24,7 +24,7 @@ describe('Table::requireForeignKey', () => {
     const table = buildTableWithForeignKey();
 
     expect(
-      table.requireForeignKey("fk1")
+      table.foreignKeys.requireByName("fk1")
     ).toBeDefined();
   });
 
@@ -32,7 +32,7 @@ describe('Table::requireForeignKey', () => {
     const table = buildTableWithForeignKey();
 
     expect(() => {
-      table.requireForeignKey("fk2");
+      table.foreignKeys.requireByName("fk2");
     }).toThrow();
   });
 });

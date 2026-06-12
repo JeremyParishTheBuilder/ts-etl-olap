@@ -14,11 +14,11 @@ describe('Database::renameTable', () => {
     );
 
     expect(() =>
-      updated.requireTable("Accounts")
+      updated.tables.requireByName("Accounts")
     ).not.toThrow();
 
     expect(() =>
-      updated.requireTable("Users")
+      updated.tables.requireByName("Users")
     ).toThrow();
   });
 
@@ -27,13 +27,13 @@ describe('Database::renameTable', () => {
       .addTable(buildTable({ name: "Users" }));
 
     const originalId =
-      db.requireTable("Users").id;
+      db.tables.requireByName("Users").id;
 
     const updated =
       db.renameTable("Users", "Accounts");
 
     expect(
-      updated.requireTable("Accounts").id
+      updated.tables.requireByName("Accounts").id
     ).toBe(originalId);
   });
 
@@ -45,11 +45,11 @@ describe('Database::renameTable', () => {
       db.renameTable("Users", "Accounts");
 
     expect(
-      updated.getTableIdByName("Users")
+      updated.tables.getIdByName("Users")
     ).toBeUndefined();
 
     expect(
-      updated.getTableIdByName("Accounts")
+      updated.tables.getIdByName("Accounts")
     ).toBeDefined();
   });
 
@@ -76,7 +76,7 @@ describe('Database::renameTable', () => {
       );
 
     expect(() =>
-      updated.requireTable("child").requireForeignKey("fk1")
+      updated.tables.requireByName("child").foreignKeys.requireByName("fk1")
     ).not.toThrow();
   });
 });

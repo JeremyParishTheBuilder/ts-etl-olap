@@ -25,7 +25,7 @@ describe('Database::removeRow', () => {
 
     expect(
       updated
-        .requireTable("Users")
+        .tables.requireByName("Users")
         .getRow(0)
     ).toBeUndefined();
   });
@@ -130,7 +130,7 @@ describe('Database::removeRow', () => {
 
     expect(
       updated
-        .requireTable("Roles")
+        .tables.requireByName("Roles")
         .getRow(0)
     ).toBeUndefined();
   });
@@ -247,21 +247,21 @@ describe('Database::removeRow', () => {
 
     expect(
       db
-        .requireTable("Users")
+        .tables.requireByName("Users")
         .requireRow(0)
     ).toEqual([1]);
 
     expect(
       updated
-        .requireTable("Users")
+        .tables.requireByName("Users")
         .getRow(0)
     ).toBeUndefined();
 
     expect(updated).not.toBe(db);
     expect(
-      updated.requireTable("Users")
+      updated.tables.requireByName("Users")
     ).not.toBe(
-      db.requireTable("Users")
+      db.tables.requireByName("Users")
     );
   });
 
@@ -293,7 +293,7 @@ describe('Database::removeRow', () => {
 
     expect(
       updated
-        .requireTable("Roles")
+        .tables.requireByName("Roles")
         .requireRow(0)
     ).toEqual([10]);
   });

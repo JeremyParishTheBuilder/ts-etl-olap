@@ -7,15 +7,13 @@ export class DropForeignKeyAction implements Action {
     private dbName: string,
     private tableName: string,
     private foreignKeyId: ForeignKeyId,
-    //private foreignKeyName: string,
   ) {}
 
   apply(databases: Databases): Databases {
     const db = databases.require(this.dbName);
 
     const updatedTable = db
-      .requireTable(this.tableName)
-      //.removeForeignKey(this.foreignKeyName);
+      .tables.requireByName(this.tableName)
       .removeForeignKeyById(this.foreignKeyId);
 
     const updatedDb = db.updateTable(updatedTable);

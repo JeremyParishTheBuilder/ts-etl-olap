@@ -49,8 +49,8 @@ describe('Database::createForeignKey', () => {
 
     expect(
       updated
-        .requireTable("Posts")
-        .requireForeignKey("FK_Posts_Users")
+        .tables.requireByName("Posts")
+        .foreignKeys.requireByName("FK_Posts_Users")
     ).toBeDefined();
   });
 
@@ -70,14 +70,14 @@ describe('Database::createForeignKey', () => {
 
     expect(() => {
       database
-        .requireTable("Posts")
-        .requireForeignKey("FK_Posts_Users");
+        .tables.requireByName("Posts")
+        .foreignKeys.requireByName("FK_Posts_Users");
     }).toThrow();
 
     expect(
       updated
-        .requireTable("Posts")
-        .requireForeignKey("FK_Posts_Users")
+        .tables.requireByName("Posts")
+        .foreignKeys.requireByName("FK_Posts_Users")
     ).toBeDefined();
   });
 
@@ -85,7 +85,7 @@ describe('Database::createForeignKey', () => {
     const database = buildDatabase();
 
     const originalParent =
-      database.requireTable("Users");
+      database.tables.requireByName("Users");
 
     const updated = database.createForeignKey(
       "Posts",
@@ -99,7 +99,7 @@ describe('Database::createForeignKey', () => {
     );
 
     expect(
-      updated.requireTable("Users")
+      updated.tables.requireByName("Users")
     ).toBe(originalParent);
   });
 
@@ -217,7 +217,7 @@ describe('Database::createForeignKey', () => {
   it('throws when child and parent column counts differ', () => {
     let database = buildDatabase();
     
-    let users = database.requireTable("Users");
+    let users = database.tables.requireByName("Users");
     users = users
       .createColumn(createColumnTestSpec({name: "Id2"}))
       .createIndex({
@@ -296,8 +296,8 @@ describe('Database::createForeignKey', () => {
 
     expect(
       updated
-        .requireTable("Posts")
-        .requireForeignKey("FK_Posts_Users")
+        .tables.requireByName("Posts")
+        .foreignKeys.requireByName("FK_Posts_Users")
     ).toBeDefined();
   });
 

@@ -17,7 +17,7 @@ describe('Table::renameForeignKey', () => {
     );
 
     expect(
-      updated.requireForeignKey(
+      updated.foreignKeys.requireByName(
         "FK_Posts_Authors"
       )
     ).toBeDefined();
@@ -37,7 +37,7 @@ describe('Table::renameForeignKey', () => {
     );
 
     expect(() => {
-      updated.requireForeignKey(
+      updated.foreignKeys.requireByName(
         "FK_Posts_Users"
       );
     }).toThrow();
@@ -57,13 +57,13 @@ describe('Table::renameForeignKey', () => {
     );
 
     expect(
-      table.requireForeignKey(
+      table.foreignKeys.requireByName(
         "FK_Posts_Users"
       )
     ).toBeDefined();
 
     expect(
-      updated.requireForeignKey(
+      updated.foreignKeys.requireByName(
         "FK_Posts_Authors"
       )
     ).toBeDefined();
@@ -83,7 +83,7 @@ describe('Table::renameForeignKey', () => {
     );
 
     expect(
-      updated.requireForeignKey(
+      updated.foreignKeys.requireByName(
         "RenamedFK"
       )
     ).toBeDefined();

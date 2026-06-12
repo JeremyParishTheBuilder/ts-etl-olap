@@ -11,9 +11,9 @@ export class AddPrimaryKeyAction implements Action {
 
   apply(databases: Databases): Databases {
     const db = databases.require(this.dbName);
-    const table = db.requireTable(this.tableName);
+    const table = db.tables.requireByName(this.tableName);
 
-    const columnIds = this.spec.columns.map(c => table.requireColumnIdByName(c));
+    const columnIds = this.spec.columns.map(c => table.columns.requireIdByName(c));
     const index = table.requireUniqueIndexByColumns(columnIds);
 
     // const index = this.spec.index ?
