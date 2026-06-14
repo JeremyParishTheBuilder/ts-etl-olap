@@ -8,7 +8,7 @@ export class CreateTableAction implements Action {
   ) {}
 
   apply(databases: Databases): Databases {
-    const updatedDb = databases.require(this.dbName)
+    const updatedDb = databases.requireByName(this.dbName)
       .createTable({name: this.tableName});
 
     return databases.update(updatedDb);

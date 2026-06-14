@@ -54,8 +54,8 @@ sql.
   values([["Cosmos Chain Registry"]]).execute();
 console.log("Inserted");
 
-const table = EngineRegistry.getInstance().engine().databases
-  .require("Cosmos Chain Registry")
+const table = EngineRegistry.getInstance().engine()
+  .databases.requireByName("Cosmos Chain Registry")
   .tables.requireByName("RegistryRoot");
 console.log("Set table");
 //console.log(table);
@@ -77,84 +77,6 @@ let table0 = Table.create({id: 0 as TableId, name: "T1"})
         index: "PK_T1_I",
       });
       console.log("TABLE 0");
-//-------------------DELETE this------------------
-
-console.log("THIS IS WHAT WE'RE TESTING");
-
-let db3 = new Database("DB1")
-      .createTable({name: "A"})
-      .createTable({name: "B"});
-
-  const a = db3.tables.requireByName("A")
-          .createColumn({ name: "ID", type: Number, nullable: false })
-          .createColumn({ name: "B_ID", type: Number })
-          .createIndex({
-            name: "pk_a",
-            columns: ["id"],
-            unique: true,
-          })
-          .createIndex({
-            name: "FKRI_CHILD",
-            columns: ["b_id"],
-            unique: false,
-          });
-          db3 = db3.updateTable(a);
-
-   const b = db3.tables.requireByName("B")
-          .createColumn({ name: "ID", type: Number, nullable: false })
-          .createColumn({ name: "A_ID", type: Number })
-          .createIndex({
-            name: "pk_b",
-            columns: ["id"],
-            unique: true,
-          })
-          .createIndex({
-            name: "FKRI_CHILD",
-            columns: ["a_id"],
-            unique: false,
-          });
-          db3 = db3.updateTable(b);
-
-          //a and b don't exactually get updated to db3...
-          //so this will fail
-
-
-      db3 = db3.createForeignKey("A", {
-        name: "FK_A_B",
-        columns: ["B_ID"],
-        reverseIndex: "FKRI_CHILD",
-        parentTable: "B",
-        parentColumns: ["ID"],
-        onDelete: ReferentialAction.cascade,
-        onUpdate: ReferentialAction.restrict,
-      })
-
-      .createForeignKey("B", {
-        name: "FK_B_A",
-        columns: ["A_ID"],
-        reverseIndex: "FKRI_CHILD",
-        parentTable: "A",
-        parentColumns: ["ID"],
-        onDelete: ReferentialAction.cascade,
-        onUpdate: ReferentialAction.restrict,
-      });
-
-    const withRows = db3
-      .addRow("A", [1, null])
-      .addRow("B", [2, 1])
-      .updateRow(
-        "A",
-        0,
-        [1, 2]
-      );
-
-      console.log("WithRows is fine, yes?");
-
-    const updated2 = withRows.removeRow("A", 0);
-
-      console.log("THIS IS WHAT WE'RE TESTING");
-
-  //---
 
 
 sql.createTable("Users", {

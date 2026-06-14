@@ -10,23 +10,11 @@ export class AddPrimaryKeyAction implements Action {
   ) {}
 
   apply(databases: Databases): Databases {
-    const db = databases.require(this.dbName);
+    const db = databases.requireByName(this.dbName);
     const table = db.tables.requireByName(this.tableName);
 
     const columnIds = this.spec.columns.map(c => table.columns.requireIdByName(c));
     const index = table.requireUniqueIndexByColumns(columnIds);
-
-    // const index = this.spec.index ?
-    //   table.requireIndex(this.spec.index) :
-    //   table.requireUniqueIndexByColumns(
-    //     this.spec.columns.map(c => table.requireColumnIdByName(c))
-    //   );
-    //const columns = this.spec.columns.map(c => table.requireColumnIdByName(c));
-    // TODO, make semantic analyzer dertime whether to use this?
-    // should foreignKey spec even still accept a column array?
-
-    //const index = table.requireUniqueIndexByColumns(columns);
-
 
     const updatedTable = table
       .createPrimaryKeyById({

@@ -1,84 +1,69 @@
 import { describe, it, expect } from 'vitest';
-import { addForeignKeyByName, buildTable } from '../utils/buildSchema.js';
+import {
+  addForeignKeyByName,
+  buildTable,
+  buildTableWithForeignKey,
+  createColumnTestSpec,
+  createIndexTestSpec
+} from '../utils/buildSchema.js';
 
 describe('Table::renameForeignKey', () => {
-
   it('renames the foreign key', () => {
-    const table = buildTable({
-      columns: 1,
-      foreignKeys: [
-        {name: "FK_Posts_Users", columns: ["c1"]}
-      ]
-    });
+    const table = buildTableWithForeignKey();
 
     const updated = table.renameForeignKey(
-      "FK_Posts_Users",
-      "FK_Posts_Authors"
+      "FK1",
+      "FK2"
     );
 
     expect(
       updated.foreignKeys.requireByName(
-        "FK_Posts_Authors"
+        "FK2"
       )
     ).toBeDefined();
   });
 
   it('removes old foreign key name', () => {
-    const table = buildTable({
-      columns: 1,
-      foreignKeys: [
-        {name: "FK_Posts_Users", columns: ["c1"]}
-      ]
-    });
+    const table = buildTableWithForeignKey();
 
     const updated = table.renameForeignKey(
-      "FK_Posts_Users",
-      "FK_Posts_Authors"
+      "FK1",
+      "FK2"
     );
 
     expect(() => {
       updated.foreignKeys.requireByName(
-        "FK_Posts_Users"
+        "FK1"
       );
     }).toThrow();
   });
 
   it('does not mutate original table (immutability)', () => {
-    const table = buildTable({
-      columns: 1,
-      foreignKeys: [
-        {name: "FK_Posts_Users", columns: ["c1"]}
-      ]
-    });
+    const table = buildTableWithForeignKey();
 
     const updated = table.renameForeignKey(
-      "FK_Posts_Users",
-      "FK_Posts_Authors"
+      "FK1",
+      "FK2"
     );
 
     expect(
       table.foreignKeys.requireByName(
-        "FK_Posts_Users"
+        "FK1"
       )
     ).toBeDefined();
 
     expect(
       updated.foreignKeys.requireByName(
-        "FK_Posts_Authors"
+        "FK2"
       )
     ).toBeDefined();
   });
 
   it('supports case-insensitive lookup', () => {
-    const table = buildTable({
-      columns: 1,
-      foreignKeys: [
-        {name: "FK_Posts_Users", columns: ["c1"]}
-      ]
-    });
+    const table = buildTableWithForeignKey();
 
     const updated = table.renameForeignKey(
-      "fk_posts_users",
+      "fK1",
       "RenamedFK"
     );
 
@@ -101,42 +86,36 @@ describe('Table::renameForeignKey', () => {
   });
 
   it('throws when another foreign key already uses the new name', () => {
-    let table = buildTable({
-      columns: 1,
-      foreignKeys: [
-        {name: "FK_Posts_Users", columns: ["c1"]}
-      ]
-    });
-    table = table
-      .createColumn({
-        name: "CategoryId",
-        type: Number,
-        nullable: false,
-      });
-    table = addForeignKeyByName(table, {
-      name: "FK_Posts_Categories",
-      columns: ["CategoryId"],
+    const table = buildTableWithForeignKey()
+      .createColumn(createColumnTestSpec({
+        name: "c2",
+      }))
+      .createIndex(createIndexTestSpec({
+        name: "ri2",
+        columns: ["c2"],
+        unique: false,
+      }));
+
+    const updated = addForeignKeyByName(table, {
+      name: "FK2",
+      columns: ["c2"],
+      reverseIndex: "ri2",
     });
 
     expect(() => {
-      table.renameForeignKey(
-        "FK_Posts_Users",
-        "FK_Posts_Categories"
+      updated.renameForeignKey(
+        "FK1",
+        "FK2"
       );
     }).toThrow();
   });
 
   it('returns same table when renaming to same name', () => {
-    const table = buildTable({
-      columns: 1,
-      foreignKeys: [
-        {name: "FK_Posts_Users", columns: ["c1"]}
-      ]
-    });
+    const table = buildTableWithForeignKey();
 
     const updated = table.renameForeignKey(
-      "FK_Posts_Users",
-      "FK_Posts_Users"
+      "FK1",
+      "FK1"
     );
 
     expect(updated).toBe(table);

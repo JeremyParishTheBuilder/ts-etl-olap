@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
-describe('Table::addPrimaryKey', () => {
+describe('Table::createPrimaryKey', () => {
   it('adds a primary key to the table', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({

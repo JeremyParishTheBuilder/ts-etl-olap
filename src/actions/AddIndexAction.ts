@@ -12,7 +12,7 @@ export class AddIndexAction implements Action {
   ) {}
 
   apply(databases: Databases): Databases {
-    const db = databases.require(this.dbName);
+    const db = databases.requireByName(this.dbName);
 
     const updatedTable = db
       .tables.requireByName(this.tableName)

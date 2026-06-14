@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
-
-import { Database } from "../../src/schema/Database.js";
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
 import { 
+  buildDatabase,
   buildTable,
   createColumnTestSpec,
   createForeignKeyTestSpec_Database,
@@ -12,7 +11,7 @@ import {
 describe('Database::removeIndex', () => {
 
   it('removes an index from a table', () => {
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(
         buildTable({columns: ["c1"]})
           .createIndex(createIndexTestSpec({
@@ -33,7 +32,7 @@ describe('Database::removeIndex', () => {
   });
 
   it('does not mutate original database state', () => {
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(
         buildTable({columns: ["c1"]})
           .createIndex(createIndexTestSpec({name: "i1", columns: ["c1"]}))
@@ -83,7 +82,7 @@ describe('Database::removeIndex', () => {
         type: Number,
       }));
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(users)
       .addTable(roles);
 
@@ -107,7 +106,7 @@ describe('Database::removeIndex', () => {
         type: String,
       }));
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(table);
 
     expect(() =>
@@ -141,7 +140,7 @@ describe('Database::removeIndex', () => {
         unique: false,
       }));
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(parent)
       .addTable(child)
       .createForeignKey("users", createForeignKeyTestSpec_Database({
@@ -189,7 +188,7 @@ describe('Database::removeIndex', () => {
         unique: false,
       }));
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(parent)
       .addTable(child)
       .createForeignKey("users", createForeignKeyTestSpec_Database({
@@ -241,7 +240,7 @@ describe('Database::removeIndex', () => {
         unique: false,
       }));
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(employees)
       .createForeignKey("employees", createForeignKeyTestSpec_Database({
         name: "FK_Manager",
@@ -274,7 +273,7 @@ describe('Database::removeIndex', () => {
 
     table = table.addRow(["a@test.com"]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(table);
 
     const updated = db.removeIndex(
@@ -304,7 +303,7 @@ describe('Database::removeIndex', () => {
         columns: ["email"],
       }));
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(table);
 
     const updated = db.removeIndex(

@@ -1,4 +1,5 @@
 import { type ColumnId } from "../schema/Column.js";
+import { type DatabaseId } from "../schema/Database.js";
 import { type ForeignKeyId } from "../schema/ForeignKey.js";
 import { type IndexId } from "../schema/Index.js";
 import { type TableId } from "../schema/Table.js";
@@ -12,6 +13,7 @@ export class IdAllocator<T extends number> {
 }
 
 export interface IdService {
+  nextDatabaseId(): DatabaseId;
   nextTableId(): TableId;
   nextColumnId(): ColumnId;
   nextForeignKeyId(): ForeignKeyId;

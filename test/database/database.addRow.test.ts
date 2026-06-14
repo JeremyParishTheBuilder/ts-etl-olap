@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { Database } from '../../src/schema/Database.js';
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
-import { createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildDatabase, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Database::addRow', () => {
   it('allows inserting row with valid foreign key reference', () => {
-    let database = new Database("DB1")
+    let database = buildDatabase()
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
@@ -61,7 +60,7 @@ describe('Database::addRow', () => {
   });
 
   it('throws when foreign key reference does not exist', () => {
-    let database = new Database("DB1")
+    let database = buildDatabase()
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
@@ -112,7 +111,7 @@ describe('Database::addRow', () => {
   });
 
   it('allows NULL foreign key values', () => {
-    let database = new Database("DB1")
+    let database = buildDatabase()
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
@@ -163,7 +162,7 @@ describe('Database::addRow', () => {
   });
 
   it('enforces foreign key constraints during insertion', () => {
-    let database = new Database("DB1")
+    let database = buildDatabase()
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
@@ -213,7 +212,7 @@ describe('Database::addRow', () => {
   });
 
   it('allows insertion when foreign key target exists', () => {
-    let database = new Database("DB1")
+    let database = buildDatabase()
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
@@ -263,7 +262,7 @@ describe('Database::addRow', () => {
   });
 
   it('allows insertion when foreign key contains NULL components', () => {
-    let database = new Database("DB1")
+    let database = buildDatabase()
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 

@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Database } from "../../src/schema/Database.js";
-import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import {
+  buildDatabase,
+  buildTable,
+  createColumnTestSpec
+} from '../utils/buildSchema.js';
 
 describe('Composite Foreign Keys', () => {
 
@@ -21,7 +24,7 @@ describe('Composite Foreign Keys', () => {
       });
 
     expect(() =>
-      new Database("DB1")
+      buildDatabase()
         .addTable(parent)
         .addTable(
           buildTable({name: "Child"})
@@ -70,7 +73,7 @@ describe('Composite Foreign Keys', () => {
 
     parent = parent.addRow([1, 2]);
 
-    let db = new Database("DB1")
+    let db = buildDatabase()
       .addTable(parent)
       .addTable(
         buildTable({name: "Child"})
@@ -130,7 +133,7 @@ describe('Composite Foreign Keys', () => {
 
     parent = parent.addRow([1, 2]);
 
-    let db = new Database("DB1")
+    let db = buildDatabase()
       .addTable(parent)
       .addTable(
         buildTable({name: "Child"})
@@ -187,7 +190,7 @@ describe('Composite Foreign Keys', () => {
     parent = parent.addRow([1, 2]);
     parent = parent.addRow([3, 4]);
 
-    let db = new Database("DB1")
+    let db = buildDatabase()
       .addTable(parent)
       .addTable(
         buildTable({name: "Child"})
@@ -261,7 +264,7 @@ describe('Composite Foreign Keys', () => {
 
     child = child.addRow([1, 2]);
 
-    let db = new Database("DB1")
+    let db = buildDatabase()
       .addTable(parent)
       .addTable(child);
 
@@ -326,7 +329,7 @@ describe('Composite Foreign Keys', () => {
 
     child = child.addRow([1, 2]);
 
-    let db = new Database("DB1")
+    let db = buildDatabase()
       .addTable(parent)
       .addTable(child);
 
@@ -387,7 +390,7 @@ describe('Composite Foreign Keys', () => {
 
     child = child.addRow([1, 2]);
 
-    let db = new Database("DB1")
+    let db = buildDatabase()
       .addTable(parent)
       .addTable(child);
 
@@ -431,7 +434,7 @@ describe('Composite Foreign Keys', () => {
 
     parent = parent.addRow([1, 2]);
 
-    let db = new Database("DB1")
+    let db = buildDatabase()
       .addTable(parent)
       .addTable(
         buildTable({name: "Child"})
@@ -486,7 +489,7 @@ describe('Composite Foreign Keys', () => {
       });
 
     expect(() =>
-      new Database("DB1")
+      buildDatabase()
         .addTable(parent)
         .addTable(
           buildTable({name: "Child"})

@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { Database } from "../../src/schema/Database.js";
 import { ReferentialAction } from "../../src/schema/ReferentialAction.js";
-import { buildTable, createColumnTestSpec } from "../utils/buildSchema.js";
+import {
+  buildDatabase,
+  buildTable,
+  createColumnTestSpec
+} from "../utils/buildSchema.js";
 
 describe("Database Referential Actions", () => {
 
@@ -24,7 +27,7 @@ describe("Database Referential Actions", () => {
       })
       .addRow([1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(parent)
       .addTable(child)
       .createForeignKey(
@@ -64,7 +67,7 @@ describe("Database Referential Actions", () => {
       })
       .addRow([1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(parent)
       .addTable(child)
       .createForeignKey(
@@ -110,7 +113,7 @@ describe("Database Referential Actions", () => {
       })
       .addRow([1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(parent)
       .addTable(child)
       .createForeignKey(
@@ -152,7 +155,7 @@ describe("Database Referential Actions", () => {
       })
       .addRow([1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(parent)
       .addTable(child)
       .createForeignKey(
@@ -202,7 +205,7 @@ describe("Database Referential Actions", () => {
       .addRow([1, null])
       .addRow([2, 1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(table)
       .createForeignKey(
         "Node",
@@ -249,7 +252,7 @@ describe("Database Referential Actions", () => {
       .addRow([1, 2])
       .addRow([2, 1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(table)
       .createForeignKey(
         "Node",
@@ -298,7 +301,7 @@ describe("Database Referential Actions", () => {
       })
       .addRow([1, 2]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(parent)
       .addTable(child)
       .createForeignKey(
@@ -356,7 +359,7 @@ describe("Database Referential Actions", () => {
       })
       .addRow([1, 2]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(parent)
       .addTable(child)
       .createForeignKey(
@@ -412,7 +415,7 @@ describe("Database Referential Actions", () => {
       })
       .addRow([1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(a)
       .addTable(b)
       .addTable(c)
@@ -467,7 +470,7 @@ describe("Database Referential Actions", () => {
       })
       .addRow([1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(parent)
       .addTable(child)
       .createForeignKey(
@@ -514,7 +517,7 @@ describe("Database Referential Actions", () => {
       D must only be deleted once.
     */
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(
         buildTable({name: "A"})
           .createColumn(createColumnTestSpec({
@@ -645,7 +648,7 @@ describe("Database Referential Actions", () => {
       reverse indexes were updated correctly.
     */
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(
         buildTable({name: "A"})
           .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
@@ -720,7 +723,7 @@ describe("Database Referential Actions", () => {
       should terminate safely.
     */
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(
         buildTable({name: "A"})
           .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
@@ -788,7 +791,7 @@ describe("Database Referential Actions", () => {
   });
 
   it("keeps reverse indexes synchronized during cascading deletes", () => {
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(
         buildTable({name: "Parent"})
           .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))

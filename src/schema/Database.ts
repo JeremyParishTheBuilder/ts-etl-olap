@@ -6,7 +6,6 @@ import {
   type ForeignKey,
 } from './ForeignKey.js';
 import { Immutable } from "../infrastructure/Immutable.js";
-import { PersistentMap } from '../infrastructure/PersistentMap.js';
 import { ReferentialAction } from './ReferentialAction.js';
 import { RowView } from './RowView.js';
 import { IdAllocator } from '../types/IdAllocator.js';
@@ -14,30 +13,39 @@ import { NamedObjectStore } from '../infrastructure/NamedObjectStore.js';
 
 const MAX_DEPTH = 25;
 
+export type DatabaseId = number & { readonly __brand: "DatabaseId" };
+
 export class Database extends Immutable {
-  //public readonly id;
+  public readonly id: DatabaseId;
   public readonly name: string;
 
   public readonly tables: NamedObjectStore<Table, TableId>;
+  public readonly tableIds: IdAllocator<TableId>;
 
-  public readonly tableIds;
-
-  constructor(/*spec: {*/
+  constructor(spec: {
+    id: DatabaseId,
     name: string,
-  /*}*/) {
+  }) {
     super();
 
-    //this.id = spec.id;
-    this.name = /*spec.*/name;
+    this.id = spec.id;
+    this.name = spec.name;
 
     this.tables = new NamedObjectStore();
-    this.tableIds = new IdAllocator<TableId>();
+    this.tableIds = new IdAllocator();
 
     this.validate();
     this.seal();
   }
 
   public validate() {}
+
+  public static create(spec: {
+    name: string,
+    id: DatabaseId,
+  }): Database {
+    return new Database(spec);
+  }
 
   public addTable(table: Table): this {
     return this.with({
@@ -52,7 +60,7 @@ export class Database extends Immutable {
   }
 
   public createTable(spec: { name: string }): this {
-    this.assertTableNameUnused(spec.name);
+    this.tables.assertNameUnused(spec.name);
 
     const [id, tableIds] = this.tableIds.allocate();
 

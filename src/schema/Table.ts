@@ -246,7 +246,7 @@ export class Table extends Immutable {
   //  </columns>
 
   //  <constraints>
-  private assertNoDuplicateUniqueColumnSet(columns: ColumnId[]): void {
+  private assertUniqueConstraintNotDuplicated(columns: ColumnId[]): void {
     for(const index of this.indexes.values()) {
       if (index.unique && sameColumnSet(index.columns, columns)) {
         throw new Error(
@@ -271,6 +271,8 @@ export class Table extends Immutable {
     if (this.primaryKey) {
       throw new Error(`Primary Key ${this.primaryKey} already exists`);
     }
+
+    
 
     const index = this.indexes.require(spec.index);
 
@@ -316,6 +318,20 @@ export class Table extends Immutable {
     }
   }
 
+  private assertReverseIndexMatchesColumns(indexId: IndexId, columns: ColumnId[]): void {
+    const index = this.indexes.require(indexId);
+    if (!arraysEqual(index.columns, columns)) {
+      throw new Error(`Reverse Index Columns does not match Foreign Key Columns`);
+    }
+  }
+
+  private assertReverseIndexNotUnique(indexId: IndexId): void {
+    const index = this.indexes.require(indexId);
+    if (index.unique === true) {
+      throw new Error(`Reverse Index must not be unique`);
+    }
+  }
+
   public createForeignKey(
     spec: {
       name: string,
@@ -330,8 +346,12 @@ export class Table extends Immutable {
   ): Table {
     this.assertConstraintNameUnused(spec.name);
 
+    this.assertReverseIndexMatchesColumns(spec.reverseIndex, spec.columns);
+
+    this.assertReverseIndexNotUnique(spec.reverseIndex);
+
     const [id, foreignKeyIds] = this.foreignKeyIds.allocate();
-    
+
     const foreignKey = ForeignKey.create({
       ...spec,
       id,
@@ -517,7 +537,7 @@ export class Table extends Immutable {
 
     if (spec.unique) {
       this.assertConstraintNameUnused(spec.name);
-      this.assertNoDuplicateUniqueColumnSet(columnIds);
+      this.assertUniqueConstraintNotDuplicated(columnIds);
     }
 
     const columnIndexes =
@@ -566,8 +586,6 @@ export class Table extends Immutable {
   }
 
   public removeCheckById(id: CheckId): Table {
-    const check = this.checks.require(id);
-
     const updatedChecks = this.checks.remove(id);
 
     return this.with({

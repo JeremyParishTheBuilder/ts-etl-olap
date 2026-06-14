@@ -8,10 +8,6 @@ export class AddForeignKeyAction implements Action {
     private dbName: string,
     private tableName: string,
     private spec: Omit<ForeignKeySpec, "kind"> & {
-      // name: string,
-      // columns: string[],
-      // parentTable: string,
-      // parentColumns: string[],
       onDelete: ReferentialAction,
       onUpdate: ReferentialAction,
       reverseIndex: string,
@@ -20,7 +16,7 @@ export class AddForeignKeyAction implements Action {
 
   apply(databases: Databases): Databases {
     const updatedDatabase = databases
-      .require(this.dbName)
+      .requireByName(this.dbName)
       .createForeignKey(
         this.tableName,
         this.spec,

@@ -12,7 +12,6 @@ export class ForeignKey extends ColumnBoundImmutable {
   public readonly id: ForeignKeyId;
   public readonly name: string;
   public readonly columns: ColumnId[];
-  //public readonly parentTable: string;
   public readonly parentTable: TableId;
   public readonly parentColumns: ColumnId[];
   public readonly parentIndex: IndexId;
@@ -24,7 +23,6 @@ export class ForeignKey extends ColumnBoundImmutable {
     id: ForeignKeyId,
     name: string,
     columns: ColumnId[],
-    //parentTable: string,
     parentTable: TableId,
     parentColumns: ColumnId[],
     parentIndex: IndexId,
@@ -37,7 +35,6 @@ export class ForeignKey extends ColumnBoundImmutable {
     this.id = spec.id;
     this.name = spec.name,
     this.columns = spec.columns,
-    //this.parentTable = normalizeIdentifier(spec.parentTable), // TODO, replace with TableId
     this.parentTable = spec.parentTable,
     this.parentColumns = spec.parentColumns,
     this.parentIndex = spec.parentIndex,
@@ -61,7 +58,6 @@ export class ForeignKey extends ColumnBoundImmutable {
     id: ForeignKeyId,
     name: string,
     columns: ColumnId[],
-    //parentTable: string,
     parentTable: TableId,
     parentColumns: ColumnId[],
     parentIndex: IndexId,

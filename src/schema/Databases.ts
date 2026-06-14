@@ -1,48 +1,71 @@
-import { PersistentMap } from "../infrastructure/PersistentMap.js";
 import { Immutable } from "../infrastructure/Immutable.js";
-import { Database } from "./Database.js";
+import { Database, type DatabaseId } from "./Database.js";
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
+import { NamedObjectStore } from "../infrastructure/NamedObjectStore.js";
+import { IdAllocator } from "../types/IdAllocator.js";
 
 export class Databases extends Immutable {
-  public databases: PersistentMap<string, Database> = new PersistentMap();
+  public readonly databases: NamedObjectStore<Database, DatabaseId>;
+  public readonly databaseIds: IdAllocator<DatabaseId>;
 
   public constructor() {
     super();
+
+    this.databases = new NamedObjectStore();
+    this.databaseIds = new IdAllocator();
+
     this.validate();
     this.seal();
   }
 
   public validate(): void {}
 
-  public get(name: string): Database | undefined {
-    return this.databases.get(normalizeIdentifier(name));
+  public get(id: DatabaseId): Database | undefined {
+    return this.databases.get(id);
   }
 
-  public require(name: string): Database {
-    const database: Database | undefined = this.get(name);
-    if (!database) throw new Error(`Database '${name ?? "unknown"}' not found`);
-    return database;
+  public getByName(name: string): Database | undefined {
+    return this.databases.getByName(name);
   }
 
-  public create(name: string): Databases {
-    return this.add(new Database(name));
+  public require(id: DatabaseId): Database {
+    return this.databases.require(id);
+  }
+
+  public requireByName(name: string): Database {
+    return this.databases.requireByName(name);
+  }
+
+  public create(spec: { name: string }): Databases {
+    this.databases.assertNameUnused(spec.name);
+
+    const [id, databaseIds] = this.databaseIds.allocate();
+
+    const database = Database.create({...spec, id});
+
+    const updatedDatabases = this.databases.add(database);
+
+    return this.with({
+      databases: updatedDatabases,
+      databaseIds,
+    } as Partial<this>);
   }
 
   public add(database: Database): Databases {
     return this.with({
-      databases: this.databases.add(normalizeIdentifier(database.name), database),
+      databases: this.databases.add(database),
     } as Partial<this>);
   }
 
   public update(database: Database): Databases {
     return this.with({
-      databases: this.databases.update(normalizeIdentifier(database.name), database)
+      databases: this.databases.update(database)
     } as Partial<this>);
   }
 
-  public remove(name: string) {
+  public remove(id: DatabaseId) {
     return this.with({
-      databases: this.databases.remove(normalizeIdentifier(name)),
+      databases: this.databases.remove(id),
     } as Partial<this>);
   }
 }

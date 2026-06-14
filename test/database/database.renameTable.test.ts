@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { Database } from '../../src/schema/Database.js';
-import { buildParentChildDatabase, buildTable } from '../utils/buildSchema.js';
+import { buildDatabase, buildParentChildDatabase, buildTable } from '../utils/buildSchema.js';
 
 describe('Database::renameTable', () => {
 
   it('renames table and makes it retrievable under new name', () => {
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(buildTable({ name: "Users" }));
 
     const updated = db.renameTable(
@@ -23,7 +22,7 @@ describe('Database::renameTable', () => {
   });
 
   it('preserves table id during rename', () => {
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(buildTable({ name: "Users" }));
 
     const originalId =
@@ -38,7 +37,7 @@ describe('Database::renameTable', () => {
   });
 
   it('updates table name lookup', () => {
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(buildTable({ name: "Users" }));
 
     const updated =
@@ -54,7 +53,7 @@ describe('Database::renameTable', () => {
   });
 
   it('rejects renaming to existing table name', () => {
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(buildTable({ name: "Users" }))
       .addTable(buildTable({ name: "Accounts" }));
 

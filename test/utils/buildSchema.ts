@@ -1,36 +1,23 @@
 import { Table, type TableId } from "../../src/schema/Table.js";
-import { Database } from "../../src/schema/Database.js";
+import { Database, type DatabaseId } from "../../src/schema/Database.js";
 import { type ColumnSpec, type ColumnId } from "../../src/schema/Column.js";
 import { type ForeignKeyId } from "../../src/schema/ForeignKey.js";
 import { type IndexSpec, type IndexId } from "../../src/schema/Index.js";
 import { type IdService } from "../../src/types/IdAllocator.js";
-import { type CheckSpec, ForeignKeySpec } from "../../src/schema/Constraint.js";
+import { type CheckSpec, type ForeignKeySpec } from "../../src/schema/Constraint.js";
 
 let nextId = 1;
 
 export function createTestIdService(): IdService {
 
   return {
+    nextDatabaseId: () => nextId++ as DatabaseId,
     nextTableId: () => nextId++ as TableId,
     nextColumnId: () => nextId++ as ColumnId,
     nextIndexId: () => nextId++ as IndexId,
     nextForeignKeyId: () => nextId++ as ForeignKeyId,
   };
 }
-
-// export function makeResolvedForeignKey(overrides = {}): ForeignKey {
-//   const ids = createTestIdService();
-
-//   return {
-//     id: ids.nextForeignKeyId(),
-//     name: "FK_Test",
-//     columns: [ids.nextColumnId()],
-//     parentTable: "Parent",
-//     parentColumns: [ids.nextColumnId()],
-//     reverseIndex: ids.nextIndexId(),
-//     ...overrides,
-//   } as ForeignKey;
-// }
 
 export function createColumnTestSpec(
   overrides: Partial<ColumnSpec> = {},
@@ -83,13 +70,17 @@ export function createForeignKeyTestSpec_Table(
   parentIndex: IndexId,
 } {
   const ids = createTestIdService();
+
+  const columns = overrides.columns ?? [ids.nextColumnId()];
+  const parentColumns = overrides.parentColumns ?? columns;
+
   return {
     name: "fk1",
-    columns: [ids.nextColumnId()],
-    reverseIndex: ids.nextIndexId(),
-    parentTable: ids.nextTableId(),
-    parentColumns: [ids.nextColumnId()],
-    parentIndex: ids.nextIndexId(),
+    columns,
+    reverseIndex: overrides.reverseIndex ?? ids.nextIndexId(),
+    parentTable: overrides.parentTable ?? ids.nextTableId(),
+    parentColumns,
+    parentIndex: overrides.parentIndex ?? ids.nextIndexId(),
     ...overrides,
   };
 }
@@ -110,6 +101,23 @@ export function createForeignKeyTestSpec_Database(
     ...overrides,
   };
 }
+
+export function buildTableWithForeignKey() {
+    const table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "c1",
+      }))
+      .createIndex(createIndexTestSpec({
+        name: "ri",
+        columns: ["c1"]
+      }));
+
+    return addForeignKeyByName(table, {
+        name: "FK1",
+        columns: ["c1"],
+        reverseIndex: "ri",
+      });
+  }
 
 export function addForeignKeyByName(
   table: Table,
@@ -138,18 +146,8 @@ interface DefaultBuildOptions {
 }
 
 interface BuildTableOptions {
-  ids?: IdService;
   name?: string;
   columns?: number | string[];
-  indexes?: Array<{
-    name?: string;
-    columns?: string[];
-  }>;
-  foreignKeys?: Array<{
-    name?: string;
-    columns?: string[];
-    //reverseIndex?: string
-  }>;
 }
 
 export function buildTable(
@@ -158,8 +156,6 @@ export function buildTable(
   const {
     name = "t1",
     columns = [],
-    //index = [],
-    foreignKeys = [],
   } = options;
 
   const ids = createTestIdService();
@@ -183,69 +179,8 @@ export function buildTable(
     });
   }
 
-  foreignKeys.forEach((fk, i) => {
-    const name = fk.name ?? `fk${i + 1}`;
-
-    const fkColumns =
-      fk.columns?.length
-        ? fk.columns
-        : [columnNames[0]];
-
-    table = table.createForeignKey(
-      createForeignKeyTestSpec_Table({
-        name,
-        columns: fkColumns.map(c =>
-          table.columns.requireIdByName(c)
-        ),
-      })
-    );
-  });
-
   return table;
 }
-
-// type TableHandle = {
-//   table: Table;
-//   cols: Record<string, ColumnId>;
-// };
-
-// type ColumnHandles = Record<string, ColumnId>;
-
-// export function getColumnHandles(table: Table): ColumnHandles {
-//   const result: ColumnHandles = {};
-
-//   for (const col of table.columns.values()) {
-//     result[col.name] = col.id;
-//   }
-
-//   return result;
-// }
-
-// export function buildTableWithHandles(
-//   spec: {
-//     name?: string;
-//     columns: string[];
-//   },
-//   ids: IdService = createTestIdService(),
-// ): TableHandle {
-//   const table = new Table(spec.name ?? "T1");
-
-//   const cols: Record<string, ColumnId> = {};
-
-//   for (const name of spec.columns) {
-//     const id = ids.nextColumnId();
-
-//     table.createColumn({
-//       name,
-//       type: Number,
-//       nullable: true,
-//     });
-
-//     cols[name] = id;
-//   }
-
-//   return { table, cols };
-// }
 
 interface BuildDatabaseOptions {
   ids?: IdService;
@@ -259,8 +194,10 @@ export function buildDatabase(
   const {
     ids = createTestIdService(),
     name = "db1",
-    tables = ["t1"],
+    tables = 0,//["t1"],
   } = options;
+
+  const databaseId = ids.nextDatabaseId();
 
   const tableNames =
     typeof tables === "number"
@@ -270,11 +207,10 @@ export function buildDatabase(
         )
       : tables;
 
-  let database = new Database(name);
+  let database = Database.create({id: databaseId, name});
 
   for (const tableName of tableNames) {
     database = database.addTable(buildTable({
-      ids,
       name: tableName,
     }));
   }
@@ -290,9 +226,11 @@ export function buildCompositeKeyDatabase(
     name = "db1",
   } = options;
 
-  return new Database(name)
+  const databaseId = ids.nextDatabaseId();
+
+  return Database.create({id: databaseId, name})
     .addTable(
-      buildTable({ids, name: "parent", columns: ["c1", "c2"]})
+      buildTable({name: "parent", columns: ["c1", "c2"]})
         .createIndex({
           name: "A_B",
           columns: ["c1", "c2"],
@@ -300,11 +238,11 @@ export function buildCompositeKeyDatabase(
         })
     )
     .addTable(
-      buildTable({ids, name: "child", columns: ["c1", "c2"]})
+      buildTable({name: "child", columns: ["c1", "c2"]})
         .createIndex({
           name: "A_B",
           columns: ["c1", "c2"],
-          unique: true,
+          unique: false,
         })
     )
     .createForeignKey("child", {
@@ -324,9 +262,11 @@ export function buildParentChildDatabase(
     name = "db1",
   } = options;
 
-  return new Database(name)
+  const databaseId = ids.nextDatabaseId();
+
+  return Database.create({id: databaseId, name})
     .addTable(
-      buildTable({ids, name: "parent", columns: ["id"]})
+      buildTable({name: "parent", columns: ["id"]})
         .createIndex({
           name: "i1",
           columns: ["id"],
@@ -334,7 +274,7 @@ export function buildParentChildDatabase(
         })
     )
     .addTable(
-      buildTable({ids, name: "child", columns: ["ref"]})
+      buildTable({name: "child", columns: ["ref"]})
         .createIndex({
           name: "ri1",
           columns: ["ref"],

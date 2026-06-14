@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Database } from '../../src/schema/Database.js';
-import { buildTable } from '../utils/buildSchema.js';
+import { buildDatabase, buildTable } from '../utils/buildSchema.js';
 
 describe('Database::addTable', () => {
   it('adds a table to the database', () => {
-    const database = new Database("DB1");
+    const database = buildDatabase();
 
     const updated = database.addTable(
       buildTable({name: "T1"})
@@ -14,7 +13,7 @@ describe('Database::addTable', () => {
   });
 
   it('does not mutate original database (immutability)', () => {
-    const database = new Database("DB1");
+    const database = buildDatabase();
 
     const updated = database.addTable(
       buildTable({name: "T1"})
@@ -25,7 +24,7 @@ describe('Database::addTable', () => {
   });
 
   it('preserves original table casing', () => {
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .createTable({name: "Users"});
 
     expect(

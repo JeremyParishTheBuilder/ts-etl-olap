@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
-
-import { Database } from "../../src/schema/Database.js";
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
-import { buildTable, createColumnTestSpec, createForeignKeyTestSpec_Database } from '../utils/buildSchema.js';
+import { buildDatabase, buildTable, createColumnTestSpec, createForeignKeyTestSpec_Database } from '../utils/buildSchema.js';
 
 describe('Database::updateRow', () => {
 
@@ -34,7 +32,7 @@ describe('Database::updateRow', () => {
 
     users = users.addRow([1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(roles)
       .addTable(users)
       .createForeignKey("users", createForeignKeyTestSpec_Database({
@@ -89,7 +87,7 @@ describe('Database::updateRow', () => {
 
     users = users.addRow([1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(roles)
       .addTable(users)
       .createForeignKey("users", createForeignKeyTestSpec_Database({
@@ -140,7 +138,7 @@ describe('Database::updateRow', () => {
 
     users = users.addRow([1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(roles)
       .addTable(users)
       .createForeignKey("users", createForeignKeyTestSpec_Database({
@@ -189,7 +187,7 @@ describe('Database::updateRow', () => {
         unique: false,
       });
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(roles)
       .addTable(users)
       .createForeignKey("users", createForeignKeyTestSpec_Database({
@@ -241,7 +239,7 @@ describe('Database::updateRow', () => {
     employees = employees.addRow([1, null]);
     employees = employees.addRow([2, 1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(employees)
       .createForeignKey("employees", createForeignKeyTestSpec_Database({
         name: "FK_Manager",
@@ -291,7 +289,7 @@ describe('Database::updateRow', () => {
 
     employees = employees.addRow([1, null]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(employees)
       .createForeignKey("employees", createForeignKeyTestSpec_Database({
         name: "FK_Manager",

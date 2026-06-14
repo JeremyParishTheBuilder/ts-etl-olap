@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Database } from '../../src/schema/Database.js';
-import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildDatabase, buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Database::updateTable', () => {
   it('replaces an existing table with using same name', () => {
@@ -10,7 +9,7 @@ describe('Database::updateTable', () => {
     const updatedTable = table
       .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(table);
 
     const updatedDb = database.updateTable(updatedTable);

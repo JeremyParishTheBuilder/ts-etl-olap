@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Database } from '../../src/schema/Database.js';
+import { buildDatabase } from '../utils/buildSchema.js';
 
 describe('Database::requireTable', () => {
   it('returns an existing table', () => {
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .createTable({name: "T1"});
 
     const table = database.tables.requireByName("T1");
@@ -13,7 +13,7 @@ describe('Database::requireTable', () => {
   });
 
   it('throws when table does not exist', () => {
-    const database = new Database("DB1");
+    const database = buildDatabase();
 
     expect(() => {
       database.tables.requireByName("T1");
@@ -21,7 +21,7 @@ describe('Database::requireTable', () => {
   });
 
   it('retrieves a table regardless of casing', () => {
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .createTable({name: "Users"});
 
     expect(

@@ -7,6 +7,6 @@ export class CreateDatabaseAction implements Action {
   ) {}
 
   apply(databases: Databases): Databases {
-    return databases.create(this.name);
+    return databases.create({name: this.name});
   }
 }

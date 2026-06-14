@@ -1,32 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { buildTable, createForeignKeyTestSpec_Table, createTestIdService } from '../utils/buildSchema.js';
+import {
+  addForeignKeyByName,
+  buildTable,
+  buildTableWithForeignKey,
+  createForeignKeyTestSpec_Table,
+} from '../utils/buildSchema.js';
 
 describe('Table::removeForeignKey', () => {
-  function buildTableWithForeignKey() {
-    const table = buildTable()
-      .createColumn({
-        name: "UserId",
-        type: Number,
-        nullable: false,
-      })
-      .createForeignKey(createForeignKeyTestSpec_Table({
-        name: "FK_Posts_Users",
-        //columns: [ids.nextColumnId()],
-        //reverseIndex: ids.nextIndexId(),
-      }));
-    return table;
-  }
-
   it('removes the foreign key', () => {
     const table = buildTableWithForeignKey();
 
     const updated = table.removeForeignKey(
-      "FK_Posts_Users"
+      "FK1"
     );
 
     expect(() => {
       updated.foreignKeys.requireByName(
-        "FK_Posts_Users"
+        "FK1"
       );
     }).toThrow();
   });
@@ -35,18 +25,18 @@ describe('Table::removeForeignKey', () => {
     const table = buildTableWithForeignKey();
 
     const updated = table.removeForeignKey(
-      "FK_Posts_Users"
+      "FK1"
     );
 
     expect(
       table.foreignKeys.requireByName(
-        "FK_Posts_Users"
+        "FK1"
       )
     ).toBeDefined();
 
     expect(() => {
       updated.foreignKeys.requireByName(
-        "FK_Posts_Users"
+        "FK1"
       );
     }).toThrow();
   });
@@ -55,12 +45,12 @@ describe('Table::removeForeignKey', () => {
     const table = buildTableWithForeignKey();
 
     const updated = table.removeForeignKey(
-      "fk_posts_users"
+      "fK1"
     );
 
     expect(() => {
       updated.foreignKeys.requireByName(
-        "FK_Posts_Users"
+        "FK1"
       );
     }).toThrow();
   });
@@ -75,26 +65,23 @@ describe('Table::removeForeignKey', () => {
 
 
   it('preserves unrelated foreign keys during foreign key removal', () => {
-    const table = buildTable()
-      .createForeignKey(createForeignKeyTestSpec_Table({
-        name: "FK_Parent1",
-      }))
-      .createForeignKey(createForeignKeyTestSpec_Table({
-        name: "FK_Parent2",
-      }));
-    
+    const table = addForeignKeyByName(buildTableWithForeignKey(), {
+        name: "FK2",
+        columns: ["c1"],
+        reverseIndex: "ri",
+      });
 
     const updated =
       table.removeForeignKey(
-        "FK_Parent1"
+        "FK2"
       );
 
     expect(() => {
-      updated.foreignKeys.requireByName("FK_Parent1");
+      updated.foreignKeys.requireByName("FK2");
     }).toThrow();
 
     expect(
-      updated.foreignKeys.requireByName("FK_Parent2")
+      updated.foreignKeys.requireByName("FK1")
     ).toBeDefined();
   });
 

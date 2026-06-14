@@ -1,7 +1,7 @@
 import { describe, it, expect, } from 'vitest';
 import { buildTable, createColumnTestSpec, } from '../utils/buildSchema.js';
 
-describe('Table::addColumn', () => {
+describe('Table::createColumn', () => {
 
   it('adds a column to an empty table', () => {
     const table = buildTable();

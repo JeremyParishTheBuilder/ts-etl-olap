@@ -10,7 +10,7 @@ export class InsertRowAction implements Action {
   ) {}
 
   apply(databases: Databases) {
-    const database = databases.require(this.dbName);
+    const database = databases.requireByName(this.dbName);
 
     const resolvedRow = database
       .tables.requireByName(this.tableName)

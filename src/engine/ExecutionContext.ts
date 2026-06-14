@@ -18,7 +18,7 @@ export class ExecutionContext {
       throw new Error("No database selected");
     }
 
-    return this.tx.databases.get(dbName);
+    return this.tx.databases.getByName(dbName);
   }
 
   public requireDatabase(name?: string): Database {
@@ -28,7 +28,7 @@ export class ExecutionContext {
       throw new Error("No database selected");
     }
 
-    return this.tx.databases.require(dbName);
+    return this.tx.databases.requireByName(dbName);
   }
 
   public getTable(name: string, dbName?: string): Table | undefined {

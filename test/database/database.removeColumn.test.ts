@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { buildCompositeKeyDatabase, buildParentChildDatabase, buildTable } from '../utils/buildSchema.js';
-import { Database } from '../../src/schema/Database.js';
+import {
+  buildCompositeKeyDatabase,
+  buildDatabase,
+  buildParentChildDatabase,
+  buildTable
+} from '../utils/buildSchema.js';
 
 describe('Database::removeColumn', () => {
 
@@ -8,7 +12,7 @@ describe('Database::removeColumn', () => {
 
     const table = buildTable({name: "t1", columns: ["c1"]});
 
-    const db = new Database("DB1").addTable(table);
+    const db = buildDatabase().addTable(table);
 
     const updatedDb = db.removeColumn("T1", "C1");
 
@@ -22,7 +26,7 @@ describe('Database::removeColumn', () => {
     const table1 = buildTable({name: "t1", columns: ["c1"]});
     const table2 = buildTable({name: "t2", columns: ["c1"]});
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(table1)
       .addTable(table2);
 
@@ -83,7 +87,7 @@ describe('Database::removeColumn', () => {
 
     const table = buildTable({name: "t1", columns: ["c1"]});
 
-    const db = new Database("DB1").addTable(table);
+    const db = buildDatabase().addTable(table);
 
     const updatedDb = db.removeColumn("t1", "c1");
 
@@ -96,7 +100,7 @@ describe('Database::removeColumn', () => {
 
     const table = buildTable({name: "t1", columns: ["c1"]});
 
-    const db = new Database("DB1").addTable(table);
+    const db = buildDatabase().addTable(table);
 
     const updatedDb = db.removeColumn("t1", "c1");
 

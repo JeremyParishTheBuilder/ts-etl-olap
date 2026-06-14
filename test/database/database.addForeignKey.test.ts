@@ -1,10 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { Database } from '../../src/schema/Database.js';
-import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import {
+  buildDatabase,
+  buildParentChildDatabase,
+  buildTable,
+  createColumnTestSpec,
+  createForeignKeyTestSpec_Database
+} from '../utils/buildSchema.js';
 
 describe('Database::createForeignKey', () => {
-  function buildDatabase() {
-    let users = buildTable({name: "Users"})
+  it('adds a foreign key to the child table', () => {
+    const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
         type: Number,
@@ -28,13 +33,9 @@ describe('Database::createForeignKey', () => {
         unique: false,
       });
 
-    return new Database("DB1")
+    const database = buildDatabase()
       .addTable(users)
       .addTable(posts);
-  }
-
-  it('adds a foreign key to the child table', () => {
-    const database = buildDatabase();
 
     const updated = database.createForeignKey(
       "Posts",
@@ -55,7 +56,33 @@ describe('Database::createForeignKey', () => {
   });
 
   it('does not mutate original database (immutability)', () => {
-    const database = buildDatabase();
+    const users = buildTable({name: "Users"})
+      .createColumn({
+        name: "Id",
+        type: Number,
+        nullable: false,
+      })
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id"],
+        unique: true,
+      });
+
+    const posts = buildTable({name: "Posts"})
+      .createColumn({
+        name: "UserId",
+        type: Number,
+        nullable: false,
+      })
+      .createIndex({
+        name: "FKRI",
+        columns: ["UserId"],
+        unique: false,
+      });
+
+    const database = buildDatabase()
+      .addTable(users)
+      .addTable(posts);
 
     const updated = database.createForeignKey(
       "Posts",
@@ -82,7 +109,33 @@ describe('Database::createForeignKey', () => {
   });
 
   it('does not mutate parent table', () => {
-    const database = buildDatabase();
+    const users = buildTable({name: "Users"})
+      .createColumn({
+        name: "Id",
+        type: Number,
+        nullable: false,
+      })
+      .createIndex({
+        name: "PK_Users",
+        columns: ["Id"],
+        unique: true,
+      });
+
+    const posts = buildTable({name: "Posts"})
+      .createColumn({
+        name: "UserId",
+        type: Number,
+        nullable: false,
+      })
+      .createIndex({
+        name: "FKRI",
+        columns: ["UserId"],
+        unique: false,
+      });
+
+    const database = buildDatabase()
+      .addTable(users)
+      .addTable(posts);
 
     const originalParent =
       database.tables.requireByName("Users");
@@ -172,7 +225,7 @@ describe('Database::createForeignKey', () => {
   });
 
   it('throws when parent columns are not uniquely indexed', () => {
-    let users = buildTable({name: "Users"})
+    const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
         type: Number,
@@ -196,7 +249,7 @@ describe('Database::createForeignKey', () => {
         unique: false,
       });
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users)
       .addTable(posts);
 
@@ -215,10 +268,8 @@ describe('Database::createForeignKey', () => {
   });
 
   it('throws when child and parent column counts differ', () => {
-    let database = buildDatabase();
-    
-    let users = database.tables.requireByName("Users");
-    users = users
+    const users = buildTable({name: "Users"})
+      .createColumn(createColumnTestSpec({name: "Id"}))
       .createColumn(createColumnTestSpec({name: "Id2"}))
       .createIndex({
         name: "PK_Users2",
@@ -226,7 +277,21 @@ describe('Database::createForeignKey', () => {
         unique: true,
       });
 
-    database = database.updateTable(users);
+    const posts = buildTable({name: "Posts"})
+      .createColumn({
+        name: "UserId",
+        type: Number,
+        nullable: false,
+      })
+      .createIndex({
+        name: "FKRI",
+        columns: ["UserID"],
+        unique: false,
+      });
+
+    const database = buildDatabase()
+      .addTable(users)
+      .addTable(posts);
 
     expect(() => {
       database.createForeignKey(
@@ -262,7 +327,7 @@ describe('Database::createForeignKey', () => {
         nullable: false,
       });
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users)
       .addTable(posts);
 
@@ -281,50 +346,30 @@ describe('Database::createForeignKey', () => {
   });
 
   it('supports case-insensitive table and column references', () => {
-    const database = buildDatabase();
+    const database = buildParentChildDatabase();
 
-    const updated = database.createForeignKey(
-      "posts",
-      {
-        name: "FK_Posts_Users",
-        columns: ["userid"],
-        reverseIndex: "FKRI",
-        parentTable: "users",
-        parentColumns: ["id"],
-      }
-    );
+    const updated = database.createForeignKey("chilD", createForeignKeyTestSpec_Database({
+        name: "fK2",
+        columns: ["reF"],
+        reverseIndex: "rI1",
+        parentTable: "parenT",
+        parentColumns: ["iD"],
+      }));
 
     expect(
       updated
-        .tables.requireByName("Posts")
-        .foreignKeys.requireByName("FK_Posts_Users")
+        .tables.requireByName("Child")
+        .foreignKeys.requireByName("fk2")
     ).toBeDefined();
   });
 
   it('throws when foreign key name already exists', () => {
-    const database = buildDatabase()
-      .createForeignKey(
-        "Posts",
-        {
-          name: "FK_Posts_Users",
-          columns: ["UserId"],
-          reverseIndex: "FKRI",
-          parentTable: "Users",
-          parentColumns: ["Id"],
-        }
-      );
+    const database = buildParentChildDatabase();
 
     expect(() => {
-      database.createForeignKey(
-        "Posts",
-        {
-          name: "FK_Posts_Users",
-          columns: ["UserId"],
-          reverseIndex: "FKRI",
-          parentTable: "Users",
-          parentColumns: ["Id"],
-        }
-      );
+      database.createForeignKey("Child", createForeignKeyTestSpec_Database({
+        name: "fk1",
+      }));
     }).toThrow();
   });
 
@@ -355,7 +400,7 @@ describe('Database::createForeignKey', () => {
       })
       .addRow([999]);
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users)
       .addTable(posts);
 
@@ -400,7 +445,7 @@ describe('Database::createForeignKey', () => {
       })
       .addRow([1])
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users)
       .addTable(posts);
 
@@ -444,7 +489,7 @@ describe('Database::createForeignKey', () => {
       })
       .addRow([null]);
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users)
       .addTable(posts);
 

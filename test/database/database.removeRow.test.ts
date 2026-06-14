@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest';
-
-import { Database } from "../../src/schema/Database.js";
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
-import { buildTable, createColumnTestSpec, createForeignKeyTestSpec_Database } from '../utils/buildSchema.js';
+import {
+  buildDatabase,
+  buildTable,
+  createColumnTestSpec,
+  createForeignKeyTestSpec_Database
+} from '../utils/buildSchema.js';
 
 describe('Database::removeRow', () => {
 
@@ -15,7 +18,7 @@ describe('Database::removeRow', () => {
 
     users = users.addRow([1]);
 
-    let db = new Database("DB1")
+    let db = buildDatabase()
       .addTable(users);
 
     const updated = db.removeRow(
@@ -57,7 +60,7 @@ describe('Database::removeRow', () => {
 
     users = users.addRow([1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(roles)
       .addTable(users)
       .createForeignKey("users", createForeignKeyTestSpec_Database({
@@ -105,7 +108,7 @@ describe('Database::removeRow', () => {
 
     users = users.addRow([1]);
 
-    let db = new Database("DB1")
+    let db = buildDatabase()
       .addTable(roles)
       .addTable(users)
       .createForeignKey("users", createForeignKeyTestSpec_Database({
@@ -164,7 +167,7 @@ describe('Database::removeRow', () => {
 
     users = users.removeRow(0);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(roles)
       .addTable(users)
       .createForeignKey("users", createForeignKeyTestSpec_Database({
@@ -192,7 +195,7 @@ describe('Database::removeRow', () => {
         type: Number,
       }));
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(users);
 
     expect(() =>
@@ -212,7 +215,7 @@ describe('Database::removeRow', () => {
 
     users = users.addRow([1]);
 
-    let db = new Database("DB1")
+    let db = buildDatabase()
       .addTable(users);
 
     db = db.removeRow(
@@ -237,7 +240,7 @@ describe('Database::removeRow', () => {
 
     users = users.addRow([1]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(users);
 
     const updated = db.removeRow(
@@ -282,7 +285,7 @@ describe('Database::removeRow', () => {
 
     roles = roles.addRow([10]);
 
-    const db = new Database("DB1")
+    const db = buildDatabase()
       .addTable(users)
       .addTable(roles);
 

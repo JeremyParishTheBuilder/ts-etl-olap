@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createColumnTestSpec, createIndexTestSpec } from '../utils/buildSchema.js';
 
-describe('Table::addIndex', () => {
+describe('Table::createIndex', () => {
   it('adds an index to the table', () => {
-    const table = buildTable() // TODO, replace new with build in this case
+    const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
     const updated = table.createIndex(createIndexTestSpec({

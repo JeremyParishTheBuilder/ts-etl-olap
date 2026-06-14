@@ -109,7 +109,6 @@ export class NamedObjectStore<
 
     return this.with({
       byId: this.byId.update(obj.id, obj),
-      //byName: nextByName,
     } as Partial<this>);
   }
 
@@ -121,32 +120,6 @@ export class NamedObjectStore<
       byId: this.byId.remove(id),
     } as Partial<this>);
   }
-
-  // -------------------------
-  // Rename (pure metadata update)
-  // -------------------------
-
-  // public rename(id: ID, newName: string): NamedObjectStore<T, ID> {
-  //   const obj = this.require(id);
-
-  //   const oldNorm = normalizeIdentifier(obj.name);
-  //   const newNorm = normalizeIdentifier(newName);
-
-  //   if (oldNorm === newNorm) return this;
-
-  //   if (this.byName.has(newNorm)) {
-  //     throw new Error(`Name already exists: "${newName}"`);
-  //   }
-
-  //   const renamed = ({
-  //     ...obj,
-  //     name: newName,
-  //   } as T);
-
-  //   return this.with({
-  //     byId: this.byId.add(id, renamed),
-  //   } as Partial<this>);
-  // }
 
   // -------------------------
   // Utilities

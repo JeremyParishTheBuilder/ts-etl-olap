@@ -6,7 +6,7 @@ import { SelectBuilder } from '../../src/statements/index.js';
 import { bindSelect } from '../../src/semantic/select.js';
 import { freshEngine } from '../engine/freshEngine.js';
 import { Engine } from '../../src/engine/Engine.js';
-import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildDatabase, buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('SemanticAnalyzer::bindSelect', () => {
   let engine: Engine;
@@ -42,7 +42,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
       .addRow([1, "Alice"]);
 
     
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users);
 
     engine.databases = engine.databases.add(database);
@@ -81,7 +81,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
       }))
       .addRow([1, "Alice"]);
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users);
 
     engine.databases = engine.databases.add(database);
@@ -117,7 +117,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
       .addRow([20])
       .addRow([30]);
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users);
 
     engine.databases = engine.databases.add(database);
@@ -157,7 +157,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
       }))
       .addRow([1]);
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users);
 
     engine.databases = engine.databases.add(database);
@@ -190,7 +190,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
         nullable: false,
       }));
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users);
 
     engine.databases = engine.databases.add(database);
@@ -216,7 +216,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
         nullable: false,
       }));
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users);
 
     engine.databases = engine.databases.add(database);
@@ -245,7 +245,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
       .addRow([1])
       .addRow([2]);
 
-    const database = new Database("DB1")
+    const database = buildDatabase()
       .addTable(users);
 
     engine.databases = engine.databases.add(database);

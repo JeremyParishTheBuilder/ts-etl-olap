@@ -9,10 +9,10 @@ export class DropColumnAction implements Action {
   ) {}
 
   apply(databases: Databases): Databases {
-    const db = databases.require(this.dbName);
+    const db = databases.requireByName(this.dbName);
 
     //TODO: drop column needs to check FKs, so should go to Database, not Table.
-    const updatedTable = db.tables.require(this.tableName)
+    const updatedTable = db.tables.requireByName(this.tableName)
       .removeColumn(this.columnName);
 
     return databases.update(
