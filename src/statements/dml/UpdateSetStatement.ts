@@ -1,21 +1,12 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { type ColumnValue } from "../../schema/Column.js"
 import { type WhereClause } from "../WhereClause.js";
 import { WhereColumnBuilder } from "../dql/WhereColumnBuilder.js";
-
-//type WhereClause = { column: string };
-
-
-type Keyword = "DEFAULT";
-//TODO, define in it's own file
-type ExplicitInput =
-  | ColumnValue
-  | Keyword;
+import { type ExplicitInput } from "../../types/ExplicitInput.js";
 
 export interface UpdateSetStatement extends BaseStatement {
   kind: "update_set",
   table: string,
-  values: Record<string, ExplicitInput>,//{column: string, value: ColumnValue}[],
+  values: Record<string, ExplicitInput>,
   where?: WhereClause,
   returning?: string[],
 }
@@ -27,7 +18,6 @@ export class UpdateSetBuilder implements StatementBuilder {
 
   constructor(
     private table: string,
-    private columns: string[] = [],
   ) {}
 
   set(data: Record<string, ExplicitInput>) {

@@ -2,6 +2,8 @@ import { InputBatch } from "./InputBatch.js";
 import { ColumnValue, type InlineColumnSpec } from "../schema/Column.js";
 import { type ConstraintSpec } from "../schema/Constraint.js";
 import { type Statement } from "../statements/Statement.js";
+import { type ExplicitInput } from "../types/ExplicitInput.js";
+import { type ReferentialAction } from "../schema/ReferentialAction.js";
 
 export class PostgresInputBatch extends InputBatch {
   constructor(
@@ -54,12 +56,28 @@ export class PostgresInputBatch extends InputBatch {
     return super.references(parentTable, parentColumns);
   }
 
+  onDelete(action: ReferentialAction) {
+    return super.onDelete(action);
+  }
+
+  onUpdate(action: ReferentialAction) {
+    return super.onUpdate(action);
+  }
+
   insertInto(table: string, columns: string[] = []) {
     return super.insertInto(table, columns);
   }
 
   values(data: ColumnValue[][]) {
     return super.values(data);
+  }
+
+  update(table: string) {
+    return super.update(table);
+  }
+
+  set(data: Record<string, ExplicitInput>) {
+    return super.set(data);
   }
 
   returning(cols: string[]) {

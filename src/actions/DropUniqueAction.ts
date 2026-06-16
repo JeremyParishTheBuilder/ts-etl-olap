@@ -1,12 +1,12 @@
 import { type Action } from "./Action.js";
 import { type Databases } from "../schema/Databases.js";
-import { type IndexId } from "../schema/Index.js";
+import { type UniqueId } from "../schema/Unique.js";
 
-export class DropIndexAction implements Action {
+export class DropUniqueAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private indexId: IndexId,
+    private uniqueId: UniqueId,
   ) {}
 
   apply(databases: Databases): Databases {
@@ -14,7 +14,7 @@ export class DropIndexAction implements Action {
 
     const updatedTable = db
       .tables.requireByName(this.tableName)
-      .removeIndexById(this.indexId);
+      .removeUniqueById(this.uniqueId);
 
     const updatedDb = db.updateTable(updatedTable);
 

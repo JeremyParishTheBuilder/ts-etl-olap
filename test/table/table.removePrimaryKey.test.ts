@@ -16,7 +16,7 @@ describe('Table::removePrimaryKey', () => {
       })
       .createPrimaryKey({
         name: "PK_T1",
-        index: "PK_T1",
+        columns: ["Id"],
       });
   }
 

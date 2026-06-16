@@ -17,7 +17,7 @@ describe('Table::createPrimaryKey', () => {
 
     const updated = table.createPrimaryKey({
       name: "PK_T1",
-      index: "PK_T1",
+      columns: ["Id"],
     });
 
     expect(
@@ -40,7 +40,7 @@ describe('Table::createPrimaryKey', () => {
 
     const updated = table.createPrimaryKey({
       name: "PK_T1",
-      index: "PK_T1",
+      columns: ["Id"],
     });
 
     expect(table.primaryKey).toBeUndefined();
@@ -64,18 +64,18 @@ describe('Table::createPrimaryKey', () => {
       })
       .createPrimaryKey({
         name: "PK_T1",
-        index: "PK_T1",
+        columns: ["Id"],
       });
 
     expect(() => {
       table.createPrimaryKey({
         name: "PK_T2",
-        index: "PK_T1",
+        columns: ["Id"],
       });
     }).toThrow();
   });
 
-  it('throws when referenced index does not exist', () => {
+  it('throws when index for referenced columns does not exist', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
@@ -86,7 +86,7 @@ describe('Table::createPrimaryKey', () => {
     expect(() => {
       table.createPrimaryKey({
         name: "PK_T1",
-        index: "PK_T1",
+        columns: ["Id"],
       });
     }).toThrow();
   });
@@ -107,7 +107,7 @@ describe('Table::createPrimaryKey', () => {
     expect(() => {
       table.createPrimaryKey({
         name: "PK_T1",
-        index: "PK_T1",
+        columns: ["Id"],
       });
     }).toThrow();
   });
@@ -128,7 +128,7 @@ describe('Table::createPrimaryKey', () => {
     expect(() => {
       table.createPrimaryKey({
         name: "PK_T1",
-        index: "PK_T1",
+        columns: ["Id"],
       });
     }).not.toThrow();
   });
@@ -150,6 +150,11 @@ describe('Table::createPrimaryKey', () => {
         columns: ["OtherId"],
         unique: true,
       })
+      .createUnique({
+        name: "UQ_1",
+        indexName: "UQ_1",
+        ownsIndex: false,
+      })
       .createIndex({
         name: "UQ_2",
         columns: ["Id"],
@@ -159,7 +164,7 @@ describe('Table::createPrimaryKey', () => {
     expect(() => {
       table.createPrimaryKey({
         name: "UQ_1",
-        index: "UQ_2",
+        columns: ["Id"],
       });
     }).toThrow();
   });
@@ -180,7 +185,7 @@ describe('Table::createPrimaryKey', () => {
     expect(() => {
       table.createPrimaryKey({
         name: "PK_T1",
-        index: "PK_T1",
+        columns: ["Id"],
       });
     }).toThrow();
   });

@@ -1,8 +1,4 @@
 import { Immutable } from "../infrastructure/Immutable.js";
-import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
-import { type ColumnId } from "./Column.js";
-import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
-import { type PrimaryKeySpec } from "./Constraint.js";
 import { type IndexId } from "./Index.js";
 
 export class PrimaryKey extends Immutable {

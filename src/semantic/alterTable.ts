@@ -9,14 +9,17 @@ import { DropForeignKeyAction } from "../actions/DropForeignKeyAction.js";
 import { type AlterTableStatement } from "../statements/index.js";
 import { CONSTRAINT_KIND } from "../schema/ConstraintKind.js";
 import { PrimaryKey } from "../schema/PrimaryKey.js";
-import { Index } from "../schema/Index.js";
 import { ForeignKey } from "../schema/ForeignKey.js";
+import { Unique } from "../schema/Unique.js";
 import { Check } from "../schema/Check.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { DropPrimaryKeyAction } from "../actions/DropPrimaryKeyAction.js";
 import { DropCheckAction } from "../actions/DropCheckAction.js";
 import { DropIndexAction } from "../actions/DropIndexAction.js";
 import { AddIndexAction } from "../actions/AddIndexAction.js";
+import { AddUniqueAction } from "../actions/AddUniqueAction.js";
+import { DropUniqueAction } from "../actions/DropUniqueAction.js";
+
 
 export function bindAlterTable(
   semantic: SemanticAnalyzer,
@@ -62,14 +65,13 @@ export function bindAlterTable(
               columns: spec.columns,
               unique: false,
               nullsDistinct: ctx.rules.constraints.nullsDistinct,
-              internal: true,
             },
           )
         );
 
         const onDelete = spec.onDelete ??
           ctx.rules.constraints.foreignKeyDefaultOnDelete;
-        const onUpdate = spec.onDelete ??
+        const onUpdate = spec.onUpdate ??
           ctx.rules.constraints.foreignKeyDefaultOnUpdate
 
         stmtActions.push(
@@ -88,13 +90,6 @@ export function bindAlterTable(
         break;
 
       case CONSTRAINT_KIND.primaryKey:
-        // let indexName = spec.index;
-
-        // if (spec.index) {
-        //   table.requireIndex(spec.index);
-        // } else {
-        //   indexName = spec.name.concat("_PKIDX");
-
         stmtActions.push(
           new AddIndexAction(
             dbName,
@@ -106,9 +101,7 @@ export function bindAlterTable(
               nullsDistinct: ctx.rules.constraints.nullsDistinct,
             },
           )
-        );
-        //}
-        
+        );     
 
         stmtActions.push(
           new AddPrimaryKeyAction(
@@ -129,6 +122,18 @@ export function bindAlterTable(
               ...spec,
               unique: true,
               nullsDistinct: ctx.rules.constraints.nullsDistinct,
+            },
+          )
+        );
+
+        stmtActions.push(
+          new AddUniqueAction(
+            dbName,
+            tableName,
+            {
+              name: spec.name,
+              indexName: /*spec.using ?? */spec.name,
+              ownsIndex: true,
             },
           )
         );
@@ -159,18 +164,24 @@ export function bindAlterTable(
           tableName,
         )
       );
-    } else if (constraint instanceof Index) {
+    } else if (constraint instanceof Unique) {
       stmtActions.push(
-        new DropIndexAction(
+        new DropUniqueAction(
           dbName,
           tableName,
           constraint.id,
         )
       );
+      if (constraint.ownsIndex) {
+        stmtActions.push(
+          new DropIndexAction(
+            dbName,
+            tableName,
+            constraint.index,
+          )
+        );
+      }
     } else if (constraint instanceof ForeignKey) {
-      //const reverseIndexName = table.requireIndexById(constraint.reverseIndex).name;
-      //reverseIndexName = spec.name.concat("_PKIDX");
-
       stmtActions.push(
         new DropForeignKeyAction(
           dbName,
@@ -194,7 +205,7 @@ export function bindAlterTable(
         )
       );
     } else {
-      throw new Error(`Invalid Constraint detected: ${constraint.name}`);
+      throw new Error(`Invalid Constraint detected: ${constraint}`);
     }
   } else if (stmt.op === "drop_primary_key") {
     stmtActions.push(
@@ -209,7 +220,6 @@ export function bindAlterTable(
         dbName,
         tableName,
         {
-          //id: ctx.ids.nextColumnId(),
           name: stmt.columnName,
           ...stmt.inlineColumnSpec
         },

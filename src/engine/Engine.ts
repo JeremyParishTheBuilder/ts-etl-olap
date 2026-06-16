@@ -106,7 +106,6 @@ export class Engine {
     const ctx = new ExecutionContext(
       tx,
       this.rules,
-      //this.idService,
       this.currentDb
     );
     const analyzer = new SemanticAnalyzer(ctx);
@@ -137,7 +136,6 @@ export class Engine {
       const ctx = new ExecutionContext(
         tx,
         this.rules,
-        //this.idService,
         this.currentDb
       );
       const analyzer = new SemanticAnalyzer(ctx);

@@ -33,14 +33,14 @@ export class ForeignKey extends ColumnBoundImmutable {
     super();
 
     this.id = spec.id;
-    this.name = spec.name,
-    this.columns = spec.columns,
-    this.parentTable = spec.parentTable,
-    this.parentColumns = spec.parentColumns,
-    this.parentIndex = spec.parentIndex,
-    this.reverseIndex = spec.reverseIndex,
-    this.onDelete = spec.onDelete ?? ReferentialAction.restrict,
-    this.onUpdate = spec.onUpdate ?? ReferentialAction.restrict,
+    this.name = spec.name;
+    this.columns = spec.columns;
+    this.parentTable = spec.parentTable;
+    this.parentColumns = spec.parentColumns;
+    this.parentIndex = spec.parentIndex;
+    this.reverseIndex = spec.reverseIndex;
+    this.onDelete = spec.onDelete ?? ReferentialAction.restrict;
+    this.onUpdate = spec.onUpdate ?? ReferentialAction.restrict;
 
     this.validate();
     this.seal();

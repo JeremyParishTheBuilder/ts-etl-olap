@@ -2,6 +2,7 @@ import { InputBatch } from "./InputBatch.js";
 import { InlineColumnSpec } from "../schema/Column.js";
 import { ConstraintSpec } from "../schema/Constraint.js";
 import { type Statement } from "../statements/Statement.js";
+import { type ExplicitInput } from "../types/ExplicitInput.js";
 
 export class SqlServerInputBatch extends InputBatch {
   constructor(
@@ -40,6 +41,14 @@ export class SqlServerInputBatch extends InputBatch {
 
   values(data: any[][]) {
     return super.values(data);
+  }
+
+  update(table: string) {
+    return super.update(table);
+  }
+
+  set(data: Record<string, ExplicitInput>) {
+    return super.set(data);
   }
 
   output(cols: string[]) {

@@ -16,7 +16,7 @@ describe('Table::renamePrimaryKey', () => {
       })
       .createPrimaryKey({
         name: "PK_T1",
-        index: "PK_T1",
+        columns: ["Id"],
       });
   }
 
@@ -73,6 +73,11 @@ describe('Table::renamePrimaryKey', () => {
         name: "UQ_1",
         columns: ["OtherId"],
         unique: true,
+      })
+      .createUnique({
+        name: "UQ_1",
+        indexName: "UQ_1",
+        ownsIndex: true,
       });
 
     expect(() => {

@@ -108,7 +108,7 @@ describe('Table::addRow', () => {
       })
       .createPrimaryKey({
         name: "PK_Users",
-        index: "PK_Users",
+        columns: ["Id"],
       })
       .addRow([1]);
 
@@ -139,7 +139,7 @@ describe('Table::addRow', () => {
     }).toThrow();
   });
 
-  it('allows multiple NULL values when nullsDistinct is true', () => {
+  it('allows multiple NULL rows when nullsDistinct is true', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Email",
@@ -159,7 +159,7 @@ describe('Table::addRow', () => {
     }).not.toThrow();
   });
 
-  it('rejects multiple NULL values when nullsDistinct is false', () => {
+  it('rejects multiple NULL rows when nullsDistinct is false', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Email",
@@ -216,6 +216,27 @@ describe('Table::addRow', () => {
 
     expect(index.hasProjectedValues(["X", null])).toBe(true);
     expect(index.hasProjectedValues(["X", "Y"])).toBe(true);
+  });
+
+  it('ignores NULLs in non-indexed columns for uniqueness', () => {
+    let table = buildTable()
+      .createColumn({ name: "A", type: String })
+      .createColumn({ name: "B", type: String })
+      .createIndex({
+        name: "UQ_A",
+        columns: ["A"],
+        unique: true,
+      });
+
+    table = table.addRow(["X", null]);
+
+    expect(() => {
+      table.addRow(["Y", "other"]); // OK (new value)
+    }).not.toThrow();
+
+    expect(() => {
+      table.addRow(["X", "other"]); // throws (duplicate A)
+    }).toThrow();
   });
 
   it('enforces index synchronization across multiple indexes', () => {

@@ -9,6 +9,7 @@ import {
 import { PrimaryKey } from "./PrimaryKey.js";
 import { ForeignKey, type ForeignKeyId } from "./ForeignKey.js";
 import { Check, type CheckId } from "./Check.js";
+import { Unique, type UniqueId } from "./Unique.js";
 import {
   Index,
   type IndexId,
@@ -16,7 +17,6 @@ import {
   requiresIndexRebuild,
 } from "./Index.js";
 import { Immutable } from "../infrastructure/Immutable.js";
-import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
 import { PersistentMap } from "../infrastructure/PersistentMap.js";
 import { type RowView } from "./RowView.js";
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
@@ -38,6 +38,7 @@ export class Table extends Immutable {
 
   public primaryKey: PrimaryKey | undefined;
   public indexes: NamedObjectStore<Index, IndexId>;
+  public uniques: NamedObjectStore<Unique, UniqueId>;
   public foreignKeys: NamedObjectStore<ForeignKey, ForeignKeyId>;
   public checks: NamedObjectStore<Check, CheckId>;
 
@@ -46,6 +47,7 @@ export class Table extends Immutable {
 
   public readonly columnIds;
   public readonly indexIds;
+  public readonly uniqueIds;
   public readonly foreignKeyIds;
   public readonly checkIds;
   
@@ -65,6 +67,7 @@ export class Table extends Immutable {
 
     this.primaryKey = undefined;
     this.indexes = new NamedObjectStore();
+    this.uniques = new NamedObjectStore();
     this.foreignKeys = new NamedObjectStore();
     this.checks = new NamedObjectStore();
 
@@ -73,6 +76,7 @@ export class Table extends Immutable {
 
     this.columnIds = new IdAllocator<ColumnId>();
     this.indexIds = new IdAllocator<IndexId>();
+    this.uniqueIds = new IdAllocator<UniqueId>();
     this.foreignKeyIds = new IdAllocator<ForeignKeyId>();
     this.checkIds = new IdAllocator<CheckId>();
 
@@ -243,9 +247,7 @@ export class Table extends Immutable {
       indexes: updatedIndexes,
     } as Partial<this>);
   }
-  //  </columns>
 
-  //  <constraints>
   private assertUniqueConstraintNotDuplicated(columns: ColumnId[]): void {
     for(const index of this.indexes.values()) {
       if (index.unique && sameColumnSet(index.columns, columns)) {
@@ -258,47 +260,80 @@ export class Table extends Immutable {
 
   public createPrimaryKey(spec: {
     name: string,
-    index: string,
-  }): Table {
-    const indexId = this.indexes.requireIdByName(spec.index);
-    return this.createPrimaryKeyById({name: spec.name, index: indexId});
-  }
-
-  public createPrimaryKeyById(spec: {
-    name: string,
-    index: IndexId,
+    columns: string[],
   }): Table {
     if (this.primaryKey) {
       throw new Error(`Primary Key ${this.primaryKey} already exists`);
     }
 
-    
+    this.assertConstraintNameUnused(spec.name);
 
-    const index = this.indexes.require(spec.index);
+    const columnIds = spec.columns.map(c => this.columns.requireIdByName(c));
 
-    if (index.unique !== true) {
-      throw new Error(`Referenced PrimaryKey index is not unique`);
-    }
+    // if (index.unique !== true) { // redundent now? because the line above necessarily get a unique index
+    //   throw new Error(`Referenced PrimaryKey index is not unique`);
+    // }
     
-    index.columns.map(c => this.columns.require(c)).forEach(column => {
+    //I should check given columns instead of index columns
+    columnIds.forEach(id => {
+      const column = this.columns.require(id);
       if(column.nullable !== false) {
-        throw new Error(`Column ${column.name} must be 'not nullable'.`);
+        throw new Error(`Column ${column.name} must be 'NOT NULL'.`);
       }
     });
 
-    const sharesBackingIndexName =
-      normalizeIdentifier(spec.name) === normalizeIdentifier(index.name);
+    const index = this.requireUniqueIndexByColumns(columnIds);
 
-    if (!sharesBackingIndexName) {
-      this.assertConstraintNameUnused(spec.name);
-    }
+    // const sharesNormalizedBackingIndexName =
+    //   normalizeIdentifier(spec.name) === normalizeIdentifier(index.name);
+
+    // if (!sharesNormalizedBackingIndexName) {
+    //   this.assertConstraintNameUnused(spec.name);
+    // }
 
     return this.with({
       primaryKey: PrimaryKey.create({
-        ...spec
+        name: spec.name,
+        index: index.id,
       }),
     } as Partial<this>);
   }
+
+  // public createPrimaryKeyById(spec: {
+  //   name: string,
+  //   index: IndexId,
+  // }): Table {
+  //   if (this.primaryKey) {
+  //     throw new Error(`Primary Key ${this.primaryKey} already exists`);
+  //   }
+
+    
+
+  //   const index = this.indexes.require(spec.index);
+
+  //   if (index.unique !== true) {
+  //     throw new Error(`Referenced PrimaryKey index is not unique`);
+  //   }
+    
+  //   index.columns.map(c => this.columns.require(c)).forEach(column => {
+  //     if(column.nullable !== false) {
+  //       throw new Error(`Column ${column.name} must be 'not nullable'.`);
+  //     }
+  //   });
+
+  //   const sharesBackingIndexName =
+  //     normalizeIdentifier(spec.name) === normalizeIdentifier(index.name);
+
+  //   if (!sharesBackingIndexName) {
+  //     this.assertConstraintNameUnused(spec.name);
+  //   }
+
+  //   return this.with({
+  //     primaryKey: PrimaryKey.create({
+  //       ...spec
+  //     }),
+  //   } as Partial<this>);
+  // }
 
   public removePrimaryKey(): Table {
     const pk = this.requirePrimaryKey();
@@ -433,25 +468,25 @@ export class Table extends Immutable {
     const normalizedOldName = normalizeIdentifier(oldName);
 
     if (normalizedOldName !== normalizedNewName) {
-      //this.assertConstraintNameUnused(newName);
-    
-
-      const backingIndexName = this.indexes.require(primaryKey.index).name;
-
-      const sharesBackingIndexName =
-        normalizedNewName === normalizeIdentifier(backingIndexName);
-
-      const existingConstraint = this.getConstraintByName(newName);
-
-      if (
-        !sharesBackingIndexName &&
-        existingConstraint //&&
-        //existingConstraint !== primaryKey
-      ) {
-        throw new Error(`Existing constraint already using name: ${newName}`);
-      }
-
+      this.assertConstraintNameUnused(newName);
     }
+
+    //   const backingIndexName = this.indexes.require(primaryKey.index).name;
+
+    //   const sharesBackingIndexName =
+    //     normalizedNewName === normalizeIdentifier(backingIndexName);
+
+    //   const existingConstraint = this.getConstraintByName(newName);
+
+    //   if (
+    //     !sharesBackingIndexName &&
+    //     existingConstraint //&&
+    //     //existingConstraint !== primaryKey
+    //   ) {
+    //     throw new Error(`Existing constraint already using name: ${newName}`);
+    //   }
+
+    // }
 
     const renamedPrimaryKey = primaryKey.rename(newName);
 
@@ -490,25 +525,32 @@ export class Table extends Immutable {
     } as Partial<this>);
   }
 
-  public getConstraintByName(name: string): ColumnBoundImmutable | PrimaryKey | undefined {
-    if (
-      this.primaryKey &&
-      normalizeIdentifier(this.primaryKey.name) === normalizeIdentifier(name)
-    ) {
-      return this.requirePrimaryKey();
-    } else if (
-      this.indexes.hasName(name) &&
-      this.indexes.getByName(name)?.unique
-    ) {
-      return this.indexes.requireByName(name);
-    } else if (this.foreignKeys.hasName(name)) {
-      return this.foreignKeys.requireByName(name);
-    } else if (this.checks.hasName(name)) {
-      return this.checks.requireByName(name);
-    } else { return undefined; }
+  public getConstraintByName(name: string):
+    | PrimaryKey
+    | ForeignKey
+    | Check
+    | Unique
+    | undefined
+  {
+    const n = normalizeIdentifier(name);
+
+    if (this.primaryKey && normalizeIdentifier(this.primaryKey.name) === n) {
+      return this.primaryKey;
+    }
+
+    return (
+      this.foreignKeys.getByName(name) ??
+      this.checks.getByName(name) ??
+      this.uniques.getByName(name)
+    );
   }
 
-  public requireConstraintByName(name: string): ColumnBoundImmutable | PrimaryKey {
+  public requireConstraintByName(name: string):
+    | PrimaryKey
+    | ForeignKey
+    | Check
+    | Unique
+  {
     const constraint = this.getConstraintByName(name);
     if (!constraint) {
       throw new Error(`No constraint named: ${name}`);
@@ -528,6 +570,80 @@ export class Table extends Immutable {
         throw new Error(`Foreign Key ${fk.name} references table: ${id}`);
       }
     }
+  }
+
+  public createUnique(spec: {
+    name: string,
+    indexName: string
+    ownsIndex: boolean,
+  }): Table {
+    this.assertConstraintNameUnused(spec.name);
+
+    const index = this.indexes.requireByName(spec.indexName);
+
+    if (index.unique !== true) {
+      throw new Error("Referenced index is not unique");
+    }
+
+    const [id, uniqueIds] = this.uniqueIds.allocate();
+
+    const unique = Unique.create({
+      id,
+      name: spec.name,
+      index: index.id,
+      ownsIndex: spec.ownsIndex,
+    });
+
+    const updatedUniques = this.uniques.add(unique);
+
+    return this.with({
+      uniques: updatedUniques,
+      uniqueIds,
+    } as Partial<this>);
+  }
+
+  public removeUnique(name: string): Table {
+    return this.removeUniqueById(this.uniques.requireIdByName(name));
+  }
+
+  public removeUniqueById(id: UniqueId): Table {
+    const unique = this.uniques.require(id);
+
+    const updatedUniques = this.uniques.remove(id);
+
+    return this.with({
+      uniques: updatedUniques,
+    } as Partial<this>);
+  }
+
+  public renameUnique(name: string, newName: string): Table {
+    return this.renameUniqueById(
+      this.uniques.requireIdByName(name),
+      newName
+    );
+  }
+
+  public renameUniqueById(id: UniqueId, newName: string): Table {
+    const unique = this.uniques.require(id);
+
+    const oldName = unique.name;
+
+    if (oldName === newName) return this;
+
+    const normalizedOldName = normalizeIdentifier(oldName);
+    const normalizedNewName = normalizeIdentifier(newName);
+
+    if (normalizedOldName !== normalizedNewName) {
+      this.assertConstraintNameUnused(newName);
+    }
+
+    const renamedUnique = unique.rename(newName);
+
+    const updatedUniques = this.uniques.update(renamedUnique);
+
+    return this.with({
+      uniques: updatedUniques,
+    } as Partial<this>);
   }
 
   public createIndex(spec: IndexSpec & {internal?: boolean}): Table {
@@ -566,6 +682,7 @@ export class Table extends Immutable {
   public removeIndexById(id: IndexId): Table {
     const index = this.indexes.require(id);
 
+    //assert index unreferenced
     if (id === this.primaryKey?.index) {
       throw new Error(`Cannot remove index when referenced by Primary Key`);
     }
@@ -573,6 +690,11 @@ export class Table extends Immutable {
     if (Array.from(this.foreignKeys.values()).some(f => f.reverseIndex === id)) {
       throw new Error(`Cannot remove index when referenced by Foreign Key`);
     }
+
+    if (Array.from(this.uniques.values()).some(u => u.index === id)) {
+      throw new Error(`Cannot remove index when referenced by Unique constraint`);
+    }
+    //assert index unreferenced
 
     const updatedIndexes = this.indexes.remove(id);
 
@@ -586,6 +708,8 @@ export class Table extends Immutable {
   }
 
   public removeCheckById(id: CheckId): Table {
+    const check = this.checks.require(id);
+
     const updatedChecks = this.checks.remove(id);
 
     return this.with({
@@ -718,59 +842,23 @@ export class Table extends Immutable {
     }
     return row;
   }
-  //  </select>
 
-  //  <insert/update>
   private assertRowLength(row: any[]): void {
     if (row.length !== this.columns.size()) {
       throw new Error(`Resolved row length mismatch with table columns`);
     }
   }
 
-  // public normalizeRow(row: ColumnValue[], mode: "insert" | "update"): ColumnValue[] {
-  //   this.assertRowLength(row);
-
-  //   const normalizedRow: ColumnValue[] = new Array(row.length);
-
-  //   this.columns.forEach(column => {
-  //     const i = column.position;
-
-  //     normalizedRow[i] =
-  //       column.normalizeDatum(row[i], mode);
-  //   });
-
-  //   return normalizedRow;
-  // }
-
-  // public resolveSemanticRow(
-  //   semanticRow: SemanticValue[],
-  //   mode: "insert" | "update",
-  // ): ColumnValue[] {
-  //   this.assertRowLength(semanticRow);
-    
-  //   const resolvedRow: ColumnValue[] = new Array(semanticRow.length);
-
-  //   this.columns.forEach(column => {
-  //     const i = column.position;
-
-  //     resolvedRow[i] =
-  //       column.resolveSemanticValue(semanticRow[i], mode);
-  //   });
-
-  //   return resolvedRow;
-  // }
-
   public resolveInsertInputs(
-    inputs: Map<string, ExplicitInput>,
+    inputs: Map<ColumnId, ExplicitInput>,
   ): ColumnValue[] {
     const resolvedRow = new Array<ColumnValue>(this.columns.size());
 
-    //for (const column of this.columnsByPosition()) {}
     for(const column of this.columns.values()) {
       const i = column.position;
 
       resolvedRow[i] =
-        column.resolveInput(inputs.get(normalizeIdentifier(column.name)) ?? undefined, "insert");
+        column.resolveInput(inputs.get(column.id) ?? undefined, "insert");
     }
 
     return resolvedRow;
@@ -785,12 +873,12 @@ export class Table extends Immutable {
     const resolvedRow = new Array<ColumnValue>(this.columns.size());
 
     for(const column of this.columns.values()) {
-      const i = column.position; // TODO, replace with iteration of this.columnsByPosition
+      const i = column.position;
 
       const input = inputs.get(column.id);
       if (input === undefined) {
         resolvedRow[i] = existingRow[i];
-        break;
+        continue;
       }
 
       resolvedRow[i] = column.resolveInput(input, "update");
@@ -798,30 +886,6 @@ export class Table extends Immutable {
 
     return resolvedRow;
   }
-
-  // public resolveUpdateRow(
-  //   semanticRow: SemanticValue[],
-  //   rowNum: number,
-  // ): ColumnValue[] {
-  //   this.assertRowLength(semanticRow);
-
-  //   const existingRow = this.requireRow(rowNum);
-    
-  //   const resolvedRow: ColumnValue[] = new Array(semanticRow.length);
-
-  //   this.columns.forEach(column => {
-  //     const i = column.position;
-
-  //     if (semanticRow[i].kind === "existing") {
-  //       resolvedRow[i] = existingRow[i];
-  //       return;
-  //     }
-
-  //     resolvedRow[i] = column.resolveSemanticValue(semanticRow[i], "update");
-  //   });
-
-  //   return resolvedRow;
-  // }
 
   public addRow(row: ColumnValue[]): Table {
     this.assertRowLength(row);
@@ -834,20 +898,10 @@ export class Table extends Immutable {
     this.assertRow(row); // CHECKs
 
     const updatedIndexes = this.indexes.mapValues(i => i.tryAddRow(rowView));
-    //TODO, confirm whether it won't add a row with null when unique
-    //Actually, it's ok to store keys will null even when unique
-    // just that if there is a null, then it shan't be considered a unique constraint violation
 
     const updatedColumns = this.columns.mapValues(column =>
       column.addDatum(row[column.position])
     );
-
-    // let updatedTable = this.with({
-    //   columns: updatedColumns,
-    //   numRows: this.numRows + 1,
-    // } as Partial<this>);
-
-    //updatedTable.assertRow();
 
     return this.with({
       indexes: updatedIndexes,
@@ -871,7 +925,6 @@ export class Table extends Immutable {
     const updatedIndexes = this.indexes.mapValues(
       index => index.tryUpdateRow(oldRow, newRow)
     );
-
 
     const updatedColumns = this.columns.mapValues(column =>
       column.updateDatum(row[column.position], rowNum)

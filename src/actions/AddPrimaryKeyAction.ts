@@ -11,15 +11,14 @@ export class AddPrimaryKeyAction implements Action {
 
   apply(databases: Databases): Databases {
     const db = databases.requireByName(this.dbName);
-    const table = db.tables.requireByName(this.tableName);
+    //const table = db.tables.requireByName(this.tableName);
 
-    const columnIds = this.spec.columns.map(c => table.columns.requireIdByName(c));
-    const index = table.requireUniqueIndexByColumns(columnIds);
+    //const columnIds = this.spec.columns.map(c => table.columns.requireIdByName(c));
+    //const index = table.requireUniqueIndexByColumns(columnIds);
 
-    const updatedTable = table
-      .createPrimaryKeyById({
-        ...this.spec,
-        index: index.id
+    const updatedTable = db.tables.requireByName(this.tableName)
+      .createPrimaryKey({
+        ...this.spec
       });
 
     const updatedDb = db.updateTable(updatedTable);

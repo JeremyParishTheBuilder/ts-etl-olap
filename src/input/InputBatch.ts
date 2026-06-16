@@ -15,6 +15,8 @@ import {
 } from "../statements/index.js";
 import { type ColumnValue, type InlineColumnSpec } from "../schema/Column.js";
 import { type ConstraintSpec } from "../schema/Constraint.js";
+import { type ExplicitInput } from "../types/ExplicitInput.js";
+import { type ReferentialAction } from "../schema/ReferentialAction.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -139,9 +141,25 @@ export abstract class InputBatch {
   protected returning(cols: string[], fragment: string = "RETURNING") {
     this.assertAllowed("returning", fragment);
     if (!(this.currentBuilder instanceof InsertIntoBuilder)) {
-      throw new Error(`Cannot call '${fragment}' outside of InsertInto`);
+      throw new Error(`Cannot call '${fragment}' outside of InsertInto`); // TODO, also on update?
     }
     this.currentBuilder.returning(cols);
+    return this;
+  }
+
+  protected update(table: string, fragment: string = "UPDATE") {
+    this.assertAllowed("update", fragment); 
+    this.finalizePreviousStatement();
+    this.currentBuilder = new UpdateSetBuilder(table);
+    return this;
+  }
+
+  protected set(data: Record<string, ExplicitInput>, fragment: string = "SET") {
+    this.assertAllowed("set", fragment);
+    if (!(this.currentBuilder instanceof UpdateSetBuilder)) {
+      throw new Error(`Cannot call '${fragment}' outside of Update`);
+    }
+    this.currentBuilder.set(data);
     return this;
   }
 
@@ -202,6 +220,30 @@ export abstract class InputBatch {
       throw new Error(`Cannot call '${fragment}' outside of AlterTable`);
     }
     this.currentBuilder.references(parentTable, parentColumns);
+    return this;
+  }
+
+  protected onDelete(
+    action: ReferentialAction,
+    fragment: string = "ON DELETE"
+  ) {
+    this.assertAllowed("onDelete", fragment);
+    if (!(this.currentBuilder instanceof AlterTableBuilder)) {
+      throw new Error(`Cannot call '${fragment}' outside of AlterTable`);
+    }
+    this.currentBuilder.onDelete(action);
+    return this;
+  }
+
+  protected onUpdate(
+    action: ReferentialAction,
+    fragment: string = "ON UPDATE"
+  ) {
+    this.assertAllowed("onUpdate", fragment);
+    if (!(this.currentBuilder instanceof AlterTableBuilder)) {
+      throw new Error(`Cannot call '${fragment}' outside of AlterTable`);
+    }
+    this.currentBuilder.onUpdate(action);
     return this;
   }
 

@@ -3,6 +3,7 @@ import { type DatabaseId } from "../schema/Database.js";
 import { type ForeignKeyId } from "../schema/ForeignKey.js";
 import { type IndexId } from "../schema/Index.js";
 import { type TableId } from "../schema/Table.js";
+import { type UniqueId } from "../schema/Unique.js";
 
 export class IdAllocator<T extends number> {
   constructor(private readonly next: T = 1 as T) {}
@@ -18,4 +19,5 @@ export interface IdService {
   nextColumnId(): ColumnId;
   nextForeignKeyId(): ForeignKeyId;
   nextIndexId(): IndexId;
+  nextUniqueId(): UniqueId;
 }

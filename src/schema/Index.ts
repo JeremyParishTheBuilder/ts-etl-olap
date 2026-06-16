@@ -20,7 +20,6 @@ export class Index extends ColumnBoundImmutable {
   public readonly columnIndexes: number[];
   public readonly unique: boolean;
   public readonly nullsDistinct: boolean;
-  public readonly internal: boolean;
   public readonly predicate?: Predicate;
 
   public readonly id: IndexId;
@@ -43,7 +42,6 @@ export class Index extends ColumnBoundImmutable {
     this.columnIndexes = spec.columnIndexes;
     this.unique = spec.unique ?? false;
     this.nullsDistinct = spec.nullsDistinct ?? true;
-    this.internal = spec.internal ?? false;
     this.predicate = spec.predicate;
 
     this.id = spec.id;
@@ -63,7 +61,6 @@ export class Index extends ColumnBoundImmutable {
     columnIndexes: number[],
     unique?: boolean,
     nullsDistinct?: boolean,
-    internal?: boolean,
     predicate?: Predicate
   }): Index {
     return new this(spec);
@@ -99,12 +96,6 @@ export class Index extends ColumnBoundImmutable {
     } as Partial<this>);
   }
 
-  // public withOwnerConstraint(ownerConstraint: string): Index {
-  //   return this.with({
-  //     ownerConstraint: normalizeIdentifier(ownerConstraint),
-  //   } as Partial<this>);
-  // }
-
   private matches(row: RowView): boolean {
     return this.predicate
       ? this.predicate.evaluate(row)
@@ -118,9 +109,11 @@ export class Index extends ColumnBoundImmutable {
   }
 
   private assertUniqueFromRow(row: RowView): void {
-    if (row.values.includes(null) && this.nullsDistinct == true) return;
+    const projectedValues = this.projectValues(row.values);
+
+    if (projectedValues.includes(null) && this.nullsDistinct == true) return;
     
-    const key = this.getKeyFromRow(row);
+    const key = this.getKeyFromProjection(projectedValues);
 
     if (this.map.has(key)) {
       throw new Error(`UNIQUE violation ${row.values}`);
@@ -130,13 +123,13 @@ export class Index extends ColumnBoundImmutable {
   public tryAddRow(row: RowView): Index {
     if (!this.matches(row)) return this;
 
-    const key = this.getKeyFromRow(row);
-
     if (this.unique) {
       this.assertUniqueFromRow(row);
     }
 
     const newMap = new Map(this.map);
+
+    const key = this.getKeyFromRow(row);
 
     const rowNumsMappedToKey = newMap.get(key) ?? [];
 

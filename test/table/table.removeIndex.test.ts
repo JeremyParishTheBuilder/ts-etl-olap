@@ -103,7 +103,7 @@ describe('Table::removeIndex', () => {
       }))
       .createPrimaryKey({
         name: "PK_Users",
-        index: "i1",
+        columns: ["Id"],
       });
 
     expect(() =>

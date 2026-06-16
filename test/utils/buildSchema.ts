@@ -5,6 +5,7 @@ import { type ForeignKeyId } from "../../src/schema/ForeignKey.js";
 import { type IndexSpec, type IndexId } from "../../src/schema/Index.js";
 import { type IdService } from "../../src/types/IdAllocator.js";
 import { type CheckSpec, type ForeignKeySpec } from "../../src/schema/Constraint.js";
+import { type UniqueId } from "../../src/schema/Unique.js";
 
 let nextId = 1;
 
@@ -15,6 +16,7 @@ export function createTestIdService(): IdService {
     nextTableId: () => nextId++ as TableId,
     nextColumnId: () => nextId++ as ColumnId,
     nextIndexId: () => nextId++ as IndexId,
+    nextUniqueId: () => nextId++ as UniqueId,
     nextForeignKeyId: () => nextId++ as ForeignKeyId,
   };
 }

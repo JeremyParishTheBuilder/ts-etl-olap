@@ -61,22 +61,6 @@ console.log("Set table");
 //console.log(table);
 
 console.log("trying to create Table");
-let table0 = Table.create({id: 0 as TableId, name: "T1"})
-      .createColumn({
-        name: "Id",
-        type: Number,
-        nullable: false,
-      })
-      .createIndex({
-        name: "PK_T1_I",
-        columns: ["Id"],
-        unique: true,
-      })
-      .createPrimaryKey({
-        name: "PK_T1",
-        index: "PK_T1_I",
-      });
-      console.log("TABLE 0");
 
 
 sql.createTable("Users", {

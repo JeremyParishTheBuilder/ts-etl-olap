@@ -13,6 +13,7 @@ import { AddIndexAction } from "../actions/AddIndexAction.js";
 import { CONSTRAINT_KIND } from "../schema/ConstraintKind.js";
 import { PrimaryKey } from "../schema/PrimaryKey.js";
 import { ForeignKey } from "../schema/ForeignKey.js";
+import { AddUniqueAction } from "../actions/AddUniqueAction.js";
 
 export function bindCreateTable(
   semantic: SemanticAnalyzer,
@@ -77,7 +78,6 @@ export function bindCreateTable(
                 columns: spec.columns,
                 unique: false,
                 nullsDistinct: ctx.rules.constraints.nullsDistinct,
-                internal: true,
               },
             )
           );
@@ -107,6 +107,18 @@ export function bindCreateTable(
                 unique: true,
                 nullsDistinct: ctx.rules.constraints.nullsDistinct
               }
+            )
+          );
+
+          stmtActions.push(
+            new AddUniqueAction(
+              dbName,
+              tableName,
+              {
+                name: spec.name,
+                indexName: spec.name,
+                ownsIndex: true,
+              },
             )
           );
 
@@ -168,7 +180,6 @@ export function bindCreateTable(
               columns: spec.columns,
               unique: false,
               nullsDistinct: ctx.rules.constraints.nullsDistinct,
-              internal: true,
             },
           )
         );
@@ -196,6 +207,18 @@ export function bindCreateTable(
             {
               ...spec,
               unique: true,
+            },
+          )
+        );
+
+        stmtActions.push(
+          new AddUniqueAction(
+            dbName,
+            tableName,
+            {
+              name: spec.name,
+              indexName: /*spec.using ?? */spec.name,
+              ownsIndex: true,
             },
           )
         );

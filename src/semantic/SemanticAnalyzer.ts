@@ -7,6 +7,7 @@ import { bindInsertInto } from "./insertInto.js";
 import { bindSelect } from "./select.js";
 import { bindAlterTable } from "./alterTable.js";
 import { type BindResult } from "../engine/BindResult.js";
+import { bindUpdateSet } from "./updateSet.js";
 
 export class SemanticAnalyzer {
 
@@ -26,6 +27,9 @@ export class SemanticAnalyzer {
       case "insert_into":
         return { kind: "actions", actions: bindInsertInto(this, stmt) };
 
+      case "update_set":
+        return { kind: "actions", actions: bindUpdateSet(this, stmt) };
+
       case "select":
         return { kind: "query", plan: bindSelect(this, stmt) };
 
@@ -34,51 +38,3 @@ export class SemanticAnalyzer {
     }
   }
 }
-
-// SemanticAnalyzer responsibilities:
-//
-// - resolve existing schema references when available
-//   (databases, tables, columns, constraints)
-//
-// - validate semantic correctness
-//   (statement structure, identifier existence,
-//    legal operation forms, dialect rules)
-//
-// - derive operation intent
-//   (insert/update/delete semantics,
-//    target mappings, ordered column mappings)
-//
-// - preserve semantic input states
-//   (value/default/null/missing)
-//
-// - produce executable queries/actions
-//   (may contain unresolved references to
-//    objects created within the same statement)
-//
-// Semantic binding does NOT:
-//
-// - allocate runtime identities
-//   (column ids, index ids, foreign key ids)
-//
-// - resolve references to objects not yet created
-//
-// - resolve runtime values
-//   (defaults, autoIncrement, generated values)
-//
-// - validate runtime data constraints
-//   (NOT NULL, ENUM, CHECK, FK)
-//
-// - mutate execution state
-//
-// Runtime execution responsibilities:
-//
-// - materialize schema objects and allocate ids
-//
-// - resolve deferred references
-//   (name -> id)
-//
-// - resolve semantic values into concrete runtime values
-//
-// - validate resolved values against schema constraints
-//
-// - execute mutations against immutable state

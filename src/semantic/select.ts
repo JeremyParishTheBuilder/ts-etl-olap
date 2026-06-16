@@ -25,7 +25,7 @@ export function bindSelect(
     specifiedColumns
   );
 
-  const columnIndexMap = getColumnIndexMap(table);
+  const columnIndexMap = getColumnIndexMap(table); // TODO, see if position map can eliminate this
   const columnIndexes = effectiveColumns.map(name => columnIndexMap.get(name)!);
 
   // 2. Base node

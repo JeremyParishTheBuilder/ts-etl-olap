@@ -1,7 +1,8 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 import { Column, InlineColumnSpec }  from "../../schema/Column.js";
-import { type ConstraintSpec } from "../../schema/Constraint.js";
+import { ForeignKeySpec, type ConstraintSpec } from "../../schema/Constraint.js";
 import { CONSTRAINT_KIND } from "../../schema/ConstraintKind.js";
+import { type ReferentialAction } from "../../schema/ReferentialAction.js";
 
 export type AlterTableStatement =
   | AlterAddColumn
@@ -61,6 +62,10 @@ type AlterTableBuilderState =
   | { state: "rename_column"; from: string; to: string }
   | { state: "modify_column"; columnName: string; column: Column }
   | { state: "add_constraint"; partial: Partial<ConstraintSpec>, constraint?: ConstraintSpec }
+  | {
+      state: "add_constraint_references";
+      constraint: ForeignKeySpec
+    }
   | { state: "drop_constraint"; constraintName: string }
   | { state: "drop_primary_key" };
 
@@ -196,11 +201,30 @@ export class AlterTableBuilder implements StatementBuilder {
       throw new Error(`References is only used for foreign keys, not ${partial.kind}`);
     }
 
-    this.state.constraint = {
-      ...partial,
-      parentTable,
-      parentColumns
-    } as ConstraintSpec;
+    // this.state.constraint = {
+    //   ...partial,
+    //   parentTable,
+    //   parentColumns
+    // } as ConstraintSpec;
+
+    this.transitionState({ state: "add_constraint_references", constraint: {
+        ...partial,
+        parentTable,
+        parentColumns
+      } as ForeignKeySpec
+    });
+  }
+
+  onDelete(action: ReferentialAction) {
+    this.state = this.assertState("add_constraint_references");
+
+    this.state.constraint.onDelete = action;
+  }
+
+  onUpdate(action: ReferentialAction) {
+    this.state = this.assertState("add_constraint_references");
+
+    this.state.constraint.onUpdate = action;
   }
 
   getNextCalls() {
@@ -228,6 +252,19 @@ export class AlterTableBuilder implements StatementBuilder {
             return { required: ["references"], optional: [] };
           }
         }
+
+      case "add_constraint_references":
+        if (!this.state.constraint || this.state.constraint.kind !== CONSTRAINT_KIND.foreignKey) {
+          return { required: [], optional: [] }; // TODO, should just assert?
+        };
+        const optionalCalls = [];
+        if (!this.state.constraint.onDelete) {
+          optionalCalls.push("onDelete");
+        }
+        if (!this.state.constraint.onUpdate) {
+          optionalCalls.push("onUpdate");
+        }
+        return { required: [], optional: optionalCalls };
 
       default:
         return { required: [], optional: [] };
@@ -272,6 +309,17 @@ export class AlterTableBuilder implements StatementBuilder {
         };
 
       case "add_constraint":
+        if (!this.state.constraint) {
+          throw new Error("Cannot create AlterTableStatement: constraint not fully defined");
+        }
+        return {
+          kind: "alter_table",
+          op: "add_constraint",
+          table: this.table,
+          constraint: this.state.constraint
+        };
+
+      case "add_constraint_references":
         if (!this.state.constraint) {
           throw new Error("Cannot create AlterTableStatement: constraint not fully defined");
         }
