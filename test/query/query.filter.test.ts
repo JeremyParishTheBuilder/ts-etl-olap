@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { TableScanNode } from '../../src/query/plan/TableScanNode.js';
-import { ComparisonPredicate } from '../../src/query/predicate/ComparisonPredicate.js';
-import { FilterNode } from '../../src/query/plan/FilterNode.js';
+import { TableScanNode } from '../../src/evaluation/plan/TableScanNode.js';
+import { ComparisonPredicate } from '../../src/evaluation/predicate/ComparisonPredicate.js';
+import { FilterNode } from '../../src/evaluation/plan/FilterNode.js';
 import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import { ColumnExpression } from '../../src/evaluation/expression/ColumnExpression.js';
+import { LiteralExpression } from '../../src/evaluation/expression/LiteralExpression.js';
 
 describe('Query::filterNode', () => {
   it("returns rows matching the predicate", () => {
@@ -19,9 +21,9 @@ describe('Query::filterNode', () => {
     const scan = new TableScanNode(table);
 
     const predicate = new ComparisonPredicate(
-      0,
+      new ColumnExpression(0),
       "gt",
-      15
+      new LiteralExpression(15)
     );
 
     const filter = new FilterNode(predicate, scan);
@@ -53,9 +55,9 @@ describe('Query::filterNode', () => {
     const scan = new TableScanNode(table);
 
     const predicate = new ComparisonPredicate(
-      0,
+      new ColumnExpression(0),
       "gt",
-      100
+      new LiteralExpression(100)
     );
 
     const filter = new FilterNode(predicate, scan);
@@ -76,9 +78,9 @@ describe('Query::filterNode', () => {
     const scan = new TableScanNode(table);
 
     const predicate = new ComparisonPredicate(
-      0,
+      new ColumnExpression(0),
       "gt",
-      0
+      new LiteralExpression(0)
     );
 
     const filter = new FilterNode(predicate, scan);
@@ -102,9 +104,9 @@ describe('Query::filterNode', () => {
     const scan = new TableScanNode(table);
 
     const predicate = new ComparisonPredicate(
-      0,
+      new ColumnExpression(0),
       "gt",
-      6
+      new LiteralExpression(6)
     );
 
     const filter = new FilterNode(predicate, scan);
@@ -132,15 +134,15 @@ describe('Query::filterNode', () => {
     const scan = new TableScanNode(table);
 
     const gtPredicate = new ComparisonPredicate(
-      0,
+      new ColumnExpression(0),
       "gt",
-      5
+      new LiteralExpression(5)
     );
 
     const ltPredicate = new ComparisonPredicate(
-      0,
+      new ColumnExpression(0),
       "lt",
-      20
+      new LiteralExpression(20)
     );
 
     const firstFilter = new FilterNode(gtPredicate, scan);
@@ -170,9 +172,9 @@ describe('Query::filterNode', () => {
     const scan = new TableScanNode(table);
 
     const predicate = new ComparisonPredicate(
-      0,
+      new ColumnExpression(0),
       "eq",
-      1
+      new LiteralExpression(1)
     );
 
     const filter = new FilterNode(predicate, scan);
@@ -200,9 +202,9 @@ describe('Query::filterNode', () => {
     const scan = new TableScanNode(table);
 
     const predicate = new ComparisonPredicate(
-      0,
+      new ColumnExpression(0),
       "gt",
-      0
+      new LiteralExpression(0)
     );
 
     const filter = new FilterNode(predicate, scan);

@@ -1,25 +1,11 @@
 import { type Action } from "../actions/Action.js";
-import { UpdateRowAction } from "../actions/UpdateRowAction.js";
+import { UpdateRowsAction } from "../actions/UpdateRowsAction.js";
 import { type UpdateSetStatement } from "../statements/index.js";
 import { type ColumnId } from "../schema/Column.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
-import { type ExplicitInput } from "../types/ExplicitInput.js";
-import { TableScanNode } from "../query/plan/TableScanNode.js";
-import { PlanNode } from "../query/plan/PlanNode.js";
+import { bindExpression } from "./expression.js";
+import { type Expression } from "../evaluation/expression/Expression.js";
 import { bindPredicate } from "./predicate.js";
-import { FilterNode } from "../query/plan/FilterNode.js";
-import { Table } from "../schema/Table.js";
-import { WhereClause } from "../statements/WhereClause.js";
-import { RowView } from "../schema/RowView.js";
-
-
-// export interface UpdateSetStatement extends BaseStatement {
-//   kind: "update_set",
-//   table: string,
-//   values: Record<string, ExplicitInput>,
-//   where?: WhereClause,
-//   returning?: string[],
-// }
 
 export function bindUpdateSet(
   semantic: SemanticAnalyzer,
@@ -33,47 +19,29 @@ export function bindUpdateSet(
   const tableName: string = stmt.table;
   const table = database.tables.requireByName(tableName);
 
-  const columnIdToValueMap = new Map<ColumnId, ExplicitInput>();
+  const updateMap = new Map<ColumnId, Expression>();
 
   for (const columnName in stmt.values) {
     const value = stmt.values[columnName];
 
     const columnId = table.columns.requireIdByName(columnName);
 
-    columnIdToValueMap.set(columnId, value);
-  }
-
-  const rows = resolveAffectedRows(
-      semantic,
-      table,
-      stmt.where,
-  );
-
-  for (const row of rows) {
-    stmtActions.push(
-      new UpdateRowAction(
-        dbName,
-        tableName,
-        row.index,
-        columnIdToValueMap,
-      )
+    updateMap.set(
+      columnId,
+      bindExpression(value, table),
     );
   }
 
+  const whereClause = stmt.where ? bindPredicate(stmt.where, table) : undefined;
+
+  stmtActions.push(
+    new UpdateRowsAction(
+      dbName,
+      tableName,
+      updateMap,
+      whereClause,
+    )
+  );
+
   return stmtActions;
-}
-
-function resolveAffectedRows(
-  semantic: SemanticAnalyzer,
-  table: Table,
-  where: WhereClause | undefined,
-): RowView[] {
-  let node: PlanNode = new TableScanNode(table);
-
-  if (where) {
-    const predicate = bindPredicate(semantic, where, table);
-    node = new FilterNode(predicate, node);
-  }
-
-  return [...node.execute()];
 }

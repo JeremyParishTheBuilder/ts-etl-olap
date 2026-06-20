@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
 import { freshEngine } from '../engine/freshEngine.js';
 import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
@@ -6,10 +6,6 @@ import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
 function createTestSql() {
   return freshEngine().input() as PostgresInputBatch;
 }
-
-beforeEach(() => {
-  
-});
 
 describe("Integration::update", () => {
   it("updates a single row", () => {
@@ -41,8 +37,9 @@ describe("Integration::update", () => {
       .set({
         Name: "Bob",
       })
-      .where("Id")
-      .eq(1)
+      .where(
+        sql.column("Id").eq(1)
+      )
       .execute();
 
     const rows = sql
@@ -90,8 +87,9 @@ describe("Integration::update", () => {
       .set({
         Name: "Updated",
       })
-      .where("Id")
-      .gt(1)
+      .where(
+        sql.column("Id").gt(1)
+      )
       .execute();
 
     const rows = sql
@@ -147,8 +145,9 @@ describe("Integration::update", () => {
         .set({
           Id: 2,
         })
-        .where("Id")
-        .eq(1)
+        .where(
+          sql.column("Id").eq(1)
+        )
         .execute();
     }).toThrow();
   });
@@ -186,8 +185,9 @@ describe("Integration::update", () => {
         .set({
           Email: "bob@test.com",
         })
-        .where("Id")
-        .eq(1)
+        .where(
+          sql.column("Id").eq(1)
+        )
         .execute();
     }).toThrow();
   });
@@ -240,8 +240,9 @@ describe("Integration::update", () => {
         .set({
           UserId: 999,
         })
-        .where("Id")
-        .eq(1)
+        .where(
+          sql.column("Id").eq(1)
+        )
         .execute();
     }).toThrow();
   });
@@ -294,8 +295,9 @@ describe("Integration::update", () => {
       .set({
         Id: 2,
       })
-      .where("Id")
-      .eq(1)
+      .where(
+        sql.column("Id").eq(1)
+      )
       .execute();
 
     const rows = sql
@@ -308,6 +310,77 @@ describe("Integration::update", () => {
         index: 0,
         values: [1, 2],
       },
+    ]]);
+  });
+
+  it("updates PKs atomically using CASE expression", () => {
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Id: { type: Number, nullable: false, primaryKey: true },
+      Name: { type: String },
+    }).execute();
+
+    sql
+      .insertInto("Users", ["Id", "Name"])
+      .values([
+        [1, "A"],
+        [2, "B"],
+      ])
+      .execute();
+
+    sql
+      .update("Users")
+      .set({
+        Id: sql.case()
+          .when(sql.column("Id").eq(1)).then(2)
+          .when(sql.column("Id").eq(2)).then(1)
+          .else(sql.column("Id")),
+      })
+      .execute();
+
+    const rows = sql.select("*").from("Users").execute();
+
+    expect(rows).toEqual([[
+      { index: 0, values: [2, "A"] },
+      { index: 1, values: [1, "B"] },
+    ]]);
+  });
+
+  it("updates using arithmetic expressions", () => {
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Id: { type: Number, nullable: false, primaryKey: true },
+      Name: { type: String },
+    }).execute();
+
+    sql
+      .insertInto("Users", ["Id", "Name"])
+      .values([
+        [1, "A"],
+        [2, "B"],
+      ])
+      .execute();
+
+    sql
+    .update("Users")
+    .set({
+      Id: sql.column("Id").add(1),
+    })
+    .execute();
+
+    const rows = sql.select("*").from("Users").execute();
+
+    expect(rows).toEqual([[
+      { index: 0, values: [2, "A"] },
+      { index: 1, values: [3, "B"] },
     ]]);
   });
 });

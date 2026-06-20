@@ -1,4 +1,3 @@
-import { WhereColumnBuilder } from "../statements/dql/WhereColumnBuilder.js";
 import {
   type Statement,
   BeginBuilder,
@@ -10,13 +9,19 @@ import {
   InsertIntoBuilder,
   SelectBuilder,
   UpdateSetBuilder,
+  DeleteFromBuilder,
   type Builder,
   isStatementBuilder,
 } from "../statements/index.js";
-import { type ColumnValue, type InlineColumnSpec } from "../schema/Column.js";
+import { type InlineColumnSpec } from "../schema/Column.js";
 import { type ConstraintSpec } from "../schema/Constraint.js";
-import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type ReferentialAction } from "../schema/ReferentialAction.js";
+import { CaseBuilder } from "../dsl/case/CaseBuilder.js";
+import { type ExpressionNode } from "../evaluation/expression/Expression.js";
+import { type ExplicitInput } from "../types/ExplicitInput.js";
+import { type PredicateNode } from "../evaluation/predicate/Predicate.js";
+import { BinaryLogicalPredicateNode, NotPredicateNode } from "../evaluation/predicate/LogicalPredicate.js";
+import { ColumnExpressionNode } from "../evaluation/expression/ColumnExpression.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -32,7 +37,7 @@ export abstract class InputBatch {
     "insertInto",
     "select",
     "update",
-    "delete",
+    "deleteFrom",
   ];
 
   constructor(
@@ -154,12 +159,22 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected set(data: Record<string, ExplicitInput>, fragment: string = "SET") {
+  protected set(data: Record<string, ExpressionNode | ExplicitInput>, fragment: string = "SET") {
     this.assertAllowed("set", fragment);
     if (!(this.currentBuilder instanceof UpdateSetBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of Update`);
     }
     this.currentBuilder.set(data);
+    return this;
+  }
+
+  protected deleteFrom(
+    table: string,
+    fragment: string = "DELETE FROM"
+  ) {
+    this.assertAllowed("deleteFrom", fragment); 
+    this.finalizePreviousStatement();
+    this.currentBuilder = new DeleteFromBuilder(table);
     return this;
   }
 
@@ -270,143 +285,183 @@ export abstract class InputBatch {
   }
 
   protected where(
-    column: string,
+    predicate: PredicateNode,
     fragment: string = "WHERE",
   ) {
     this.assertAllowed("where", fragment);
     if (
       !(this.currentBuilder instanceof SelectBuilder) &&
-      !(this.currentBuilder instanceof UpdateSetBuilder)// &&
-      //!(this.currentBuilder instanceof DeleteBuilder) // not implemented yet, TODO
+      !(this.currentBuilder instanceof UpdateSetBuilder) &&
+      !(this.currentBuilder instanceof DeleteFromBuilder)
     ) {
       throw new Error(`Cannot call '${fragment}' outside of SELECT/UPDATE/DELETE`);
     }
-    this.currentBuilder = this.currentBuilder.where(column); // temporarily sets the currentBuilder to whereColumnBuilder
+    this.currentBuilder.where(predicate);
     return this;
   }
 
-  protected eq(
-    value: ColumnValue,
-    fragment: string = "eq",
-  ) {
-    this.assertAllowed("eq", fragment);
+  // protected eq(
+  //   value: ColumnValue,
+  //   fragment: string = "eq",
+  // ) {
+  //   this.assertAllowed("eq", fragment);
 
-    if (!(this.currentBuilder instanceof WhereColumnBuilder)) {
-      throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
-    }
+  //   if (!(this.currentBuilder instanceof WhereBuilder)) {
+  //     throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
+  //   }
 
-    this.currentBuilder = this.currentBuilder.eq(value);
+  //   this.currentBuilder = this.currentBuilder.eq(value);
 
-    return this;
-  }
+  //   return this;
+  // }
 
-  protected ne(
-    value: ColumnValue,
-    fragment: string = "ne",
-  ) {
-    this.assertAllowed("ne", fragment);
+  // protected ne(
+  //   value: ColumnValue,
+  //   fragment: string = "ne",
+  // ) {
+  //   this.assertAllowed("ne", fragment);
 
-    if (!(this.currentBuilder instanceof WhereColumnBuilder)) {
-      throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
-    }
+  //   if (!(this.currentBuilder instanceof WhereBuilder)) {
+  //     throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
+  //   }
 
-    this.currentBuilder = this.currentBuilder.ne(value);
+  //   this.currentBuilder = this.currentBuilder.ne(value);
 
-    return this;
-  }
+  //   return this;
+  // }
 
-  protected gt(
-    value: ColumnValue,
-    fragment: string = "gt",
-  ) {
-    this.assertAllowed("gt", fragment);
+  // protected gt(
+  //   value: ColumnValue,
+  //   fragment: string = "gt",
+  // ) {
+  //   this.assertAllowed("gt", fragment);
 
-    if (!(this.currentBuilder instanceof WhereColumnBuilder)) {
-      throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
-    }
+  //   if (!(this.currentBuilder instanceof WhereBuilder)) {
+  //     throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
+  //   }
 
-    this.currentBuilder = this.currentBuilder.gt(value);
+  //   this.currentBuilder = this.currentBuilder.gt(value);
 
-    return this;
-  }
+  //   return this;
+  // }
 
-  protected gte(
-    value: ColumnValue,
-    fragment: string = "gte",
-  ) {
-    this.assertAllowed("gte", fragment);
+  // protected gte(
+  //   value: ColumnValue,
+  //   fragment: string = "gte",
+  // ) {
+  //   this.assertAllowed("gte", fragment);
 
-    if (!(this.currentBuilder instanceof WhereColumnBuilder)) {
-      throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
-    }
+  //   if (!(this.currentBuilder instanceof WhereBuilder)) {
+  //     throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
+  //   }
 
-    this.currentBuilder = this.currentBuilder.gte(value);
+  //   this.currentBuilder = this.currentBuilder.gte(value);
 
-    return this;
-  }
+  //   return this;
+  // }
 
-  protected lt(
-    value: ColumnValue,
-    fragment: string = "lt",
-  ) {
-    this.assertAllowed("lt", fragment);
+  // protected lt(
+  //   value: ColumnValue,
+  //   fragment: string = "lt",
+  // ) {
+  //   this.assertAllowed("lt", fragment);
 
-    if (!(this.currentBuilder instanceof WhereColumnBuilder)) {
-      throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
-    }
+  //   if (!(this.currentBuilder instanceof WhereBuilder)) {
+  //     throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
+  //   }
 
-    this.currentBuilder = this.currentBuilder.lt(value);
+  //   this.currentBuilder = this.currentBuilder.lt(value);
 
-    return this;
-  }
+  //   return this;
+  // }
 
-  protected lte(
-    value: ColumnValue,
-    fragment: string = "lte",
-  ) {
-    this.assertAllowed("lte", fragment);
+  // protected lte(
+  //   value: ColumnValue,
+  //   fragment: string = "lte",
+  // ) {
+  //   this.assertAllowed("lte", fragment);
 
-    if (!(this.currentBuilder instanceof WhereColumnBuilder)) {
-      throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
-    }
+  //   if (!(this.currentBuilder instanceof WhereBuilder)) {
+  //     throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
+  //   }
 
-    this.currentBuilder = this.currentBuilder.lte(value);
+  //   this.currentBuilder = this.currentBuilder.lte(value);
 
-    return this;
-  }
+  //   return this;
+  // }
 
-  protected and(
-    column: string,
-    fragment: string = "AND",
-  ) {
-    this.assertAllowed("and", fragment);
+  // protected and(
+  //   column: string,
+  //   fragment: string = "AND",
+  // ) {
+  //   this.assertAllowed("and", fragment);
 
-    if (
-      !(this.currentBuilder instanceof SelectBuilder) // TODO add updatesetbuilder and delete
-    ) {
-      throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
-    }
+  //   if (
+  //     !(this.currentBuilder instanceof SelectBuilder) // TODO add updatesetbuilder and delete
+  //   ) {
+  //     throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
+  //   }
 
-    this.currentBuilder = this.currentBuilder.and(column);
+  //   this.currentBuilder = this.currentBuilder.and(column);
     
-    return this;
+  //   return this;
+  // }
+
+  // protected or(
+  //   column: string,
+  //   fragment: string = "OR",
+  // ) {
+  //   this.assertAllowed("or", fragment);
+
+  //   if (
+  //     !(this.currentBuilder instanceof SelectBuilder) // TODO add updatesetbuilder and delete
+  //   ) {
+  //     throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
+  //   }
+
+  //   this.currentBuilder = this.currentBuilder.or(column);
+    
+  //   return this;
+  // }
+
+  protected and(left: PredicateNode, right: PredicateNode) {   
+    return new BinaryLogicalPredicateNode(
+      left,
+      right,
+      "and",
+    );
   }
 
-  protected or(
-    column: string,
-    fragment: string = "OR",
+  protected or(left: PredicateNode, right: PredicateNode) {   
+    return new BinaryLogicalPredicateNode(
+      left,
+      right,
+      "or",
+    );
+  }
+
+  protected xor(left: PredicateNode, right: PredicateNode) {   
+    return new BinaryLogicalPredicateNode(
+      left,
+      right,
+      "xor",
+    );
+  }
+
+  protected not(inner: PredicateNode) {   
+    return new NotPredicateNode(
+      inner,
+    );
+  }
+
+  protected case() {   
+    return new CaseBuilder();
+  }
+
+  protected column(
+    name: string,
   ) {
-    this.assertAllowed("or", fragment);
-
-    if (
-      !(this.currentBuilder instanceof SelectBuilder) // TODO add updatesetbuilder and delete
-    ) {
-      throw new Error(`Cannot call '${fragment}' outside of WHERE clause`);
-    }
-
-    this.currentBuilder = this.currentBuilder.or(column);
-    
-    return this;
+    return new ColumnExpressionNode(name);
   }
 
   execute() {

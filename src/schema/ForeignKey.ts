@@ -175,7 +175,7 @@ export class CompiledForeignKey {
 
   public applyReferentialActionToRow(
     existingChildRow: ColumnValue[],
-    replacementParentRow: readonly ColumnValue[],
+    replacementParentRow: readonly ColumnValue[] | undefined,
     action: ReferentialAction,
   ): ColumnValue[] {
     let next: ColumnValue[];
@@ -192,6 +192,12 @@ export class CompiledForeignKey {
 
         return next;
       case ReferentialAction.cascade:
+        if (!replacementParentRow) {
+          throw new Error(
+            "Replacement parent row required for CASCADE update"
+          );
+        }
+        
         next = [...existingChildRow];
 
         this.columnIndexes.forEach((childIdx, i) => {         

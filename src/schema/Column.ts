@@ -1,7 +1,3 @@
-import {
-  type Expression,
-} from './Expression.js';
-
 export type ColumnType =
   | StringConstructor
   | NumberConstructor
@@ -312,7 +308,7 @@ export type InlineColumnSpec = Omit<ColumnSpec, 'name'> & {
     onDelete?: ReferentialAction,
     onUpdate?: ReferentialAction,
   };
-  check?: Expression;
+  check?: any;//Expression;
 };
 
 export type ColumnShape = Omit<ColumnSpec, 'name'> & {
@@ -336,14 +332,14 @@ export type ColumnShape = Omit<ColumnSpec, 'name'> & {
 //   return v;
 // }
 
-function isExpression(v: unknown): v is Expression {
-  return (
-    typeof v === "object" &&
-    v !== null &&
-    "kind" in v &&
-    typeof (v as any).kind === "string"
-  );
-}
+// function isExpression(v: unknown): v is Expression {
+//   return (
+//     typeof v === "object" &&
+//     v !== null &&
+//     "kind" in v &&
+//     typeof (v as any).kind === "string"
+//   );
+// }
 
 //Column Utils
 export function widens(oldType: ColumnType, newType: ColumnType): boolean {

@@ -1,66 +1,33 @@
-import { ComparisonPredicate } from "../query/predicate/ComparisonPredicate.js";
-import { BinaryLogicalPredicate, NotPredicate } from "../query/predicate/LogicalPredicate.js";
-import { type Predicate } from "../query/predicate/Predicate.js";
-import { type WhereClause } from "../statements/WhereClause.js";
+import { ComparisonPredicate } from "../evaluation/predicate/ComparisonPredicate.js";
+import { BinaryLogicalPredicate, NotPredicate } from "../evaluation/predicate/LogicalPredicate.js";
+import { type PredicateNode, type Predicate } from "../evaluation/predicate/Predicate.js";
 import { type Table } from "../schema/Table.js";
-import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
+import { bindExpression } from "./expression.js";
 
 export function bindPredicate(
-  semantic: SemanticAnalyzer,
-  clause: WhereClause,
+  pred: PredicateNode,
   table: Table,
 ): Predicate {
-  switch (clause.type) {
+  switch (pred.kind) {
     case "comparison": {
-      const column = table.columns.requireByName(clause.column);
-
       return new ComparisonPredicate(
-        column.position,
-        clause.operator,
-        clause.value
+        bindExpression(pred.left, table),
+        pred.operator,
+        bindExpression(pred.right, table)
       );
     }
 
-    case "logical": {
-      const left = bindPredicate(semantic, clause.left, table);
-      const right = bindPredicate(semantic, clause.right, table);
-
+    case "binaryLogical": {
       return new BinaryLogicalPredicate(
-        left,
-        right,
-        clause.operator
+        bindPredicate(pred.left, table),
+        bindPredicate(pred.right, table),
+        pred.operator
       );
     }
 
     case "not": {
-      const inner = bindPredicate(semantic, clause, table);
-
       return new NotPredicate(
-        inner
-      );
-    }
-
-    case "between": {
-      const inner = bindPredicate(semantic, clause, table);
-
-      return new NotPredicate(
-        inner
-      );
-    }
-
-    case "in": {
-      const inner = bindPredicate(semantic, clause, table);
-
-      return new NotPredicate(
-        inner
-      );
-    }
-
-    case "null_check": {
-      const inner = bindPredicate(semantic, clause, table);
-
-      return new NotPredicate(
-        inner
+        bindPredicate(pred.inner, table)
       );
     }
 

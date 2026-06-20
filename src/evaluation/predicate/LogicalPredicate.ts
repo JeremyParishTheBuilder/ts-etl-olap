@@ -1,5 +1,15 @@
-import { type Predicate } from "./Predicate.js";
+import { type PredicateNode, type Predicate } from "./Predicate.js";
 import { type RowView } from "../../schema/RowView.js";
+
+export class BinaryLogicalPredicateNode {
+  readonly kind = "binaryLogical" as const;
+
+  constructor(
+    public left: PredicateNode,
+    public right: PredicateNode,
+    public operator: "and" | "or" | "xor"
+  ) {}
+}
 
 export class BinaryLogicalPredicate implements Predicate {
   constructor(
@@ -20,6 +30,12 @@ export class BinaryLogicalPredicate implements Predicate {
         throw new Error(`Invalid logical operator`);
     }
   }
+}
+
+export class NotPredicateNode {
+  readonly kind = "not" as const;
+
+  constructor(public inner: PredicateNode) {}
 }
 
 export class NotPredicate implements Predicate {

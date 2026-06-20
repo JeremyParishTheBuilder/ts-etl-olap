@@ -24,8 +24,11 @@ import { CheckSpec } from "./Constraint.js";
 import { ReferentialAction } from "./ReferentialAction.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { IdAllocator } from "../types/IdAllocator.js";
-import { Predicate } from "../query/predicate/Predicate.js";
+import { Predicate } from "../evaluation/predicate/Predicate.js";
 import { NamedObjectStore } from "../infrastructure/NamedObjectStore.js";
+import { type ResolvedUpdate } from "../types/ResolvedUpdate.js";
+import { type ResolvedDelete } from "../types/ResolvedDelete.js";
+import { type Expression } from "../evaluation/expression/Expression.js";
 
 export type TableId = number & { readonly __brand: "TableId" };
 
@@ -98,7 +101,7 @@ export class Table extends Immutable {
   }
 
   public getColumnPosition(id: ColumnId): number | undefined {
-    return this.columnPositions.get(id);
+    return this.columnPositions.get(id); // TODO, delete -- wrong logic!
   }
 
   public requireColumnPosition(id: ColumnId): number {
@@ -910,6 +913,105 @@ export class Table extends Immutable {
     } as Partial<this>);
   }
 
+  // TODO write fn
+  // public updateRows(row: ColumnValue[], rowNums: number): Table {
+  //   this.assertRowLength(row);
+
+  //   const oldRow = this.requireRowView(rowNum);
+
+  //   const newRow = {
+  //     index: oldRow.index,
+  //     values: row
+  //   };
+
+  //   this.assertRow(row);
+
+  //   const updatedIndexes = this.indexes.mapValues(
+  //     index => index.tryUpdateRow(oldRow, newRow)
+  //   );
+
+  //   const updatedColumns = this.columns.mapValues(column =>
+  //     column.updateDatum(row[column.position], rowNum)
+  //   );
+
+  //   //this.assertRow(row);
+
+  //   return this.with({
+  //     indexes: updatedIndexes,
+  //     columns: updatedColumns,
+  //   } as Partial<this>);
+  // }
+
+  public resolveUpdateExpressions(
+    expressions: Map<ColumnId, Expression>,
+    rowNum: number
+  ): ResolvedUpdate {
+    const rowView = this.requireRowView(rowNum);
+
+    const oldRow = this.requireRow(rowNum);
+
+    const newRow = [...oldRow];
+
+    for (const [columnId, expression] of expressions) {
+      const position =
+        this.columns.require(columnId).position;
+
+      newRow[position] =
+        expression.evaluate(rowView);
+    }
+
+    return {
+      //tableId: this.id,
+      rowNum,
+      oldRow,
+      newRow,
+    };
+  }
+
+  public updateRows(updates: ResolvedUpdate[]): Table {
+    let updatedColumns = this.columns;
+
+    for (const update of updates) {
+      this.assertRowLength(update.newRow);
+
+      this.assertRow(update.newRow); // against checks
+      
+      updatedColumns = updatedColumns.mapValues(column =>
+        column.updateDatum(update.newRow[column.position], update.rowNum)
+      );
+    }
+
+    const tableWithUpdatedColumns = this.with({
+      columns: updatedColumns
+    } as Partial<this>);
+
+    const updatedIndexes =
+      this.indexes.mapValues(index => index.build(tableWithUpdatedColumns.iterateAliveRows()));
+
+    return tableWithUpdatedColumns.with({
+      indexes: updatedIndexes,
+    } as Partial<this>);
+  }
+
+  public removeRows(deletes: ResolvedDelete[]): Table {
+    const newRowAlive = [...this.rowAlive];
+    for (const deleteRow of deletes) {      
+      newRowAlive[deleteRow.rowNum] = false;
+    }
+
+    const tableWithUpdatedRowAlive = this.with({
+      rowAlive: newRowAlive,
+    } as Partial<this>);
+
+    const updatedIndexes =
+      this.indexes.mapValues(index => index.build(tableWithUpdatedRowAlive.iterateAliveRows()));
+
+    return tableWithUpdatedRowAlive.with({
+      indexes: updatedIndexes,
+    } as Partial<this>);
+  }
+
+
   public updateRow(row: ColumnValue[], rowNum: number): Table {
     this.assertRowLength(row);
 
@@ -920,7 +1022,7 @@ export class Table extends Immutable {
       values: row
     };
 
-    this.assertRow(row);
+    this.assertRow(row); // against checks
 
     const updatedIndexes = this.indexes.mapValues(
       index => index.tryUpdateRow(oldRow, newRow)
@@ -929,8 +1031,6 @@ export class Table extends Immutable {
     const updatedColumns = this.columns.mapValues(column =>
       column.updateDatum(row[column.position], rowNum)
     );
-
-    //this.assertRow(row);
 
     return this.with({
       indexes: updatedIndexes,

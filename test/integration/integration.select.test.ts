@@ -127,8 +127,9 @@ describe('Integration::select', () => {
     const rows = sql
       .select("*")
       .from("Users")
-      .where("Age")
-      .gt(15)
+      .where(
+        sql.column("Age").gt(15)
+      )
       .execute();
 
     expect(rows[0]).toEqual([
@@ -173,10 +174,12 @@ describe('Integration::select', () => {
     const rows = sql
       .select("*")
       .from("Users")
-      .where("Age")
-      .eq(20)
-      .and("Score")
-      .eq(100)
+      .where(
+        sql.and(
+          sql.column("Age").eq(20),
+          sql.column("Score").eq(100)
+        )
+      )
       .execute();
 
     expect(rows[0]).toEqual([
@@ -217,10 +220,12 @@ describe('Integration::select', () => {
     const rows = sql
       .select("*")
       .from("Users")
-      .where("Age")
-      .eq(20)
-      .and("Score")
-      .eq(100)
+      .where(
+        sql.and(
+          sql.column("Age").eq(20),
+          sql.column("Score").eq(100)
+        )
+      )
       .execute();
 
     expect(rows[0]).toEqual([
@@ -257,10 +262,12 @@ describe('Integration::select', () => {
     const rows = sql
       .select("*")
       .from("Users")
-      .where("Age")
-      .eq(10)
-      .or("Age")
-      .eq(30)
+      .where(
+        sql.or(
+          sql.column("Age").eq(10),
+          sql.column("Age").eq(30)
+        )
+      )
       .execute();
 
     expect(rows[0]).toEqual([

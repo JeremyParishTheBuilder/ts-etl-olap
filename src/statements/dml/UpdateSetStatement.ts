@@ -1,57 +1,39 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { type WhereClause } from "../WhereClause.js";
-import { WhereColumnBuilder } from "../dql/WhereColumnBuilder.js";
+import { type ExpressionNode } from "../../evaluation/expression/Expression.js";
+import { asExpressionNode } from "../../dsl/expression/asExpressionNode.js";
 import { type ExplicitInput } from "../../types/ExplicitInput.js";
+import { type PredicateNode } from "../../evaluation/predicate/Predicate.js";
 
 export interface UpdateSetStatement extends BaseStatement {
   kind: "update_set",
   table: string,
-  values: Record<string, ExplicitInput>,
-  where?: WhereClause,
+  values: Record<string, ExpressionNode>,
+  where?: PredicateNode,
   returning?: string[],
 }
 
 export class UpdateSetBuilder implements StatementBuilder {
-  private values?: Record<string, ExplicitInput>;
-  private whereClause?: WhereClause;
+  private values?: Record<string, ExpressionNode>;
+  private whereClause?: PredicateNode;
   private returningCols?: string[];
 
   constructor(
     private table: string,
   ) {}
 
-  set(data: Record<string, ExplicitInput>) {
-    this.values = data;
-  }
+  set(data: Record<string, ExpressionNode | ExplicitInput>) {
+    const normalized: Record<string, ExpressionNode> = {};
 
-  where(column: string): WhereColumnBuilder {
-    return new WhereColumnBuilder(this, column);
-  }
-
-  and(column: string): WhereColumnBuilder {
-    return new WhereColumnBuilder(this, column, "and");
-  }
-  
-  or(column: string): WhereColumnBuilder {
-    return new WhereColumnBuilder(this, column, "or");
-  }
-
-  addWhereClause(clause: WhereClause, logicalOp?: "and" | "or") {
-    if (!this.whereClause) {
-      this.whereClause = clause;
-      return;
+    for (const key in data) {
+      normalized[key] =
+        asExpressionNode(data[key]);
     }
 
-    if (!logicalOp) {
-      throw new Error("Missing logical operator (and/or)");
-    }
+    this.values = normalized;
+  }
 
-    this.whereClause = {
-      type: "logical",
-      operator: logicalOp,
-      left: this.whereClause,
-      right: clause,
-    };
+  where(predicate: PredicateNode) {
+    this.whereClause = predicate;
   }
 
   returning(cols: string[]) {
@@ -75,7 +57,7 @@ export class UpdateSetBuilder implements StatementBuilder {
 
     return {
       required: [],
-      optional: ["and", "or", "returning"],
+      optional: ["returning"],
     };
   }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec, createDelete } from '../utils/buildSchema.js';
 
 describe('Table::removeRow', () => {
 
@@ -12,7 +12,9 @@ describe('Table::removeRow', () => {
 
     table = table.addRow([1]);
 
-    const updated = table.removeRow(0);
+    const updated = table.removeRows(
+      [createDelete(table, 0)]
+    );
 
     expect(updated.isRowAlive(0)).toBe(false);
   });
@@ -31,7 +33,9 @@ describe('Table::removeRow', () => {
 
     table = table.addRow(["a@test.com"]);
 
-    const updated = table.removeRow(0);
+    const updated = table.removeRows(
+      [createDelete(table, 0)]
+    );
 
     const index =
       updated.indexes.requireByName("UQ_Email");
@@ -57,7 +61,9 @@ describe('Table::removeRow', () => {
     table = table.addRow(["b@test.com"]);
     table = table.addRow(["c@test.com"]);
 
-    const updated = table.removeRow(1);
+    const updated = table.removeRows(
+      [createDelete(table, 1)]
+    );
 
     const index =
       updated.indexes.requireByName("UQ_Email");
@@ -86,7 +92,9 @@ describe('Table::removeRow', () => {
     table = table.addRow([2]);
     table = table.addRow([3]);
 
-    const updated = table.removeRow(1);
+    const updated = table.removeRows(
+      [createDelete(table, 1)]
+    );
 
     expect(
       updated.requireRowView(0).index
@@ -106,10 +114,14 @@ describe('Table::removeRow', () => {
 
     table = table.addRow([1]);
 
-    table = table.removeRow(0);
+    table = table.removeRows(
+      [createDelete(table, 0)]
+    );
 
     expect(() =>
-      table.removeRow(0)
+      table.removeRows(
+        [createDelete(table, 0)]
+      )
     ).toThrow();
   });
 
@@ -121,7 +133,9 @@ describe('Table::removeRow', () => {
       }));
 
     expect(() =>
-      table.removeRow(99)
+      table.removeRows(
+        [createDelete(table, 99)]
+      )
     ).toThrow();
   });
 
@@ -134,7 +148,9 @@ describe('Table::removeRow', () => {
 
     table = table.addRow([1]);
 
-    const updated = table.removeRow(0);
+    const updated = table.removeRows(
+      [createDelete(table, 0)]
+    );
 
     expect(
       updated.getRow(0)
@@ -164,7 +180,9 @@ describe('Table::removeRow', () => {
     table = table.addRow([2]);
     table = table.addRow([3]);
 
-    const updated = table.removeRow(1);
+    const updated = table.removeRows(
+      [createDelete(table, 1)]
+    );
 
     const rows = [
       ...updated.iterateAliveRows(),
@@ -191,7 +209,9 @@ describe('Table::removeRow', () => {
 
     table = table.addRow([1]);
 
-    const updated = table.removeRow(0);
+    const updated = table.removeRows(
+      [createDelete(table, 0)]
+    );
 
     expect(
       table.requireRow(0)
@@ -217,7 +237,9 @@ describe('Table::removeRow', () => {
 
     expect(table.numRows).toBe(1);
 
-    const updated = table.removeRow(0);
+    const updated = table.removeRows(
+      [createDelete(table, 0)]
+    );
 
     expect(updated.numRows).toBe(1);
   });
@@ -232,7 +254,9 @@ describe('Table::removeRow', () => {
     table = table.addRow([1]);
     table = table.addRow([2]);
 
-    table = table.removeRow(0);
+    table = table.removeRows(
+      [createDelete(table, 0)]
+    );
 
     const updated = table.addRow([3]);
 
@@ -244,4 +268,33 @@ describe('Table::removeRow', () => {
     });
   });
 
+  it("removes multiple rows", () => {
+    let table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+      }))
+      .createColumn(createColumnTestSpec({
+        name: "name",
+        type: String,
+      }));
+      
+     table = table.addRow([1, "Alice"]);
+     table = table.addRow([2, "Bob"]);
+     table = table.addRow([3, "Charlie"]);
+
+    const updated = table.removeRows([
+      {
+        rowNum: 0,
+        oldRow: [1, "Alice"],
+      },
+      {
+        rowNum: 2,
+        oldRow: [3, "Charlie"],
+      },
+    ]);
+
+    expect([...updated.iterateAliveRows()])
+      .toHaveLength(1);
+  });
 });

@@ -3,6 +3,8 @@ import { InlineColumnSpec } from "../schema/Column.js";
 import { ConstraintSpec } from "../schema/Constraint.js";
 import { type Statement } from "../statements/Statement.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
+import { type ExpressionNode } from "../evaluation/expression/Expression.js";
+import { type PredicateNode } from "../evaluation/predicate/Predicate.js";
 
 export class SqlServerInputBatch extends InputBatch {
   constructor(
@@ -47,8 +49,12 @@ export class SqlServerInputBatch extends InputBatch {
     return super.update(table);
   }
 
-  set(data: Record<string, ExplicitInput>) {
+  set(data: Record<string, ExpressionNode | ExplicitInput>) {
     return super.set(data);
+  }
+
+  deleteFrom(table: string) {
+    return super.deleteFrom(table);
   }
 
   output(cols: string[]) {
@@ -63,7 +69,31 @@ export class SqlServerInputBatch extends InputBatch {
     return super.from(name);
   }
 
-  where(column: string) {
-    return super.where(column);
+  where(predicate: PredicateNode) {
+    return super.where(predicate);
+  }
+
+  case() {
+    return super.case();
+  }
+
+  column(name: string) {
+    return super.column(name);
+  }
+
+  and(left: PredicateNode, right: PredicateNode) {
+    return super.and(left, right);
+  }
+
+  or(left: PredicateNode, right: PredicateNode) {
+    return super.or(left, right);
+  }
+
+  xor(left: PredicateNode, right: PredicateNode) {
+    return super.xor(left, right);
+  }
+
+  not(inner: PredicateNode) {
+    return super.not(inner);
   }
 }

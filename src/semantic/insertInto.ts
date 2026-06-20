@@ -19,7 +19,6 @@ export function bindInsertInto(
   stmt: InsertIntoStatement
 ) {
   const stmtActions: Action[] = [];
-
   
   const database = semantic.ctx.requireDatabase();
   const dbName: string = database.name;

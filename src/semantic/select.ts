@@ -1,7 +1,7 @@
-import { type PlanNode } from "../query/plan/PlanNode.js";
-import { TableScanNode } from "../query/plan/TableScanNode.js";
-import { FilterNode } from "../query/plan/FilterNode.js";
-import { ProjectNode } from "../query/plan/ProjectNode.js";
+import { type PlanNode } from "../evaluation/plan/PlanNode.js";
+import { TableScanNode } from "../evaluation/plan/TableScanNode.js";
+import { FilterNode } from "../evaluation/plan/FilterNode.js";
+import { ProjectNode } from "../evaluation/plan/ProjectNode.js";
 
 import { type SelectStatement } from "../statements/index.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
@@ -32,9 +32,9 @@ export function bindSelect(
   let node: PlanNode = new TableScanNode(table);
 
   // 3. WHERE -> predicate -> filter
-  const whereClause = stmt.whereClause;
+  const whereClause = stmt.where;
   if (whereClause) {
-    const predicate = bindPredicate(semantic, whereClause, table);
+    const predicate = bindPredicate(whereClause, table);
     node = new FilterNode(predicate, node);
   }
 

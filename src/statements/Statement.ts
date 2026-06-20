@@ -7,7 +7,7 @@ import { type AlterTableStatement } from "./ddl/AlterTableStatement.js";
 import { type InsertIntoStatement } from "./dml/InsertIntoStatement.js";
 import { type SelectStatement } from "./dql/SelectStatement.js";
 import { type UpdateSetStatement } from "./dml/UpdateSetStatement.js";
-import { type WhereStatement } from "./dql/WhereColumnBuilder.js";
+import { type DeleteFromStatement } from "./dml/DeleteFromStatement.js";
 
 export interface BaseStatement {
   readonly kind: StatementKind;
@@ -22,6 +22,7 @@ export type StatementKind =
   | "alter_table"
   | "insert_into"
   | "update_set"
+  | "delete_from"
   | "select"
   | "where";
 
@@ -34,8 +35,8 @@ export type Statement =
   | AlterTableStatement
   | InsertIntoStatement
   | UpdateSetStatement
-  | SelectStatement
-  | WhereStatement;
+  | DeleteFromStatement
+  | SelectStatement;
 
 export interface StatementBuilder extends Builder {
   createStatement(): Statement;

@@ -4,6 +4,7 @@ import {
   buildDatabase,
   buildTable,
   createColumnTestSpec,
+  createDelete,
   createForeignKeyTestSpec_Database
 } from '../utils/buildSchema.js';
 
@@ -21,9 +22,9 @@ describe('Database::removeRow', () => {
     let db = buildDatabase()
       .addTable(users);
 
-    const updated = db.removeRow(
+    const updated = db.removeRows(
       "Users",
-      0,
+      [createDelete(users, 0)]
     );
 
     expect(
@@ -74,9 +75,9 @@ describe('Database::removeRow', () => {
       }));
 
     expect(() =>
-      db.removeRow(
+      db.removeRows(
         "Roles",
-        0,
+        [createDelete(roles, 0)]
       )
     ).toThrow();
   });
@@ -121,14 +122,14 @@ describe('Database::removeRow', () => {
         onUpdate: ReferentialAction.restrict,
       }));
 
-    db = db.removeRow(
+    db = db.removeRows(
       "Users",
-      0,
+      [createDelete(users, 0)]
     );
 
-    const updated = db.removeRow(
+    const updated = db.removeRows(
       "Roles",
-      0,
+      [createDelete(roles, 0)]
     );
 
     expect(
@@ -165,7 +166,9 @@ describe('Database::removeRow', () => {
 
     users = users.addRow([1]);
 
-    users = users.removeRow(0);
+    users = users.removeRows(
+      [createDelete(users, 0)]
+    );
 
     const db = buildDatabase()
       .addTable(roles)
@@ -181,9 +184,9 @@ describe('Database::removeRow', () => {
       }));
 
     expect(() =>
-      db.removeRow(
+      db.removeRows(
         "Roles",
-        0,
+        [createDelete(roles, 0)]
       )
     ).not.toThrow();
   });
@@ -199,9 +202,9 @@ describe('Database::removeRow', () => {
       .addTable(users);
 
     expect(() =>
-      db.removeRow(
+      db.removeRows(
         "Users",
-        999,
+        [createDelete(users, 999)]
       )
     ).toThrow();
   });
@@ -218,15 +221,17 @@ describe('Database::removeRow', () => {
     let db = buildDatabase()
       .addTable(users);
 
-    db = db.removeRow(
+    db = db.removeRows(
       "Users",
-      0,
+      [createDelete(users, 0)]
     );
 
+    const updatedUsers = db.tables.require(users.id);
+
     expect(() =>
-      db.removeRow(
+      db.removeRows(
         "Users",
-        0,
+        [createDelete(updatedUsers, 0)]
       )
     ).toThrow();
   });
@@ -243,9 +248,9 @@ describe('Database::removeRow', () => {
     const db = buildDatabase()
       .addTable(users);
 
-    const updated = db.removeRow(
+    const updated = db.removeRows(
       "Users",
-      0,
+      [createDelete(users, 0)]
     );
 
     expect(
@@ -289,9 +294,9 @@ describe('Database::removeRow', () => {
       .addTable(users)
       .addTable(roles);
 
-    const updated = db.removeRow(
+    const updated = db.removeRows(
       "Users",
-      0,
+      [createDelete(users, 0)]
     );
 
     expect(
@@ -301,4 +306,105 @@ describe('Database::removeRow', () => {
     ).toEqual([10]);
   });
 
+  it("removes multiple rows", () => {
+    let users = buildTable({ name: "Users" })
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+      }))
+      .createColumn(createColumnTestSpec({
+        name: "name",
+        type: String,
+      }));
+
+    users = users.addRow([1, "Alice"]);
+    users = users.addRow([2, "Bob"]);
+    users = users.addRow([3, "Charlie"]);
+
+    const db = buildDatabase()
+      .addTable(users);
+
+    const updated = db.removeRows(
+      "Users",
+      [
+        createDelete(users, 0),
+        createDelete(users, 2),
+      ],
+    );
+
+    const updatedUsers =
+      updated.tables.requireByName("Users");
+
+    expect([...updatedUsers.iterateAliveRows()])
+      .toHaveLength(1);
+
+    expect(updatedUsers.requireRow(1))
+      .toEqual([2, "Bob"]);
+  });
+
+  it("cascades multiple parent deletes in a single operation", () => {
+    let roles = buildTable({ name: "Roles" })
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+      }))
+      .createIndex({
+        name: "PK_Roles",
+        columns: ["id"],
+        unique: true,
+      });
+
+    roles = roles.addRow([1]);
+    roles = roles.addRow([2]);
+
+    let users = buildTable({ name: "Users" })
+      .createColumn(createColumnTestSpec({
+        name: "roleId",
+        type: Number,
+      }))
+      .createIndex({
+        name: "FKRI_Users",
+        columns: ["roleId"],
+        unique: false,
+      });
+
+    users = users.addRow([1]);
+    users = users.addRow([2]);
+
+    const db = buildDatabase()
+      .addTable(roles)
+      .addTable(users)
+      .createForeignKey(
+        "Users",
+        createForeignKeyTestSpec_Database({
+          name: "FK_Users_Roles",
+          columns: ["roleId"],
+          reverseIndex: "FKRI_Users",
+          parentTable: "Roles",
+          parentColumns: ["id"],
+          onDelete: ReferentialAction.cascade,
+          onUpdate: ReferentialAction.restrict,
+        }),
+      );
+
+    const updated = db.removeRows(
+      "Roles",
+      [
+        createDelete(roles, 0),
+        createDelete(roles, 1),
+      ],
+    );
+
+    const updatedRoles =
+      updated.tables.requireByName("Roles");
+
+    const updatedUsers =
+      updated.tables.requireByName("Users");
+
+    expect([...updatedRoles.iterateAliveRows()])
+      .toHaveLength(0);
+
+    expect([...updatedUsers.iterateAliveRows()])
+      .toHaveLength(0);
+  });
 });

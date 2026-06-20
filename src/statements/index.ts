@@ -4,6 +4,7 @@ export * from "./ddl/CreateTableStatement.js";
 export * from "./ddl/AlterTableStatement.js";
 export * from "./dml/InsertIntoStatement.js";
 export * from "./dml/UpdateSetStatement.js";
+export * from "./dml/DeleteFromStatement.js";
 export * from "./dql/SelectStatement.js";
 export * from "./session/UseDatabaseStatement.js";
 export * from "./session/BeginStatement.js";

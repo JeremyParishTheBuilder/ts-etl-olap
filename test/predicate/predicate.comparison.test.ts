@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { ComparisonPredicate } from '../../src/query/predicate/ComparisonPredicate.js';
+import { ComparisonPredicate } from '../../src/evaluation/predicate/ComparisonPredicate.js';
 import { RowView } from '../../src/schema/RowView.js';
+import { ColumnExpression } from '../../src/evaluation/expression/ColumnExpression.js';
+import { LiteralExpression } from '../../src/evaluation/expression/LiteralExpression.js';
 
 describe("ComparisonPredicate", () => {
   it("evaluates equality", () => {
-    const pred = new ComparisonPredicate(0, "eq", 1);
+    const pred = new ComparisonPredicate(new ColumnExpression(0), "eq", new LiteralExpression(1));
     const row1: RowView = {
       index: 0,
       values: [1]
@@ -19,7 +21,7 @@ describe("ComparisonPredicate", () => {
   });
 
   it("evaluates inequality", () => {
-    const pred = new ComparisonPredicate(0, "ne", 1);
+    const pred = new ComparisonPredicate(new ColumnExpression(0), "ne", new LiteralExpression(1));
     const row1: RowView = {
       index: 0,
       values: [1]
@@ -34,7 +36,7 @@ describe("ComparisonPredicate", () => {
   });
 
   it("evaluates gt", () => {
-    const pred = new ComparisonPredicate(0, "gt", 1);
+    const pred = new ComparisonPredicate(new ColumnExpression(0), "gt", new LiteralExpression(1));
     const row1: RowView = {
       index: 0,
       values: [1]
@@ -49,7 +51,7 @@ describe("ComparisonPredicate", () => {
   });
 
   it("evaluates lt", () => {
-    const pred = new ComparisonPredicate(0, "lt", 1);
+    const pred = new ComparisonPredicate(new ColumnExpression(0), "lt", new LiteralExpression(1));
     const row1: RowView = {
       index: 0,
       values: [1]
@@ -64,7 +66,7 @@ describe("ComparisonPredicate", () => {
   });
 
   it("uses the configured column index", () => {
-    const pred = new ComparisonPredicate(1, "eq", 5);
+    const pred = new ComparisonPredicate(new ColumnExpression(1), "eq", new LiteralExpression(5));
 
     const row: RowView = {
       index: 0,
@@ -75,7 +77,7 @@ describe("ComparisonPredicate", () => {
   });
 
   it("returns false for incompatible equality types", () => {
-    const pred = new ComparisonPredicate(0, "eq", 2);
+    const pred = new ComparisonPredicate(new ColumnExpression(0), "eq", new LiteralExpression(2));
 
     const row: RowView = {
       index: 0,
@@ -85,19 +87,19 @@ describe("ComparisonPredicate", () => {
     expect(pred.evaluate(row)).toBe(false);
   });
 
-  it("returns false for incompatible ordering types", () => {
-    const pred = new ComparisonPredicate(0, "gt", 2);
+  it("throws for incompatible ordering types", () => {
+    const pred = new ComparisonPredicate(new ColumnExpression(0), "gt", new LiteralExpression(2));
 
     const row: RowView = {
       index: 0,
       values: ["3"]
     };
 
-    expect(pred.evaluate(row)).toBe(false);
+    expect(() => { pred.evaluate(row) }).toThrow();
   });
 
   it("returns false for null equality comparisons", () => {
-    const pred = new ComparisonPredicate(0, "eq", 1);
+    const pred = new ComparisonPredicate(new ColumnExpression(0), "eq", new LiteralExpression(1));
 
     const row: RowView = {
       index: 0,
@@ -108,7 +110,7 @@ describe("ComparisonPredicate", () => {
   });
 
   it("returns false when both equality values are null", () => {
-    const pred = new ComparisonPredicate(0, "eq", null);
+    const pred = new ComparisonPredicate(new ColumnExpression(0), "eq", new LiteralExpression(null));
 
     const row: RowView = {
       index: 0,
@@ -119,7 +121,7 @@ describe("ComparisonPredicate", () => {
   });
 
   it("returns false for null ordering comparisons", () => {
-    const pred = new ComparisonPredicate(0, "gt", 1);
+    const pred = new ComparisonPredicate(new ColumnExpression(0), "gt", new LiteralExpression(1));
 
     const row: RowView = {
       index: 0,
@@ -130,7 +132,7 @@ describe("ComparisonPredicate", () => {
   });
 
   it("returns false when ordering against null", () => {
-    const pred = new ComparisonPredicate(0, "lt", null);
+    const pred = new ComparisonPredicate(new ColumnExpression(0), "lt", new LiteralExpression(null));
 
     const row: RowView = {
       index: 0,
@@ -142,9 +144,9 @@ describe("ComparisonPredicate", () => {
 
   it("throws for unsupported operators", () => {
     const pred = new ComparisonPredicate(
-      0,
+      new ColumnExpression(0),
       "invalid" as never,
-      1
+      new LiteralExpression(1)
     );
 
     const row: RowView = {
@@ -156,7 +158,7 @@ describe("ComparisonPredicate", () => {
   });
 
   it("evaluates deterministically", () => {
-    const pred = new ComparisonPredicate(0, "eq", 1);
+    const pred = new ComparisonPredicate(new ColumnExpression(0), "eq", new LiteralExpression(1));
 
     const row: RowView = {
       index: 0,

@@ -1,13 +1,14 @@
 import { type ExecutionContext } from "../engine/ExecutionContext.js";
 import { type Statement } from "../statements/index.js";
 
+import { type BindResult } from "../engine/BindResult.js";
 import { bindCreateDatabase } from "./createDatabase.js";
 import { bindCreateTable } from "./createTable.js";
 import { bindInsertInto } from "./insertInto.js";
 import { bindSelect } from "./select.js";
 import { bindAlterTable } from "./alterTable.js";
-import { type BindResult } from "../engine/BindResult.js";
 import { bindUpdateSet } from "./updateSet.js";
+import { bindDeleteFrom } from "./deleteFrom.js";
 
 export class SemanticAnalyzer {
 
@@ -29,6 +30,9 @@ export class SemanticAnalyzer {
 
       case "update_set":
         return { kind: "actions", actions: bindUpdateSet(this, stmt) };
+
+      case "delete_from":
+        return { kind: "actions", actions: bindDeleteFrom(this, stmt) };
 
       case "select":
         return { kind: "query", plan: bindSelect(this, stmt) };

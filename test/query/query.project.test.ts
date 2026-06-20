@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { TableScanNode } from '../../src/query/plan/TableScanNode.js';
-import { ProjectNode } from '../../src/query/plan/ProjectNode.js';
-import { FilterNode } from '../../src/query/plan/FilterNode.js';
-import { ComparisonPredicate } from '../../src/query/predicate/ComparisonPredicate.js';
+import { TableScanNode } from '../../src/evaluation/plan/TableScanNode.js';
+import { ProjectNode } from '../../src/evaluation/plan/ProjectNode.js';
+import { FilterNode } from '../../src/evaluation/plan/FilterNode.js';
+import { ComparisonPredicate } from '../../src/evaluation/predicate/ComparisonPredicate.js';
 import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import { ColumnExpression } from '../../src/evaluation/expression/ColumnExpression.js';
+import { LiteralExpression } from '../../src/evaluation/expression/LiteralExpression.js';
 
 describe('Query::projectNode', () => {
   it("projects selected columns", () => {
@@ -118,7 +120,7 @@ describe('Query::projectNode', () => {
     const scan = new TableScanNode(table);
 
     const filter = new FilterNode(
-      new ComparisonPredicate(1, "gt", 15),
+      new ComparisonPredicate(new ColumnExpression(1), "gt", new LiteralExpression(15)),
       scan
     );
 

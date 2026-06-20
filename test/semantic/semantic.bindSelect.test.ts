@@ -7,6 +7,8 @@ import { bindSelect } from '../../src/semantic/select.js';
 import { freshEngine } from '../engine/freshEngine.js';
 import { Engine } from '../../src/engine/Engine.js';
 import { buildDatabase, buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import { ColumnExpressionNode } from '../../src/evaluation/expression/ColumnExpression.js';
+//import { ColumnBuilder } from '../../src/dsl/column/ColumnBuilder.js';
 
 describe('SemanticAnalyzer::bindSelect', () => {
   let engine: Engine;
@@ -126,9 +128,12 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
     const semantic = createSemantic(database);
 
+    
     const builder = new SelectBuilder("*");
     builder.from("Users");
-    builder.where("Age").gt(15);
+    builder.where(
+          new ColumnExpressionNode("Age").gt(15)
+        );
 
     const stmt = builder.createStatement();
 
@@ -227,7 +232,9 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
     const builder = new SelectBuilder("*");
     builder.from("users");
-    builder.where("MissingColumn").eq(1);
+    builder.where(
+          new ColumnExpressionNode("MissingColumn").eq(1)
+        );
     const stmt = builder.createStatement();
 
     expect(() => {

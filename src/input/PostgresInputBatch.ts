@@ -1,9 +1,11 @@
 import { InputBatch } from "./InputBatch.js";
-import { ColumnValue, type InlineColumnSpec } from "../schema/Column.js";
+import { type ColumnValue, type InlineColumnSpec } from "../schema/Column.js";
 import { type ConstraintSpec } from "../schema/Constraint.js";
 import { type Statement } from "../statements/Statement.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type ReferentialAction } from "../schema/ReferentialAction.js";
+import { type ExpressionNode } from "../evaluation/expression/Expression.js";
+import { type PredicateNode } from "../evaluation/predicate/Predicate.js";
 
 export class PostgresInputBatch extends InputBatch {
   constructor(
@@ -76,8 +78,12 @@ export class PostgresInputBatch extends InputBatch {
     return super.update(table);
   }
 
-  set(data: Record<string, ExplicitInput>) {
+  set(data: Record<string, ExpressionNode | ExplicitInput>) {
     return super.set(data);
+  }
+
+  deleteFrom(table: string) {
+    return super.deleteFrom(table);
   }
 
   returning(cols: string[]) {
@@ -92,39 +98,31 @@ export class PostgresInputBatch extends InputBatch {
     return super.from(name);
   }
 
-  where(column: string) {
-    return super.where(column);
+  where(predicate: PredicateNode) {
+    return super.where(predicate);
   }
 
-  and(column: string) {
-    return super.and(column);
+  case() {
+    return super.case();
   }
 
-  or(column: string) {
-    return super.or(column);
+  column(name: string) {
+    return super.column(name);
   }
 
-  eq(value: ColumnValue) {
-    return super.eq(value);
+  and(left: PredicateNode, right: PredicateNode) {
+    return super.and(left, right);
   }
 
-  ne(value: ColumnValue) {
-    return super.ne(value);
+  or(left: PredicateNode, right: PredicateNode) {
+    return super.or(left, right);
   }
 
-  gt(value: ColumnValue) {
-    return super.gt(value);
+  xor(left: PredicateNode, right: PredicateNode) {
+    return super.xor(left, right);
   }
 
-  gte(value: ColumnValue) {
-    return super.gte(value);
-  }
-
-  lt(value: ColumnValue) {
-    return super.lt(value);
-  }
-
-  lte(value: ColumnValue) {
-    return super.lte(value);
+  not(inner: PredicateNode) {
+    return super.not(inner);
   }
 }

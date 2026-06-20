@@ -28,6 +28,48 @@ console.log("Created Table");
 sql.commit().execute();
 console.log("Commit");
 
+console.log("Now what");
+sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Id: {
+        type: Number,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: String,
+        nullable: false,
+      },
+    }).execute();
+
+    console.log(sql.select("*").from("Users").execute()[0]);
+
+    sql
+      .insertInto("Users", ["Id", "Name"])
+      .values([
+        [1, "Alice"],
+        [2, "Bob"],
+      ])
+      .execute();
+
+      console.log(sql.select("*").from("Users").execute()[0]);
+
+      sql
+        .update("Users")
+        .set({
+          Id: 2,
+        })
+        .where(
+          sql.column("Id").eq(1)
+        )
+        .execute();
+
+      console.log(sql.select("*").from("Users").execute()[0]);
+
+        console.log("THAT's right");
+
 const chainRegistryRoot = new FsStructureEntry(
   "ChainRegistryRoot",
   Directory,
@@ -100,15 +142,15 @@ sql.createTable("Users", {
 
 
 const predicate = new ComparisonPredicate(
-  /* columnIndex */ 0,
+  /* columnIndex */ new ColumnExpression(0),
   "eq",
-  "Cosmos Chain Registry"
+  new LiteralExpression("Cosmos Chain Registry")
 );
 
 const predicate2 = new ComparisonPredicate(
-  /* columnIndex */ 2,
+  /* columnIndex */ new ColumnExpression(2),
   "gt",
-  100
+  new LiteralExpression(100)
 );
 const p3 = new BinaryLogicalPredicate(
   predicate,
@@ -424,15 +466,17 @@ import DirectoryContent from '../mapping/DirectoryContent.js';
 import { InputBatch } from '../input/InputBatch.js';
 import { SemanticAnalyzer } from '../semantic/SemanticAnalyzer.js';
 import { Engine } from '../engine/Engine.js';
-import { ComparisonPredicate } from '../query/predicate/ComparisonPredicate.js';
-import { FilterNode } from '../query/plan/FilterNode.js';
-import { TableScanNode } from '../query/plan/TableScanNode.js';
-import { ProjectNode } from '../query/plan/ProjectNode.js';
-import { BinaryLogicalPredicate } from '../query/predicate/LogicalPredicate.js';
+import { ComparisonPredicate } from '../evaluation/predicate/ComparisonPredicate.js';
+import { FilterNode } from '../evaluation/plan/FilterNode.js';
+import { TableScanNode } from '../evaluation/plan/TableScanNode.js';
+import { ProjectNode } from '../evaluation/plan/ProjectNode.js';
+import { BinaryLogicalPredicate } from '../evaluation/predicate/LogicalPredicate.js';
 import { Table, TableId } from '../schema/Table.js';
 import { Database } from '../schema/Database.js';
 import { ReferentialAction } from '../schema/ReferentialAction.js';
 import { type ColumnId } from '../schema/Column.js';
+import { ColumnExpression } from '../evaluation/expression/ColumnExpression.js';
+import { LiteralExpression } from '../evaluation/expression/LiteralExpression.js';
 
 export const CosmosChainRegistry = new Map();
 

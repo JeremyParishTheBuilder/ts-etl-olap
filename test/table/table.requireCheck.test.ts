@@ -28,9 +28,6 @@ describe('Table::requireCheck', () => {
       columns: ["Age"]
     }));
 
-    console.log(tableWithCheck);
-    console.log(tableWithCheck.checks.requireByName("chk_positiveage"));
-
     expect(
       tableWithCheck.checks.requireByName("chk_positiveage")
     ).toBeDefined();

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec, createUpdate } from '../utils/buildSchema.js';
 
 describe('Table::updateRow', () => {
 
@@ -12,9 +12,8 @@ describe('Table::updateRow', () => {
 
     table = table.addRow([1]);
 
-    const updated = table.updateRow(
-      [2],
-      0,
+    const updated = table.updateRows(
+      [createUpdate(table, 0, [2])]
     );
 
     expect(
@@ -31,9 +30,8 @@ describe('Table::updateRow', () => {
 
     table = table.addRow([1]);
 
-    const updated = table.updateRow(
-      [2],
-      0,
+    const updated = table.updateRows(
+      [createUpdate(table, 0, [2])]
     );
 
     expect(
@@ -57,7 +55,9 @@ describe('Table::updateRow', () => {
     table = table.addRow([1]);
 
     expect(() =>
-      table.updateRow([2], 99)
+      table.updateRows(
+      [createUpdate(table, 99, [2])]
+    )
     ).toThrow();
   });
 
@@ -75,9 +75,8 @@ describe('Table::updateRow', () => {
     table = table.addRow([1, "Alice"]);
 
     expect(() =>
-      table.updateRow(
-        [1],
-        0,
+      table.updateRows(
+        [createUpdate(table, 0, [1])]
       )
     ).toThrow();
   });
@@ -92,9 +91,8 @@ describe('Table::updateRow', () => {
     table = table.addRow([1]);
 
     expect(() =>
-      table.updateRow(
-        [1, 2],
-        0,
+      table.updateRows(
+        [createUpdate(table, 0, [1, 2])]
       )
     ).toThrow();
   });
@@ -110,9 +108,8 @@ describe('Table::updateRow', () => {
     table = table.addRow([1]);
 
     expect(() =>
-      table.updateRow(
-        [null],
-        0,
+      table.updateRows(
+        [createUpdate(table, 0, [null])]
       )
     ).toThrow();
   });
@@ -131,9 +128,8 @@ describe('Table::updateRow', () => {
 
     table = table.addRow(["a@test.com"]);
 
-    const updated = table.updateRow(
-      ["b@test.com"],
-      0,
+    const updated = table.updateRows(
+      [createUpdate(table, 0, ["b@test.com"])]
     );
 
     const index =
@@ -162,9 +158,8 @@ describe('Table::updateRow', () => {
 
     table = table.addRow(["a@test.com"]);
 
-    const updated = table.updateRow(
-      ["a@test.com"],
-      0,
+    const updated = table.updateRows(
+      [createUpdate(table, 0, ["a@test.com"])]
     );
 
     const index =
@@ -191,9 +186,8 @@ describe('Table::updateRow', () => {
     table = table.addRow(["b@test.com"]);
 
     expect(() =>
-      table.updateRow(
-        ["a@test.com"],
-        1,
+      table.updateRows(
+        [createUpdate(table, 1, ["a@test.com"])]
       )
     ).toThrow();
   });
@@ -208,9 +202,8 @@ describe('Table::updateRow', () => {
     table = table.addRow([1]);
     table = table.addRow([2]);
 
-    const updated = table.updateRow(
-      [10],
-      0,
+    const updated = table.updateRows(
+      [createUpdate(table, 0, [10])]
     );
 
     expect(
@@ -227,9 +220,8 @@ describe('Table::updateRow', () => {
 
     table = table.addRow([1]);
 
-    const updated = table.updateRow(
-      [2],
-      0,
+    const updated = table.updateRows(
+      [createUpdate(table, 0, [2])]
     );
 
     expect(
@@ -249,9 +241,8 @@ describe('Table::updateRow', () => {
 
     table = table.addRow([1]);
 
-    const updated = table.updateRow(
-      [2],
-      0,
+    const updated = table.updateRows(
+      [createUpdate(table, 0, [2])]
     );
 
     expect(updated.numRows).toBe(1);
@@ -281,9 +272,8 @@ describe('Table::updateRow', () => {
     table = table.addRow([1, "a@test.com"]);
     table = table.addRow([2, "b@test.com"]);
 
-    const updated = table.updateRow(
-      [2, "c@test.com"],
-      1,
+    const updated = table.updateRows(
+      [createUpdate(table, 1, [2, "c@test.com"])]
     );
 
     const originalIndex =
@@ -343,13 +333,8 @@ describe('Table::updateRow', () => {
       "Alice",
     ]);
 
-    const updated = table.updateRow(
-      [
-        1,
-        "a@test.com",
-        "Alicia",
-      ],
-      0,
+    const updated = table.updateRows(
+      [createUpdate(table, 0, [1, "a@test.com", "Alicia"])]
     );
 
     const originalIndex =
@@ -403,9 +388,8 @@ describe('Table::updateRow', () => {
     table = table.addRow([2, "b@test.com"]);
 
     expect(() =>
-      table.updateRow(
-        [2, "a@test.com"],
-        1,
+      table.updateRows(
+        [createUpdate(table, 1, [2, "a@test.com"])]
       )
     ).toThrow();
   });
@@ -436,13 +420,8 @@ describe('Table::updateRow', () => {
       "Alice",
     ]);
 
-    const updated = table.updateRow(
-      [
-        1,
-        "a@test.com",
-        "Alicia",
-      ],
-      0,
+    const updated = table.updateRows(
+      [createUpdate(table, 0, [1, "a@test.com", "Alicia"])]
     );
 
     const index =
@@ -475,9 +454,8 @@ describe('Table::updateRow', () => {
     table = table.addRow([2, "b@test.com"]);
     table = table.addRow([3, "c@test.com"]);
 
-    const updated = table.updateRow(
-      [2, "updated@test.com"],
-      1,
+    const updated = table.updateRows(
+      [createUpdate(table, 1, [2, "updated@test.com"])]
     );
 
     const index =
@@ -512,7 +490,9 @@ describe('Table::updateRow', () => {
     table = table.removeRow(0);
 
     expect(() =>
-      table.updateRow([2], 0)
+      table.updateRows(
+        [createUpdate(table, 0, [2])]
+      )
     ).toThrow();
   });
 
@@ -525,9 +505,8 @@ describe('Table::updateRow', () => {
 
     table = table.addRow([1]);
 
-    const updated = table.updateRow(
-      [2],
-      0,
+    const updated = table.updateRows(
+      [createUpdate(table, 0, [2])]
     );
 
     expect(
@@ -540,5 +519,26 @@ describe('Table::updateRow', () => {
 
     expect(updated).not.toBe(table);
     expect(updated.columns).not.toBe(table.columns);
+  });
+
+  it("updates multiple rows", () => {
+    let table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+      }));
+
+    table = table.addRow([1]);
+    table = table.addRow([2]);
+    table = table.addRow([3]);
+
+    const updated = table.updateRows([
+      createUpdate(table, 0, [10]),
+      createUpdate(table, 2, [30]),
+    ]);
+
+    expect(updated.requireRow(0)).toEqual([10]);
+    expect(updated.requireRow(1)).toEqual([2]);
+    expect(updated.requireRow(2)).toEqual([30]);
   });
 });

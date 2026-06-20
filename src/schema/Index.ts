@@ -1,4 +1,4 @@
-import { Predicate } from "../query/predicate/Predicate.js";
+import { Predicate } from "../evaluation/predicate/Predicate.js";
 import { type ColumnId, type ColumnType, type ColumnValue } from "./Column.js";
 import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
 import { RowView } from "./RowView.js";

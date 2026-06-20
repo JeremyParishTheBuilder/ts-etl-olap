@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { type Predicate } from '../../src/query/predicate/Predicate';
-import { BinaryLogicalPredicate, NotPredicate } from '../../src/query/predicate/LogicalPredicate';
+import { type Predicate } from '../../src/evaluation/predicate/Predicate.js';
+import { BinaryLogicalPredicate, NotPredicate } from '../../src/evaluation/predicate/LogicalPredicate.js';
 import { RowView } from '../../src/schema/RowView';
 
 const truePredicate: Predicate = {

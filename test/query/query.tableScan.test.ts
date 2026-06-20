@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TableScanNode } from '../../src/query/plan/TableScanNode.js';
+import { TableScanNode } from '../../src/evaluation/plan/TableScanNode.js';
 import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Query::tableScanNode', () => {
