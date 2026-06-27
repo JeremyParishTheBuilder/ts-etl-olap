@@ -11,8 +11,6 @@ describe('Table::renameCheck', () => {
       .createCheck(
         createCheckTestSpec({
           name: "CHK_PositiveAge",
-          columns: ["Age"],
-          expression: undefined,
         })
       );
   }
@@ -99,8 +97,6 @@ describe('Table::renameCheck', () => {
       .createCheck(
         createCheckTestSpec({
           name: "CHK_AdultAge",
-          columns: ["Age"],
-          expression: undefined,
         })
       );
 

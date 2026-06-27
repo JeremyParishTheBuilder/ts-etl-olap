@@ -1,12 +1,11 @@
 import { CONSTRAINT_KIND } from "./ConstraintKind.js";
-import { type ColumnId } from "./Column.js";
 import { ReferentialAction } from "./ReferentialAction.js";
+import { type PredicateNode } from "../evaluation/predicate/Predicate.js";
 
 export type PrimaryKeySpec = {
   kind: CONSTRAINT_KIND.primaryKey,
   name: string,
   columns: string[],
-  //index?: string,
 }
 
 export type UniqueSpec = {
@@ -28,8 +27,8 @@ export type ForeignKeySpec = {
 export type CheckSpec = {
   kind: CONSTRAINT_KIND.check,
   name: string,
-  columns: string[],
-  expression: undefined//Expression,
+  //columns: string[],
+  predicate: PredicateNode,
 }
 
 export type ConstraintSpec =

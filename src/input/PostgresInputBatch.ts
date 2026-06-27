@@ -50,6 +50,10 @@ export class PostgresInputBatch extends InputBatch {
     return super.addColumn(columnName, inlineColumnSpec);
   }
 
+  check(predicate: PredicateNode) {
+    return super.check(predicate);
+  }
+
   foreignKey(columns: string[]) {
     return super.foreignKey(columns);
   }

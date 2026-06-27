@@ -3,9 +3,9 @@ import { UpdateRowsAction } from "../actions/UpdateRowsAction.js";
 import { type UpdateSetStatement } from "../statements/index.js";
 import { type ColumnId } from "../schema/Column.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
-import { bindExpression } from "./expression.js";
+import { bindExpression, resolveExpression } from "./expression.js";
 import { type Expression } from "../evaluation/expression/Expression.js";
-import { bindPredicate } from "./predicate.js";
+import { bindPredicate, resolvePredicate } from "./predicate.js";
 
 export function bindUpdateSet(
   semantic: SemanticAnalyzer,
@@ -28,11 +28,13 @@ export function bindUpdateSet(
 
     updateMap.set(
       columnId,
-      bindExpression(value, table),
+      bindExpression(resolveExpression(value, table), table),
     );
   }
 
-  const whereClause = stmt.where ? bindPredicate(stmt.where, table) : undefined;
+  const whereClause = stmt.where ?
+    bindPredicate(resolvePredicate(stmt.where, table), table) :
+    undefined;
 
   stmtActions.push(
     new UpdateRowsAction(

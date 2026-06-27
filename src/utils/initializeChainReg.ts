@@ -9,6 +9,29 @@ import MultiRegistryRoot from '../mapping/MultiRegistryRoot.js';
 import { EngineRegistry } from '../engine/EngineRegistry.js';
 import { type PostgresInputBatch } from '../input/PostgresInputBatch.js';
 
+import { Directory } from "../mapping/Directory.js";
+import {
+  AnyDirectoryMatcher,
+  DirectoryContentIncludesMatcher,
+  DirectoryNameMatcher,
+  DirectoryNameSetMatcher,
+  NotDirectoryNameMatcher
+} from "../mapping/DirectoryMatcher.js";
+import { TraversalMode } from '../mapping/TraversalMode.js';
+import { CollectionNode } from '../mapping/CollectionNode.js';
+import { ScopeNode } from '../mapping/ScopeNode.js';
+import { DiscoveryContext } from '../mapping/DiscoveryContext.js';
+import { FileNameMatcher } from '../mapping/FileMatcher.js';
+import { ImportMapping } from '../mapping/ImportMapping.js';
+import { DerivedField } from '../mapping/DerivedField.js';
+import { FileImportNode } from '../mapping/FileImportNode.js';
+import { type ImportResult } from '../mapping/ImportResult.js';
+import { type ImportNode } from '../mapping/ImportNode.js';
+import { JsonFileReader } from '../mapping/JsonFileReader.js';
+import { JsonPath } from '../mapping/JsonPath.js';
+import { IdentitySourceResolver } from '../mapping/IdentitySourceResolver.js';
+import { SchemaBuilder } from '../mapping/SchemaBuilder.js';
+
 const CCR1_PATH: string = '../chain-registry';
 
 //const db: Database = new Database("CCR");
@@ -19,9 +42,203 @@ export const getChainRegContents = () => {
 
   console.log("starting chain reg");
 
-  //db.select([]).from("RegistryRoot").where({kind: "pred", fn: (rowId) => rowId === 1 }).query();
+  const chainCollection =
+    new CollectionNode(
+      new DirectoryContentIncludesMatcher("chain.json"),
+      [
+        //chainFileScope // add the chain file as a child
+      ],
+      "chainDirectory",
+      "chainDirectoryName",
+      "chainDirectory",
+      ["networkKind", "networkType"]
+    );
 
-  
+  const cosmosScope =
+    new ScopeNode(
+      new AnyDirectoryMatcher(),
+      TraversalMode.Self,
+      [
+        chainCollection
+      ],
+      "networkType",
+      "networkType",
+      () => "Cosmos",
+      "networkTypeDirectory",
+      ["networkKind"]
+    );
+
+  const nonCosmosScope =
+    new ScopeNode(
+      new DirectoryNameMatcher("_non-cosmos"),
+      TraversalMode.Children,
+      [
+        chainCollection
+      ],
+      "networkType",
+      "networkType",
+      () => "Non-cosmos",
+      "networkTypeDirectory",
+      ["networkKind"]
+    );
+
+  const mainnetScope =
+    new ScopeNode(
+      new AnyDirectoryMatcher(),
+      TraversalMode.Self,
+      [
+        cosmosScope,
+        nonCosmosScope,
+      ],
+      "networkKind",
+      "networkKind",
+      () => "Mainnet",
+      "networkDirectory",
+      []
+    );
+
+  const testnetScope =
+    new ScopeNode(
+      new DirectoryNameMatcher("testnets"),
+      TraversalMode.Children,
+      [
+        cosmosScope,
+        nonCosmosScope,
+      ],
+      "networkKind",
+      "networkKind",
+      () => "Testnet",
+      "networkDirectory",
+      []
+    );
+
+  const registry =
+    new ScopeNode(
+      new AnyDirectoryMatcher(),
+      TraversalMode.Self,
+      [
+        mainnetScope,
+        testnetScope
+      ],
+    );
+
+  const registryRootDirectory = new Directory("./temp");
+
+  const discoveries =
+    registry.discover(
+      new DiscoveryContext(
+        registryRootDirectory
+      )
+    );
+
+  console.log("discoveries");
+  console.log(discoveries);
+
+  const feeTokenImportMapping = 
+    new ImportMapping(
+      "FeeToken",
+      JsonPath.parse("fees.fee_tokens"),
+      "ChainJsonFile.FeeTokens.",
+    );
+
+  const stakingTokenImportMapping = 
+    new ImportMapping(
+      "StakingToken",
+      JsonPath.parse("staking.staking_tokens"),
+      "ChainJsonFile.StakingTokens.",
+    );
+    
+
+  const chainFileImportMapping = new ImportMapping(
+    "Chain",
+    new IdentitySourceResolver(),
+    "ChainJsonFile.",
+    [
+      new DerivedField(
+        "displayName",
+        source => `${(source as any).pretty_name} (${(source as any).chain_id})`
+      )
+    ],
+    [
+      feeTokenImportMapping,
+      stakingTokenImportMapping,
+    ]
+  );
+
+  const chainFileImporter =
+    new FileImportNode(
+      "chainDirectory",
+      new FileNameMatcher("chain.json"),
+      new JsonFileReader(),
+      chainFileImportMapping,
+      "chainDirectory"
+    );
+
+  const assetsImportMapping = 
+    new ImportMapping(
+      "Asset",
+      JsonPath.parse("assets"),
+      "AssetlistJsonFile.Assets.",
+    );
+
+  const assetlistFileImportMapping = new ImportMapping(
+    "Chain",
+    new IdentitySourceResolver(),
+    "AssetJsonFile.",
+    [],
+    [
+      assetsImportMapping,
+    ]
+  );
+
+  const assetlistFileImporter =
+    new FileImportNode(
+      "chainDirectory",
+      new FileNameMatcher("assetlist.json"),
+      new JsonFileReader(),
+      assetlistFileImportMapping,
+      "chainDirectory"
+    );
+
+  const importers: ImportNode[] = [
+    chainFileImporter,
+    assetlistFileImporter,
+    //logoImporter,
+    //...
+  ];
+
+  const imports: ImportResult[] = [];
+
+  for (const discovery of discoveries) {
+    console.log(discovery);
+    for (const importer of importers) {
+      console.log(importer);
+      console.log(importer.accepts(discovery));
+      if (!importer.accepts(discovery)) {
+        // console.log("not accept");
+        // console.log(importer);
+        // console.log(discovery);
+        continue;
+      }
+      imports.push(
+        ...importer.import(discovery)
+      );
+      console.log("pushed"); // never see anything pushed...
+    }
+  }
+
+  console.log("imports");
+  console.log(imports);
+
+  const builder = new SchemaBuilder();
+
+  for (const result of imports) {
+    builder.observe(result);
+  }
+
+  console.log(builder.schema);
+
+  console.log("created chain reg");
 
   const chain_reg = new RegistryRoot(CosmosChainRegistry, "Cosmos", CCR1_PATH);
   console.log("started");

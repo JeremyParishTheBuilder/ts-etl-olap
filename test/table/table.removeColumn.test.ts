@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { buildTable } from '../utils/buildSchema.js';
+import { buildTable, createCheckTestSpec } from '../utils/buildSchema.js';
+import { ColumnExpressionNode } from '../../src/evaluation/expression/ColumnExpression.js';
+import { LiteralExpressionNode } from '../../src/evaluation/expression/LiteralExpression.js';
+import { ComparisonPredicateNode } from '../../src/evaluation/predicate/ComparisonPredicate.js';
 
 describe('Table::removeColumn', () => {
   it('removes a column from the table', () => {
@@ -148,5 +151,25 @@ describe('Table::removeColumn', () => {
     expect(
       updated.indexes.requireByName("IDX2")
     ).toBeDefined();
+  });
+
+  it('rejects removing columns referenced by checks', () => {
+    const table = buildTable()
+      .createColumn({
+        name: "C1",
+        type: Number,
+      })
+      .createCheck(createCheckTestSpec({
+        name: "CHK_Adult",
+        predicate: new ComparisonPredicateNode(
+          new ColumnExpressionNode("C1"),
+          "gte",
+          new LiteralExpressionNode(18),
+        ),
+      }));
+
+    expect(() => {
+      table.removeColumn("C1");
+    }).toThrow();
   });
 });

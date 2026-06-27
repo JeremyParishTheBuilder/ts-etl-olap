@@ -2,7 +2,11 @@ import { type Predicate } from "./Predicate.js";
 import { type RowView } from "../../schema/RowView.js";
 import { type ComparisonOperator } from "../../statements/WhereClause.js";
 import { assertComparable } from "../utility/assertTypesComparable.js";
-import { type Expression, type ExpressionNode } from "../expression/Expression.js";
+import {
+  type ResolvedExpressionNode,
+  type Expression,
+  type ExpressionNode
+} from "../expression/Expression.js";
 
 export class ComparisonPredicateNode {
   readonly kind = "comparison" as const;
@@ -11,6 +15,16 @@ export class ComparisonPredicateNode {
     public left: ExpressionNode,
     public operator: ComparisonOperator,
     public right: ExpressionNode,
+  ) {}
+}
+
+export class ResolvedComparisonPredicateNode {
+  readonly kind = "comparison" as const;
+
+  constructor(
+    public left: ResolvedExpressionNode,
+    public operator: ComparisonOperator,
+    public right: ResolvedExpressionNode,
   ) {}
 }
 

@@ -33,8 +33,8 @@ export const SQLSERVER_RULES: DialectRules = {
     supportsNotValidatedConstraints: true,
     nullsDistinct: true,
     allowNullableForeignKeys: true,
-    foreignKeyDefaultOnDelete: ReferentialAction.restrict,
-    foreignKeyDefaultOnUpdate: ReferentialAction.restrict,
+    foreignKeyDefaultOnDelete: "restrict",
+    foreignKeyDefaultOnUpdate: "restrict",
   },
 
   insert: {

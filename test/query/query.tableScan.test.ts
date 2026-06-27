@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { TableScanNode } from '../../src/evaluation/plan/TableScanNode.js';
-import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec, createDelete } from '../utils/buildSchema.js';
 
 describe('Query::tableScanNode', () => {
   it("returns alive rows from the table", () => {
@@ -64,7 +64,7 @@ describe('Query::tableScanNode', () => {
       .addRow([2])
       .addRow([3]);
 
-    table = table.removeRow(1);
+    table = table.removeRows([createDelete(table, 1)]);
 
     const scan = new TableScanNode(table);
 

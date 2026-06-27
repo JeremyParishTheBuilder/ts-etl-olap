@@ -1,4 +1,8 @@
-import { type PredicateNode, type Predicate } from "./Predicate.js";
+import {
+  type PredicateNode,
+  type Predicate,
+  type ResolvedPredicateNode
+} from "./Predicate.js";
 import { type RowView } from "../../schema/RowView.js";
 
 export class BinaryLogicalPredicateNode {
@@ -7,6 +11,16 @@ export class BinaryLogicalPredicateNode {
   constructor(
     public left: PredicateNode,
     public right: PredicateNode,
+    public operator: "and" | "or" | "xor"
+  ) {}
+}
+
+export class ResolvedBinaryLogicalPredicateNode {
+  readonly kind = "binaryLogical" as const;
+
+  constructor(
+    public left: ResolvedPredicateNode,
+    public right: ResolvedPredicateNode,
     public operator: "and" | "or" | "xor"
   ) {}
 }
@@ -36,6 +50,12 @@ export class NotPredicateNode {
   readonly kind = "not" as const;
 
   constructor(public inner: PredicateNode) {}
+}
+
+export class ResolvedNotPredicateNode {
+  readonly kind = "not" as const;
+
+  constructor(public inner: ResolvedPredicateNode) {}
 }
 
 export class NotPredicate implements Predicate {

@@ -37,6 +37,18 @@ export class MySqlInputBatch extends InputBatch {
     return super.createTable(table, columnSchema, constraintSchema);
   }
 
+  alterTable(table: string) {
+    return super.alterTable(table);
+  }
+
+  addConstraint(name: string) {
+    return super.addConstraint(name);
+  }
+
+  check(predicate: PredicateNode) {
+    return super.check(predicate);
+  }
+
   insertInto(table: string, columns: string[] = []) {
     return super.insertInto(table, columns);
   }

@@ -1,0 +1,1 @@
+export type DerivedValueResolver = (source: unknown) => unknown;

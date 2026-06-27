@@ -1,5 +1,5 @@
 import { type RowView } from "../../schema/RowView.js";
-import { type ColumnValue } from "../../schema/Column.js";
+import { type ColumnId, type ColumnValue } from "../../schema/Column.js";
 import { assertColumnIndexWithinRow } from "../row/assertColumnIndexWithinRow.js";
 import { type ExpressionNode } from "./Expression.js";
 import { ComparisonPredicateNode } from "../predicate/ComparisonPredicate.js";
@@ -16,6 +16,14 @@ export class ColumnExpression {
 
     return row.values[this.columnPosition];
   }
+}
+
+export class ResolvedColumnExpressionNode {
+  readonly kind = "column" as const;
+
+  constructor(
+    public columnId: ColumnId,
+  ) {}
 }
 
 export class ColumnExpressionNode {

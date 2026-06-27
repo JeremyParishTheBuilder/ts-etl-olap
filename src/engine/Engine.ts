@@ -93,7 +93,6 @@ export class Engine {
 
     if (stmt.kind === "use_database") {
       this.setCurrentDatabase(stmt.dbName);
-      //this.currentDb = stmt.dbName;
       return;
     }
 
@@ -162,7 +161,7 @@ export class Engine {
   execute() {
     if (!this.inputBatch) return;
     this.inputBatch.execute();
-    this.inputBatch = undefined; // clear batch after execution
+    this.inputBatch = undefined;
   }
   //  <input batch>
 
@@ -198,7 +197,6 @@ export class Engine {
     this._currentTransaction = new Transaction(
       this.nextTxId(),
       this.databases,
-      //this.allocators, // add this?
     );
   }
 
@@ -216,14 +214,6 @@ export class Engine {
 
     this._currentTransaction = undefined;
   }
-
-  // if (!this.currentDb) { // TODO: move to execute
-  //     const first = this.databases.databases.map.keys().next().value;
-  //     if (first) {
-  //       this.currentDb = first;
-  //     }
-  //   }
-
 
   rollbackTx(): void {
     this._currentTransaction = undefined;

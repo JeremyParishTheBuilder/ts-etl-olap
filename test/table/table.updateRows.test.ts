@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildTable, createColumnTestSpec, createUpdate } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec, createDelete, createUpdate } from '../utils/buildSchema.js';
 
 describe('Table::updateRow', () => {
 
@@ -487,7 +487,7 @@ describe('Table::updateRow', () => {
 
     table = table.addRow([1]);
 
-    table = table.removeRow(0);
+    table = table.removeRows([createDelete(table, 0)]);
 
     expect(() =>
       table.updateRows(

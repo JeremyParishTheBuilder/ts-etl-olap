@@ -97,4 +97,68 @@ describe("Integration::insert", () => {
         .execute();
     }).toThrow();
   });
+
+  it('rejects inserts violating checks', () => {
+
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Age: {
+        type: Number,
+        nullable: false,
+      },
+    }).execute();
+
+    sql.alterTable("Users")
+      .addConstraint("CHK_Adult")
+      .check(
+        sql.column("Age").gte(18)
+      )
+      .execute();
+
+    expect(() => {
+      sql
+        .insertInto("Users", ["Age"])
+        .values([
+          [10]
+        ])
+        .execute();
+    }).toThrow();
+  });
+
+  it('allows inserts satisfying checks', () => {
+
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Age: {
+        type: Number,
+        nullable: false,
+      },
+    }).execute();
+
+    sql.alterTable("Users")
+      .addConstraint("CHK_Adult")
+      .check(
+        sql.column("Age").gte(18)
+      )
+      .execute();
+
+    expect(() => {
+      sql
+        .insertInto("Users", ["Age"])
+        .values([
+          [20]
+        ])
+        .execute();
+    }).not.toThrow();
+  });
 });

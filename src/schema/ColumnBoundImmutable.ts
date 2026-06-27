@@ -16,10 +16,6 @@ export abstract class ColumnBoundImmutable
   abstract readonly columns: ColumnId[];
 
   public validateColumns(): void {
-    if (this.columns.length === 0) {
-      throw new Error("Constraint requires at least one column");
-    }
-
     if (new Set(this.columns).size !== this.columns.length) {
       throw new Error("Duplicate column in constraint");
     }

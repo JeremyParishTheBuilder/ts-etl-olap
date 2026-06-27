@@ -19,6 +19,7 @@ import { DropIndexAction } from "../actions/DropIndexAction.js";
 import { AddIndexAction } from "../actions/AddIndexAction.js";
 import { AddUniqueAction } from "../actions/AddUniqueAction.js";
 import { DropUniqueAction } from "../actions/DropUniqueAction.js";
+import { type Column } from "../schema/Column.js";
 
 
 export function bindAlterTable(
@@ -36,7 +37,10 @@ export function bindAlterTable(
   if (stmt.op === "add_constraint") {
     const spec = stmt.constraint;
 
-    const columns = spec.columns.map(c => table.columns.requireByName(c));
+    let columns: Column[] = [];
+    if ("columns" in spec) {
+      columns = spec.columns?.map(c => table.columns.requireByName(c));
+    }
 
     switch (spec.kind) {
       case CONSTRAINT_KIND.foreignKey:

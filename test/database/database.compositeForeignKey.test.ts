@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   buildDatabase,
   buildTable,
-  createColumnTestSpec
+  createColumnTestSpec,
+  createUpdate
 } from '../utils/buildSchema.js';
 
 describe('Composite Foreign Keys', () => {
@@ -281,10 +282,9 @@ describe('Composite Foreign Keys', () => {
 
     const updates = [3, 4];
 
-    const updated = db.updateRow(
+    const updated = db.updateRows(
       "Child",
-      0,
-      updates,
+      [createUpdate(child, 0, updates)]
     );
 
     expect(
@@ -347,10 +347,9 @@ describe('Composite Foreign Keys', () => {
     const updates = [5, 6];
 
     expect(() =>
-      db.updateRow(
+      db.updateRows(
         "Child",
-        0,
-        updates,
+        [createUpdate(child, 0, updates)]
       )
     ).toThrow();
   });
@@ -408,10 +407,9 @@ describe('Composite Foreign Keys', () => {
     const updates = [9, 9];
 
     expect(() =>
-      db.updateRow(
+      db.updateRows(
         "Parent",
-        0,
-        updates,
+        [createUpdate(parent, 0, updates)]
       )
     ).toThrow();
   });

@@ -151,7 +151,7 @@ describe("Integration::delete", () => {
           columns: ["RoleId"],
           parentTable: "Roles",
           parentColumns: ["Id"],
-          onDelete: ReferentialAction.restrict,
+          onDelete: "restrict",
         },
       }
     ).execute();
@@ -204,7 +204,7 @@ describe("Integration::delete", () => {
           columns: ["RoleId"],
           parentTable: "Roles",
           parentColumns: ["Id"],
-          onDelete: ReferentialAction.cascade,
+          onDelete: "cascade",
         },
       }
     ).execute();

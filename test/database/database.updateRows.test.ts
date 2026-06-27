@@ -41,8 +41,8 @@ describe('Database::updateRow', () => {
         reverseIndex: "FKRI_Users",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
 
     const updates = [2];
@@ -95,8 +95,8 @@ describe('Database::updateRow', () => {
         reverseIndex: "FKRI_Users",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
 
     const updates = [999];
@@ -145,8 +145,8 @@ describe('Database::updateRow', () => {
         reverseIndex: "FKRI_Users",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
 
     const updates = [2];
@@ -193,8 +193,8 @@ describe('Database::updateRow', () => {
         reverseIndex: "FKRI_Users",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
 
     const updates = [2];
@@ -243,8 +243,8 @@ describe('Database::updateRow', () => {
         reverseIndex: "FKRI_Employees",
         parentTable: "Employees",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
 
     const updates = [2, 2];
@@ -292,8 +292,8 @@ describe('Database::updateRow', () => {
         parentTable: "Employees",
         parentColumns: ["id"],
         reverseIndex: "FKR_Employees",
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
       
     const updates = [2, 999];
@@ -381,8 +381,8 @@ describe('Database::updateRow', () => {
           reverseIndex: "FKRI_Users",
           parentTable: "Roles",
           parentColumns: ["id"],
-          onDelete: ReferentialAction.restrict,
-          onUpdate: ReferentialAction.cascade,
+          onDelete: "restrict",
+          onUpdate: "cascade",
         }),
       );
 

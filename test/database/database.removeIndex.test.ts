@@ -149,8 +149,8 @@ describe('Database::removeIndex', () => {
         reverseIndex: "FKR_Id",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
 
     expect(() =>
@@ -197,8 +197,8 @@ describe('Database::removeIndex', () => {
         reverseIndex: "FKR_Id",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
 
     const updated = db.removeIndex(
@@ -248,8 +248,8 @@ describe('Database::removeIndex', () => {
         reverseIndex: "FKR_Employees",
         parentTable: "Employees",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
 
     expect(() =>

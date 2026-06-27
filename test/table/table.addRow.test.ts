@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import { buildTable, createCheckTestSpec, createColumnTestSpec, createDelete } from '../utils/buildSchema.js';
+import { ComparisonPredicateNode } from '../../src/evaluation/predicate/ComparisonPredicate.js';
+import { ColumnExpressionNode } from '../../src/evaluation/expression/ColumnExpression.js';
+import { LiteralExpressionNode } from '../../src/evaluation/expression/LiteralExpression.js';
 
 describe('Table::addRow', () => {
   it('inserts a row into a table with defined columns', () => {
@@ -286,7 +289,7 @@ describe('Table::addRow', () => {
     table = table.addRow([1]);
     table = table.addRow([2]);
 
-    table = table.removeRow(0);
+    table = table.removeRows([createDelete(table, 0)]);
 
     const updated = table.addRow([3]);
 
@@ -367,5 +370,51 @@ describe('Table::addRow', () => {
     table = table.addRow([2]);
 
     expect(table.numRows).toBe(2);
+  });
+
+  it('rejects rows that violate checks', () => {
+    const table =
+      buildTable()
+        .createColumn({
+          name: "Age",
+          type: Number,
+        })
+        .createCheck(
+          createCheckTestSpec({
+            name: "CHK_Adult",
+            predicate: new ComparisonPredicateNode(
+              new ColumnExpressionNode("Age"),
+              "gte",
+              new LiteralExpressionNode(18),
+            ),
+          })
+        );
+
+    expect(() => {
+      table.addRow([10]);
+    }).toThrow();
+  });
+
+  it('allows rows that satisfy checks', () => {
+    const table =
+      buildTable()
+        .createColumn({
+          name: "Age",
+          type: Number,
+        })
+        .createCheck(
+          createCheckTestSpec({
+            name: "CHK_Adult",
+            predicate: new ComparisonPredicateNode(
+              new ColumnExpressionNode("Age"),
+              "gte",
+              new LiteralExpressionNode(18),
+            ),
+          })
+        );
+
+    expect(() => {
+      table.addRow([20]);
+    }).not.toThrow();
   });
 });

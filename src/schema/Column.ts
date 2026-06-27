@@ -7,14 +7,11 @@ export type ColumnType =
 
 export type PrimitiveColumnValue = string | number | boolean | null;
 export type ColumnValue = PrimitiveColumnValue;
-// export type ColumnValue =
-//   | PrimitiveColumnValue
-//   | Expression
-//   | { readonly f: (...args: any[]) => any };
 
 import { Immutable } from "../infrastructure/Immutable.js";
-import { ReferentialAction } from './ReferentialAction.js';
-import { ExplicitInput } from '../types/ExplicitInput.js';
+import { type ReferentialAction } from './ReferentialAction.js';
+import { type ExplicitInput } from '../types/ExplicitInput.js';
+import { type PredicateNode } from "../evaluation/predicate/Predicate.js";
 
 export type ColumnId = number & { readonly __brand: "ColumnId" };
 
@@ -308,7 +305,7 @@ export type InlineColumnSpec = Omit<ColumnSpec, 'name'> & {
     onDelete?: ReferentialAction,
     onUpdate?: ReferentialAction,
   };
-  check?: any;//Expression;
+  check?: PredicateNode;
 };
 
 export type ColumnShape = Omit<ColumnSpec, 'name'> & {

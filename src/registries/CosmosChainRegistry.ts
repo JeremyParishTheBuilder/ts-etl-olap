@@ -1,6 +1,6 @@
 import FsStructureEntry from '../mapping/FsStructureEntry.js';
-import Directory from '../mapping/Directory.js';
-import File from '../mapping/File.js';
+import { Directory } from '../mapping/Directory.js';
+import { File } from '../mapping/File.js';
 import Pointer from '../mapping/Pointer.js';
 import { EngineRegistry } from '../engine/EngineRegistry.js';
 import { Dialect } from "../dialect/Dialect.js";
@@ -10,6 +10,8 @@ import { type PostgresInputBatch } from '../input/PostgresInputBatch.js';
 EngineRegistry.getInstance().newEngine("DEFAULT_POSTGRES", Dialect.Postgres);
 EngineRegistry.getInstance().setDefaultEngine("DEFAULT_POSTGRES");
 const sql: PostgresInputBatch = EngineRegistry.getInstance().engine().input() as PostgresInputBatch;
+
+
 
 sql.createDatabase("Cosmos Chain Registry").execute();
 console.log("Created CCR");
@@ -28,47 +30,59 @@ console.log("Created Table");
 sql.commit().execute();
 console.log("Commit");
 
-console.log("Now what");
-sql.createDatabase("DB1").execute();
-    sql.useDatabase("DB1").execute();
 
-    sql.createTable("Users", {
-      Id: {
-        type: Number,
-        nullable: false,
-        primaryKey: true,
-      },
-      Name: {
-        type: String,
-        nullable: false,
-      },
-    }).execute();
+// console.log("Now what");
+// sql.createDatabase("DB1").execute();
+//     sql.useDatabase("DB1").execute();
 
-    console.log(sql.select("*").from("Users").execute()[0]);
+//     sql.createTable("Users", {
+//       Id: {
+//         type: Number,
+//         nullable: false,
+//         primaryKey: true,
+//       },
+//       Name: {
+//         type: String,
+//         nullable: false,
+//       },
+//     }).execute();
 
-    sql
-      .insertInto("Users", ["Id", "Name"])
-      .values([
-        [1, "Alice"],
-        [2, "Bob"],
-      ])
-      .execute();
+//     // sql.alterTable("Users")
+//     //   .addConstraint("chk")
+//     //   .foreignKey(["Id"])
+//     //   .execute();
 
-      console.log(sql.select("*").from("Users").execute()[0]);
+//     sql.alterTable("Users")
+//       .addConstraint("chk")
+//       .check(
+//         sql.column("Id").gte(0)
+//       ).execute();
 
-      sql
-        .update("Users")
-        .set({
-          Id: 2,
-        })
-        .where(
-          sql.column("Id").eq(1)
-        )
-        .execute();
+//     console.log(sql.select("*").from("Users").execute()[0]);
 
-      console.log(sql.select("*").from("Users").execute()[0]);
+//     sql
+//       .insertInto("Users", ["Id", "Name"])
+//       .values([
+//         [1, "Alice"],
+//         [2, "Bob"],
+//       ])
+//       .execute();
 
-        console.log("THAT's right");
+//       console.log(sql.select("*").from("Users").execute()[0]);
+
+//       sql
+//         .update("Users")
+//         .set({
+//           Id: 2,
+//         })
+//         .where(
+//           sql.column("Id").eq(1)
+//         )
+//         .execute();
+
+//       console.log(sql.select("*").from("Users").execute()[0]);
+
+//         console.log("THAT's right");
 
 const chainRegistryRoot = new FsStructureEntry(
   "ChainRegistryRoot",
@@ -137,7 +151,7 @@ sql.createTable("Users", {
 
       
 
-    sql.commit().execute();
+    //sql.commit().execute();
     
 
 
@@ -382,7 +396,7 @@ const chainDirectory = new FsStructureEntry(
   chainTypeDirectory,
   null,
   (key) => key as string,
-  (item: DirectoryContent): boolean => {
+  (item: FsObject): boolean => {
     if (!(item instanceof Directory)) return false;
     return ["assetlist.json", "chain.json"]
       .some(name => item.find(File, name).length > 0);
@@ -449,7 +463,7 @@ const ibcFile = new FsStructureEntry(
   ibcDirectory,
   null,
   (key) => key as string & ".json",
-  (item: DirectoryContent): boolean => item instanceof File && item.basename.includes(".json")
+  (item: FsObject): boolean => item instanceof File && item.basename.includes(".json")
 );
 
 function isChainDirectory(directory: Directory | File): boolean {
@@ -462,7 +476,7 @@ function isChainDirectory(directory: Directory | File): boolean {
 
 import RegistryObject from '../mapping/RegistryObject.js';
 import RegistryStructureEntry from '../mapping/RegistryStructureEntry.js';
-import DirectoryContent from '../mapping/DirectoryContent.js';
+import { FsObject} from '../mapping/FsObject.js';
 import { InputBatch } from '../input/InputBatch.js';
 import { SemanticAnalyzer } from '../semantic/SemanticAnalyzer.js';
 import { Engine } from '../engine/Engine.js';

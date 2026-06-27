@@ -1,13 +1,19 @@
 import { type ColumnValue } from "../../schema/Column.js";
 import { type RowView } from "../../schema/RowView.js";
-import { type BinaryExpressionNode } from "./BinaryExpressionNode.js";
-import { type CaseExpressionNode } from "./CaseExpression.js";
-import { type ColumnExpressionNode } from "./ColumnExpression.js";
+import { type ResolvedBinaryExpressionNode, type BinaryExpressionNode } from "./BinaryExpressionNode.js";
+import { type ResolvedCaseExpressionNode, type CaseExpressionNode } from "./CaseExpression.js";
+import { type ResolvedColumnExpressionNode, type ColumnExpressionNode } from "./ColumnExpression.js";
 import { type LiteralExpressionNode } from "./LiteralExpression.js";
 
 export interface Expression {
   evaluate(row: RowView): ColumnValue;
 }
+
+export type ResolvedExpressionNode =
+  | ResolvedColumnExpressionNode
+  | LiteralExpressionNode
+  | ResolvedCaseExpressionNode
+  | ResolvedBinaryExpressionNode;
 
 export type ExpressionNode =
   | ColumnExpressionNode

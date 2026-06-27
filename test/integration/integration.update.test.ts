@@ -277,7 +277,7 @@ describe("Integration::update", () => {
       .addConstraint("Posts_FK")
       .foreignKey(["UserId"])
       .references("Users", ["Id"])
-      .onUpdate(ReferentialAction.cascade)
+      .onUpdate("cascade")
       .execute();
 
     sql
@@ -381,6 +381,138 @@ describe("Integration::update", () => {
     expect(rows).toEqual([[
       { index: 0, values: [2, "A"] },
       { index: 1, values: [3, "B"] },
+    ]]);
+  });
+
+  it('rejects inserts violating checks', () => {
+  
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Age: {
+        type: Number,
+        nullable: false,
+      },
+    }).execute();
+
+    sql.alterTable("Users")
+      .addConstraint("CHK_Adult")
+      .check(
+        sql.column("Age").gte(18)
+      )
+      .execute();
+
+    sql
+      .insertInto("Users", ["Age"])
+      .values([
+        [20]
+      ])
+      .execute();
+
+    expect(() => {
+      sql
+        .update("Users")
+        .set({
+          Age: 10
+        })
+        .execute();
+    }).toThrow();
+  });
+
+  it('allows updates satisfying checks', () => {
+
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Age: {
+        type: Number,
+        nullable: false,
+      },
+    }).execute();
+
+    sql.alterTable("Users")
+      .addConstraint("CHK_Adult")
+      .check(
+        sql.column("Age").gte(18)
+      )
+      .execute();
+
+    sql
+      .insertInto("Users", ["Age"])
+      .values([
+        [20]
+      ])
+      .execute();
+
+    expect(() => {
+      sql
+        .update("Users")
+        .set({
+          Age: 22
+        })
+        .execute();
+    }).not.toThrow();
+  });
+
+  it('rejects entire update when one row violates a check', () => {
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Age: {
+        type: Number,
+        nullable: false,
+      },
+    }).execute();
+
+    sql.alterTable("Users")
+      .addConstraint("CHK_Adult")
+      .check(
+        sql.column("Age").gte(18)
+      )
+      .execute();
+
+    sql
+      .insertInto("Users", ["Age"])
+      .values([
+        [20], [30]
+      ])
+      .execute();
+
+    expect(() => {
+      sql
+        .update("Users")
+        .set({
+          Age: sql.column("Age").subtract(10)
+        })
+        .execute();
+    }).toThrow();
+
+    const users =
+      sql.select("*")
+        .from("Users")
+        .execute();
+
+    expect(users).toEqual([[
+      {
+        "index": 0,
+        "values": [20],
+      },
+      {
+        "index": 1,
+        "values": [30],
+      },
     ]]);
   });
 });

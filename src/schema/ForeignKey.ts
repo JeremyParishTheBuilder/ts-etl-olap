@@ -39,8 +39,8 @@ export class ForeignKey extends ColumnBoundImmutable {
     this.parentColumns = spec.parentColumns;
     this.parentIndex = spec.parentIndex;
     this.reverseIndex = spec.reverseIndex;
-    this.onDelete = spec.onDelete ?? ReferentialAction.restrict;
-    this.onUpdate = spec.onUpdate ?? ReferentialAction.restrict;
+    this.onDelete = spec.onDelete ?? "restrict";
+    this.onUpdate = spec.onUpdate ?? "restrict";
 
     this.validate();
     this.seal();
@@ -180,10 +180,10 @@ export class CompiledForeignKey {
   ): ColumnValue[] {
     let next: ColumnValue[];
     switch (action) {
-      case ReferentialAction.restrict:
-      case ReferentialAction.noAction:
+      case "restrict":
+      case "noAction":
         return existingChildRow;
-      case ReferentialAction.setNull:
+      case "setNull":
         next = [...existingChildRow];
         
         this.columnIndexes.forEach(idx => {
@@ -191,13 +191,13 @@ export class CompiledForeignKey {
         });
 
         return next;
-      case ReferentialAction.cascade:
+      case "cascade":
         if (!replacementParentRow) {
           throw new Error(
             "Replacement parent row required for CASCADE update"
           );
         }
-        
+
         next = [...existingChildRow];
 
         this.columnIndexes.forEach((childIdx, i) => {         

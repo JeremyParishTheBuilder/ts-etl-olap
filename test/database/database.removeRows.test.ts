@@ -70,8 +70,8 @@ describe('Database::removeRow', () => {
         reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
 
     expect(() =>
@@ -118,8 +118,8 @@ describe('Database::removeRow', () => {
         reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
 
     db = db.removeRows(
@@ -179,8 +179,8 @@ describe('Database::removeRow', () => {
         reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       }));
 
     expect(() =>
@@ -382,8 +382,8 @@ describe('Database::removeRow', () => {
           reverseIndex: "FKRI_Users",
           parentTable: "Roles",
           parentColumns: ["id"],
-          onDelete: ReferentialAction.cascade,
-          onUpdate: ReferentialAction.restrict,
+          onDelete: "cascade",
+          onUpdate: "restrict",
         }),
       );
 

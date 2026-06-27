@@ -3,6 +3,7 @@ import { Column, InlineColumnSpec }  from "../../schema/Column.js";
 import { ForeignKeySpec, type ConstraintSpec } from "../../schema/Constraint.js";
 import { CONSTRAINT_KIND } from "../../schema/ConstraintKind.js";
 import { type ReferentialAction } from "../../schema/ReferentialAction.js";
+import { PredicateNode } from "../../evaluation/predicate/Predicate.js";
 
 export type AlterTableStatement =
   | AlterAddColumn
@@ -156,7 +157,7 @@ export class AlterTableBuilder implements StatementBuilder {
     } as ConstraintSpec;
   }
 
-  check(columns: string[], expr: any/*Expression*/) {
+  check(predicate: PredicateNode) {
     this.state = this.assertState("add_constraint");
 
     const partial = this.state.partial;
@@ -168,8 +169,7 @@ export class AlterTableBuilder implements StatementBuilder {
     this.state.constraint = {
       ...partial,
       kind: CONSTRAINT_KIND.check,
-      columns: columns,
-      //expr: expr/*Expression*/
+      predicate: predicate,
     } as ConstraintSpec;
   }
 
@@ -193,19 +193,13 @@ export class AlterTableBuilder implements StatementBuilder {
 
     const partial = this.state.partial;
 
-    if (!partial?.columns || !partial?.kind || !partial.name) {
+    if (partial.kind !== CONSTRAINT_KIND.foreignKey || !partial?.columns || !partial.name) {
       throw new Error("Incomplete foreign key definition");
     }
 
     if (partial.kind !== CONSTRAINT_KIND.foreignKey) {
       throw new Error(`References is only used for foreign keys, not ${partial.kind}`);
     }
-
-    // this.state.constraint = {
-    //   ...partial,
-    //   parentTable,
-    //   parentColumns
-    // } as ConstraintSpec;
 
     this.transitionState({ state: "add_constraint_references", constraint: {
         ...partial,
@@ -255,7 +249,7 @@ export class AlterTableBuilder implements StatementBuilder {
 
       case "add_constraint_references":
         if (!this.state.constraint || this.state.constraint.kind !== CONSTRAINT_KIND.foreignKey) {
-          return { required: [], optional: [] }; // TODO, should just assert?
+          return { required: [], optional: [] };
         };
         const optionalCalls = [];
         if (!this.state.constraint.onDelete) {

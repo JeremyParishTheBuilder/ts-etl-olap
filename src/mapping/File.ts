@@ -1,7 +1,7 @@
-import DirectoryContent from './DirectoryContent.js';
+import { FsObject } from './FsObject.js';
 import * as fs from 'fs';
 
-export class File extends DirectoryContent {
+export class File extends FsObject {
 
   private _contents: any | null = null;
   private _failed: boolean = false;
@@ -10,6 +10,7 @@ export class File extends DirectoryContent {
     super(fullPath);
   }
 
+  //don't need?
   private readJson(): any | null {
     if (!this._basename.endsWith(".json")) {
       console.warn(`Skipping non-JSON file: ${this.basename}`);
@@ -25,6 +26,7 @@ export class File extends DirectoryContent {
     }
   }
 
+  //might also not need?
   public get contents(): any | null {
     if (this._failed) {
       return null;  // Return `null` if the previous attempt failed

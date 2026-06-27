@@ -1,6 +1,6 @@
-import Directory from './Directory.js';
-import File from './File.js';
-import DirectoryContent from './DirectoryContent.js';
+import { Directory } from './Directory.js';
+import { File } from './File.js';
+import { FsObject } from './FsObject.js';
 import RegistryRoot from './RegistryRoot.js';
 
 class FsStructureEntry {
@@ -10,7 +10,7 @@ class FsStructureEntry {
   private _parent: FsStructureEntry | null;
   private _types: string[] | null = null;
   private _name: (key?: string) => string;
-  private _qualify: (item: DirectoryContent) => boolean;
+  private _qualify: (item: FsObject) => boolean;
 
   // private _directories: FsStructureEntry[] = [];
   // private _files: FsStructureEntry[] = [];
@@ -21,7 +21,7 @@ class FsStructureEntry {
     parent: FsStructureEntry | null,
     types: string[] | null,
     name: (key?: string) => string,
-    qualify?: (item: DirectoryContent) => boolean
+    qualify?: (item: FsObject) => boolean
   ) {
     this._id = id;
     this._fsType = fsType;
@@ -46,7 +46,7 @@ class FsStructureEntry {
   //   return;
   // }
 
-  public find<T extends DirectoryContent>(
+  public find<T extends FsObject>(
     root: RegistryRoot,
     itemType: { new (...args: any[]): T },
     key?: string

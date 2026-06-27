@@ -225,6 +225,18 @@ export abstract class InputBatch {
     return this;
   }
 
+  protected check(
+    predicate: PredicateNode,
+    fragment: string = "CHECK"
+  ) {
+    this.assertAllowed("check", fragment);
+    if (!(this.currentBuilder instanceof AlterTableBuilder)) {
+      throw new Error(`Cannot call '${fragment}' outside of AlterTable`);
+    }
+    this.currentBuilder.check(predicate);
+    return this;
+  }
+
   protected references(
     parentTable: string,
     parentColumns: string[],
@@ -469,12 +481,13 @@ export abstract class InputBatch {
 
     let resultIterators = [];
 
-    for (const stmt of this.statements) {
+    const statementsToExecute = [...this.statements];
+    this.statements = [];
+
+    for (const stmt of statementsToExecute) {
       const result = this.executeStatement(stmt);
       if (stmt.kind === "select") resultIterators.push(result);
     }
-
-    this.statements = [];
 
     return resultIterators;
   }

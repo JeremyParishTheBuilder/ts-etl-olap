@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createCheckTestSpec, createColumnTestSpec } from '../utils/buildSchema.js';
+import { ComparisonPredicateNode } from '../../src/evaluation/predicate/ComparisonPredicate.js';
+import { ColumnExpressionNode } from '../../src/evaluation/expression/ColumnExpression.js';
+import { LiteralExpressionNode } from '../../src/evaluation/expression/LiteralExpression.js';
 
 describe('Table::createCheck', () => {
 
@@ -14,7 +17,6 @@ describe('Table::createCheck', () => {
     const updated = table
       .createCheck(createCheckTestSpec({
         name: "CHK_PositiveAge",
-        columns: ["Age"],
       }));
 
     expect(
@@ -32,7 +34,6 @@ describe('Table::createCheck', () => {
     const updated = table.createCheck(
       createCheckTestSpec({
         name: "CHK_PositiveAge",
-        columns: ["Age"],
       })
     );
 
@@ -45,6 +46,27 @@ describe('Table::createCheck', () => {
     ).toBeDefined();
   });
 
+  it('allows referencing columns that exist', () => {
+    const table = buildTable()
+      .createColumn({
+        name: "Age",
+        type: Number,
+      });
+
+    expect(() => {
+      table.createCheck(
+        createCheckTestSpec({
+          name: "CHK_PositiveAge",
+          predicate: new ComparisonPredicateNode(
+            new ColumnExpressionNode("Age"),
+            "gte",
+            new LiteralExpressionNode(18)
+          )
+        })
+      );
+    }).not.toThrow();
+  });
+
   it('throws when referenced columns do not exist', () => {
     const table = buildTable();
 
@@ -52,7 +74,11 @@ describe('Table::createCheck', () => {
       table.createCheck(
         createCheckTestSpec({
           name: "CHK_PositiveAge",
-          columns: ["Age"],
+          predicate: new ComparisonPredicateNode(
+            new ColumnExpressionNode("Age"),
+            "gte",
+            new LiteralExpressionNode(18)
+          )
         })
       );
     }).toThrow();
@@ -67,7 +93,6 @@ describe('Table::createCheck', () => {
       .createCheck(
         createCheckTestSpec({
           name: "CHK_PositiveAge",
-          columns: ["Age"],
         })
       );
 
@@ -75,7 +100,6 @@ describe('Table::createCheck', () => {
       table.createCheck(
         createCheckTestSpec({
           name: "CHK_PositiveAge",
-          columns: ["Age"],
         })
       );
     }).toThrow();
@@ -91,12 +115,57 @@ describe('Table::createCheck', () => {
     const updated = table.createCheck(
       createCheckTestSpec({
         name: "CHK_PositiveAge",
-        columns: ["Age"],
       })
     );
 
     expect(
       updated.checks.requireByName("CHK_PositiveAge")
     ).toBeDefined();
+  });
+
+  it('rejects creating a check when existing rows violate it', () => {
+    const table =
+      buildTable()
+        .createColumn({
+          name: "Age",
+          type: Number,
+        })
+        .addRow([10]);
+
+    expect(() => {
+      table.createCheck(
+        createCheckTestSpec({
+          name: "CHK_Adult",
+          predicate: new ComparisonPredicateNode(
+            new ColumnExpressionNode("Age"),
+            "gte",
+            new LiteralExpressionNode(18),
+          ),
+        })
+      );
+    }).toThrow();
+  });
+
+  it('allows creating a check when existing rows satisfy it', () => {
+    const table =
+      buildTable()
+        .createColumn({
+          name: "Age",
+          type: Number,
+        })
+        .addRow([20]);
+
+    expect(() => {
+      table.createCheck(
+        createCheckTestSpec({
+          name: "CHK_Adult",
+          predicate: new ComparisonPredicateNode(
+            new ColumnExpressionNode("Age"),
+            "gte",
+            new LiteralExpressionNode(18),
+          ),
+        })
+      );
+    }).not.toThrow();
   });
 });

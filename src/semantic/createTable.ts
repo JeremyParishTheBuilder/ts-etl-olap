@@ -307,8 +307,7 @@ function constraintSpecsFromColumnSpec(
     specs.push({
       kind: CONSTRAINT_KIND.check,
       name: `${colName}_chk`,
-      columns: [colName],
-      expression: undefined,//colSpec.check,
+      predicate: colSpec.check,
     });
   }
 

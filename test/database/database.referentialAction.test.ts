@@ -3,7 +3,9 @@ import { ReferentialAction } from "../../src/schema/ReferentialAction.js";
 import {
   buildDatabase,
   buildTable,
-  createColumnTestSpec
+  createColumnTestSpec,
+  createDelete,
+  createUpdate
 } from "../utils/buildSchema.js";
 
 describe("Database Referential Actions", () => {
@@ -38,13 +40,13 @@ describe("Database Referential Actions", () => {
           reverseIndex: "FKRI_Id",
           parentTable: "Parent",
           parentColumns: ["ID"],
-          onDelete: ReferentialAction.restrict,
-          onUpdate: ReferentialAction.restrict,
+          onDelete: "restrict",
+          onUpdate: "restrict",
         }
       );
 
     expect(() =>
-      db.removeRow("Parent", 0)
+      db.removeRows("Parent", [createDelete(parent, 0)])
     ).toThrow();
   });
 
@@ -78,12 +80,12 @@ describe("Database Referential Actions", () => {
           reverseIndex: "FKRI_Id",
           parentTable: "Parent",
           parentColumns: ["ID"],
-          onDelete: ReferentialAction.cascade,
-          onUpdate: ReferentialAction.restrict,
+          onDelete: "cascade",
+          onUpdate: "restrict",
         }
       );
 
-    const updated = db.removeRow("Parent", 0);
+    const updated = db.removeRows("Parent", [createDelete(parent, 0)]);
 
     expect(
       updated.tables.requireByName("Child").rowAlive[0]
@@ -124,12 +126,12 @@ describe("Database Referential Actions", () => {
           reverseIndex: "FKRI_Id",
           parentTable: "Parent",
           parentColumns: ["ID"],
-          onDelete: ReferentialAction.setNull,
-          onUpdate: ReferentialAction.restrict,
+          onDelete: "setNull",
+          onUpdate: "restrict",
         }
       );
 
-    const updated = db.removeRow("Parent", 0);
+    const updated = db.removeRows("Parent", [createDelete(parent, 0)]);
 
     expect(
       updated.tables.requireByName("Child").requireRow(0)
@@ -166,17 +168,16 @@ describe("Database Referential Actions", () => {
           reverseIndex: "FKRI_Id",
           parentTable: "Parent",
           parentColumns: ["ID"],
-          onDelete: ReferentialAction.restrict,
-          onUpdate: ReferentialAction.cascade,
+          onDelete: "restrict",
+          onUpdate: "cascade",
         }
       );
 
     const updates = [2];
 
-    const updated = db.updateRow(
+    const updated = db.updateRows(
       "Parent",
-      0,
-      updates,
+      [createUpdate(parent, 0, updates)]
     );
 
     expect(
@@ -215,12 +216,12 @@ describe("Database Referential Actions", () => {
           reverseIndex: "FKRI_Id",
           parentTable: "Node",
           parentColumns: ["ID"],
-          onDelete: ReferentialAction.cascade,
-          onUpdate: ReferentialAction.cascade,
+          onDelete: "cascade",
+          onUpdate: "cascade",
         }
       );
 
-    const updated = db.removeRow("Node", 0);
+    const updated = db.removeRows("Node", [createDelete(table, 0)]);
 
     expect(
       updated.tables.requireByName("Node").rowAlive[0]
@@ -262,17 +263,16 @@ describe("Database Referential Actions", () => {
           reverseIndex: "FKRI_Id",
           parentTable: "Node",
           parentColumns: ["ID"],
-          onDelete: ReferentialAction.cascade,
-          onUpdate: ReferentialAction.cascade,
+          onDelete: "cascade",
+          onUpdate: "cascade",
         }
       );
 
     const updates = [3, 2];
 
-    const updated = db.updateRow(
+    const updated = db.updateRows(
       "Node",
-      0,
-      updates,
+      [createUpdate(table, 0, updates)]
     );
 
     expect(
@@ -312,17 +312,16 @@ describe("Database Referential Actions", () => {
           reverseIndex: "FKRI_CHILD",
           parentTable: "Parent",
           parentColumns: ["A", "B"],
-          onDelete: ReferentialAction.cascade,
-          onUpdate: ReferentialAction.cascade,
+          onDelete: "cascade",
+          onUpdate: "cascade",
         }
       );
     
     const updates = [10, 20];
 
-    const updated = db.updateRow(
+    const updated = db.updateRows(
       "Parent",
-      0,
-      updates,
+      [createUpdate(parent, 0, updates)]
     );
 
     expect(
@@ -370,12 +369,12 @@ describe("Database Referential Actions", () => {
           reverseIndex: "FKRI_CHILD",
           parentTable: "Parent",
           parentColumns: ["A", "B"],
-          onDelete: ReferentialAction.setNull,
-          onUpdate: ReferentialAction.setNull,
+          onDelete: "setNull",
+          onUpdate: "setNull",
         }
       );
 
-    const updated = db.removeRow("Parent", 0);
+    const updated = db.removeRows("Parent", [createDelete(parent, 0)]);
 
     expect(
       updated.tables.requireByName("Child").requireRow(0)
@@ -427,8 +426,8 @@ describe("Database Referential Actions", () => {
           reverseIndex: "FKRI_CHILD",
           parentTable: "A",
           parentColumns: ["ID"],
-          onDelete: ReferentialAction.cascade,
-          onUpdate: ReferentialAction.cascade,
+          onDelete: "cascade",
+          onUpdate: "cascade",
         }
       )
       .createForeignKey(
@@ -439,12 +438,12 @@ describe("Database Referential Actions", () => {
           reverseIndex: "FKRI_CHILD",
           parentTable: "B",
           parentColumns: ["AID"],
-          onDelete: ReferentialAction.cascade,
-          onUpdate: ReferentialAction.cascade,
+          onDelete: "cascade",
+          onUpdate: "cascade",
         }
       );
 
-    const updated = db.removeRow("A", 0);
+    const updated = db.removeRows("A", [createDelete(a, 0)]);
 
     expect(
       updated.tables.requireByName("B").rowAlive[0]
@@ -481,12 +480,12 @@ describe("Database Referential Actions", () => {
           reverseIndex: "FKRI_CHILD",
           parentTable: "Parent",
           parentColumns: ["ID"],
-          onDelete: ReferentialAction.cascade,
-          onUpdate: ReferentialAction.cascade,
+          onDelete: "cascade",
+          onUpdate: "cascade",
         }
       );
 
-    const updated = db.removeRow("Parent", 0);
+    const updated = db.removeRows("Parent", [createDelete(parent, 0)]);
 
     expect(() => {
       db.tables.requireByName("Parent").assertRowAlive(0)
@@ -516,10 +515,7 @@ describe("Database Referential Actions", () => {
 
       D must only be deleted once.
     */
-
-    const db = buildDatabase()
-      .addTable(
-        buildTable({name: "A"})
+    const a = buildTable({name: "A"})
           .createColumn(createColumnTestSpec({
             name: "ID",
             type: Number,
@@ -530,7 +526,11 @@ describe("Database Referential Actions", () => {
             columns: ["id"],
             unique: true,
           })
-          .addRow([1])
+          .addRow([1]);
+
+    const db = buildDatabase()
+      .addTable(
+        a
       )
       .addTable(
         buildTable({name: "B"})
@@ -594,8 +594,8 @@ describe("Database Referential Actions", () => {
         reverseIndex: "FKRI_CHILD",
         parentTable: "A",
         parentColumns: ["ID"],
-        onDelete: ReferentialAction.cascade,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "cascade",
+        onUpdate: "restrict",
       })
 
       .createForeignKey("C", {
@@ -604,8 +604,8 @@ describe("Database Referential Actions", () => {
         reverseIndex: "FKRI_CHILD",
         parentTable: "A",
         parentColumns: ["ID"],
-        onDelete: ReferentialAction.cascade,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "cascade",
+        onUpdate: "restrict",
       })
 
       .createForeignKey("D", {
@@ -614,8 +614,8 @@ describe("Database Referential Actions", () => {
         reverseIndex: "FKRI_CHILD",
         parentTable: "B",
         parentColumns: ["ID"],
-        onDelete: ReferentialAction.cascade,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "cascade",
+        onUpdate: "restrict",
       })
 
       .createForeignKey("D", {
@@ -624,11 +624,11 @@ describe("Database Referential Actions", () => {
         reverseIndex: "FKRI_CHILD2",
         parentTable: "C",
         parentColumns: ["ID"],
-        onDelete: ReferentialAction.cascade,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "cascade",
+        onUpdate: "restrict",
       });
 
-    const updated = db.removeRow("A", 0);
+    const updated = db.removeRows("A", [createDelete(a, 0)]);
 
     expect(updated.tables.requireByName("A").rowAlive[0]).toBe(false);
     expect(updated.tables.requireByName("B").rowAlive[0]).toBe(false);
@@ -648,16 +648,18 @@ describe("Database Referential Actions", () => {
       reverse indexes were updated correctly.
     */
 
-    const db = buildDatabase()
-      .addTable(
-        buildTable({name: "A"})
+    const a = buildTable({name: "A"})
           .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
           .createIndex({
             name: "pk_a",
             columns: ["id"],
             unique: true,
           })
-          .addRow([1])
+          .addRow([1]);
+
+    const db = buildDatabase()
+      .addTable(
+        a
       )
       .addTable(
         buildTable({name: "B"})
@@ -692,8 +694,8 @@ describe("Database Referential Actions", () => {
         reverseIndex: "FKRI_CHILD",
         parentTable: "A",
         parentColumns: ["ID"],
-        onDelete: ReferentialAction.cascade,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "cascade",
+        onUpdate: "restrict",
       })
 
       .createForeignKey("C", {
@@ -702,11 +704,11 @@ describe("Database Referential Actions", () => {
         reverseIndex: "FKRI_CHILD",
         parentTable: "B",
         parentColumns: ["ID"],
-        onDelete: ReferentialAction.cascade,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "cascade",
+        onUpdate: "restrict",
       });
 
-    const updated = db.removeRow("A", 0);
+    const updated = db.removeRows("A", [createDelete(a, 0)]);
 
     expect(updated.tables.requireByName("A").rowAlive[0]).toBe(false);
     expect(updated.tables.requireByName("B").rowAlive[0]).toBe(false);
@@ -723,9 +725,7 @@ describe("Database Referential Actions", () => {
       should terminate safely.
     */
 
-    const db = buildDatabase()
-      .addTable(
-        buildTable({name: "A"})
+    const a = buildTable({name: "A"})
           .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
           .createColumn(createColumnTestSpec({ name: "B_ID", type: Number }))
           .createIndex({
@@ -738,6 +738,10 @@ describe("Database Referential Actions", () => {
             columns: ["b_id"],
             unique: false,
           })
+
+    const db = buildDatabase()
+      .addTable(
+        a
       )
       .addTable(
         buildTable({name: "B"})
@@ -761,8 +765,8 @@ describe("Database Referential Actions", () => {
         reverseIndex: "FKRI_CHILD",
         parentTable: "B",
         parentColumns: ["ID"],
-        onDelete: ReferentialAction.cascade,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "cascade",
+        onUpdate: "restrict",
       })
 
       .createForeignKey("B", {
@@ -771,37 +775,39 @@ describe("Database Referential Actions", () => {
         reverseIndex: "FKRI_CHILD",
         parentTable: "A",
         parentColumns: ["ID"],
-        onDelete: ReferentialAction.cascade,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "cascade",
+        onUpdate: "restrict",
       });
 
     const withRows = db
       .addRow("A", [1, null])
-      .addRow("B", [2, 1])
-      .updateRow(
+      .addRow("B", [2, 1]);
+
+    const aWithRows = withRows.tables.require(a.id);
+
+    const withUpdate = withRows.updateRows(
         "A",
-        0,
-        [1, 2]
+        [createUpdate(aWithRows, 0, [1, 2])]
       );
 
-    const updated = withRows.removeRow("A", 0);
+    const updated = withUpdate.removeRows("A", [createDelete(aWithRows, 0)]);
 
     expect(updated.tables.requireByName("A").rowAlive[0]).toBe(false);
     expect(updated.tables.requireByName("B").rowAlive[0]).toBe(false);
   });
 
   it("keeps reverse indexes synchronized during cascading deletes", () => {
-    const db = buildDatabase()
-      .addTable(
-        buildTable({name: "Parent"})
+    const parent = buildTable({name: "Parent"})
           .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
           .createIndex({
             name: "pk_parent",
             columns: ["id"],
             unique: true,
           })
-          .addRow([1])
-      )
+          .addRow([1]);
+
+    const db = buildDatabase()
+      .addTable(parent)
       .addTable(
         buildTable({name: "Child"})
           .createColumn(createColumnTestSpec({ name: "PARENT_ID", type: Number }))
@@ -819,11 +825,14 @@ describe("Database Referential Actions", () => {
         reverseIndex: "FKRI_CHILD",
         parentTable: "Parent",
         parentColumns: ["ID"],
-        onDelete: ReferentialAction.cascade,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "cascade",
+        onUpdate: "restrict",
       });
 
-    const updated = db.removeRow("Parent", 0);
+    const updated = db.removeRows(
+      "Parent",
+      [createDelete(parent, 0)]
+    );
 
     const child = updated.tables.requireByName("Child");
 

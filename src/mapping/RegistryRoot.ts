@@ -3,7 +3,7 @@ import Pointer from './Pointer.js';
 import RegistryObject from './RegistryObject.js';
 import MultiRegistryRoot from './MultiRegistryRoot.js';
 import RegistryStructureEntry from './RegistryStructureEntry.js';
-import Directory from './Directory.js';
+import { Directory } from './Directory.js';
 
 class RegistryRoot extends RegistryObject {
 

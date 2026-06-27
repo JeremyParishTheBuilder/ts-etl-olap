@@ -8,6 +8,8 @@ import { type CheckSpec, type ForeignKeySpec } from "../../src/schema/Constraint
 import { type UniqueId } from "../../src/schema/Unique.js";
 import { type ResolvedUpdate } from "../../src/types/ResolvedUpdate.js";
 import { type ResolvedDelete } from "../../src/types/ResolvedDelete.js";
+import { ComparisonPredicateNode } from "../../src/evaluation/predicate/ComparisonPredicate.js";
+import { LiteralExpressionNode } from "../../src/evaluation/expression/LiteralExpression.js";
 
 let nextId = 1;
 
@@ -72,8 +74,11 @@ export function createCheckTestSpec(
 ): Omit<CheckSpec, "kind"> {
   return {
     name: "chk1",
-    columns: ["c1"],
-    expression: undefined,
+    predicate: new ComparisonPredicateNode(
+      new LiteralExpressionNode(1),
+      "eq",
+      new LiteralExpressionNode(1)
+    ),
     ...overrides,
   };
 }

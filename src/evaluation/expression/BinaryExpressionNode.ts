@@ -1,10 +1,10 @@
 import { type ColumnValue } from "../../schema/Column.js";
-import { type Expression, type ExpressionNode } from "./Expression.js";
+import { ResolvedExpressionNode, type Expression, type ExpressionNode } from "./Expression.js";
 import { type RowView } from "../../schema/RowView.js";
 import { assertIsNumber } from "../utility/assertIsNumber.js";
 
 export class BinaryExpressionNode {
-  readonly kind = "binaryExpression" as const;
+  readonly kind = "binary" as const;
 
   constructor(
     public readonly left: ExpressionNode,
@@ -15,6 +15,21 @@ export class BinaryExpressionNode {
       | "divide"
       | "mod",
     public readonly right: ExpressionNode,
+  ) {}
+}
+
+export class ResolvedBinaryExpressionNode {
+  readonly kind = "binary" as const;
+
+  constructor(
+    public readonly left: ResolvedExpressionNode,
+    public readonly operator:
+      | "add"
+      | "subtract"
+      | "multiply"
+      | "divide"
+      | "mod",
+    public readonly right: ResolvedExpressionNode,
   ) {}
 }
 

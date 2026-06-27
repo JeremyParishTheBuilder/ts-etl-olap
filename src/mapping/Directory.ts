@@ -1,13 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 import File from './File.js';
-import DirectoryContent from './DirectoryContent.js';
+import { FsObject } from './FsObject.js';
 
-export class Directory extends DirectoryContent  {
+export class Directory extends FsObject  {
 
   private _contents: (Directory | File)[] | null = null;
   private _failed: boolean = false;
-  //private _isChain: boolean | null = null;
 
   constructor(fullPath: string) {
     super(fullPath);
@@ -32,7 +31,7 @@ export class Directory extends DirectoryContent  {
     }
   }
 
-  public get contents(): DirectoryContent[] | null {
+  public get contents(): FsObject[] | null {
     if (this._failed) {
       return null;  // Return `null` if the previous attempt failed
     }
@@ -45,7 +44,7 @@ export class Directory extends DirectoryContent  {
     return this._contents!;
   }
 
-  public find<T extends DirectoryContent>(
+  public find<T extends FsObject>(
     itemType: new (...args: any[]) => T,
     itemName?: string
   ): T[] {
@@ -88,5 +87,3 @@ export class Directory extends DirectoryContent  {
   }
 
 }
-
-export default Directory;

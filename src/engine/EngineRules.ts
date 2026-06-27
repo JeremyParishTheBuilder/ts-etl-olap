@@ -33,13 +33,13 @@ export const ENGINE_RULES: Record<
     foreignKeyDefaultOnDelete: {
       dialectDefault: (d: Dialect) =>
         DIALECT_RULES[d].constraints.foreignKeyDefaultOnDelete,
-      engineDefault: ReferentialAction.restrict,
+      engineDefault: "restrict",
     },
 
     foreignKeyDefaultOnUpdate: {
       dialectDefault: (d: Dialect) =>
         DIALECT_RULES[d].constraints.foreignKeyDefaultOnUpdate,
-      engineDefault: ReferentialAction.restrict,
+      engineDefault: "restrict",
     },
 
     requireExplicitNames: {

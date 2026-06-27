@@ -1,7 +1,15 @@
 import { type ColumnValue } from "../../schema/Column.js";
 import { type RowView } from "../../schema/RowView.js";
-import { type Predicate, type PredicateNode } from "../predicate/Predicate.js";
-import { type Expression, type ExpressionNode } from "./Expression.js";
+import {
+  type ResolvedPredicateNode,
+  type Predicate,
+  type PredicateNode
+} from "../predicate/Predicate.js";
+import {
+  type ResolvedExpressionNode,
+  type Expression,
+  type ExpressionNode
+} from "./Expression.js";
 
 export class CaseExpressionNode {
   readonly kind = "case" as const;
@@ -12,6 +20,18 @@ export class CaseExpressionNode {
       then: ExpressionNode;
     }>,
     public readonly elseExpr?: ExpressionNode,
+  ) {}
+}
+
+export class ResolvedCaseExpressionNode {
+  readonly kind = "case" as const;
+
+  constructor(
+    public readonly branches: Array<{
+      when: ResolvedPredicateNode;
+      then: ResolvedExpressionNode;
+    }>,
+    public readonly elseExpr?: ResolvedExpressionNode,
   ) {}
 }
 

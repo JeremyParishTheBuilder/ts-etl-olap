@@ -7,7 +7,7 @@ import { type SelectStatement } from "../statements/index.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { type Column } from "../schema/Column.js";
 import { getColumnIndexMap, getOrderedColumns, resolveSelectColumnList } from "./resolveColumnList.js";
-import { bindPredicate } from "./predicate.js";
+import { bindPredicate, resolvePredicate } from "./predicate.js";
 
 export function bindSelect(
   semantic: SemanticAnalyzer,
@@ -34,7 +34,7 @@ export function bindSelect(
   // 3. WHERE -> predicate -> filter
   const whereClause = stmt.where;
   if (whereClause) {
-    const predicate = bindPredicate(whereClause, table);
+    const predicate = bindPredicate(resolvePredicate(whereClause, table), table);
     node = new FilterNode(predicate, node);
   }
 

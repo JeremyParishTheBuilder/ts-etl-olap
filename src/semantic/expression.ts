@@ -1,16 +1,26 @@
-import { BinaryExpression } from "../evaluation/expression/BinaryExpressionNode.js";
-import { CaseExpression } from "../evaluation/expression/CaseExpression.js";
-import { ColumnExpression } from "../evaluation/expression/ColumnExpression.js";
+import {
+  BinaryExpression,
+  ResolvedBinaryExpressionNode
+} from "../evaluation/expression/BinaryExpressionNode.js";
+import {
+  CaseExpression,
+  ResolvedCaseExpressionNode
+} from "../evaluation/expression/CaseExpression.js";
+import {
+  ColumnExpression,
+  ResolvedColumnExpressionNode
+} from "../evaluation/expression/ColumnExpression.js";
 import {
   type ExpressionNode,
-  type Expression
+  type Expression,
+  type ResolvedExpressionNode
 } from "../evaluation/expression/Expression.js";
 import { LiteralExpression } from "../evaluation/expression/LiteralExpression.js";
 import { type Table } from "../schema/Table.js";
-import { bindPredicate } from "./predicate.js";
+import { bindPredicate, resolvePredicate } from "./predicate.js";
 
 export function bindExpression(
-  expr: ExpressionNode,
+  expr: ResolvedExpressionNode,
   table: Table
 ): Expression {
   switch (expr.kind) {
@@ -18,7 +28,7 @@ export function bindExpression(
       return new LiteralExpression(expr.value);
 
     case "column":
-      const columnIndex = table.columns.requireByName(expr.columnName).position;
+      const columnIndex = table.columns.require(expr.columnId).position;
 
       return new ColumnExpression(columnIndex);
 
@@ -39,11 +49,57 @@ export function bindExpression(
           : undefined,
       );
 
-    case "binaryExpression": {
+    case "binary": {
       return new BinaryExpression(
         bindExpression(expr.left, table),
         expr.operator,
         bindExpression(expr.right, table),
+      );
+    }
+
+    default: {
+      throw new Error(
+        `Unsupported expression kind: ${expr}`
+      );
+    }
+  }
+}
+
+export function resolveExpression(
+  expr: ExpressionNode,
+  table: Table
+): ResolvedExpressionNode {
+  switch (expr.kind) {
+    case "literal":
+      return expr;
+
+    case "column":
+      const columnId = table.columns.requireIdByName(expr.columnName);
+
+      return new ResolvedColumnExpressionNode(columnId);
+
+    case "case":
+      return new ResolvedCaseExpressionNode(
+        expr.branches.map(branch => ({
+          when: resolvePredicate(
+            branch.when,
+            table,
+          ),
+          then: resolveExpression(
+            branch.then,
+            table,
+          ),
+        })),
+        expr.elseExpr
+          ? resolveExpression(expr.elseExpr, table)
+          : undefined,
+      );
+
+    case "binary": {
+      return new ResolvedBinaryExpressionNode(
+        resolveExpression(expr.left, table),
+        expr.operator,
+        resolveExpression(expr.right, table),
       );
     }
 

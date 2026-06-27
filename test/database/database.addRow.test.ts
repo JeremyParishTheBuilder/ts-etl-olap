@@ -199,8 +199,8 @@ describe('Database::addRow', () => {
         reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       });
 
     expect(() =>
@@ -249,8 +249,8 @@ describe('Database::addRow', () => {
         reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       })
       .addRow("Users", [1]);
 
@@ -297,8 +297,8 @@ describe('Database::addRow', () => {
         reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["id"],
-        onDelete: ReferentialAction.restrict,
-        onUpdate: ReferentialAction.restrict,
+        onDelete: "restrict",
+        onUpdate: "restrict",
       });
 
     expect(() =>

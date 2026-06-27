@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Table } from '../../src/schema/Table.js';
-import { buildTable } from '../utils/buildSchema.js';
+import { buildTable, createCheckTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::removeCheck', () => {
   function buildTableWithCheck(): Table {
@@ -9,11 +9,9 @@ describe('Table::removeCheck', () => {
         name: "Age",
         type: Number,
       })
-      .createCheck({
+      .createCheck(createCheckTestSpec({
         name: "CHK_PositiveAge",
-        columns: ["Age"],
-        expression: undefined,
-      });
+      }));
   }
 
   it('removes the check constraint', () => {

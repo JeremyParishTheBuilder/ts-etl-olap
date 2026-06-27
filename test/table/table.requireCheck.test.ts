@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createCheckTestSpec } from '../utils/buildSchema.js';
+import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
 
 describe('Table::requireCheck', () => {
 
@@ -9,7 +10,6 @@ describe('Table::requireCheck', () => {
     })
     .createCheck(createCheckTestSpec({
       name: "CHK_PositiveAge",
-      columns: ["Age"]
     }));
 
     expect(
@@ -25,7 +25,6 @@ describe('Table::requireCheck', () => {
     const tableWithCheck = table
     .createCheck(createCheckTestSpec({
       name: "CHK_PositiveAge",
-      columns: ["Age"]
     }));
 
     expect(

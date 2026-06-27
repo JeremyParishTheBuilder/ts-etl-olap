@@ -1,6 +1,6 @@
 import path from 'path';
 
-export class DirectoryContent {
+export class FsObject {
   protected _fullPath: string;
   protected _basename: string;
   protected constructor(fullPath: string) {
@@ -14,5 +14,3 @@ export class DirectoryContent {
     return this._fullPath;
   }
 }
-
-export default DirectoryContent;

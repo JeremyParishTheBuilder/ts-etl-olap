@@ -2,7 +2,7 @@ import { type Action } from "../actions/Action.js";
 import { DeleteRowsAction } from "../actions/DeleteRowsAction.js";
 import { type DeleteFromStatement } from "../statements/index.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
-import { bindPredicate } from "./predicate.js";
+import { bindPredicate, resolvePredicate } from "./predicate.js";
 
 export function bindDeleteFrom(
   semantic: SemanticAnalyzer,
@@ -16,7 +16,7 @@ export function bindDeleteFrom(
   const tableName: string = stmt.table;
   const table = database.tables.requireByName(tableName);
 
-  const whereClause = stmt.where ? bindPredicate(stmt.where, table) : undefined;
+  const whereClause = stmt.where ? bindPredicate(resolvePredicate(stmt.where, table), table) : undefined;
 
   stmtActions.push(
     new DeleteRowsAction(
