@@ -30,11 +30,12 @@ import { type ImportNode } from '../mapping/ImportNode.js';
 import { JsonFileReader } from '../mapping/JsonFileReader.js';
 import { JsonPath } from '../mapping/JsonPath.js';
 import { IdentitySourceResolver } from '../mapping/IdentitySourceResolver.js';
-import { SchemaBuilder } from '../mapping/SchemaBuilder.js';
+import { SchemaBuilder } from '../mapping/schema/SchemaBuilder.js';
+import { LambdaValueResolver } from '../mapping/LambdaValueResolver.js';
+import { JsonValueResolver } from '../mapping/JsonValueResolver.js';
+//import { DatabaseBuilder } from '../mapping/DatabaseBuilder.js';
 
 const CCR1_PATH: string = '../chain-registry';
-
-//const db: Database = new Database("CCR");
 
 const sql: PostgresInputBatch = EngineRegistry.getInstance().engine().input() as PostgresInputBatch;
 
@@ -123,6 +124,7 @@ export const getChainRegContents = () => {
     );
 
   const registryRootDirectory = new Directory("./temp");
+  //const registryRootDirectory = new Directory(CCR1_PATH);
 
   const discoveries =
     registry.discover(
@@ -136,32 +138,42 @@ export const getChainRegContents = () => {
 
   const feeTokenImportMapping = 
     new ImportMapping(
-      "FeeToken",
+      "FeeTokens",
       JsonPath.parse("fees.fee_tokens"),
       "ChainJsonFile.FeeTokens.",
     );
 
   const stakingTokenImportMapping = 
     new ImportMapping(
-      "StakingToken",
+      "StakingTokens",
       JsonPath.parse("staking.staking_tokens"),
       "ChainJsonFile.StakingTokens.",
     );
     
+  const logoUrisImportMapping = 
+    new ImportMapping(
+      "LogoURIs",
+      JsonPath.parse("logo_URIs"),
+      "",
+    );
 
   const chainFileImportMapping = new ImportMapping(
-    "Chain",
+    "Chains",
     new IdentitySourceResolver(),
     "ChainJsonFile.",
     [
       new DerivedField(
         "displayName",
-        source => `${(source as any).pretty_name} (${(source as any).chain_id})`
+        new LambdaValueResolver(source =>
+          `${(source as any).pretty_name} (${(source as any).chain_id})`
+        )
       )
     ],
+    [],
     [
       feeTokenImportMapping,
       stakingTokenImportMapping,
+      //logoUrisImportMapping
     ]
   );
 
@@ -174,17 +186,32 @@ export const getChainRegContents = () => {
       "chainDirectory"
     );
 
+  
+
   const assetsImportMapping = 
     new ImportMapping(
-      "Asset",
+      "Assets",
       JsonPath.parse("assets"),
       "AssetlistJsonFile.Assets.",
+      [],
+      [
+        new DerivedField(
+          "assetDenom",
+          new JsonValueResolver(
+            JsonPath.parse("base")
+          )
+        )
+      ],
+      [
+        logoUrisImportMapping
+      ],
     );
 
   const assetlistFileImportMapping = new ImportMapping(
-    "Chain",
+    "Chains",
     new IdentitySourceResolver(),
     "AssetJsonFile.",
+    [],
     [],
     [
       assetsImportMapping,
@@ -203,27 +230,20 @@ export const getChainRegContents = () => {
   const importers: ImportNode[] = [
     chainFileImporter,
     assetlistFileImporter,
-    //logoImporter,
-    //...
+    //versionsFileImporter,
+    //...images maybe?
   ];
 
   const imports: ImportResult[] = [];
 
   for (const discovery of discoveries) {
-    console.log(discovery);
     for (const importer of importers) {
-      console.log(importer);
-      console.log(importer.accepts(discovery));
       if (!importer.accepts(discovery)) {
-        // console.log("not accept");
-        // console.log(importer);
-        // console.log(discovery);
         continue;
       }
       imports.push(
         ...importer.import(discovery)
       );
-      console.log("pushed"); // never see anything pushed...
     }
   }
 
@@ -234,9 +254,22 @@ export const getChainRegContents = () => {
 
   for (const result of imports) {
     builder.observe(result);
+    console.log(result);
   }
 
   console.log(builder.schema);
+
+  const schema = builder.schema;
+
+  // const databaseBuilder = new DatabaseBuilder();
+
+  // const database =
+  //   databaseBuilder.build(
+  //     schema,
+  //     imports
+  //   );
+
+  // console.log(database);
 
   console.log("created chain reg");
 

@@ -1,4 +1,4 @@
 export interface ImportSourceResolver {
-  resolve(source: unknown): unknown;
+  resolveMany(source: unknown): unknown[];
   consumedKeys(): string[];
 }

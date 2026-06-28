@@ -4,11 +4,11 @@ import { type ImportResult } from "./ImportResult.js";
 export interface ImportNode {
 
   accepts(
-        discovery: DiscoveryResult
-    ): boolean;
+    discovery: DiscoveryResult
+  ): boolean;
 
   import(
-      discovery: DiscoveryResult
+    discovery: DiscoveryResult
   ): ImportResult[];
 
 }

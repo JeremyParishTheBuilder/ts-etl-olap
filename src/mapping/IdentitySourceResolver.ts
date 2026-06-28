@@ -1,8 +1,12 @@
 import { type ImportSourceResolver } from "./ImportSourceResolver.js";
 
 export class IdentitySourceResolver implements ImportSourceResolver {
-  resolve(source: unknown): unknown[] {
+  resolveMany(source: unknown): unknown[] {
     return [source];
+  }
+
+  resolveFirst(source: unknown): unknown {
+    return source;
   }
 
   consumedKeys(): string[] {

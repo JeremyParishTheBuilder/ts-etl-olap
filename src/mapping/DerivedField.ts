@@ -1,8 +1,8 @@
-import { type DerivedValueResolver } from "./DerivedValueResolver.js";
+import { type ValueResolver } from "./ValueResolver.js";
 
 export class DerivedField {
   constructor(
     readonly columnName: string,
-    readonly sourceResolver: DerivedValueResolver,
+    readonly sourceResolver: ValueResolver,
   ) {}
 }

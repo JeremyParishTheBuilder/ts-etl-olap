@@ -6,6 +6,7 @@ import { type ImportMapping } from "./ImportMapping.js";
 import { type ImportNode } from "./ImportNode.js";
 import { ImportResult } from "./ImportResult.js";
 import { type FileReader } from "./FileReader.js";
+import { ImportContext } from "./ImportContext.js";
 
 export class FileImportNode implements ImportNode {
   constructor(
@@ -52,8 +53,11 @@ export class FileImportNode implements ImportNode {
       return [];
     }
 
+    const context = new ImportContext(discovery.captures);
+
     return this.importMapping(
       discovery,
+      context,
       this.mapping,
       source
     );
@@ -61,6 +65,7 @@ export class FileImportNode implements ImportNode {
 
   private importMapping(
     discovery: DiscoveryResult,
+    context: ImportContext,
     mapping: ImportMapping,
     source: unknown
   ): ImportResult[] {
@@ -92,38 +97,39 @@ export class FileImportNode implements ImportNode {
     for (const field of mapping.derivedFields) {
       values.set(
         field.columnName,
-        field.sourceResolver(source)
+        field.sourceResolver.resolve(source)
       );
     }
 
     results.push(
       new ImportResult(
         discovery,
+        context.captures,
         mapping.tableName,
         values
       )
     );
 
-    for (const child of mapping.nestedMappings) {
-      const nestedSource = child.sourceResolver.resolve(source);
+    let childContext = context;
 
-      if (Array.isArray(nestedSource)) {
-        for (const item of nestedSource) {
-          results.push(
-            ...this.importMapping(
-              discovery,
-              child,
-              item
-            )
-          );
-        }
-      }
-      else if (nestedSource != null) {
+    for (const capture of mapping.captures) {
+      childContext = childContext.withCapture(
+        capture.columnName,
+        capture.sourceResolver.resolve(source)
+        //capture.sourceResolver.resolveFirst(source)
+      );
+    }
+
+    for (const child of mapping.nestedMappings) {
+      const nestedSources = child.sourceResolver.resolveMany(source);
+
+      for (const nested of nestedSources) {
         results.push(
           ...this.importMapping(
             discovery,
+            childContext,
             child,
-            nestedSource
+            nested
           )
         );
       }

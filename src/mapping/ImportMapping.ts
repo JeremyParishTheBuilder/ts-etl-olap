@@ -7,6 +7,7 @@ export class ImportMapping {
     readonly sourceResolver: ImportSourceResolver,
     readonly prefix = "",
     readonly derivedFields: DerivedField[] = [],
+    readonly captures: DerivedField[] = [],
     readonly nestedMappings: ImportMapping[] = [],
   ) {}
 }

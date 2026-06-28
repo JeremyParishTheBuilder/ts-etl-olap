@@ -5,7 +5,7 @@ export class JsonPathResolver implements ImportSourceResolver {
     private readonly path: string[]
   ) {}
 
-  resolve(source: unknown): unknown[] {
+  resolveMany = (source: unknown): unknown[] => {
     let current: any = source;
 
     for (const part of this.path) {
@@ -16,12 +16,34 @@ export class JsonPathResolver implements ImportSourceResolver {
       current = current[part];
     }
 
-    return current;
+    if (current == null) {
+      return [];
+    }
+
+    if (Array.isArray(current)) {
+      return current;
+    }
+
+    return [current];
+  }
+
+  resolveFirst = (source: unknown): unknown => {
+    const values = this.resolveMany(source);
+
+    return values.length
+      ? values[0]
+      : undefined;
   }
 
   consumedKeys(): string[] {
     return this.path.length > 0
       ? [this.path[0]]
       : [];
+  }
+
+  static parse(path: string): JsonPathResolver {
+    return new JsonPathResolver(
+      path.split(".")
+    );
   }
 }
