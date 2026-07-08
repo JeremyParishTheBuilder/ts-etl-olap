@@ -1,8 +1,6 @@
-import { type ColumnValue } from "../schema/Column.js";
-import { type TableId } from "../schema/Table.js";
+import { type ColumnValue } from "../types/ColumnValue.js";
 
 export type ResolvedUpdate = {
-  //tableId: TableId;
   rowNum: number;
   oldRow: ColumnValue[];
   newRow: ColumnValue[];

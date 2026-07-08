@@ -1,7 +1,8 @@
 import { type Action } from "../actions/Action.js";
 import { InsertRowAction } from "../actions/InsertRowAction.js";
 import { type InsertIntoStatement } from "../statements/index.js";
-import { type ColumnId, type Column, type ColumnValue } from "../schema/Column.js";
+import { type ColumnId, type Column } from "../schema/Column.js";
+import { type ColumnValue } from "../types/ColumnValue.js";
 import { getOrderedColumns, resolveUniqueColumnList } from "./resolveColumnList.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { ExplicitInput } from "../types/ExplicitInput.js";

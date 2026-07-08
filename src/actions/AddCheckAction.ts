@@ -1,6 +1,5 @@
 import { type Action } from "./Action.js";
 import { type Databases } from "../schema/Databases.js";
-import { Check } from "../schema/Check.js";
 import { type CheckSpec } from "../schema/Constraint.js";
 
 export class AddCheckAction implements Action {

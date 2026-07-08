@@ -1,5 +1,5 @@
 import { InputBatch } from "./InputBatch.js";
-import { type ColumnValue, type InlineColumnSpec } from "../schema/Column.js";
+import { type InlineColumnSpec } from "../schema/Column.js";
 import { type ConstraintSpec } from "../schema/Constraint.js";
 import { type Statement } from "../statements/Statement.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
@@ -74,7 +74,7 @@ export class PostgresInputBatch extends InputBatch {
     return super.insertInto(table, columns);
   }
 
-  values(data: ColumnValue[][]) {
+  values(data: any[][]) {
     return super.values(data);
   }
 

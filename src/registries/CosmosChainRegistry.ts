@@ -1,7 +1,7 @@
-import FsStructureEntry from '../mapping/FsStructureEntry.js';
-import { Directory } from '../mapping/Directory.js';
-import { File } from '../mapping/File.js';
-import Pointer from '../mapping/Pointer.js';
+import FsStructureEntry from '../mapping/oldTypes/FsStructureEntry.js';
+import { Directory } from '../mapping/discovery/Directory.js';
+import { File } from '../mapping/discovery/File.js';
+import Pointer from '../mapping/oldTypes/Pointer.js';
 import { EngineRegistry } from '../engine/EngineRegistry.js';
 import { Dialect } from "../dialect/Dialect.js";
 import { type PostgresInputBatch } from '../input/PostgresInputBatch.js';
@@ -271,21 +271,21 @@ sql.
   insertInto("ConceptStructure", ["id", "parentId"]).
   values([["Asset", "Chain"]]);
 
-sql.createTable("StorageBinding", {
-  id: { type: String, nullable: false, primaryKey: true },
-  parentId: { type: String }, // FK -> StorageBinding
-  structureId: { type: String }, // FK -> ConceptStructure
-  storageType: { type: String, enumValues: ["Fs.Directory", "Fs.File", "Json", "Db.Table"] },
-  name: { type: "function" },
-  keys: { type: "function" }, // or types
-  qualifyFn: { type: "function", defaultValue: "{ f: () => true }"}
-});
+// sql.createTable("StorageBinding", {
+//   id: { type: String, nullable: false, primaryKey: true },
+//   parentId: { type: String }, // FK -> StorageBinding
+//   structureId: { type: String }, // FK -> ConceptStructure
+//   storageType: { type: String, enumValues: ["Fs.Directory", "Fs.File", "Json", "Db.Table"] },
+//   name: { type: "function" },
+//   keys: { type: "function" }, // or types
+//   qualifyFn: { type: "function", defaultValue: "{ f: () => true }"}
+// });
 
-sql.
-  alterTable("StorageBinding").
-    addConstraint("FK_ConceptStructure").
-      foreignKey(["structureId"]).
-       references("ConceptStructure", ["id"]);//.
+// sql.
+//   alterTable("StorageBinding").
+//     addConstraint("FK_ConceptStructure").
+//       foreignKey(["structureId"]).
+//        references("ConceptStructure", ["id"]);//.
     // addConstraint("FK_StorageBindingParent").
     //   foreignKey(["parentId"]).
     //   references("StorageBinding", ["id"]);
@@ -312,9 +312,9 @@ sql.
 //   values([["VersionsFile", "Chain", "Fs.File", { f: () => "versions.json" }]]);
 
 
-sql.
-  insertInto("Structure", ["level", "parentLevel", "dataType"])?.
-  values([["RegistryRoot", "Fs.Directory", "RegistryRoot"]]);
+// sql.
+//   insertInto("Structure", ["level", "parentLevel", "dataType"])?.
+//   values([["RegistryRoot", "Fs.Directory", "RegistryRoot"]]);
 // sql.
 //   insertInto("Structure", ["level", "dataType", "parentLevel", "name"])?.
 //   values([[
@@ -474,9 +474,9 @@ function isChainDirectory(directory: Directory | File): boolean {
 }
 
 
-import RegistryObject from '../mapping/RegistryObject.js';
-import RegistryStructureEntry from '../mapping/RegistryStructureEntry.js';
-import { FsObject} from '../mapping/FsObject.js';
+import RegistryObject from '../mapping/oldTypes/RegistryObject.js';
+import RegistryStructureEntry from '../mapping/oldTypes/RegistryStructureEntry.js';
+import { FsObject} from '../mapping/discovery/FsObject.js';
 import { InputBatch } from '../input/InputBatch.js';
 import { SemanticAnalyzer } from '../semantic/SemanticAnalyzer.js';
 import { Engine } from '../engine/Engine.js';

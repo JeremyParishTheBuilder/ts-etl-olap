@@ -1,5 +1,6 @@
 import { type RowView } from "../../schema/RowView.js";
-import { type ColumnId, type ColumnValue } from "../../schema/Column.js";
+import { type ColumnId } from "../../schema/Column.js";
+import { type ColumnValue } from "../../types/ColumnValue.js";
 import { assertColumnIndexWithinRow } from "../row/assertColumnIndexWithinRow.js";
 import { type ExpressionNode } from "./Expression.js";
 import { ComparisonPredicateNode } from "../predicate/ComparisonPredicate.js";

@@ -1,5 +1,5 @@
 import { type RowView } from "../../schema/RowView.js";
-import { type ColumnValue } from "../../schema/Column.js";
+import { type ColumnValue } from "../../types/ColumnValue.js";
 
 export class LiteralExpressionNode {
   readonly kind = "literal" as const;

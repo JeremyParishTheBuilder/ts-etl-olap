@@ -1,4 +1,5 @@
-import { type Column, type ColumnValue } from "../schema/Column.js";
+import { type Column } from "../schema/Column.js";
+import { type ColumnValue } from "../types/ColumnValue.js";
 
 export interface QueryResult {
   readonly columns: readonly string[];

@@ -1,4 +1,4 @@
-import { type ImportResult } from "../ImportResult.js";
+import { type ImportResult } from "../import/ImportResult.js";
 import { DatabaseSchema } from "./DatabaseSchema.js";
 
 export class SchemaBuilder {
@@ -7,7 +7,7 @@ export class SchemaBuilder {
   observe(
     result: ImportResult
   ): void {
-    const table = this.schema.getOrCreateTable(result.tableName);
+    const table = this.schema.getOrCreateTable(result.mapping.tableName);
 
     for (const [column, value] of result.values) {
       table.observe(column, value);

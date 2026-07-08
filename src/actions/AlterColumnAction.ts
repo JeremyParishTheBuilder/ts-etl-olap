@@ -1,5 +1,5 @@
 import { type Action } from "./Action.js";
-import { type ColumnType } from "../schema/Column.js";
+import { type ColumnType } from "../types/ColumnType.js";
 import { type Databases } from "../schema/Databases.js";
 
 export class AlterColumnAction implements Action {

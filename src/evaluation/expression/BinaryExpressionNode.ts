@@ -1,4 +1,4 @@
-import { type ColumnValue } from "../../schema/Column.js";
+import { type ColumnValue } from "../../types/ColumnValue.js";
 import { ResolvedExpressionNode, type Expression, type ExpressionNode } from "./Expression.js";
 import { type RowView } from "../../schema/RowView.js";
 import { assertIsNumber } from "../utility/assertIsNumber.js";

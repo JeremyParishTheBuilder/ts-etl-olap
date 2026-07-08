@@ -1,11 +1,11 @@
 import {
   type ColumnSpec,
-  type ColumnValue,
-  type ColumnType,
   Column,
   assertTypeIndexable,
   type ColumnId,
 } from "./Column.js";
+import { type ColumnType } from "../types/ColumnType.js";
+import { type ColumnValue } from "../types/ColumnValue.js";
 import { PrimaryKey } from "./PrimaryKey.js";
 import { ForeignKey, type ForeignKeyId } from "./ForeignKey.js";
 import { Check, type CheckId } from "./Check.js";

@@ -1,4 +1,4 @@
-import { type ColumnValue } from "../schema/Column";
+import { type ColumnValue } from "../types/ColumnValue.js";
 
 export type SemanticValue =
   | { kind: "value"; value: ColumnValue }
@@ -6,7 +6,6 @@ export type SemanticValue =
   | { kind: "null" }
   | { kind: "missing" }
   | { kind: "existing" }
-//  | { kind: "generated" }
   | { kind: "expression"; expr: any/*Expression*/ };
 
 export function syntaxToSemanticValue(
@@ -35,27 +34,3 @@ export function toSemanticValues(
 
   return semanticValues;
 }
-
-// export function toSemanticRow(
-//   table: Table,
-//   valueMap: Map<number, ColumnValue>,
-//   keywords: Set<string>,
-// ): SemanticValue[] {
-//   let semanticValues: SemanticValue[] = [];
-
-//   table.columns.forEach(column => {
-//     const kind = valueMap.has(column.id) ? "explicit" : "implicit";
-
-//     const semanticValue = {
-//       kind,
-//     }
-
-//     if (kind === "explicit") {
-//       semanticValue.value = valueMap.get(column.id);
-//     }
-
-//     semanticValues.push(semanticValue);
-//   });
-
-//   return semanticValues;
-// }

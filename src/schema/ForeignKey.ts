@@ -1,5 +1,6 @@
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
-import { type ColumnId, ColumnValue } from "./Column.js";
+import { type ColumnId } from "./Column.js";
+import { type ColumnValue } from "../types/ColumnValue.js";
 import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
 import { type IndexId } from "./Index.js";
 import { ReferentialAction } from "./ReferentialAction.js";

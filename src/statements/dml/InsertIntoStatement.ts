@@ -1,5 +1,5 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import {type ColumnValue } from "../../schema/Column.js"
+import { type ColumnValue } from "../../types/ColumnValue.js";
 
 export interface InsertIntoStatement extends BaseStatement {
   kind: "insert_into",

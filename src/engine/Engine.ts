@@ -38,6 +38,10 @@ export class Engine {
     this.rules = RulesFacade(this.ruleResolver);
   }
 
+  public install(databases: Databases): void {
+    this.databases = databases;
+  }
+
   static create(dialect: Dialect): Engine {
     if (!(dialect in DIALECT_RULES)) {
       throw new Error(`Unsupported dialect: ${dialect}`);

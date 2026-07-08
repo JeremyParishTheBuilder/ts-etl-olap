@@ -10,8 +10,7 @@ export class TableSchema {
     columnName: string,
     value: unknown
   ): void {
-    let column =
-      this.columns.get(columnName);
+    let column = this.columns.get(columnName);
 
     if (!column) {
       column = new ColumnSchema(columnName);

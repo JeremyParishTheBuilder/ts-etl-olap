@@ -1,4 +1,4 @@
-import { ColumnValue } from "../../schema/Column.js";
+import { type ColumnValue } from "../../types/ColumnValue.js";
 
 export function assertComparable(
   left: ColumnValue,

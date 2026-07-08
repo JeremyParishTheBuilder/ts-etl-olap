@@ -1,15 +1,28 @@
+import { type ColumnType, columnTypeFromValue } from "../../types/ColumnType.js";
+import { isColumnValue } from "../../types/ColumnValue.js";
+
 export class ColumnSchema {
   constructor(
     readonly name: string,
-    readonly observedTypes = new Set<string>(),
-    public nullable = false
+    public type: ColumnType = "unknown",
   ) {}
 
-  observe(
-    value: unknown
-  ): void {
-    this.observedTypes.add(
-      typeof value
-    );
+  observe(value: unknown): void {
+     if (!isColumnValue(value)) {
+      return;
+    }
+
+    const observed = columnTypeFromValue(value);
+
+    if (this.type === "unknown") {
+      this.type = observed;
+      return;
+    }
+
+    if (this.type !== observed) {
+      throw new Error(
+        `Column '${this.name}' has inconsistent observed types.`
+      );
+    }
   }
 }

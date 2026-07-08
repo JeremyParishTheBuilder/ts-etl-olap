@@ -1,0 +1,80 @@
+import { Directory } from "./Directory.js";
+import { type DiscoveryContext } from "./DiscoveryContext.js";
+import { type DiscoveryNode } from "./DiscoveryNode.js";
+import { DiscoveryResult } from "./DiscoveryResult.js";
+import { FsObjectMatcher } from "./FsObjectMatcher.js";
+
+export interface CollectionNodeSepc {
+  readonly matcher: FsObjectMatcher,
+  readonly children: readonly DiscoveryNode[],
+  readonly nodeType: string,
+  readonly captureName: string,
+  readonly objectName?: string,
+}
+
+export class CollectionNode implements DiscoveryNode {
+  constructor(readonly spec: CollectionNodeSepc) {}
+
+  discover(
+    context: DiscoveryContext
+  ): DiscoveryResult[] {
+    const current =
+      context.current;
+
+    if (!(current instanceof Directory)) {
+      return [];
+    }
+
+    const results: DiscoveryResult[] = [];
+
+    const contents = current.contents ?? [];
+
+    const objectName = this.spec.objectName ?? this.spec.nodeType;
+
+    for (const child of contents) {
+      if (!(child instanceof Directory)) {
+        continue;
+      }
+
+      if (
+        !this.spec.matcher.matches(child)
+      ) {
+        continue;
+      }
+
+      let childContext = context
+        .withCurrent(child)
+        .withIdentityParts([child.basename]);
+
+      childContext = childContext
+        .withScopeCapture(
+          this.spec.captureName,
+          child.basename
+        );
+
+      results.push(
+        new DiscoveryResult(
+          this.spec.nodeType,
+          childContext.identity,
+          new Map(childContext.scopeCaptures),
+          new Map([
+            [
+              objectName,
+              child
+            ]
+          ])
+        )
+      );
+
+      for (const node of this.spec.children) {
+        results.push(
+          ...node.discover(
+            childContext
+          )
+        );
+      }
+    }
+
+    return results;
+  }
+}

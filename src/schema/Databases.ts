@@ -1,6 +1,5 @@
 import { Immutable } from "../infrastructure/Immutable.js";
 import { Database, type DatabaseId } from "./Database.js";
-import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
 import { NamedObjectStore } from "../infrastructure/NamedObjectStore.js";
 import { IdAllocator } from "../types/IdAllocator.js";
 

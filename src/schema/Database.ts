@@ -1,6 +1,8 @@
 import { Table, type TableId } from './Table.js';
 import { normalizeIdentifier } from '../utils/normalizeIdentifier.js';
-import { type Column, type ColumnId, type ColumnValue, isTypeCompatible } from './Column.js';
+import { type Column, type ColumnId } from './Column.js';
+import { isTypeCompatible } from "../types/ColumnType.js";
+import { type ColumnValue } from "../types/ColumnValue.js";
 import { 
   CompiledForeignKey,
   type ForeignKey,
@@ -12,6 +14,7 @@ import { IdAllocator } from '../types/IdAllocator.js';
 import { NamedObjectStore } from '../infrastructure/NamedObjectStore.js';
 import { type ResolvedUpdate } from '../types/ResolvedUpdate.js';
 import { type ResolvedDelete } from '../types/ResolvedDelete.js';
+import { arraysEqual } from '../utils/arrayHelpers.js';
 
 const MAX_DEPTH = 25;
 
@@ -242,8 +245,6 @@ export class Database extends Immutable {
 
   public addRow(tableName: string, row: ColumnValue[]): Database {
     const table: Table = this.tables.requireByName(tableName);
-    
-    //const normalizedRow = table.normalizeRow(row, "insert");
 
     const updatedTable = table.addRow(row);
 
@@ -1115,15 +1116,15 @@ export class Database extends Immutable {
 
 }
 
-function arraysEqual(a: readonly any[], b: readonly any[]): boolean {
-  if (a.length !== b.length) return false;
+// export function arraysEqual(a: readonly any[], b: readonly any[]): boolean {
+//   if (a.length !== b.length) return false;
 
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
-  }
+//   for (let i = 0; i < a.length; i++) {
+//     if (a[i] !== b[i]) return false;
+//   }
 
-  return true;
-}
+//   return true;
+// }
 
 //used for: addForeignKey
 function assertForeignKeyColumnCompatibility(

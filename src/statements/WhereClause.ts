@@ -1,4 +1,4 @@
-import { type ColumnValue } from "../schema/Column.js";
+import { type ColumnValue } from "../types/ColumnValue.js";
 
 export type ComparisonOperator = "eq" | "ne" | "gt" | "lt" | "gte" | "lte";
 

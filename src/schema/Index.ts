@@ -1,5 +1,7 @@
 import { Predicate } from "../evaluation/predicate/Predicate.js";
-import { type ColumnId, type ColumnType, type ColumnValue } from "./Column.js";
+import { type ColumnId } from "./Column.js";
+import { type ColumnType } from "../types/ColumnType.js";
+import { type ColumnValue } from "../types/ColumnValue.js";
 import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
 import { RowView } from "./RowView.js";
 

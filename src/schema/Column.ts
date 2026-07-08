@@ -1,17 +1,9 @@
-export type ColumnType =
-  | StringConstructor
-  | NumberConstructor
-  | BooleanConstructor
-  | "expression"
-  | "function";
-
-export type PrimitiveColumnValue = string | number | boolean | null;
-export type ColumnValue = PrimitiveColumnValue;
-
 import { Immutable } from "../infrastructure/Immutable.js";
 import { type ReferentialAction } from './ReferentialAction.js';
 import { type ExplicitInput } from '../types/ExplicitInput.js';
 import { type PredicateNode } from "../evaluation/predicate/Predicate.js";
+import { type ColumnValue } from "../types/ColumnValue.js";
+import { type ColumnType, matchesColumnType } from "../types/ColumnType.js";
 
 export type ColumnId = number & { readonly __brand: "ColumnId" };
 
@@ -156,9 +148,6 @@ export class Column extends Immutable {
     return normalizedDatum; 
   }
 
-  //resolveDatum(datum, mode) -> ColumnValue   // produces final value
-  //validateDatum(value) -> void               // asserts correctness
-
   private resolveDefaultOrThrow(mode: "insert" | "update"): ColumnValue {
     if (this.defaultValue !== undefined) return this.defaultValue;
     else if (this.isAutoIncrement() && mode === "insert") {
@@ -169,23 +158,6 @@ export class Column extends Immutable {
       throw new Error(`Cannot resolve default the Column ${this.name}`);
     }
   }
-
-  // public resolveSemanticValue(
-  //   semanticValue: SemanticValue,
-  //   mode: "insert" | "update",
-  // ): ColumnValue {
-  //   switch (semanticValue.kind) {
-  //     case "value":
-  //       return semanticValue.value;
-  //     case "null":
-  //       return null;
-  //     case "default":
-  //       return this.resolveDefaultOrThrow(mode);
-  //     default:
-  //       throw new Error(`Unsupported semantic value kind: ${semanticValue.kind}`);
-  //   }
-  //   throw new Error(`Cannot resolve semantic value: ${JSON.stringify(semanticValue)}`);
-  // }
 
   public resolveInput(
     input: ExplicitInput | undefined,
@@ -198,9 +170,6 @@ export class Column extends Immutable {
     if (typeof input === "symbol") {
       throw new Error("Keyword must be resolved at Table level");
     }
-    // if (typeof input === "symbol") {
-    //   return this.resolveKeyword(input, mode);
-    // }
 
     return input;
   }
@@ -257,29 +226,6 @@ export class Column extends Immutable {
   }
 }
 
-export function isTypeCompatible(type1: ColumnType, type2: ColumnType): boolean {
-  return type1 === type2;
-}
-
-function matchesColumnType(value: any, type: ColumnType): boolean {
-  if (value === null) return true; // nullability handled separately
-
-  switch (type) {
-    case String:
-      return typeof value === "string";
-    case Number:
-      return typeof value === "number" && !Number.isNaN(value);
-    case Boolean:
-      return typeof value === "boolean";
-    case "expression":
-      return typeof value === "object" && value !== null && "kind" in value;
-    case "function":
-      return typeof value === "object" && value !== null && typeof (value as any).fn === "function";
-    default:
-      return false;
-  }
-}
-
 export type ColumnSpec = {
   name: string;
   type: ColumnType;
@@ -315,29 +261,6 @@ export type ColumnShape = Omit<ColumnSpec, 'name'> & {
   };
 }
 
-// export function cloneColumnValue(v: ColumnValue): ColumnValue {
-//   if (v === null) return v;
-
-//   // if (typeof v === "object") {
-//   //   if ("f" in v) return v; // function wrapper reused
-
-//   //   if (isExpression(v)) {
-//   //     return cloneExpression(v);
-//   //   }
-//   // }
-
-//   return v;
-// }
-
-// function isExpression(v: unknown): v is Expression {
-//   return (
-//     typeof v === "object" &&
-//     v !== null &&
-//     "kind" in v &&
-//     typeof (v as any).kind === "string"
-//   );
-// }
-
 //Column Utils
 export function widens(oldType: ColumnType, newType: ColumnType): boolean {
   if (oldType === newType) return true;
@@ -346,9 +269,6 @@ export function widens(oldType: ColumnType, newType: ColumnType): boolean {
   if (oldType === Number && newType === String) return true;
   if (oldType === Boolean && newType === String) return true;
 
-  // special types
-  //if (oldType === "expression" && newType === "function") return true;
-  // etc...
   return false;
 }
 
@@ -358,9 +278,6 @@ export function widenValue(newType: ColumnType, value: ColumnValue): ColumnValue
   if (newType === String) return String(value);
   if (newType === Number) return Number(value);
   if (newType === Boolean) return Boolean(value);
-  
-  // expression/function passthrough
-  //if (newType === "expression" || newType === "function") return value; //TODO
 
   return value; // default, or throw
 }

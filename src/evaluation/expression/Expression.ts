@@ -1,4 +1,4 @@
-import { type ColumnValue } from "../../schema/Column.js";
+import { type ColumnValue } from "../../types/ColumnValue.js";
 import { type RowView } from "../../schema/RowView.js";
 import { type ResolvedBinaryExpressionNode, type BinaryExpressionNode } from "./BinaryExpressionNode.js";
 import { type ResolvedCaseExpressionNode, type CaseExpressionNode } from "./CaseExpression.js";
