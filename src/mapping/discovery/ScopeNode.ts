@@ -1,4 +1,6 @@
-import { type ColumnValue } from "../../types/ColumnValue.js";
+import { type ExpressionBuilder } from "../../dsl/expression/ExpressionBuilder.js";
+//import { type Capture } from "../value/Capture.js";
+import { type CaptureContext } from "../value/CaptureContext.js";
 import { Directory } from "./Directory.js";
 import { type DiscoveryContext } from "./DiscoveryContext.js";
 import { type DiscoveryNode } from "./DiscoveryNode.js";
@@ -12,8 +14,8 @@ export interface ScopeNodeSpec {
   readonly traversalMode: TraversalMode,
   readonly children: readonly DiscoveryNode[],
   readonly nodeType: string,
-  readonly captureName?: string,
-  readonly captureResolver?: (directory: Directory) => ColumnValue,
+  //readonly captures?: readonly Capture<DiscoveryContext>[]
+  readonly captures?: Record<string, ExpressionBuilder<CaptureContext>>,
   readonly objectName?: string,
 }
 
@@ -67,26 +69,24 @@ export class ScopeNode implements DiscoveryNode {
         );
       }
 
-      if (this.spec.captureName) {
-        const value = this.spec.captureResolver
-          ? this.spec.captureResolver(candidate)
-          : candidate.basename;
-
-        candidateContext = candidateContext.withScopeCapture(
-          this.spec.captureName,
-          value
-        );
+      for (const [name, builder] of Object.entries(this.spec.captures?? {})) {
+      //for (const capture of this.spec.captures ?? []) {
+        candidateContext =
+          candidateContext.withScopeCapture(
+            name,
+            builder.evaluate(candidateContext)
+          );
       }
 
       if (
-        this.spec.nodeType &&
-        this.spec.captureName
+        this.spec.nodeType// &&
+        //this.spec.captureName
       ) {
         results.push(
           new DiscoveryResult(
             this.spec.nodeType,
             candidateContext.identity,
-            new Map(candidateContext.scopeCaptures),
+            new Map(candidateContext.captures),
             //this.spec.objectName // here
               //?
               new Map([

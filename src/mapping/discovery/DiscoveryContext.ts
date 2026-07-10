@@ -1,14 +1,15 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { type ImportRowIdentity } from "../import/ImportRowIdentity.js";
+import { type CaptureContext } from "../value/CaptureContext.js";
 import { type FsObject } from "./FsObject.js";
 
-export class DiscoveryContext {
+export class DiscoveryContext implements CaptureContext {
 
   constructor(
     readonly current: FsObject,
-    readonly scopeCaptures:
+    readonly captures:
       ReadonlyMap<string, ColumnValue> = new Map(),
-    readonly identity: ImportRowIdentity, // remove or keep?
+    readonly identity: ImportRowIdentity,
   ) {}
 
   withCurrent(
@@ -16,7 +17,7 @@ export class DiscoveryContext {
   ): DiscoveryContext {
     return new DiscoveryContext(
       current,
-      this.scopeCaptures,
+      this.captures,
       this.identity
     );
   }
@@ -28,7 +29,7 @@ export class DiscoveryContext {
     return new DiscoveryContext(
       this.current,
       new Map([
-        ...this.scopeCaptures,
+        ...this.captures,
         [name, value]
       ]),
       this.identity
@@ -40,7 +41,7 @@ export class DiscoveryContext {
   ): DiscoveryContext {
     return new DiscoveryContext(
       this.current,
-      this.scopeCaptures,
+      this.captures,
       this.identity.append(...parts), 
     );
   }
@@ -52,11 +53,11 @@ export class DiscoveryContext {
 
     for (const name of names) {
       if (
-        this.scopeCaptures.get(name) !== undefined
+        this.captures.get(name) !== undefined
       ) {
         result.set(
           name,
-          this.scopeCaptures.get(name)!
+          this.captures.get(name)!
         );
       }
     }

@@ -7,6 +7,7 @@ import { type RowView } from '../../src/schema/RowView.js';
 import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
 import { freshEngine } from '../engine/freshEngine.js';
 import { CaseExpression } from '../../src/evaluation/expression/CaseExpression.js';
+import { literal } from '../../src/dsl/expression/functions.js';
 
 function createTestSql() {
   return freshEngine().input() as PostgresInputBatch;
@@ -60,7 +61,7 @@ describe('Expression::caseExpression', () => {
 
   it("allows column expressions in CASE ELSE", () => {
     const sql = createTestSql();
-    
+
     const expr = sql.case()
       .when(sql.column("Id").eq(1)).then(10)
       .else(sql.column("Id"));

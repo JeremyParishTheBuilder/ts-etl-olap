@@ -1,20 +1,20 @@
-import { Directory } from "./Directory.js";
-import { File } from "./File.js";
-import { type DiscoveryResult } from "./DiscoveryResult.js";
-import { type FsObjectMatcher } from "./FsObjectMatcher.js";
-import { ImportMapping } from "../import/ImportMapping.js";
-import { type ImportNode } from "../import/ImportNode.js";
-import { ImportResult } from "../import/ImportResult.js";
-import { type FileReader } from "./FileReader.js";
-import { ImportContext } from "../import/ImportContext.js";
+import { Directory } from "../discovery/Directory.js";
+import { File } from "../discovery/File.js";
+import { type DiscoveryResult } from "../discovery/DiscoveryResult.js";
+import { type FsObjectMatcher } from "../discovery/FsObjectMatcher.js";
+import { ImportMapping } from "./ImportMapping.js";
+import { type ImportNode } from "./ImportNode.js";
+import { ImportResult } from "./ImportResult.js";
+import { type FileReader } from "../discovery/FileReader.js";
+import { ImportContext } from "./ImportContext.js";
 import { isColumnValue, type ColumnValue } from "../../types/ColumnValue.js";
 import { type JsonValue } from "../value/JsonValue.js";
 import { type ValueResolverContext } from "../value/ValueResolverContext.js";
-import { type ImportSourceResolver } from "../import/ImportSourceResolver.js";
-import { type ArrayLocation } from "../import/ArrayLocation.js";
+import { type ImportSource } from "./ImportSource.js";
+import { type ArrayLocation } from "./ArrayLocation.js";
 import { arraysEqual } from "../../utils/arrayHelpers.js";
 import { pathToPascalCase, toPascalCase } from "../../utils/format.js";
-import { FileNameMatcher } from "./FileMatcher.js";
+import { FileNameMatcher } from "../discovery/FileMatcher.js";
 
 export interface FileImportNodeSpec {
   readonly acceptsNodeType: string;
@@ -117,17 +117,22 @@ export class FileImportNode implements ImportNode {
       }
     };
 
-    for (const field of mapping.derivedFields) {
+    for (const [name, builder] of Object.entries(mapping.fields ?? {})) {
+    //for (const field of mapping.derivedFields) {
+      // values.set(
+      //   effectivePrefix + field.columnName,
+      //   field.sourceResolver.resolve(resolverContext)
+      // );
       values.set(
-        effectivePrefix + field.columnName,
-        field.sourceResolver.resolve(resolverContext)
+        effectivePrefix + name,
+        builder.evaluate(resolverContext)
       );
     }
 
-    for (const capture of mapping.captures) {
+    for (const [name, builder] of Object.entries(mapping.captures?? {})) {
       childContext = childContext.withCapture(
-        capture.columnName,
-        capture.sourceResolver.resolve(resolverContext)
+        name,
+        builder.evaluate(resolverContext)
       );
     }
 
@@ -333,7 +338,7 @@ export class FileImportNode implements ImportNode {
           continue;
         }
 
-        const inferredResolver: ImportSourceResolver = {
+        const inferredResolver: ImportSource = {
           resolveMany: () => array.values,
           resolveFirst: () => array.values[0] ?? null,
           consumedKeys: () => [],

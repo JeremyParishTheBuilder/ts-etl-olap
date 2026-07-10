@@ -1,11 +1,11 @@
-import { type JsonPathResolver } from "../import/JsonPathResolver.js";
+import { type JsonPath } from "../import/JsonPath.js";
 import { type JsonValue } from "./JsonValue.js";
 import { type ValueResolver } from "./ValueResolver.js";
 import { type ValueResolverContext } from "./ValueResolverContext.js";
 
 export class JsonValueResolver implements ValueResolver<JsonValue> {
   constructor(
-    private readonly path: JsonPathResolver
+    private readonly path: JsonPath
   ) {}
 
   resolve(context: ValueResolverContext): JsonValue {

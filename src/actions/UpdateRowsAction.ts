@@ -13,7 +13,7 @@ export class UpdateRowsAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private expressions: Map<ColumnId, Expression>,
+    private expressions: Map<ColumnId, Expression<RowView>>,
     private predicate?: Predicate,
   ) {}
 

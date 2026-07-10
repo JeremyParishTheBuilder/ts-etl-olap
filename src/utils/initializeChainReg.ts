@@ -20,17 +20,18 @@ import { CollectionNode } from '../mapping/discovery/CollectionNode.js';
 import { ScopeNode } from '../mapping/discovery/ScopeNode.js';
 import { FileNameMatcher } from '../mapping/discovery/FileMatcher.js';
 import { ImportMapping } from '../mapping/import/ImportMapping.js';
-import { DerivedField } from '../mapping/import/DerivedField.js';
-import { FileImportNode } from '../mapping/discovery/FileImportNode.js';
+//import { DerivedField } from '../mapping/value/DerivedField.js';
+import { FileImportNode } from '../mapping/import/FileImportNode.js';
 import { type ImportNode } from '../mapping/import/ImportNode.js';
 import { JsonFileReader } from '../mapping/discovery/JsonFileReader.js';
-import { IdentitySourceResolver } from '../mapping/import/IdentitySourceResolver.js';
+import { IdentitySource } from '../mapping/import/IdentitySource.js';
 import { LambdaValueResolver } from '../mapping/value/LambdaValueResolver.js';
-import { PrimitiveJsonValueResolver } from '../mapping/value/PrimitiveJsonValueResolver.js';
-import { JsonPathResolver } from '../mapping/import/JsonPathResolver.js';
+import { JsonPath } from '../mapping/import/JsonPath.js';
 import { ImportPipeline } from '../mapping/pipeline/ImportPipeline.js';
 import { DiscoveryImportNode } from '../mapping/import/DiscoveryImportNode.js';
-import { CaptureField } from '../mapping/utils/helpers.js';
+//import { CaptureField } from '../mapping/utils/helpers.js';
+import { capture, concat, directoryName, json, literal } from '../dsl/expression/functions.js';
+//import { Capture } from '../mapping/value/Capture.js';
 
 const CCR1_PATH: string = '../chain-registry';
 
@@ -44,12 +45,17 @@ export const getChainRegContents = () => {
 
   const chainDirectoryImportMapping = new ImportMapping({
     tableName: "Chains",
-    sourceResolver: new IdentitySourceResolver(),
-    derivedFields: [
-      CaptureField("chainDirectoryName"),
-      CaptureField("networkKind"),
-      CaptureField("networkType")
-    ]
+    sourceResolver: new IdentitySource(),
+    fields: {
+      chainDirectoryName: capture("chainDirectoryName"),
+      networkKind: capture("networkKind"),
+      networkType: capture("networkType")
+    }
+    // derivedFields: [
+    //   CaptureField("chainDirectoryName"),
+    //   CaptureField("networkKind"),
+    //   CaptureField("networkType")
+    // ]
   });
 
   const chainDirectoryImporter = new DiscoveryImportNode({
@@ -59,19 +65,12 @@ export const getChainRegContents = () => {
 
   const chainCollection = 
     new CollectionNode({
-      matcher: new DirectoryContentIncludesMatcher("chain.json"),
+      matcher: new DirectoryContentIncludesMatcher("chain.json"), //directoryContents().contains("chain.json")
       children: [],
       nodeType: "chainDirectory",
-      captureName: "chainDirectoryName",
-      // captures: [
-      //   new Capture({
-      //     name: "chainDirecotryName",
-      //     resolver: directoryName()
-      //   })
-      // ],
-      // captures: {
-      //   chainDirectoryName: directoryName(),
-      // }
+      captures: {
+        "chainDirectoryName": directoryName()
+      }
   });
 
   const cosmosScope =
@@ -82,8 +81,15 @@ export const getChainRegContents = () => {
         chainCollection
       ],
       nodeType: "networkType",
-      captureName: "networkType",
-      captureResolver: () => "Cosmos",
+      captures: {
+        networkType: literal("Cosmos")
+      }
+      // captures: [
+      //   new Capture(
+      //     "networkType",
+      //     literal("Cosmos")
+      //   )
+      // ]
     });
 
   const nonCosmosScope =
@@ -94,8 +100,15 @@ export const getChainRegContents = () => {
         chainCollection
       ],
       nodeType: "networkType",
-      captureName: "networkType",
-      captureResolver: () => "Non-cosmos",
+      captures: {
+        networkType: literal("Non-cosmos")
+      }
+      // captures: [
+      //   new Capture(
+      //     "networkType",
+      //     literal("Non-cosmos")
+      //   )
+      // ]
     });
 
   const mainnetScope =
@@ -107,21 +120,29 @@ export const getChainRegContents = () => {
         nonCosmosScope,
       ],
       nodeType: "networkKind",
-      captureName: "networkKind",
-      captureResolver: () => "Mainnet",
+      captures: {
+        networkKind: literal("Mainnet")
+      }
     });
 
   const testnetScope =
     new ScopeNode({
-      matcher: new DirectoryNameMatcher("testnets"),
+      matcher: new DirectoryNameMatcher("testnets"), // directoryName().eq("testnets")
       traversalMode: TraversalMode.Children,
       children: [
         cosmosScope,
         nonCosmosScope,
       ],
       nodeType: "networkKind",
-      captureName: "networkKind",
-      captureResolver: () => "Testnet",
+      captures: {
+        networkKind: literal("Testnet")
+      }
+      // captures: [
+      //   new Capture(
+      //     "networkKind",
+      //     literal("Testnet")
+      //   )
+      // ]
     });
 
   const registry =
@@ -140,50 +161,54 @@ export const getChainRegContents = () => {
   const feeTokenImportMapping = 
     new ImportMapping({
       tableName: "FeeTokens",
-      sourceResolver: JsonPathResolver.parse("fees.fee_tokens"),
+      sourceResolver: JsonPath.parse("fees.fee_tokens"),
     });
 
   const stakingTokenImportMapping = 
     new ImportMapping({
       tableName: "StakingTokens",
-      sourceResolver: JsonPathResolver.parse("staking.staking_tokens"),
+      sourceResolver: JsonPath.parse("staking.staking_tokens"),
   });
     
   const logoUrisImportMapping = 
     new ImportMapping({
-      sourceResolver: JsonPathResolver.parse("logo_URIs"),
-      derivedFields: [
-        CaptureField("owner")
-      ],
+      sourceResolver: JsonPath.parse("logo_URIs"),
+      fields: {
+        owner: capture("owner")
+      }
+      // derivedFields: [
+      //   CaptureField("owner")
+      // ],
     });
 
-    const imagesImportMapping = 
-      new ImportMapping({
-        sourceResolver: JsonPathResolver.parse("images"),
-        derivedFields: [
-          CaptureField("owner")
-        ],
-      });
+  const imagesImportMapping = 
+    new ImportMapping({
+      sourceResolver: JsonPath.parse("images"),
+      // derivedFields: [
+      //   CaptureField("owner")
+      // ],
+      fields: {
+        owner: capture("owner")
+      }
+    });
 
   const chainFileImportMapping = new ImportMapping({
     tableName: "Chains",
-    sourceResolver: new IdentitySourceResolver(),
-    derivedFields: [
-      new DerivedField(
-        "displayName", // would show up as column name: ChainJson.displayName 
-        new LambdaValueResolver(ctx =>
-          `${(ctx.source as any).pretty_name} (${(ctx.source as any).chain_id})`
+    sourceResolver: new IdentitySource(),
+    fields: {
+      displayName: concat(
+          json("pretty_name"),
+          literal(" ("),
+          json("chain_id"),
+          literal(")")
         )
-      )
-    ],
-    captures: [
-      new DerivedField(
-        "owner",
-        new LambdaValueResolver(ctx =>
-          `Chain:${ctx.capture("chainDirectoryName")}`
+    },
+    captures: {
+      owner: concat(
+          literal("Chain:"),
+          capture("chainDirectoryName")
         )
-      )
-    ],
+    },
     nestedMappings: [
       feeTokenImportMapping,
       stakingTokenImportMapping,
@@ -191,6 +216,27 @@ export const getChainRegContents = () => {
       imagesImportMapping
     ]
   });
+
+  // derivedFields: [
+    //   new DerivedField(
+    //     "displayName",
+    //     concat(
+    //       json("pretty_name"),
+    //       literal(" ("),
+    //       json("chain_id"),
+    //       literal(")")
+    //     )
+    //   )
+    // ],
+    // captures: [
+    //   new Capture(
+    //     "owner",
+    //     concat(
+    //       literal("Chain:"),
+    //       capture("chainDirectoryName")
+    //     )
+    //   )
+    // ],
 
   const chainFileImporter =
     new FileImportNode({
@@ -204,36 +250,58 @@ export const getChainRegContents = () => {
   const assetsImportMapping = 
     new ImportMapping({
       tableName: "Assets",
-      sourceResolver: JsonPathResolver.parse("assets"),
-      captures: [
-        new DerivedField(
-          "owner",
-          new LambdaValueResolver(ctx =>
-            `Asset:${
-              ctx.capture("chainDirectoryName")
-            }:${
-              new PrimitiveJsonValueResolver(
-                JsonPathResolver.parse("base")
-              ).resolve(ctx)
-            }`
-          )
-        ),
-        new DerivedField(
-          "assetBase",
-          new PrimitiveJsonValueResolver(
-            JsonPathResolver.parse("base")
-          )
-        )
-      ],
+      sourceResolver: JsonPath.parse("assets"),
+      captures: {
+        owner: concat(
+            literal("Asset:"),
+            capture("chainDirectoryName"),
+            literal(":"),
+            json("base")
+          ),
+        assetBase: json("base")
+      },
+      // captures: [
+      //   new Capture(
+      //     "owner",
+      //     concat(
+      //       literal("Asset:"),
+      //       capture("chainDirectoryName"),
+      //       literal(":"),
+      //       json("base")
+      //     )
+      //   ),
+      //   new Capture(
+      //     "assetBase",
+      //     json("base")
+      //   )
+      // ],
       nestedMappings: [
         logoUrisImportMapping,
         imagesImportMapping
       ],
     });
 
+    // new DerivedField(
+        //   "owner",
+        //   new LambdaValueResolver(ctx =>
+        //     `
+        //     ${literal("Asset:")}
+        //     ${capture("chainDirectoryName")}
+        //     ${literal(":")}
+        //     ${json("base")}
+        //     `
+        //     //`Asset:
+        //     //${ctx.capture("chainDirectoryName")}
+        //       // new PrimitiveJsonValueResolver(
+        //       //   JsonPathResolver.parse("base")
+        //       // ).resolve(ctx)
+        //     //}`
+        //   )
+        //),
+
   const assetlistFileImportMapping = new ImportMapping({
     tableName: "Chains",
-    sourceResolver: new IdentitySourceResolver(),
+    sourceResolver: new IdentitySource(),
     nestedMappings: [
       assetsImportMapping,
     ]

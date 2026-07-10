@@ -1,6 +1,6 @@
 import { type JsonValue } from "../value/JsonValue.js";
 
-export interface ImportSourceResolver {
+export interface ImportSource {
   resolveMany(source: JsonValue): readonly JsonValue[];
   resolveFirst(source: JsonValue): JsonValue;
   consumedKeys(): string[];

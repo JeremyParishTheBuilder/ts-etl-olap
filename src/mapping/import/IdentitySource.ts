@@ -1,7 +1,7 @@
 import { type JsonValue } from "../value/JsonValue.js";
-import { type ImportSourceResolver } from "./ImportSourceResolver.js";
+import { type ImportSource } from "./ImportSource.js";
 
-export class IdentitySourceResolver implements ImportSourceResolver {
+export class IdentitySource implements ImportSource {
   resolveMany(source: JsonValue): JsonValue[] {
     return [source];
   }

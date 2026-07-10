@@ -1,7 +1,7 @@
 import {
   BinaryExpression,
   ResolvedBinaryExpressionNode
-} from "../evaluation/expression/BinaryExpressionNode.js";
+} from "../evaluation/expression/BinaryExpression.js";
 import {
   CaseExpression,
   ResolvedCaseExpressionNode
@@ -16,13 +16,14 @@ import {
   type ResolvedExpressionNode
 } from "../evaluation/expression/Expression.js";
 import { LiteralExpression } from "../evaluation/expression/LiteralExpression.js";
+import { type RowView } from "../schema/RowView.js";
 import { type Table } from "../schema/Table.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
 
 export function bindExpression(
   expr: ResolvedExpressionNode,
   table: Table
-): Expression {
+): Expression<RowView> {
   switch (expr.kind) {
     case "literal":
       return new LiteralExpression(expr.value);

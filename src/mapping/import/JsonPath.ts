@@ -1,8 +1,7 @@
-import { toPascalCase } from "../../utils/format.js";
 import { type JsonValue } from "../value/JsonValue.js";
-import { type ImportSourceResolver } from "./ImportSourceResolver.js";
+import { type ImportSource } from "./ImportSource.js";
 
-export class JsonPathResolver implements ImportSourceResolver {
+export class JsonPath implements ImportSource {
   constructor(
     public readonly path: readonly string[]
   ) {}
@@ -43,8 +42,8 @@ export class JsonPathResolver implements ImportSourceResolver {
       : [];
   }
 
-  static parse(path: string): JsonPathResolver {
-    return new JsonPathResolver(
+  static parse(path: string): JsonPath {
+    return new JsonPath(
       path.split(".")
     );
   }

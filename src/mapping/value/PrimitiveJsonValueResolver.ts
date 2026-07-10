@@ -1,11 +1,11 @@
 import { type ColumnValue, isColumnValue } from "../../types/ColumnValue.js";
 import { type ValueResolverContext } from "./ValueResolverContext.js";
-import { type JsonPathResolver } from "../import/JsonPathResolver.js";
+import { type JsonPath } from "../import/JsonPath.js";
 import { type ValueResolver } from "./ValueResolver.js";
 
 export class PrimitiveJsonValueResolver implements ValueResolver<ColumnValue> {
   constructor(
-    private readonly path: JsonPathResolver
+    private readonly path: JsonPath
   ) {}
 
   resolve(context: ValueResolverContext): ColumnValue {

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
 import { freshEngine } from '../engine/freshEngine.js';
-import { ReferentialAction } from '../../src/schema/ReferentialAction.js';
 import { CONSTRAINT_KIND } from '../../src/schema/ConstraintKind.js';
+import { column } from '../../src/dsl/expression/functions.js';
 
 function createTestSql() {
   return freshEngine().input() as PostgresInputBatch;
@@ -36,7 +36,7 @@ describe("Integration::delete", () => {
     sql
       .deleteFrom("Users")
       .where(
-        sql.column("Id").eq(1)
+        column("Id").eq(1)
       )
       .execute();
 

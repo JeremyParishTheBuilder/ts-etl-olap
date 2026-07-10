@@ -8,10 +8,11 @@ import {
 import {
   type ResolvedExpressionNode,
   type Expression,
-  type ExpressionNode
+  ExpressionNode,
+  ExpressionNodeBase
 } from "./Expression.js";
 
-export class CaseExpressionNode {
+export class CaseExpressionNode extends ExpressionNodeBase {
   readonly kind = "case" as const;
 
   constructor(
@@ -20,7 +21,9 @@ export class CaseExpressionNode {
       then: ExpressionNode;
     }>,
     public readonly elseExpr?: ExpressionNode,
-  ) {}
+  ) {
+    super();
+  }
 }
 
 export class ResolvedCaseExpressionNode {
@@ -35,19 +38,22 @@ export class ResolvedCaseExpressionNode {
   ) {}
 }
 
-export class CaseExpression {
+export class CaseExpression<TContext> implements Expression<TContext> {
   public constructor(
-    public readonly branches: Array<{when: Predicate, then: Expression}>,
-    public readonly elseExpr?: Expression,
+    public readonly branches: Array<{
+      when: Predicate<TContext>,
+      then: Expression<TContext>
+    }>,
+    public readonly elseExpr?: Expression<TContext>,
   ) {}
 
-  evaluate(row: RowView): ColumnValue {
+  evaluate(context: TContext): ColumnValue {
     for (const branch of this.branches) {
-      if (branch.when.evaluate(row)) {
-        return branch.then.evaluate(row);
+      if (branch.when.evaluate(context)) {
+        return branch.then.evaluate(context);
       }
     }
 
-    return this.elseExpr?.evaluate(row) ?? null;
+    return this.elseExpr?.evaluate(context) ?? null;
   }
 }

@@ -1,9 +1,13 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
-import { ResolvedExpressionNode, type Expression, type ExpressionNode } from "./Expression.js";
-import { type RowView } from "../../schema/RowView.js";
+import {
+  ResolvedExpressionNode,
+  type Expression,
+  ExpressionNode,
+  ExpressionNodeBase
+} from "./Expression.js";
 import { assertIsNumber } from "../utility/assertIsNumber.js";
 
-export class BinaryExpressionNode {
+export class BinaryExpressionNode extends ExpressionNodeBase {
   readonly kind = "binary" as const;
 
   constructor(
@@ -15,7 +19,9 @@ export class BinaryExpressionNode {
       | "divide"
       | "mod",
     public readonly right: ExpressionNode,
-  ) {}
+  ) {
+    super();
+  }
 }
 
 export class ResolvedBinaryExpressionNode {
@@ -33,21 +39,21 @@ export class ResolvedBinaryExpressionNode {
   ) {}
 }
 
-export class BinaryExpression {
+export class BinaryExpression<TContext> implements Expression<TContext> {
   constructor(
-    public readonly left: Expression,
+    public readonly left: Expression<TContext>,
     public readonly operator:
       | "add"
       | "subtract"
       | "multiply"
       | "divide"
       | "mod",
-    public readonly right: Expression,
+    public readonly right: Expression<TContext>,
   ) {}
 
-  evaluate(row: RowView): ColumnValue {
-    const leftResult = this.left.evaluate(row);
-    const rightResult = this.right.evaluate(row);
+  evaluate(context: TContext): ColumnValue {
+    const leftResult = this.left.evaluate(context);
+    const rightResult = this.right.evaluate(context);
 
     if (leftResult === null || rightResult === null) {
       return false;

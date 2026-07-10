@@ -10,8 +10,14 @@ import {
   type NotPredicateNode
 } from "./LogicalPredicate.js";
 
-export interface Predicate {
-  evaluate(row: RowView): boolean;
+// export interface Predicate {
+//   evaluate(row: RowView): boolean;
+// }
+
+export interface Predicate<
+  TContext = RowView
+> {
+  evaluate(context: TContext): boolean;
 }
 
 export type ResolvedPredicateNode =

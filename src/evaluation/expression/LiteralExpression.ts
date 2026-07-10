@@ -1,20 +1,23 @@
-import { type RowView } from "../../schema/RowView.js";
 import { type ColumnValue } from "../../types/ColumnValue.js";
+import { type Expression, ExpressionNodeBase } from "./Expression.js";
 
-export class LiteralExpressionNode {
+export class LiteralExpressionNode extends ExpressionNodeBase {
   readonly kind = "literal" as const;
 
   constructor(
     public readonly value: ColumnValue
-  ) {}
+  ) {
+    super();
+  }
 }
 
-export class LiteralExpression {
+export class LiteralExpression<TContext, TValue>
+  implements Expression<TContext, TValue> {
   constructor(
-    public value: ColumnValue
+    public value: TValue
   ) {}
 
-  evaluate(row: RowView): ColumnValue {
+  evaluate(context: TContext): TValue {
     return this.value;
   }
 }

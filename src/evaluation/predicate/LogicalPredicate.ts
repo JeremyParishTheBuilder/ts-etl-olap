@@ -25,21 +25,23 @@ export class ResolvedBinaryLogicalPredicateNode {
   ) {}
 }
 
-export class BinaryLogicalPredicate implements Predicate {
+export class BinaryLogicalPredicate<TContext>
+  implements Predicate<TContext> {
+
   constructor(
-    public left: Predicate,
-    public right: Predicate,
+    public left: Predicate<TContext>,
+    public right: Predicate<TContext>,
     public operator: "and" | "or" | "xor"
   ) {}
 
-  evaluate(row: RowView): boolean {
+  evaluate(context: TContext): boolean {
     switch (this.operator) {
       case "and":
-        return this.left.evaluate(row) && this.right.evaluate(row);
+        return this.left.evaluate(context) && this.right.evaluate(context);
       case "or":
-        return this.left.evaluate(row) || this.right.evaluate(row);
+        return this.left.evaluate(context) || this.right.evaluate(context);
       case "xor":
-        return this.left.evaluate(row) !== this.right.evaluate(row);
+        return this.left.evaluate(context) !== this.right.evaluate(context);
       default:
         throw new Error(`Invalid logical operator`);
     }
@@ -58,10 +60,12 @@ export class ResolvedNotPredicateNode {
   constructor(public inner: ResolvedPredicateNode) {}
 }
 
-export class NotPredicate implements Predicate {
-  constructor(public inner: Predicate) {}
+export class NotPredicate<TContext>
+  implements Predicate<TContext> {
 
-  evaluate(row: RowView): boolean {
-    return !this.inner.evaluate(row);
+  constructor(public inner: Predicate<TContext>) {}
+
+  evaluate(context: TContext): boolean {
+    return !this.inner.evaluate(context);
   }
 }

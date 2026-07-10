@@ -46,10 +46,12 @@ export class DiscoveryImportNode implements ImportNode {
 
     const prefix = this.spec.mapping.prefix ?? this.inferredPrefix();
 
-    for (const field of this.spec.mapping.derivedFields) {
+    for (const [name, builder] of Object.entries(this.spec.mapping.fields?? {})) {
+    //for (const field of this.spec.mapping.derivedFields) {
       values.set(
-        prefix + field.columnName,
-        field.sourceResolver.resolve(resolverContext)
+        prefix + name,
+        builder.evaluate(resolverContext)
+        //field.sourceResolver.resolve(resolverContext)
       );
     }
 

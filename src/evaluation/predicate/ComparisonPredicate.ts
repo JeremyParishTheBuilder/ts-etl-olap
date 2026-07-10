@@ -28,16 +28,18 @@ export class ResolvedComparisonPredicateNode {
   ) {}
 }
 
-export class ComparisonPredicate implements Predicate {
+export class ComparisonPredicate<TContext>
+  implements Predicate<TContext> {
+
   constructor(
-    public left: Expression,
+    public left: Expression<TContext>,
     public operator: ComparisonOperator,
-    public right: Expression,
+    public right: Expression<TContext>,
   ) {}
 
-  evaluate(row: RowView): boolean {
-    const leftResult = this.left.evaluate(row);
-    const rightResult = this.right.evaluate(row);
+  evaluate(context: TContext): boolean {
+    const leftResult = this.left.evaluate(context);
+    const rightResult = this.right.evaluate(context);
 
     if (leftResult === null || rightResult === null) {
       return false;

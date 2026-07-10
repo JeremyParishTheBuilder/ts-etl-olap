@@ -889,7 +889,7 @@ export class Table extends Immutable {
   }
 
   public resolveUpdateExpressions(
-    expressions: Map<ColumnId, Expression>,
+    expressions: Map<ColumnId, Expression<RowView>>,
     rowNum: number
   ): ResolvedUpdate {
     const rowView = this.requireRowView(rowNum);

@@ -6,6 +6,7 @@ import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { bindExpression, resolveExpression } from "./expression.js";
 import { type Expression } from "../evaluation/expression/Expression.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
+import { type RowView } from "../schema/RowView.js";
 
 export function bindUpdateSet(
   semantic: SemanticAnalyzer,
@@ -19,7 +20,7 @@ export function bindUpdateSet(
   const tableName: string = stmt.table;
   const table = database.tables.requireByName(tableName);
 
-  const updateMap = new Map<ColumnId, Expression>();
+  const updateMap = new Map<ColumnId, Expression<RowView>>();
 
   for (const columnName in stmt.values) {
     const value = stmt.values[columnName];

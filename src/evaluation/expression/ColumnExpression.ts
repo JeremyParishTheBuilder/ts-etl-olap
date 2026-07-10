@@ -2,10 +2,10 @@ import { type RowView } from "../../schema/RowView.js";
 import { type ColumnId } from "../../schema/Column.js";
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { assertColumnIndexWithinRow } from "../row/assertColumnIndexWithinRow.js";
-import { type ExpressionNode } from "./Expression.js";
-import { ComparisonPredicateNode } from "../predicate/ComparisonPredicate.js";
+import { type ExpressionNode, ExpressionNodeBase } from "./Expression.js";
 import { asExpressionNode } from "../../dsl/expression/asExpressionNode.js";
-import { BinaryExpressionNode } from "./BinaryExpressionNode.js";
+import { ComparisonPredicateNode } from "../predicate/ComparisonPredicate.js";
+import { BinaryExpressionNode } from "./BinaryExpression.js";
 
 export class ColumnExpression {
   constructor(
@@ -27,12 +27,14 @@ export class ResolvedColumnExpressionNode {
   ) {}
 }
 
-export class ColumnExpressionNode {
+export class ColumnExpressionNode extends ExpressionNodeBase {
   readonly kind = "column" as const;
 
   constructor(
     public columnName: string,
-  ) {}
+  ) {
+    super();
+  }
 
   // -- Predicates --
   

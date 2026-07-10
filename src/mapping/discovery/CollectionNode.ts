@@ -1,3 +1,6 @@
+import { type ExpressionBuilder } from "../../dsl/expression/ExpressionBuilder.js";
+//import { Capture } from "../value/Capture.js";
+import { type CaptureContext } from "../value/CaptureContext.js";
 import { Directory } from "./Directory.js";
 import { type DiscoveryContext } from "./DiscoveryContext.js";
 import { type DiscoveryNode } from "./DiscoveryNode.js";
@@ -8,9 +11,12 @@ export interface CollectionNodeSepc {
   readonly matcher: FsObjectMatcher,
   readonly children: readonly DiscoveryNode[],
   readonly nodeType: string,
-  readonly captureName: string,
+  //readonly captures?: readonly Capture<DiscoveryContext>[]
+  readonly captures?: Record<string, ExpressionBuilder<CaptureContext>>,
   readonly objectName?: string,
 }
+
+//for (const [name, builder] of Object.entries(mapping.captures?? {})) {
 
 export class CollectionNode implements DiscoveryNode {
   constructor(readonly spec: CollectionNodeSepc) {}
@@ -46,17 +52,25 @@ export class CollectionNode implements DiscoveryNode {
         .withCurrent(child)
         .withIdentityParts([child.basename]);
 
-      childContext = childContext
-        .withScopeCapture(
-          this.spec.captureName,
-          child.basename
-        );
+      for (const [name, builder] of Object.entries(this.spec.captures?? {})) {
+        childContext =
+          childContext.withScopeCapture(
+            name,
+            builder.evaluate(childContext)
+          );
+      }
+
+      // childContext = childContext
+      //   .withScopeCapture(
+      //     this.spec.captureName,
+      //     child.basename
+      //   );
 
       results.push(
         new DiscoveryResult(
           this.spec.nodeType,
           childContext.identity,
-          new Map(childContext.scopeCaptures),
+          new Map(childContext.captures),
           new Map([
             [
               objectName,
