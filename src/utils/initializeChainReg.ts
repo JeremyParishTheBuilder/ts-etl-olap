@@ -22,8 +22,7 @@ import { JsonPath } from '../mapping/import/JsonPath.js';
 import { ImportPipeline } from '../mapping/pipeline/ImportPipeline.js';
 import { DiscoveryImportNode } from '../mapping/import/DiscoveryImportNode.js';
 import { basename, capture, concat, directoryName, json, literal } from '../dsl/expression/functions.js';
-import { every, some, isDirectory, isFile } from '../dsl/predicate/functions.js';
-import { contains } from '../dsl/matcher/functions.js';
+import { every, some, isDirectory, isFile, contains } from '../dsl/predicate/functions.js';
 
 const CCR1_PATH: string = '../chain-registry';
 
@@ -147,14 +146,17 @@ export const getChainRegContents = () => {
     
   const logoUrisImportMapping = 
     new ImportMapping({
+      tableName: "Images",
       sourceResolver: JsonPath.parse("logo_URIs"),
       fields: {
-        owner: capture("owner")
+        owner: capture("owner"),
+        type: literal("logo")
       }
     });
 
   const imagesImportMapping = 
     new ImportMapping({
+      tableName: "Images",
       sourceResolver: JsonPath.parse("images"),
       fields: {
         owner: capture("owner")
@@ -262,6 +264,11 @@ export const getChainRegContents = () => {
         console.log(column.name);
       }
     }
+    if (table.name === "Images") {
+      for (const column of table.columns.values()) {
+        console.log(column.name);
+      }
+    }
   }
 
 
@@ -271,9 +278,9 @@ export const getChainRegContents = () => {
   console.log(chainResult);
 
 
-  const logoURIsResult = sql.select("*").from("LogoURIs").execute()[0];
-  console.log("logoURIsResult");
-  console.log(logoURIsResult);
+  // const logoURIsResult = sql.select("*").from("LogoURIs").execute()[0];
+  // console.log("logoURIsResult");
+  // console.log(logoURIsResult);
 
   const imagesResult = sql.select("*").from("Images").execute()[0];
   console.log("imagesResult");

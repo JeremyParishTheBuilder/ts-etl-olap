@@ -1,7 +1,6 @@
 import { Directory } from "../discovery/Directory.js";
 import { File } from "../discovery/File.js";
 import { type DiscoveryResult } from "../discovery/DiscoveryResult.js";
-import { type FsObjectMatcher } from "../matcher/FsObjectMatcher.js";
 import { ImportMapping } from "./ImportMapping.js";
 import { type ImportNode } from "./ImportNode.js";
 import { ImportResult } from "./ImportResult.js";
@@ -15,12 +14,11 @@ import { type ArrayLocation } from "./ArrayLocation.js";
 import { arraysEqual } from "../../utils/arrayHelpers.js";
 import { pathToPascalCase, toPascalCase } from "../../utils/format.js";
 import { PredicateBuilder } from "../../dsl/predicate/PredicateBuilder.js";
-import { asMatcher } from "../matcher/PredicateMatcher.js";
 import { FsObject } from "../discovery/FsObject.js";
 
 export interface FileImportNodeSpec {
   readonly acceptsNodeType: string;
-  readonly matcher: FsObjectMatcher | PredicateBuilder<FsObject>;
+  readonly matcher: PredicateBuilder<FsObject>;
   readonly reader: FileReader<JsonValue>;
   readonly mapping: ImportMapping;
   readonly directoryObjectName: string;
@@ -48,13 +46,11 @@ export class FileImportNode implements ImportNode {
       return [];
     }
 
-    const matcher = asMatcher(this.spec.matcher);
-
     const file =
       directory.contents?.find(
         obj =>
           obj instanceof File &&
-          matcher.matches(obj)
+          this.spec.matcher.evaluate(obj)
       );
 
     if (!(file instanceof File)) {

@@ -1,6 +1,7 @@
+import { type ComparisonOperator } from "../semantic/ast/predicate/ComparisonPredicateNode.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 
-export type ComparisonOperator = "eq" | "ne" | "gt" | "lt" | "gte" | "lte";
+// export type ComparisonOperator = "eq" | "ne" | "gt" | "lt" | "gte" | "lte";
 
 export type WhereClause =
   | {

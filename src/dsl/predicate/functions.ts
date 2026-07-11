@@ -1,4 +1,5 @@
 import { AndPredicate } from "../../evaluation/predicate/AndPredicate.js";
+import { ContainsPredicate } from "../../evaluation/predicate/ContainsPredicate.js";
 import { IsDirectoryPredicate } from "../../evaluation/predicate/IsDirectoryPredicate.js";
 import { IsFilePredicate } from "../../evaluation/predicate/IsFilePredicate.js";
 import { NotPredicate } from "../../evaluation/predicate/NotPredicate.js";
@@ -62,5 +63,13 @@ export function isDirectory() {
 export function isFile() {
   return new PredicateBuilder<FsObject>(
     new IsFilePredicate()
+  );
+}
+
+export function contains(
+  predicate: PredicateBuilder<FsObject>
+) {
+  return new PredicateBuilder<FsObject>(
+    new ContainsPredicate(predicate.predicate)
   );
 }

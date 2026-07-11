@@ -1,15 +1,6 @@
-import {
-  BinaryExpression,
-  ResolvedBinaryExpressionNode
-} from "../evaluation/expression/BinaryExpression.js";
-import {
-  CaseExpression,
-  ResolvedCaseExpressionNode
-} from "../evaluation/expression/CaseExpression.js";
-import {
-  ColumnExpression,
-  ResolvedColumnExpressionNode
-} from "../evaluation/expression/ColumnExpression.js";
+import { BinaryExpression } from "../evaluation/expression/BinaryExpression.js";
+import { ResolvedCaseExpressionNode } from "./ast/expression/CaseExpressionNode.js";
+import { ColumnExpression } from "../evaluation/expression/ColumnExpression.js";
 import {
   type ExpressionNode,
   type Expression,
@@ -19,6 +10,9 @@ import { LiteralExpression } from "../evaluation/expression/LiteralExpression.js
 import { type RowView } from "../schema/RowView.js";
 import { type Table } from "../schema/Table.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
+import { CaseExpression } from "../evaluation/expression/CaseExpression.js";
+import { ResolvedColumnExpressionNode } from "./ast/expression/ColumnExpressionNode.js";
+import { ResolvedBinaryExpressionNode } from "./ast/expression/BinaryExpressionNode.js";
 
 export function bindExpression(
   expr: ResolvedExpressionNode,

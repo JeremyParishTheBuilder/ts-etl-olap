@@ -19,10 +19,12 @@ import { type ReferentialAction } from "../schema/ReferentialAction.js";
 import { CaseBuilder } from "../dsl/case/CaseBuilder.js";
 import { type ExpressionNode } from "../evaluation/expression/Expression.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
-import { type PredicateNode } from "../semantic/ast/PredicateNode.js";
-import { BinaryLogicalPredicateNode } from "../evaluation/predicate/LogicalPredicate.js";
-import { ColumnExpressionNode } from "../evaluation/expression/ColumnExpression.js";
-import { NotPredicateNode } from "../semantic/ast/NotPredicateNode.js";
+import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
+import { ColumnExpressionNode } from "../semantic/ast/expression/ColumnExpressionNode.js";
+import { NotPredicateNode } from "../semantic/ast/predicate/NotPredicateNode.js";
+import { XorPredicateNode } from "../semantic/ast/predicate/XorPredicateNode.js";
+import { OrPredicateNode } from "../semantic/ast/predicate/OrPredicateNode.js";
+import { AndPredicateNode } from "../semantic/ast/predicate/AndPredicateNode.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -314,26 +316,23 @@ export abstract class InputBatch {
   }
 
   protected and(left: PredicateNode, right: PredicateNode) {   
-    return new BinaryLogicalPredicateNode(
+    return new AndPredicateNode([
       left,
-      right,
-      "and",
-    );
+      right
+    ]);
   }
 
   protected or(left: PredicateNode, right: PredicateNode) {   
-    return new BinaryLogicalPredicateNode(
+    return new OrPredicateNode([
       left,
-      right,
-      "or",
-    );
+      right
+    ]);
   }
 
   protected xor(left: PredicateNode, right: PredicateNode) {   
-    return new BinaryLogicalPredicateNode(
+    return new XorPredicateNode(
       left,
-      right,
-      "xor",
+      right
     );
   }
 

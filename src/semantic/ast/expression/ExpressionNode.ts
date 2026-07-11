@@ -1,26 +1,14 @@
-import { type ColumnValue } from "../../types/ColumnValue.js";
-import { type RowView } from "../../schema/RowView.js";
+import { BinaryExpressionNode, type ResolvedBinaryExpressionNode } from "./BinaryExpressionNode.js";
 import {
   type ResolvedCaseExpressionNode,
   type CaseExpressionNode
-} from "../../semantic/ast/expression/CaseExpressionNode.js";
-import { 
+} from "./CaseExpressionNode.js";
+import {
   type ResolvedColumnExpressionNode,
   type ColumnExpressionNode
-} from "../../semantic/ast/expression/ColumnExpressionNode.js";
-import { type LiteralExpressionNode } from "../../semantic/ast/expression/LiteralExpressionNode.js";
-import { type ConcatExpressionNode } from "../../semantic/ast/expression/ConcatExpressionNode.js";
-import {
-  type BinaryExpressionNode,
-  type ResolvedBinaryExpressionNode
-} from "../../semantic/ast/expression/BinaryExpressionNode.js";
-
-export interface Expression<
-  TContext = RowView,
-  TValue = ColumnValue
-> {
-  evaluate(context: TContext): TValue;
-}
+} from "./ColumnExpressionNode.js";
+import { type LiteralExpressionNode } from "./LiteralExpressionNode.js";
+import { ConcatExpressionNode } from "./ConcatExpressionNode.js";
 
 export type ResolvedExpressionNode =
   | ResolvedColumnExpressionNode

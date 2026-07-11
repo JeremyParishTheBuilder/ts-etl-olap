@@ -5,7 +5,7 @@ import { type Statement } from "../statements/Statement.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type ReferentialAction } from "../schema/ReferentialAction.js";
 import { type ExpressionNode } from "../evaluation/expression/Expression.js";
-import { type PredicateNode } from "../semantic/ast/PredicateNode.js";
+import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
 
 export class PostgresInputBatch extends InputBatch {
   constructor(

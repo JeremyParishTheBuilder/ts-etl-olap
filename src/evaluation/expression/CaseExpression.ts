@@ -1,43 +1,8 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import {
-  type PredicateNode,
-  type ResolvedPredicateNode
-} from "../../semantic/ast/PredicateNode.js";
-import {
   type Predicate,
 } from "../predicate/Predicate.js";
-import {
-  type ResolvedExpressionNode,
-  type Expression,
-  ExpressionNode,
-  ExpressionNodeBase
-} from "./Expression.js";
-
-export class CaseExpressionNode extends ExpressionNodeBase {
-  readonly kind = "case" as const;
-
-  constructor(
-    public readonly branches: Array<{
-      when: PredicateNode;
-      then: ExpressionNode;
-    }>,
-    public readonly elseExpr?: ExpressionNode,
-  ) {
-    super();
-  }
-}
-
-export class ResolvedCaseExpressionNode {
-  readonly kind = "case" as const;
-
-  constructor(
-    public readonly branches: Array<{
-      when: ResolvedPredicateNode;
-      then: ResolvedExpressionNode;
-    }>,
-    public readonly elseExpr?: ResolvedExpressionNode,
-  ) {}
-}
+import { type Expression } from "./Expression.js";
 
 export class CaseExpression<TContext> implements Expression<TContext> {
   public constructor(

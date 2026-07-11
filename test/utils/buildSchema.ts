@@ -9,8 +9,8 @@ import { type CheckSpec, type ForeignKeySpec } from "../../src/schema/Constraint
 import { type UniqueId } from "../../src/schema/Unique.js";
 import { type ResolvedUpdate } from "../../src/types/ResolvedUpdate.js";
 import { type ResolvedDelete } from "../../src/types/ResolvedDelete.js";
-import { ComparisonPredicateNode } from "../../src/evaluation/predicate/ComparisonPredicate.js";
-import { LiteralExpressionNode } from "../../src/evaluation/expression/LiteralExpression.js";
+import { LiteralExpressionNode } from "../../src/semantic/ast/expression/LiteralExpressionNode.js";
+import { ComparisonPredicateNode } from "../../src/semantic/ast/predicate/ComparisonPredicateNode.js";
 
 let nextId = 1;
 

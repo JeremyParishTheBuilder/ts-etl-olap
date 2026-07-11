@@ -14,15 +14,13 @@ import {
   type NotPredicateNode,
   type ResolvedNotPredicateNode
 } from "./NotPredicateNode.js";
-import { BinaryLogicalPredicateNode, ResolvedBinaryLogicalPredicateNode } from "../../evaluation/predicate/LogicalPredicate";
 import { 
   type ComparisonPredicateNode,
   type ResolvedComparisonPredicateNode
-} from "../../evaluation/predicate/ComparisonPredicate";
+} from "./ComparisonPredicateNode.js";
 
 export type ResolvedPredicateNode =
   | ResolvedComparisonPredicateNode
-  | ResolvedBinaryLogicalPredicateNode
   | ResolvedAndPredicateNode
   | ResolvedOrPredicateNode
   | ResolvedXorPredicateNode
@@ -30,7 +28,6 @@ export type ResolvedPredicateNode =
 
 export type PredicateNode =
   | ComparisonPredicateNode
-  | BinaryLogicalPredicateNode
   | AndPredicateNode
   | OrPredicateNode
   | XorPredicateNode

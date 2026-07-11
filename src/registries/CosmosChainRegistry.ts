@@ -166,11 +166,10 @@ const predicate2 = new ComparisonPredicate(
   "gt",
   new LiteralExpression(100)
 );
-const p3 = new BinaryLogicalPredicate(
+const p3 = new AndPredicate([
   predicate,
-  predicate2,
-  "and"
-);
+  predicate2
+]);
 
 console.log("Set Predicate");
 const fnode = new FilterNode(
@@ -484,13 +483,13 @@ import { ComparisonPredicate } from '../evaluation/predicate/ComparisonPredicate
 import { FilterNode } from '../evaluation/plan/FilterNode.js';
 import { TableScanNode } from '../evaluation/plan/TableScanNode.js';
 import { ProjectNode } from '../evaluation/plan/ProjectNode.js';
-import { BinaryLogicalPredicate } from '../evaluation/predicate/LogicalPredicate.js';
 import { Table, TableId } from '../schema/Table.js';
 import { Database } from '../schema/Database.js';
 import { ReferentialAction } from '../schema/ReferentialAction.js';
 import { type ColumnId } from '../schema/Column.js';
 import { ColumnExpression } from '../evaluation/expression/ColumnExpression.js';
 import { LiteralExpression } from '../evaluation/expression/LiteralExpression.js';
+import { AndPredicate } from '../evaluation/predicate/AndPredicate.js';
 
 export const CosmosChainRegistry = new Map();
 

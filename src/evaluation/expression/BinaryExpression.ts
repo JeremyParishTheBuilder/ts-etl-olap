@@ -1,43 +1,6 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
-import {
-  ResolvedExpressionNode,
-  type Expression,
-  ExpressionNode,
-  ExpressionNodeBase
-} from "./Expression.js";
+import { type Expression } from "./Expression.js";
 import { assertIsNumber } from "../utility/assertIsNumber.js";
-
-export class BinaryExpressionNode extends ExpressionNodeBase {
-  readonly kind = "binary" as const;
-
-  constructor(
-    public readonly left: ExpressionNode,
-    public readonly operator:
-      | "add"
-      | "subtract"
-      | "multiply"
-      | "divide"
-      | "mod",
-    public readonly right: ExpressionNode,
-  ) {
-    super();
-  }
-}
-
-export class ResolvedBinaryExpressionNode {
-  readonly kind = "binary" as const;
-
-  constructor(
-    public readonly left: ResolvedExpressionNode,
-    public readonly operator:
-      | "add"
-      | "subtract"
-      | "multiply"
-      | "divide"
-      | "mod",
-    public readonly right: ResolvedExpressionNode,
-  ) {}
-}
 
 export class BinaryExpression<TContext> implements Expression<TContext> {
   constructor(

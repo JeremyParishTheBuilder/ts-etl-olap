@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createCheckTestSpec, createColumnTestSpec } from '../utils/buildSchema.js';
-import { ComparisonPredicateNode } from '../../src/evaluation/predicate/ComparisonPredicate.js';
-import { ColumnExpressionNode } from '../../src/evaluation/expression/ColumnExpression.js';
-import { LiteralExpressionNode } from '../../src/evaluation/expression/LiteralExpression.js';
+import { ColumnExpressionNode } from '../../src/semantic/ast/expression/ColumnExpressionNode.js';
+import { LiteralExpressionNode } from '../../src/semantic/ast/expression/LiteralExpressionNode.js';
+import { ComparisonPredicateNode } from '../../src/semantic/ast/predicate/ComparisonPredicateNode.js';
 
 describe('Table::createCheck', () => {
 

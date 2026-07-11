@@ -1,4 +1,4 @@
-import { type PredicateNode } from "../../semantic/ast/PredicateNode.js";
+import { type PredicateNode } from "../../semantic/ast/predicate/PredicateNode.js";
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 
 export interface SelectStatement extends BaseStatement {

@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
 import { freshEngine } from '../engine/freshEngine.js';
-import { column } from '../../src/dsl/expression/functions.js';
 
 function createTestSql() {
   return freshEngine().input() as PostgresInputBatch;
@@ -441,7 +440,7 @@ describe("Integration::update", () => {
     sql.alterTable("Users")
       .addConstraint("CHK_Adult")
       .check(
-        column("Age").gte(18)
+        sql.column("Age").gte(18)
       )
       .execute();
 

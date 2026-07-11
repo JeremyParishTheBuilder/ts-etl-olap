@@ -1,18 +1,15 @@
 import { type ExpressionBuilder } from "../../dsl/expression/ExpressionBuilder.js";
 import { PredicateBuilder } from "../../dsl/predicate/PredicateBuilder.js";
-//import { type Capture } from "../value/Capture.js";
 import { type CaptureContext } from "../value/CaptureContext.js";
 import { Directory } from "./Directory.js";
 import { type DiscoveryContext } from "./DiscoveryContext.js";
 import { type DiscoveryNode } from "./DiscoveryNode.js";
 import { DiscoveryResult } from "./DiscoveryResult.js";
 import { type FsObject } from "./FsObject.js";
-import { FsObjectMatcher } from "../matcher/FsObjectMatcher.js";
-import { asMatcher, PredicateMatcher } from "../matcher/PredicateMatcher.js";
 import { TraversalMode } from "./TraversalMode.js";
 
 export interface ScopeNodeSpec {
-  readonly matcher: FsObjectMatcher | PredicateBuilder<FsObject>,
+  readonly matcher: PredicateBuilder<FsObject>,
   readonly traversalMode: TraversalMode,
   readonly children: readonly DiscoveryNode[],
   readonly nodeType: string,
@@ -52,17 +49,13 @@ export class ScopeNode implements DiscoveryNode {
       default: candidates = [];
     }
 
-    const matcher = asMatcher(this.spec.matcher);// instanceof PredicateBuilder
-      // ? new PredicateMatcher(this.spec.matcher.predicate)
-      // : this.spec.matcher;
-
     for (const candidate of candidates) {
 
       if (!(candidate instanceof Directory)) {
         continue;
       }
 
-      if (!matcher.matches(candidate)) {
+      if (!this.spec.matcher.evaluate(candidate)) {
         continue;
       }
 

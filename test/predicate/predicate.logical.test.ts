@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { type Predicate } from '../../src/evaluation/predicate/Predicate.js';
-import { BinaryLogicalPredicate } from '../../src/evaluation/predicate/LogicalPredicate.js';
 import { RowView } from '../../src/schema/RowView';
 import { NotPredicate } from '../../src/evaluation/predicate/NotPredicate.js';
 import { AndPredicate } from '../../src/evaluation/predicate/AndPredicate.js';
+import { OrPredicate } from '../../src/evaluation/predicate/OrPredicate.js';
+import { XorPredicate } from '../../src/evaluation/predicate/XorPredicate.js';
 
 const truePredicate: Predicate = {
   evaluate: () => true
@@ -29,46 +30,41 @@ describe("BinaryLogicalPredicate.evaluate()", () => {
   });
 
   it("returns false when one and predicate is false", () => {
-    const pred = new BinaryLogicalPredicate(
+    const pred = new AndPredicate([
       truePredicate,
       falsePredicate,
-      "and"
-    );
+    ]);
 
     expect(pred.evaluate(emptyRow)).toBe(false);
   });
 
   it("evaluates or", () => {
-    const pred = new BinaryLogicalPredicate(
+    const pred = new OrPredicate([
       falsePredicate,
       truePredicate,
-      "or"
-    );
+    ]);
 
     expect(pred.evaluate(emptyRow)).toBe(true);
   });
 
   it("returns false when both or predicates are false", () => {
-    const pred = new BinaryLogicalPredicate(
+    const pred = new OrPredicate([
       falsePredicate,
       falsePredicate,
-      "or"
-    );
+    ]);
 
     expect(pred.evaluate(emptyRow)).toBe(false);
   });
 
   it("evaluates xor", () => {
-    const pred = new BinaryLogicalPredicate(
+    const pred = new XorPredicate(
       truePredicate,
       falsePredicate,
-      "xor"
     );
 
-    const pred2 = new BinaryLogicalPredicate(
+    const pred2 = new XorPredicate(
       falsePredicate,
-      truePredicate,
-      "xor"
+      truePredicate
     );
 
     expect(pred.evaluate(emptyRow)).toBe(true);
@@ -76,16 +72,14 @@ describe("BinaryLogicalPredicate.evaluate()", () => {
   });
 
   it("returns false when xor predicates are equal", () => {
-    const pred = new BinaryLogicalPredicate(
+    const pred = new XorPredicate(
       truePredicate,
-      truePredicate,
-      "xor"
+      truePredicate
     );
 
-    const pred2 = new BinaryLogicalPredicate(
+    const pred2 = new XorPredicate(
       falsePredicate,
-      falsePredicate,
-      "xor"
+      falsePredicate
     );
 
     expect(pred.evaluate(emptyRow)).toBe(false);
@@ -93,17 +87,15 @@ describe("BinaryLogicalPredicate.evaluate()", () => {
   });
 
   it("supports nested composition", () => {
-    const inner = new BinaryLogicalPredicate(
+    const inner = new OrPredicate([
       truePredicate,
       falsePredicate,
-      "or"
-    );
+    ]);
 
-    const outer = new BinaryLogicalPredicate(
+    const outer = new AndPredicate([
       inner,
       truePredicate,
-      "and"
-    );
+    ]);
 
     expect(outer.evaluate(emptyRow)).toBe(true);
   });
@@ -113,11 +105,10 @@ describe("BinaryLogicalPredicate.evaluate()", () => {
       evaluate: vi.fn(() => true)
     };
 
-    const pred = new BinaryLogicalPredicate(
+    const pred = new AndPredicate([
       falsePredicate,
-      right,
-      "and"
-    );
+      right
+    ]);
 
     pred.evaluate(emptyRow);
 
@@ -129,34 +120,20 @@ describe("BinaryLogicalPredicate.evaluate()", () => {
       evaluate: vi.fn(() => false)
     };
 
-    const pred = new BinaryLogicalPredicate(
+    const pred = new OrPredicate([
       truePredicate,
-      right,
-      "or"
-    );
+      right
+    ]);
 
     pred.evaluate(emptyRow);
 
     expect(right.evaluate).not.toHaveBeenCalled();
   });
 
-  it("throws for unsupported operators", () => {
-    const pred = new BinaryLogicalPredicate(
-      truePredicate,
-      truePredicate,
-      "invalid" as never
-    );
-
-    expect(() =>
-      pred.evaluate(emptyRow)
-    ).toThrow();
-  });
-
   it("evaluates deterministically", () => {
-    const pred = new BinaryLogicalPredicate(
+    const pred = new XorPredicate(
       truePredicate,
       falsePredicate,
-      "xor"
     );
 
     expect(pred.evaluate(emptyRow)).toBe(true);
@@ -170,11 +147,10 @@ describe("BinaryLogicalPredicate.evaluate()", () => {
       values: [1]
     };
 
-    const pred = new BinaryLogicalPredicate(
+    const pred = new AndPredicate([
       truePredicate,
-      truePredicate,
-      "and"
-    );
+      truePredicate
+    ]);
 
     pred.evaluate(row);
 
@@ -199,11 +175,10 @@ describe("NotPredicate.evaluate()", () => {
   });
 
   it("supports nested predicates", () => {
-    const inner = new BinaryLogicalPredicate(
+    const inner = new AndPredicate([
       truePredicate,
-      falsePredicate,
-      "and"
-    );
+      falsePredicate
+    ]);
 
     const pred = new NotPredicate(inner);
 

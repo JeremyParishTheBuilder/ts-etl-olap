@@ -7,8 +7,7 @@ import { bindSelect } from '../../src/semantic/select.js';
 import { freshEngine } from '../engine/freshEngine.js';
 import { Engine } from '../../src/engine/Engine.js';
 import { buildDatabase, buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
-import { ColumnExpressionNode } from '../../src/evaluation/expression/ColumnExpression.js';
-//import { ColumnBuilder } from '../../src/dsl/column/ColumnBuilder.js';
+import { ColumnExpressionNode } from '../../src/semantic/ast/expression/ColumnExpressionNode.js';
 
 describe('SemanticAnalyzer::bindSelect', () => {
   let engine: Engine;

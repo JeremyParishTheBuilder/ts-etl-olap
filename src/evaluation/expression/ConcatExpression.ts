@@ -1,4 +1,4 @@
-import { type Expression, ExpressionNode, ExpressionNodeBase } from "./Expression.js";
+import { type Expression } from "./Expression.js";
 
 export class ConcatExpression<TContext>
   implements Expression<TContext, string> {
@@ -11,15 +11,5 @@ export class ConcatExpression<TContext>
     return this.expressions
       .map(x => x.evaluate(context))
       .join("");
-  }
-}
-
-export class ConcatExpressionNode extends ExpressionNodeBase {
-  readonly kind = "concat" as const;
-
-  constructor(
-    public readonly expressions: ExpressionNode[],
-  ) {
-    super();
   }
 }

@@ -1,5 +1,5 @@
 import { type ResolvedExpressionNode } from "../evaluation/expression/Expression.js";
-import { type ResolvedPredicateNode } from "../semantic/ast/PredicateNode.js";
+import { type ResolvedPredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
 import { type ColumnId } from "../schema/Column.js";
 
 export class ResolvedPredicateColumnCollector {
@@ -27,7 +27,15 @@ export class ResolvedPredicateColumnCollector {
         this.collectExpression(predicate.right, columns);
         return;
 
-      case "binaryLogical":
+      case "and":
+        predicate.predicates.map(p => this.collectPredicate(p, columns))
+        return;
+
+      case "or":
+        predicate.predicates.map(p => this.collectPredicate(p, columns))
+        return;
+
+      case "xor":
         this.collectPredicate(predicate.left, columns);
         this.collectPredicate(predicate.right, columns);
         return;
