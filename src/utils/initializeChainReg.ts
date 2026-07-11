@@ -10,28 +10,20 @@ import { EngineRegistry } from '../engine/EngineRegistry.js';
 import { type PostgresInputBatch } from '../input/PostgresInputBatch.js';
 
 import { Directory } from "../mapping/discovery/Directory.js";
-import {
-  AnyDirectoryMatcher,
-  DirectoryContentIncludesMatcher,
-  DirectoryNameMatcher,
-} from "../mapping/discovery/DirectoryMatcher.js";
 import { TraversalMode } from '../mapping/discovery/TraversalMode.js';
 import { CollectionNode } from '../mapping/discovery/CollectionNode.js';
 import { ScopeNode } from '../mapping/discovery/ScopeNode.js';
-import { FileNameMatcher } from '../mapping/discovery/FileMatcher.js';
 import { ImportMapping } from '../mapping/import/ImportMapping.js';
-//import { DerivedField } from '../mapping/value/DerivedField.js';
 import { FileImportNode } from '../mapping/import/FileImportNode.js';
 import { type ImportNode } from '../mapping/import/ImportNode.js';
 import { JsonFileReader } from '../mapping/discovery/JsonFileReader.js';
 import { IdentitySource } from '../mapping/import/IdentitySource.js';
-import { LambdaValueResolver } from '../mapping/value/LambdaValueResolver.js';
 import { JsonPath } from '../mapping/import/JsonPath.js';
 import { ImportPipeline } from '../mapping/pipeline/ImportPipeline.js';
 import { DiscoveryImportNode } from '../mapping/import/DiscoveryImportNode.js';
-//import { CaptureField } from '../mapping/utils/helpers.js';
-import { capture, concat, directoryName, json, literal } from '../dsl/expression/functions.js';
-//import { Capture } from '../mapping/value/Capture.js';
+import { basename, capture, concat, directoryName, json, literal } from '../dsl/expression/functions.js';
+import { every, some, isDirectory, isFile } from '../dsl/predicate/functions.js';
+import { contains } from '../dsl/matcher/functions.js';
 
 const CCR1_PATH: string = '../chain-registry';
 
@@ -51,11 +43,6 @@ export const getChainRegContents = () => {
       networkKind: capture("networkKind"),
       networkType: capture("networkType")
     }
-    // derivedFields: [
-    //   CaptureField("chainDirectoryName"),
-    //   CaptureField("networkKind"),
-    //   CaptureField("networkType")
-    // ]
   });
 
   const chainDirectoryImporter = new DiscoveryImportNode({
@@ -65,17 +52,23 @@ export const getChainRegContents = () => {
 
   const chainCollection = 
     new CollectionNode({
-      matcher: new DirectoryContentIncludesMatcher("chain.json"), //directoryContents().contains("chain.json")
+      matcher: contains(
+        some(
+          every(isFile(), basename().eq("chain.json")),
+          every(isFile(), basename().eq("assetlist.json"))
+        )
+      ),
       children: [],
       nodeType: "chainDirectory",
       captures: {
-        "chainDirectoryName": directoryName()
+        "chainDirectoryName": directoryName() // still works
+        //"chainDirectoryName": basename() // error
       }
   });
 
   const cosmosScope =
     new ScopeNode({
-      matcher: new AnyDirectoryMatcher(),
+      matcher: isDirectory(),
       traversalMode: TraversalMode.Self,
       children: [
         chainCollection
@@ -84,17 +77,11 @@ export const getChainRegContents = () => {
       captures: {
         networkType: literal("Cosmos")
       }
-      // captures: [
-      //   new Capture(
-      //     "networkType",
-      //     literal("Cosmos")
-      //   )
-      // ]
     });
 
   const nonCosmosScope =
     new ScopeNode({
-      matcher: new DirectoryNameMatcher("_non-cosmos"),
+      matcher: every(isDirectory(), basename().eq("_non-cosmos")),
       traversalMode: TraversalMode.Children,
       children: [
         chainCollection
@@ -103,17 +90,11 @@ export const getChainRegContents = () => {
       captures: {
         networkType: literal("Non-cosmos")
       }
-      // captures: [
-      //   new Capture(
-      //     "networkType",
-      //     literal("Non-cosmos")
-      //   )
-      // ]
     });
 
   const mainnetScope =
     new ScopeNode({
-      matcher: new AnyDirectoryMatcher(),
+      matcher: isDirectory(),
       traversalMode: TraversalMode.Self,
       children: [
         cosmosScope,
@@ -127,7 +108,7 @@ export const getChainRegContents = () => {
 
   const testnetScope =
     new ScopeNode({
-      matcher: new DirectoryNameMatcher("testnets"), // directoryName().eq("testnets")
+      matcher: every(isDirectory(), basename().eq("testnets")),
       traversalMode: TraversalMode.Children,
       children: [
         cosmosScope,
@@ -137,17 +118,11 @@ export const getChainRegContents = () => {
       captures: {
         networkKind: literal("Testnet")
       }
-      // captures: [
-      //   new Capture(
-      //     "networkKind",
-      //     literal("Testnet")
-      //   )
-      // ]
     });
 
   const registry =
     new ScopeNode({
-      matcher: new AnyDirectoryMatcher(),
+      matcher: isDirectory(),
       traversalMode: TraversalMode.Self,
       children: [
         mainnetScope,
@@ -176,17 +151,11 @@ export const getChainRegContents = () => {
       fields: {
         owner: capture("owner")
       }
-      // derivedFields: [
-      //   CaptureField("owner")
-      // ],
     });
 
   const imagesImportMapping = 
     new ImportMapping({
       sourceResolver: JsonPath.parse("images"),
-      // derivedFields: [
-      //   CaptureField("owner")
-      // ],
       fields: {
         owner: capture("owner")
       }
@@ -217,31 +186,10 @@ export const getChainRegContents = () => {
     ]
   });
 
-  // derivedFields: [
-    //   new DerivedField(
-    //     "displayName",
-    //     concat(
-    //       json("pretty_name"),
-    //       literal(" ("),
-    //       json("chain_id"),
-    //       literal(")")
-    //     )
-    //   )
-    // ],
-    // captures: [
-    //   new Capture(
-    //     "owner",
-    //     concat(
-    //       literal("Chain:"),
-    //       capture("chainDirectoryName")
-    //     )
-    //   )
-    // ],
-
   const chainFileImporter =
     new FileImportNode({
       acceptsNodeType: "chainDirectory",
-      matcher: new FileNameMatcher("chain.json"),
+      matcher: every(isFile(), basename().eq("chain.json")),
       reader: new JsonFileReader(),
       mapping: chainFileImportMapping,
       directoryObjectName: "chainDirectory",
@@ -260,44 +208,11 @@ export const getChainRegContents = () => {
           ),
         assetBase: json("base")
       },
-      // captures: [
-      //   new Capture(
-      //     "owner",
-      //     concat(
-      //       literal("Asset:"),
-      //       capture("chainDirectoryName"),
-      //       literal(":"),
-      //       json("base")
-      //     )
-      //   ),
-      //   new Capture(
-      //     "assetBase",
-      //     json("base")
-      //   )
-      // ],
       nestedMappings: [
         logoUrisImportMapping,
         imagesImportMapping
       ],
     });
-
-    // new DerivedField(
-        //   "owner",
-        //   new LambdaValueResolver(ctx =>
-        //     `
-        //     ${literal("Asset:")}
-        //     ${capture("chainDirectoryName")}
-        //     ${literal(":")}
-        //     ${json("base")}
-        //     `
-        //     //`Asset:
-        //     //${ctx.capture("chainDirectoryName")}
-        //       // new PrimitiveJsonValueResolver(
-        //       //   JsonPathResolver.parse("base")
-        //       // ).resolve(ctx)
-        //     //}`
-        //   )
-        //),
 
   const assetlistFileImportMapping = new ImportMapping({
     tableName: "Chains",
@@ -310,7 +225,7 @@ export const getChainRegContents = () => {
   const assetlistFileImporter =
     new FileImportNode({
       acceptsNodeType: "chainDirectory",
-      matcher: new FileNameMatcher("assetlist.json"),
+      matcher: every(isFile(), basename().eq("assetlist.json")),
       reader: new JsonFileReader(),
       mapping: assetlistFileImportMapping,
       directoryObjectName: "chainDirectory",

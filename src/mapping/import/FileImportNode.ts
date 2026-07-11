@@ -1,7 +1,7 @@
 import { Directory } from "../discovery/Directory.js";
 import { File } from "../discovery/File.js";
 import { type DiscoveryResult } from "../discovery/DiscoveryResult.js";
-import { type FsObjectMatcher } from "../discovery/FsObjectMatcher.js";
+import { type FsObjectMatcher } from "../matcher/FsObjectMatcher.js";
 import { ImportMapping } from "./ImportMapping.js";
 import { type ImportNode } from "./ImportNode.js";
 import { ImportResult } from "./ImportResult.js";
@@ -14,11 +14,13 @@ import { type ImportSource } from "./ImportSource.js";
 import { type ArrayLocation } from "./ArrayLocation.js";
 import { arraysEqual } from "../../utils/arrayHelpers.js";
 import { pathToPascalCase, toPascalCase } from "../../utils/format.js";
-import { FileNameMatcher } from "../discovery/FileMatcher.js";
+import { PredicateBuilder } from "../../dsl/predicate/PredicateBuilder.js";
+import { asMatcher } from "../matcher/PredicateMatcher.js";
+import { FsObject } from "../discovery/FsObject.js";
 
 export interface FileImportNodeSpec {
   readonly acceptsNodeType: string;
-  readonly matcher: FsObjectMatcher;
+  readonly matcher: FsObjectMatcher | PredicateBuilder<FsObject>;
   readonly reader: FileReader<JsonValue>;
   readonly mapping: ImportMapping;
   readonly directoryObjectName: string;
@@ -46,11 +48,13 @@ export class FileImportNode implements ImportNode {
       return [];
     }
 
+    const matcher = asMatcher(this.spec.matcher);
+
     const file =
       directory.contents?.find(
         obj =>
           obj instanceof File &&
-          this.spec.matcher.matches(obj)
+          matcher.matches(obj)
       );
 
     if (!(file instanceof File)) {
@@ -73,7 +77,7 @@ export class FileImportNode implements ImportNode {
       context,
       this.spec.mapping,
       source,
-      this.inferredPrefix()
+      inferredPrefix(file)
     );
   }
 
@@ -118,11 +122,6 @@ export class FileImportNode implements ImportNode {
     };
 
     for (const [name, builder] of Object.entries(mapping.fields ?? {})) {
-    //for (const field of mapping.derivedFields) {
-      // values.set(
-      //   effectivePrefix + field.columnName,
-      //   field.sourceResolver.resolve(resolverContext)
-      // );
       values.set(
         effectivePrefix + name,
         builder.evaluate(resolverContext)
@@ -355,12 +354,8 @@ export class FileImportNode implements ImportNode {
 
     return [...explicit, ...inferred];
   }
+}
 
-  inferredPrefix(): string {
-    if (this.spec.matcher instanceof FileNameMatcher) {
-      return toPascalCase(this.spec.matcher.name) + ".";
-    }
-
-    return toPascalCase(this.spec.acceptsNodeType) + ".";
-  }
+export function inferredPrefix(obj: FsObject): string {
+  return toPascalCase(obj.basename) + ".";
 }

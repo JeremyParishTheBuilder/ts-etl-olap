@@ -1,6 +1,8 @@
 import { CaseExpressionNode } from "../../evaluation/expression/CaseExpression.js";
 import { type ExpressionNode } from "../../evaluation/expression/Expression.js";
-import { type PredicateNode } from "../../evaluation/predicate/Predicate";
+import {
+  type PredicateNode
+} from "../../semantic/ast/PredicateNode.js";
 import { WhenBuilder } from "./WhenBuilder.js";
 import { type CaseBranch } from "./CaseBranch.js";
 import { type ExplicitInput } from "../../types/ExplicitInput.js";

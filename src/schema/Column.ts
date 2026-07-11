@@ -1,7 +1,7 @@
 import { Immutable } from "../infrastructure/Immutable.js";
 import { type ReferentialAction } from './ReferentialAction.js';
 import { type ExplicitInput } from '../types/ExplicitInput.js';
-import { type PredicateNode } from "../evaluation/predicate/Predicate.js";
+import { type PredicateNode } from "../semantic/ast/PredicateNode.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { type ColumnType, matchesColumnType } from "../types/ColumnType.js";
 

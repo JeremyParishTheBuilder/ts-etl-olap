@@ -3,7 +3,7 @@ import { Column, InlineColumnSpec }  from "../../schema/Column.js";
 import { ForeignKeySpec, type ConstraintSpec } from "../../schema/Constraint.js";
 import { CONSTRAINT_KIND } from "../../schema/ConstraintKind.js";
 import { type ReferentialAction } from "../../schema/ReferentialAction.js";
-import { PredicateNode } from "../../evaluation/predicate/Predicate.js";
+import { type PredicateNode } from "../../semantic/ast/PredicateNode.js";
 
 export type AlterTableStatement =
   | AlterAddColumn

@@ -1,5 +1,7 @@
 import { type ExpressionNode } from "../../evaluation/expression/Expression.js";
-import { type PredicateNode } from "../../evaluation/predicate/Predicate.js";
+import {
+  type PredicateNode
+} from "../../semantic/ast/PredicateNode.js";
 
 export type CaseBranch = {
   when: PredicateNode;

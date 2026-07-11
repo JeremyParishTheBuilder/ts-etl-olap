@@ -3,6 +3,7 @@ import { type Expression } from "../../evaluation/expression/Expression.js";
 import { LiteralExpression } from "../../evaluation/expression/LiteralExpression.js";
 import { ComparisonPredicate } from "../../evaluation/predicate/ComparisonPredicate.js";
 import { type ColumnValue } from "../../types/ColumnValue.js";
+import { PredicateBuilder } from "../predicate/PredicateBuilder.js";
 
 export class ExpressionBuilder<TContext> {
   constructor(
@@ -26,60 +27,72 @@ export class ExpressionBuilder<TContext> {
   eq(
     rhs: ExpressionBuilder<TContext> | ColumnValue
   ) {
-    return new ComparisonPredicate(
-      this.expression,
-      "eq",
-      this.unwrap(rhs)
+    return new PredicateBuilder<TContext>(
+      new ComparisonPredicate(
+        this.expression,
+        "eq",
+        this.unwrap(rhs)
+      )
     );
   }
 
   ne(
     rhs: ExpressionBuilder<TContext> | ColumnValue
   ) {
-    return new ComparisonPredicate(
-      this.expression,
-      "ne",
-      this.unwrap(rhs)
+    return new PredicateBuilder<TContext>(
+      new ComparisonPredicate(
+        this.expression,
+        "ne",
+        this.unwrap(rhs)
+      )
     );
   }
 
   gt(
     rhs: ExpressionBuilder<TContext> | ColumnValue
   ) {
-    return new ComparisonPredicate(
-      this.expression,
-      "gt",
-      this.unwrap(rhs)
+    return new PredicateBuilder<TContext>(
+      new ComparisonPredicate(
+        this.expression,
+        "gt",
+        this.unwrap(rhs)
+      )
     );
   }
 
   gte(
     rhs: ExpressionBuilder<TContext> | ColumnValue
   ) {
-    return new ComparisonPredicate(
-      this.expression,
-      "gte",
-      this.unwrap(rhs)
+    return new PredicateBuilder<TContext>(
+      new ComparisonPredicate(
+        this.expression,
+        "gte",
+        this.unwrap(rhs)
+      )
     );
   }
 
   lt(
     rhs: ExpressionBuilder<TContext> | ColumnValue
   ) {
-    return new ComparisonPredicate(
-      this.expression,
-      "lt",
-      this.unwrap(rhs)
+    return new PredicateBuilder<TContext>(
+      new ComparisonPredicate(
+        this.expression,
+        "lt",
+        this.unwrap(rhs)
+      )
     );
   }
 
   lte(
     rhs: ExpressionBuilder<TContext> | ColumnValue
   ) {
-    return new ComparisonPredicate(
-      this.expression,
-      "lte",
-      this.unwrap(rhs)
+    return new PredicateBuilder<TContext>(
+      new ComparisonPredicate(
+        this.expression,
+        "lte",
+        this.unwrap(rhs)
+      )
     );
   }
 

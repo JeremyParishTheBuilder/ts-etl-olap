@@ -19,9 +19,10 @@ import { type ReferentialAction } from "../schema/ReferentialAction.js";
 import { CaseBuilder } from "../dsl/case/CaseBuilder.js";
 import { type ExpressionNode } from "../evaluation/expression/Expression.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
-import { type PredicateNode } from "../evaluation/predicate/Predicate.js";
-import { BinaryLogicalPredicateNode, NotPredicateNode } from "../evaluation/predicate/LogicalPredicate.js";
+import { type PredicateNode } from "../semantic/ast/PredicateNode.js";
+import { BinaryLogicalPredicateNode } from "../evaluation/predicate/LogicalPredicate.js";
 import { ColumnExpressionNode } from "../evaluation/expression/ColumnExpression.js";
+import { NotPredicateNode } from "../semantic/ast/NotPredicateNode.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];

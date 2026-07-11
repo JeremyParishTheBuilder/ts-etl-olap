@@ -6,8 +6,9 @@ import { JsonExpression } from "../../evaluation/expression/JsonExpression.js";
 import { LiteralExpression } from "../../evaluation/expression/LiteralExpression.js";
 import { type Expression } from "../../evaluation/expression/Expression.js";
 import { ConcatExpression } from "../../evaluation/expression/ConcatExpression.js";
-import { DirectoryNameExpression } from "../../evaluation/expression/DirectoryNameExpression.js";
+import { DirectoryNameExpression, DirectoryNameFsExpression } from "../../evaluation/expression/DirectoryNameExpression.js";
 import { ExpressionBuilder } from "./ExpressionBuilder.js";
+import { BasenameExpression } from "../../evaluation/expression/BasenameExpression.js";
 
 export function case_() {   
   return new CaseBuilder();
@@ -46,6 +47,12 @@ export function literal(
 export function directoryName() {
   return new ExpressionBuilder(
     new DirectoryNameExpression()
+  );
+}
+
+export function basename() {
+  return new ExpressionBuilder(
+    new BasenameExpression()
   );
 }
 

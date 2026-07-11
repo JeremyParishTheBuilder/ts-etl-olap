@@ -1,22 +1,22 @@
 import { type ExpressionBuilder } from "../../dsl/expression/ExpressionBuilder.js";
+import { PredicateBuilder } from "../../dsl/predicate/PredicateBuilder.js";
 //import { Capture } from "../value/Capture.js";
 import { type CaptureContext } from "../value/CaptureContext.js";
 import { Directory } from "./Directory.js";
 import { type DiscoveryContext } from "./DiscoveryContext.js";
 import { type DiscoveryNode } from "./DiscoveryNode.js";
 import { DiscoveryResult } from "./DiscoveryResult.js";
-import { FsObjectMatcher } from "./FsObjectMatcher.js";
+import { type FsObject } from "./FsObject.js";
+import { type FsObjectMatcher } from "../matcher/FsObjectMatcher.js";
+import { asMatcher, PredicateMatcher } from "../matcher/PredicateMatcher.js";
 
 export interface CollectionNodeSepc {
-  readonly matcher: FsObjectMatcher,
+  readonly matcher: FsObjectMatcher | PredicateBuilder<FsObject>,
   readonly children: readonly DiscoveryNode[],
   readonly nodeType: string,
-  //readonly captures?: readonly Capture<DiscoveryContext>[]
   readonly captures?: Record<string, ExpressionBuilder<CaptureContext>>,
   readonly objectName?: string,
 }
-
-//for (const [name, builder] of Object.entries(mapping.captures?? {})) {
 
 export class CollectionNode implements DiscoveryNode {
   constructor(readonly spec: CollectionNodeSepc) {}
@@ -37,13 +37,18 @@ export class CollectionNode implements DiscoveryNode {
 
     const objectName = this.spec.objectName ?? this.spec.nodeType;
 
+    const matcher = asMatcher(this.spec.matcher);
+    // const matcher = this.spec.matcher instanceof PredicateBuilder
+    //   ? new PredicateMatcher(this.spec.matcher.predicate)
+    //   : this.spec.matcher;
+
     for (const child of contents) {
       if (!(child instanceof Directory)) {
         continue;
       }
 
       if (
-        !this.spec.matcher.matches(child)
+        !matcher.matches(child)
       ) {
         continue;
       }

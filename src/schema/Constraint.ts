@@ -1,6 +1,6 @@
 import { CONSTRAINT_KIND } from "./ConstraintKind.js";
 import { ReferentialAction } from "./ReferentialAction.js";
-import { type PredicateNode } from "../evaluation/predicate/Predicate.js";
+import { type PredicateNode } from "../semantic/ast/PredicateNode.js";
 
 export type PrimaryKeySpec = {
   kind: CONSTRAINT_KIND.primaryKey,

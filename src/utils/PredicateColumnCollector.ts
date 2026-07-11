@@ -1,5 +1,5 @@
 import { type ResolvedExpressionNode } from "../evaluation/expression/Expression.js";
-import { type ResolvedPredicateNode } from "../evaluation/predicate/Predicate.js";
+import { type ResolvedPredicateNode } from "../semantic/ast/PredicateNode.js";
 import { type ColumnId } from "../schema/Column.js";
 
 export class ResolvedPredicateColumnCollector {

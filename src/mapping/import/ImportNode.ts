@@ -1,4 +1,5 @@
 import { type DiscoveryResult } from "../discovery/DiscoveryResult.js";
+import { type FsObject } from "../discovery/FsObject.js";
 import { type ImportResult } from "./ImportResult.js";
 
 export interface ImportNode {
@@ -10,5 +11,5 @@ export interface ImportNode {
     discovery: DiscoveryResult
   ): ImportResult[];
 
-  inferredPrefix(): string;
+  //inferredPrefix(obj: FsObject): string;
 }

@@ -1,5 +1,5 @@
-import { type ValueResolverContext } from "./ValueResolverContext.js";
+// import { type ValueResolverContext } from "./ValueResolverContext.js";
 
-export interface ValueResolver<T> {
-  resolve(context: ValueResolverContext): T;
-}
+// export interface ValueResolver<T> {
+//   resolve(context: ValueResolverContext): T;
+// }

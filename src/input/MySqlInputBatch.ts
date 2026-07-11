@@ -4,7 +4,7 @@ import { ConstraintSpec } from "../schema/Constraint.js";
 import { type Statement } from "../statements/Statement.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type ExpressionNode } from "../evaluation/expression/Expression.js";
-import { type PredicateNode } from "../evaluation/predicate/Predicate.js";
+import { type PredicateNode } from "../semantic/ast/PredicateNode.js";
 
 export class MySqlInputBatch extends InputBatch {
   constructor(

@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { type Predicate } from '../../src/evaluation/predicate/Predicate.js';
-import { BinaryLogicalPredicate, NotPredicate } from '../../src/evaluation/predicate/LogicalPredicate.js';
+import { BinaryLogicalPredicate } from '../../src/evaluation/predicate/LogicalPredicate.js';
 import { RowView } from '../../src/schema/RowView';
+import { NotPredicate } from '../../src/evaluation/predicate/NotPredicate.js';
+import { AndPredicate } from '../../src/evaluation/predicate/AndPredicate.js';
 
 const truePredicate: Predicate = {
   evaluate: () => true
@@ -18,11 +20,10 @@ const emptyRow: RowView = {
 
 describe("BinaryLogicalPredicate.evaluate()", () => {
   it("evaluates and", () => {
-    const pred = new BinaryLogicalPredicate(
+    const pred = new AndPredicate([
       truePredicate,
-      truePredicate,
-      "and"
-    );
+      truePredicate
+    ]);
 
     expect(pred.evaluate(emptyRow)).toBe(true);
   });

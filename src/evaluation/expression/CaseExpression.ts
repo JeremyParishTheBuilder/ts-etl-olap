@@ -1,9 +1,10 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
-import { type RowView } from "../../schema/RowView.js";
 import {
-  type ResolvedPredicateNode,
+  type PredicateNode,
+  type ResolvedPredicateNode
+} from "../../semantic/ast/PredicateNode.js";
+import {
   type Predicate,
-  type PredicateNode
 } from "../predicate/Predicate.js";
 import {
   type ResolvedExpressionNode,

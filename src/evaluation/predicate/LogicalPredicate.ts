@@ -1,9 +1,10 @@
 import {
   type PredicateNode,
-  type Predicate,
   type ResolvedPredicateNode
+} from "../../semantic/ast/PredicateNode.js";
+import {
+  type Predicate,
 } from "./Predicate.js";
-import { type RowView } from "../../schema/RowView.js";
 
 export class BinaryLogicalPredicateNode {
   readonly kind = "binaryLogical" as const;
@@ -48,24 +49,24 @@ export class BinaryLogicalPredicate<TContext>
   }
 }
 
-export class NotPredicateNode {
-  readonly kind = "not" as const;
+// export class NotPredicateNode {
+//   readonly kind = "not" as const;
 
-  constructor(public inner: PredicateNode) {}
-}
+//   constructor(public inner: PredicateNode) {}
+// }
 
-export class ResolvedNotPredicateNode {
-  readonly kind = "not" as const;
+// export class ResolvedNotPredicateNode {
+//   readonly kind = "not" as const;
 
-  constructor(public inner: ResolvedPredicateNode) {}
-}
+//   constructor(public inner: ResolvedPredicateNode) {}
+// }
 
-export class NotPredicate<TContext>
-  implements Predicate<TContext> {
+// export class NotPredicate<TContext>
+//   implements Predicate<TContext> {
 
-  constructor(public inner: Predicate<TContext>) {}
+//   constructor(public inner: Predicate<TContext>) {}
 
-  evaluate(context: TContext): boolean {
-    return !this.inner.evaluate(context);
-  }
-}
+//   evaluate(context: TContext): boolean {
+//     return !this.inner.evaluate(context);
+//   }
+// }

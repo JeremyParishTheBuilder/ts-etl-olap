@@ -1,6 +1,7 @@
 import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
 import { type ColumnId } from "./Column.js";
-import { type ResolvedPredicateNode, type Predicate } from "../evaluation/predicate/Predicate.js";
+import { type Predicate } from "../evaluation/predicate/Predicate.js";
+import { type ResolvedPredicateNode } from "../semantic/ast/PredicateNode.js";
 import { ResolvedPredicateColumnCollector } from "../utils/PredicateColumnCollector.js";
 import { bindPredicate } from "../semantic/predicate.js";
 import { type Table } from "./Table.js";

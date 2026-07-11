@@ -1,5 +1,5 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { type PredicateNode } from "../../evaluation/predicate/Predicate.js";
+import { type PredicateNode } from "../../semantic/ast/PredicateNode.js";
 
 export interface DeleteFromStatement extends BaseStatement {
   kind: "delete_from",

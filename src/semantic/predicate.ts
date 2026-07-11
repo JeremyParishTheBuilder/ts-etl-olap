@@ -4,16 +4,16 @@ import {
 } from "../evaluation/predicate/ComparisonPredicate.js";
 import {
   BinaryLogicalPredicate,
-  NotPredicate,
   ResolvedBinaryLogicalPredicateNode,
-  ResolvedNotPredicateNode
 } from "../evaluation/predicate/LogicalPredicate.js";
-import {
+import { NotPredicate } from "../evaluation/predicate/NotPredicate.js";
+import { 
   type PredicateNode,
-  type Predicate,
   type ResolvedPredicateNode
-} from "../evaluation/predicate/Predicate.js";
+} from "./ast/PredicateNode.js";
+import { type Predicate } from "../evaluation/predicate/Predicate.js";
 import { type Table } from "../schema/Table.js";
+import { ResolvedNotPredicateNode } from "./ast/NotPredicateNode.js";
 import { bindExpression, resolveExpression } from "./expression.js";
 
 export function bindPredicate(
