@@ -1,3 +1,4 @@
+import { JsonPath } from "../../mapping/import/JsonPath.js";
 import { ValueResolverContext } from "../../mapping/value/ValueResolverContext.js";
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { type Expression } from "./Expression.js";
@@ -5,22 +6,20 @@ import { type Expression } from "./Expression.js";
 export class JsonExpression
   implements Expression<ValueResolverContext, ColumnValue> {
 
+  private readonly path: JsonPath;
+
   constructor(
     public name: string,
-  ) {}
+  ) {
+    this.path = JsonPath.parse(name);
+  }
 
   evaluate(context: ValueResolverContext): ColumnValue {
-    const source = context.source;
+    const value = this.path.resolveFirst(context.source);
 
-    if (
-      source === null ||
-      typeof source !== "object" ||
-      Array.isArray(source)
-    ) {
+    if (value === undefined) {
       return null;
     }
-
-    const value = source[this.name];
 
     if (
       value === null ||

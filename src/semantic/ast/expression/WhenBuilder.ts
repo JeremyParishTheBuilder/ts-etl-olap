@@ -1,10 +1,10 @@
-import { type ExpressionNode } from "../../evaluation/expression/Expression.js";
+import { type ExpressionNode } from "../../../evaluation/expression/Expression.js";
 import {
   type PredicateNode,
-} from "../../semantic/ast/predicate/PredicateNode.js";
-import { type ExplicitInput } from "../../types/ExplicitInput.js";
-import { asExpressionNode } from "../expression/asExpressionNode.js";
-import { type CaseBranch } from "./CaseBranch.js";
+} from "../predicate/PredicateNode.js";
+import { type ExplicitInput } from "../../../types/ExplicitInput.js";
+import { asExpressionNode } from "../../../dsl/expression/asExpressionNode.js";
+import { type CaseBranchNode } from "./CaseBranchNode.js";
 import { type CaseBuilder } from "./CaseBuilder.js";
 
 export class WhenBuilder {
@@ -18,7 +18,7 @@ export class WhenBuilder {
       {
         when: this.predicate,
         then: asExpressionNode(expr),
-      } as CaseBranch
+      } as CaseBranchNode
     );
 
     return this.caseBuilder;

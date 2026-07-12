@@ -6,10 +6,7 @@ import { type Expression } from "./Expression.js";
 
 export class CaseExpression<TContext> implements Expression<TContext> {
   public constructor(
-    public readonly branches: Array<{
-      when: Predicate<TContext>,
-      then: Expression<TContext>
-    }>,
+    public readonly branches: CaseBranch<TContext>[],
     public readonly elseExpr?: Expression<TContext>,
   ) {}
 
@@ -23,3 +20,8 @@ export class CaseExpression<TContext> implements Expression<TContext> {
     return this.elseExpr?.evaluate(context) ?? null;
   }
 }
+
+export type CaseBranch<TContext> = {
+  when: Predicate<TContext>;
+  then: Expression<TContext>;
+};

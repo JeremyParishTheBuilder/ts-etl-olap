@@ -2,10 +2,13 @@ import { AndPredicate } from "../../evaluation/predicate/AndPredicate.js";
 import { ContainsPredicate } from "../../evaluation/predicate/ContainsPredicate.js";
 import { IsDirectoryPredicate } from "../../evaluation/predicate/IsDirectoryPredicate.js";
 import { IsFilePredicate } from "../../evaluation/predicate/IsFilePredicate.js";
+import { IsNotNullPredicate } from "../../evaluation/predicate/IsNotNull.js";
+import { IsNullPredicate } from "../../evaluation/predicate/IsNull.js";
 import { NotPredicate } from "../../evaluation/predicate/NotPredicate.js";
 import { OrPredicate } from "../../evaluation/predicate/OrPredicate.js";
 import { XorPredicate } from "../../evaluation/predicate/XorPredicate.js";
 import { type FsObject } from "../../mapping/discovery/FsObject.js";
+import { type ExpressionBuilder } from "../expression/ExpressionBuilder.js";
 import { PredicateBuilder } from "./PredicateBuilder.js";
 
 export function every<TContext>(
@@ -71,5 +74,21 @@ export function contains(
 ) {
   return new PredicateBuilder<FsObject>(
     new ContainsPredicate(predicate.predicate)
+  );
+}
+
+export function isNull<TContext>(
+  inner: ExpressionBuilder<TContext>,
+) {
+  return new PredicateBuilder<TContext>(
+    new IsNullPredicate(inner)
+  );
+}
+
+export function isNotNull<TContext>(
+  inner: ExpressionBuilder<TContext>,
+) {
+  return new PredicateBuilder<TContext>(
+    new IsNotNullPredicate(inner)
   );
 }

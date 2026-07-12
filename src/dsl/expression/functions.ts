@@ -1,4 +1,3 @@
-import { CaseBuilder } from "../case/CaseBuilder.js";
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { CaptureExpression } from "../../evaluation/expression/CaptureExpression.js";
 import { JsonExpression } from "../../evaluation/expression/JsonExpression.js";
@@ -7,9 +6,19 @@ import { ConcatExpression } from "../../evaluation/expression/ConcatExpression.j
 import { DirectoryNameExpression } from "../../evaluation/expression/DirectoryNameExpression.js";
 import { ExpressionBuilder } from "./ExpressionBuilder.js";
 import { BasenameExpression } from "../../evaluation/expression/BasenameExpression.js";
+import {
+  type CaseBranch,
+  CaseExpression
+} from "../../evaluation/expression/CaseExpression.js";
+import { type Expression } from "../../evaluation/expression/Expression.js";
 
-export function case_() {   
-  return new CaseBuilder();
+export function case_<TContext>(
+  branches: CaseBranch<TContext>[],
+  elseExpr: Expression<TContext>
+) {
+  return new ExpressionBuilder(
+    new CaseExpression(branches, elseExpr)
+  );
 }
 
 export function json(

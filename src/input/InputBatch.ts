@@ -16,7 +16,7 @@ import {
 import { type InlineColumnSpec } from "../schema/Column.js";
 import { type ConstraintSpec } from "../schema/Constraint.js";
 import { type ReferentialAction } from "../schema/ReferentialAction.js";
-import { CaseBuilder } from "../dsl/case/CaseBuilder.js";
+import { CaseBuilder } from "../semantic/ast/expression/CaseBuilder.js";
 import { type ExpressionNode } from "../evaluation/expression/Expression.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";

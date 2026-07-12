@@ -21,8 +21,8 @@ import { IdentitySource } from '../mapping/import/IdentitySource.js';
 import { JsonPath } from '../mapping/import/JsonPath.js';
 import { ImportPipeline } from '../mapping/pipeline/ImportPipeline.js';
 import { DiscoveryImportNode } from '../mapping/import/DiscoveryImportNode.js';
-import { basename, capture, concat, directoryName, json, literal } from '../dsl/expression/functions.js';
-import { every, some, isDirectory, isFile, contains } from '../dsl/predicate/functions.js';
+import { basename, capture, case_, concat, directoryName, json, literal } from '../dsl/expression/functions.js';
+import { every, some, isDirectory, isFile, contains, isNull, isNotNull } from '../dsl/predicate/functions.js';
 
 const CCR1_PATH: string = '../chain-registry';
 
@@ -148,6 +148,7 @@ export const getChainRegContents = () => {
     new ImportMapping({
       tableName: "Images",
       sourceResolver: JsonPath.parse("logo_URIs"),
+      prefix: "",
       fields: {
         owner: capture("owner"),
         type: literal("logo")
@@ -158,8 +159,30 @@ export const getChainRegContents = () => {
     new ImportMapping({
       tableName: "Images",
       sourceResolver: JsonPath.parse("images"),
+      prefix: "",
       fields: {
-        owner: capture("owner")
+        owner: capture("owner"),
+        imageSyncOwner: case_([
+          {
+            when: every(
+              isNull(json("image_sync.base_denom")),
+              isNotNull(json("image_sync.chain_name"))
+            ),
+            then: concat(
+              literal("Chain:"),
+              json("image_sync.chain_name")
+            )
+          }, {
+            when: isNotNull(json("image_sync.chain_name")),
+            then: concat(
+              literal("Asset:"),
+              json("image_sync.chain_name"),
+              literal(":"),
+              json("image_sync.base_denom")
+            )
+          }],
+          literal(null)
+        )
       }
     });
 
