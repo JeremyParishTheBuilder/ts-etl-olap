@@ -1,38 +1,34 @@
 import { type ExpressionBuilder } from "../../dsl/expression/ExpressionBuilder.js";
 import { pathToPascalCase } from "../../utils/format.js";
-//import { type Capture } from "../value/Capture.js";
-import { type CaptureContext } from "../value/CaptureContext.js";
-//import { type DerivedField } from "../value/DerivedField.js";
-import { type ValueResolverContext } from "../value/ValueResolverContext.js";
+import { type CaptureContext } from "../discovery/CaptureContext.js";
 import { type ImportSource } from "./ImportSource.js";
 
 export class ImportMapping {
+  public accepts?: string; 
   public tableName: string;
-  public sourceResolver: ImportSource;
+  public source: ImportSource;
   public prefix?: string;
-  //public derivedFields: DerivedField[];
   public fields?: Record<string, ExpressionBuilder<CaptureContext>>;
-  //public captures: Capture<ValueResolverContext>[];
   public captures?: Record<string, ExpressionBuilder<CaptureContext>>;
-  public nestedMappings: ImportMapping[];
+  public children: ImportMapping[];
 
   constructor(readonly spec: { 
+    accepts?: string,
     tableName?: string,
-    sourceResolver: ImportSource,
+    source: ImportSource,
     prefix?: string,
     fields?: Record<string, ExpressionBuilder<CaptureContext>>,
-    //captures?: Capture<ValueResolverContext>[]
     captures?: Record<string, ExpressionBuilder<CaptureContext>>,
-    nestedMappings?: ImportMapping[],
+    children?: ImportMapping[],
   }) {
+    this.accepts = spec.accepts;
     this.tableName = spec.tableName ??
-      ImportMapping.inferTableName(spec.sourceResolver);
-    this.sourceResolver = spec.sourceResolver;
+      ImportMapping.inferTableName(spec.source);
+    this.source = spec.source;
     this.prefix = spec.prefix;
-    this.fields = spec.fields;// ?? [];
-    //this.captures = spec.captures ?? [];
+    this.fields = spec.fields;
     this.captures = spec.captures;
-    this.nestedMappings = spec.nestedMappings ?? [];
+    this.children = spec.children ?? [];
   }
 
   static inferTableName(

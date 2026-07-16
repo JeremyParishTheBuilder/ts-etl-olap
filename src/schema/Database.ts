@@ -8,8 +8,8 @@ import {
   type ForeignKey,
 } from './ForeignKey.js';
 import { Immutable } from "../infrastructure/Immutable.js";
-import { ReferentialAction } from './ReferentialAction.js';
-import { RowView } from './RowView.js';
+import { type ReferentialAction } from './ReferentialAction.js';
+import { type RowView } from './RowView.js';
 import { IdAllocator } from '../types/IdAllocator.js';
 import { NamedObjectStore } from '../infrastructure/NamedObjectStore.js';
 import { type ResolvedUpdate } from '../types/ResolvedUpdate.js';

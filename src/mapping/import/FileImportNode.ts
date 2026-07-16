@@ -7,7 +7,7 @@ import { ImportResult } from "./ImportResult.js";
 import { type FileReader } from "../discovery/FileReader.js";
 import { ImportContext } from "./ImportContext.js";
 import { isColumnValue, type ColumnValue } from "../../types/ColumnValue.js";
-import { type JsonValue } from "../value/JsonValue.js";
+import { type JsonValue } from "../value/json/JsonValue.js";
 import { type ValueResolverContext } from "../value/ValueResolverContext.js";
 import { type ImportSource } from "./ImportSource.js";
 import { type ArrayLocation } from "./ArrayLocation.js";
@@ -15,6 +15,8 @@ import { arraysEqual } from "../../utils/arrayHelpers.js";
 import { pathToPascalCase, toPascalCase } from "../../utils/format.js";
 import { PredicateBuilder } from "../../dsl/predicate/PredicateBuilder.js";
 import { FsObject } from "../discovery/FsObject.js";
+import { ObjectImporter } from "./ObjectImporter.js";
+import { FileLoader } from "../discovery/FileLoader.js";
 
 export interface FileImportNodeSpec {
   readonly acceptsNodeType: string;
@@ -25,6 +27,8 @@ export interface FileImportNodeSpec {
 }
 
 export class FileImportNode implements ImportNode {
+  private readonly objectImporter = new ObjectImporter();
+
   constructor(readonly spec: FileImportNodeSpec) {}
 
   accepts(
@@ -39,25 +43,29 @@ export class FileImportNode implements ImportNode {
   import(
     discovery: DiscoveryResult
   ): ImportResult[] {
-
     const directory = discovery.objects.get(this.spec.directoryObjectName);
 
     if (!(directory instanceof Directory)) {
       return [];
     }
 
-    const file =
-      directory.contents?.find(
-        obj =>
-          obj instanceof File &&
-          this.spec.matcher.evaluate(obj)
-      );
+    const loader = new FileLoader(
+      this.spec.matcher,
+      this.spec.reader
+    );
+    // const file =
+    //   directory.contents?.find(
+    //     obj =>
+    //       obj instanceof File &&
+    //       this.spec.matcher.evaluate(obj)
+    //   );
 
-    if (!(file instanceof File)) {
-      return [];
-    }
+    // if (!(file instanceof File)) {
+    //   return [];
+    // }
 
-    const source = this.spec.reader.read(file);
+    // const source = this.spec.reader.read(file);
+    const source = loader.load(directory);
 
     if (source === null) {
       return [];
@@ -68,288 +76,288 @@ export class FileImportNode implements ImportNode {
       discovery.identity
     );
 
-    return this.importMapping(
+    return this.objectImporter.import(
       discovery,
       context,
       this.spec.mapping,
       source,
-      inferredPrefix(file)
+      ""//inferredPrefix(file)
     );
   }
 
-  private importMapping(
-    discovery: DiscoveryResult,
-    context: ImportContext,
-    mapping: ImportMapping,
-    source: JsonValue,
-    prefix: string,
-  ): ImportResult[] {
-    const results: ImportResult[] = [];
+  // private importMapping(
+  //   discovery: DiscoveryResult,
+  //   context: ImportContext,
+  //   mapping: ImportMapping,
+  //   source: JsonValue,
+  //   prefix: string,
+  // ): ImportResult[] {
+  //   const results: ImportResult[] = [];
 
-    const values = new Map<string, ColumnValue>();
+  //   const values = new Map<string, ColumnValue>();
 
-    const excludedProperties = new Set(
-      mapping.nestedMappings.flatMap(m => m.sourceResolver.consumedKeys())
-    );
+  //   const excludedProperties = new Set(
+  //     mapping.children.flatMap(m => m.source.consumedKeys())
+  //   );
 
-    const effectivePrefix = mapping.prefix ?? prefix;
+  //   const effectivePrefix = mapping.prefix ?? prefix;
 
-    this.collectValues(
-      values,
-      effectivePrefix,
-      source,
-      excludedProperties,
-    );
+  //   this.collectValues(
+  //     values,
+  //     effectivePrefix,
+  //     source,
+  //     excludedProperties,
+  //   );
 
-    let childContext = context;
+  //   let childContext = context;
 
-    let resolverContext: ValueResolverContext = {
-      source,
-      captures: childContext.captures,
-      capture(name: string): ColumnValue {
-        const value = childContext.captures.get(name);
+  //   let resolverContext: ValueResolverContext = {
+  //     source,
+  //     captures: childContext.captures,
+  //     capture(name: string): ColumnValue {
+  //       const value = childContext.captures.get(name);
 
-        if (value === undefined) {
-          throw new Error(`Missing capture '${name}'.`);
-        }
+  //       if (value === undefined) {
+  //         throw new Error(`Missing capture '${name}'.`);
+  //       }
 
-        return value;
-      }
-    };
+  //       return value;
+  //     }
+  //   };
 
-    for (const [name, builder] of Object.entries(mapping.fields ?? {})) {
-      values.set(
-        effectivePrefix + name,
-        builder.evaluate(resolverContext)
-      );
-    }
+  //   for (const [name, builder] of Object.entries(mapping.fields ?? {})) {
+  //     values.set(
+  //       effectivePrefix + name,
+  //       builder.evaluate(resolverContext)
+  //     );
+  //   }
 
-    for (const [name, builder] of Object.entries(mapping.captures?? {})) {
-      childContext = childContext.withCapture(
-        name,
-        builder.evaluate(resolverContext)
-      );
-    }
+  //   for (const [name, builder] of Object.entries(mapping.captures?? {})) {
+  //     childContext = childContext.withCapture(
+  //       name,
+  //       builder.evaluate(resolverContext)
+  //     );
+  //   }
 
-    let rowIdentity = context.identity.append(
-      ...mapping.sourceResolver.identityParts()
-    );
+  //   let rowIdentity = context.identity.append(
+  //     ...mapping.source.identityParts()
+  //   );
 
-    childContext = childContext.withIdentity(rowIdentity);
+  //   childContext = childContext.withIdentity(rowIdentity);
 
-    results.push(
-      new ImportResult(
-        mapping,
-        discovery,
-        childContext.captures,
-        values,
-        rowIdentity
-      )
-    );
+  //   results.push(
+  //     new ImportResult(
+  //       mapping,
+  //       discovery,
+  //       childContext.captures,
+  //       values,
+  //       rowIdentity
+  //     )
+  //   );
 
-    for (const child of this.resolveNestedMappings(mapping, source)) {
-      const nestedSources = child.sourceResolver.resolveMany(source);
+  //   for (const child of this.resolveNestedMappings(mapping, source)) {
+  //     const nestedSources = child.source.resolveMany(source);
 
-      const childPrefix =
-        (mapping.prefix ?? prefix)
-        + pathToPascalCase(
-            child.sourceResolver.identityParts()
-        )
-        + ".";
+  //     const childPrefix =
+  //       (mapping.prefix ?? prefix)
+  //       + pathToPascalCase(
+  //           child.source.identityParts()
+  //       )
+  //       + ".";
 
-      for (const [index, nested] of nestedSources.entries()) {
-        const nestedIdentity = rowIdentity.append(index);
+  //     for (const [index, nested] of nestedSources.entries()) {
+  //       const nestedIdentity = rowIdentity.append(index);
 
-        const context = childContext.withIdentity(nestedIdentity);
+  //       const context = childContext.withIdentity(nestedIdentity);
 
-        results.push(
-          ...this.importMapping(
-            discovery,
-            context,
-            child,
-            nested,
-            childPrefix
-          )
-        );
-      }
-    }
+  //       results.push(
+  //         ...this.importMapping(
+  //           discovery,
+  //           context,
+  //           child,
+  //           nested,
+  //           childPrefix
+  //         )
+  //       );
+  //     }
+  //   }
 
-    return results;
-  }
+  //   return results;
+  // }
 
-  private flattenObject(
-    values: Map<string, ColumnValue>,
-    prefix: string,
-    value: JsonValue,
-    excludedTopLevelKeys: ReadonlySet<string>,
-    path: readonly string[] = [],
-  ): void {
+  // private flattenObject(
+  //   values: Map<string, ColumnValue>,
+  //   prefix: string,
+  //   value: JsonValue,
+  //   excludedTopLevelKeys: ReadonlySet<string>,
+  //   path: readonly string[] = [],
+  // ): void {
 
-    if (isColumnValue(value)) {
-      values.set(
-        prefix + path.join("."),
-        value
-      );
-      return;
-    }
+  //   if (isColumnValue(value)) {
+  //     values.set(
+  //       prefix + path.join("."),
+  //       value
+  //     );
+  //     return;
+  //   }
 
-    if (Array.isArray(value)) {
-      return;
-    }
+  //   if (Array.isArray(value)) {
+  //     return;
+  //   }
 
-    if (
-      value !== null &&
-      typeof value === "object"
-    ) {
-      for (const [key, child] of Object.entries(value)) {
-        if (
-          path.length === 0 &&
-          excludedTopLevelKeys.has(key)
-        ) {
-          continue;
-        }
+  //   if (
+  //     value !== null &&
+  //     typeof value === "object"
+  //   ) {
+  //     for (const [key, child] of Object.entries(value)) {
+  //       if (
+  //         path.length === 0 &&
+  //         excludedTopLevelKeys.has(key)
+  //       ) {
+  //         continue;
+  //       }
 
-        this.flattenObject(
-          values,
-          prefix,
-          child,
-          excludedTopLevelKeys,
-          [...path, key],
-        );
-      }
-    }
-  }
+  //       this.flattenObject(
+  //         values,
+  //         prefix,
+  //         child,
+  //         excludedTopLevelKeys,
+  //         [...path, key],
+  //       );
+  //     }
+  //   }
+  // }
 
-  private collectValues(
-    values: Map<string, ColumnValue>,
-    prefix: string,
-    value: JsonValue,
-    excludedTopLevelKeys: ReadonlySet<string>,
-    path: string[] = [],
-  ): void {
+  // private collectValues(
+  //   values: Map<string, ColumnValue>,
+  //   prefix: string,
+  //   value: JsonValue,
+  //   excludedTopLevelKeys: ReadonlySet<string>,
+  //   path: string[] = [],
+  // ): void {
 
-    if (isColumnValue(value)) {
-      values.set(
-        prefix + path.join("."),
-        value
-      );
-      return;
-    }
+  //   if (isColumnValue(value)) {
+  //     values.set(
+  //       prefix + path.join("."),
+  //       value
+  //     );
+  //     return;
+  //   }
 
-    if (Array.isArray(value)) {
-      return;
-    }
+  //   if (Array.isArray(value)) {
+  //     return;
+  //   }
 
-    if (
-      value !== null &&
-      typeof value === "object"
-    ) {
-      for (const [key, child] of Object.entries(value)) {
-        if (
-          path.length === 0 &&
-          excludedTopLevelKeys.has(key)
-        ) {
-          continue;
-        }
+  //   if (
+  //     value !== null &&
+  //     typeof value === "object"
+  //   ) {
+  //     for (const [key, child] of Object.entries(value)) {
+  //       if (
+  //         path.length === 0 &&
+  //         excludedTopLevelKeys.has(key)
+  //       ) {
+  //         continue;
+  //       }
 
-        path.push(key);
+  //       path.push(key);
 
-        this.collectValues(
-          values,
-          prefix,
-          child,
-          excludedTopLevelKeys,
-          path,
-        );
+  //       this.collectValues(
+  //         values,
+  //         prefix,
+  //         child,
+  //         excludedTopLevelKeys,
+  //         path,
+  //       );
 
-        path.pop();
-      }
-    }
-  }
+  //       path.pop();
+  //     }
+  //   }
+  // }
 
-  private collectArrays(
-    value: JsonValue,
-    result: ArrayLocation[],
-    path: string[] = []
-  ): void {
-    if (
-      value === null ||
-      typeof value !== "object"
-    ) {
-      return;
-    }
+  // private collectArrays(
+  //   value: JsonValue,
+  //   result: ArrayLocation[],
+  //   path: string[] = []
+  // ): void {
+  //   if (
+  //     value === null ||
+  //     typeof value !== "object"
+  //   ) {
+  //     return;
+  //   }
 
-    if (Array.isArray(value)) {
-      result.push({
-        path: [...path],
-        values: value,
-      });
+  //   if (Array.isArray(value)) {
+  //     result.push({
+  //       path: [...path],
+  //       values: value,
+  //     });
 
-      return;
-    }
+  //     return;
+  //   }
 
-    for (const [key, child] of Object.entries(value)) {
-      path.push(key);
+  //   for (const [key, child] of Object.entries(value)) {
+  //     path.push(key);
 
-      this.collectArrays(
-        child,
-        result,
-        path
-      );
+  //     this.collectArrays(
+  //       child,
+  //       result,
+  //       path
+  //     );
 
-      path.pop();
-    }
-  }
+  //     path.pop();
+  //   }
+  // }
 
-  private resolveNestedMappings(
-    mapping: ImportMapping,
-    source: JsonValue
-  ): ImportMapping[] {
+  // private resolveNestedMappings(
+  //   mapping: ImportMapping,
+  //   source: JsonValue
+  // ): ImportMapping[] {
 
-    const explicit = mapping.nestedMappings;
+  //   const explicit = mapping.children;
 
-    const inferred: ImportMapping[] = [];
+  //   const inferred: ImportMapping[] = [];
 
-    if (source && typeof source === "object" && !Array.isArray(source)) {
+  //   if (source && typeof source === "object" && !Array.isArray(source)) {
 
-      const arrays: ArrayLocation[] = [];
+  //     const arrays: ArrayLocation[] = [];
 
-      this.collectArrays(
-        source,
-        arrays
-      );
+  //     this.collectArrays(
+  //       source,
+  //       arrays
+  //     );
     
-      for (const array of arrays) {
+  //     for (const array of arrays) {
 
-        const alreadyMapped =
-          explicit.some(m =>
-            arraysEqual(
-              m.sourceResolver.identityParts(),
-              array.path
-            )
-          );
+  //       const alreadyMapped =
+  //         explicit.some(m =>
+  //           arraysEqual(
+  //             m.source.identityParts(),
+  //             array.path
+  //           )
+  //         );
 
-        if (alreadyMapped) {
-          continue;
-        }
+  //       if (alreadyMapped) {
+  //         continue;
+  //       }
 
-        const inferredResolver: ImportSource = {
-          resolveMany: () => array.values,
-          resolveFirst: () => array.values[0] ?? null,
-          consumedKeys: () => [],
-          identityParts: () => array.path,
-        };
+  //       const inferredResolver: ImportSource = {
+  //         resolveMany: () => array.values,
+  //         resolveFirst: () => array.values[0] ?? null,
+  //         consumedKeys: () => [],
+  //         identityParts: () => array.path,
+  //       };
 
-        inferred.push(
-          new ImportMapping({
-            sourceResolver: inferredResolver
-          })
-        );
-      }
-    }
+  //       inferred.push(
+  //         new ImportMapping({
+  //           source: inferredResolver
+  //         })
+  //       );
+  //     }
+  //   }
 
-    return [...explicit, ...inferred];
-  }
+  //   return [...explicit, ...inferred];
+  // }
 }
 
 export function inferredPrefix(obj: FsObject): string {

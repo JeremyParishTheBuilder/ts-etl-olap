@@ -1,5 +1,4 @@
 import { DEFAULT, Dialect, DIALECT_RULES, type Keyword } from "../dialect/index.js";
-import { ReferentialAction } from "../schema/ReferentialAction.js";
 
 export interface EngineRuleSpec<T> {
   engineDefault: T; // fallback default

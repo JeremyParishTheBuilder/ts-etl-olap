@@ -1,17 +1,17 @@
-import { JsonPath } from "../../mapping/import/JsonPath.js";
-import { ValueResolverContext } from "../../mapping/value/ValueResolverContext.js";
+import { Path } from "../../mapping/import/Path.js";
+import { type ValueResolverContext } from "../../mapping/value/ValueResolverContext.js";
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { type Expression } from "./Expression.js";
 
 export class JsonExpression
   implements Expression<ValueResolverContext, ColumnValue> {
 
-  private readonly path: JsonPath;
+  private readonly path: Path;
 
   constructor(
     public name: string,
   ) {
-    this.path = JsonPath.parse(name);
+    this.path = Path.parse(name);
   }
 
   evaluate(context: ValueResolverContext): ColumnValue {

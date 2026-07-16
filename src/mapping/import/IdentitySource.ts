@@ -1,4 +1,4 @@
-import { type JsonValue } from "../value/JsonValue.js";
+import { type JsonValue } from "../value/json/JsonValue.js";
 import { type ImportSource } from "./ImportSource.js";
 
 export class IdentitySource implements ImportSource {

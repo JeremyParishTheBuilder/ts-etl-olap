@@ -1,7 +1,7 @@
 import fs from "fs";
 import { type FileReader } from "./FileReader.js";
 import { type File } from "./File.js";
-import { JsonValue } from "../value/JsonValue.js";
+import { type JsonValue } from "../value/json/JsonValue.js";
 
 export class JsonFileReader implements FileReader<JsonValue> {
   read(file: File): JsonValue {

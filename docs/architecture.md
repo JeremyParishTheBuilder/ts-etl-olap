@@ -45,9 +45,9 @@ It consists of four stages:
 - Schema Inference
 - Database Construction
 
-Discovery traverses external sources and produces immutable `DiscoveryResult`s.
+Discovery traverses arbitrary hierarchical data and produces immutable DiscoveryResults. Discovery is composed of DiscoveryNodes, DiscoveryNavigators, and optional DiscoveryDecoders, allowing the same discovery model to operate across filesystems, JSON, XML, and future structured sources.
 
-Import consumes discovery results using `ImportNode`s and `ImportMapping`s. Expressions compute fields and captures while automatic inference handles common cases such as nested objects, arrays, table names, and column prefixes.
+Import consumes DiscoveryResults using ImportNodes and ImportMappings. Expressions transform captured values into relational fields while automatic inference handles common mapping scenarios.
 
 Schema inference observes imported values to construct a `DatabaseSchema`.
 
@@ -97,7 +97,7 @@ Queries produce immutable `QueryPlan`s evaluated against `RowView`s.
 
 # DSL
 
-The DSL provides a fluent API for constructing SQL statements, expressions, and predicates.
+The DSL provides fluent builders for discovery, import mappings, SQL statements, expressions, and predicates.
 
 Runtime builders evaluate directly against typed contexts, while SQL builders construct abstract syntax trees for semantic analysis.
 
@@ -127,6 +127,7 @@ Business rules are evaluated separately before export or publication.
 - Referential propagation operates against immutable snapshots.
 - Structural validation belongs to the engine.
 - Business validation belongs to the validation layer.
+- Discovery is independent of import and relational schema.
 
 ---
 

@@ -1,6 +1,6 @@
 import { type Action } from "./Action.js";
 import { type Databases } from "../schema/Databases.js";
-import { ForeignKeyId } from "../schema/ForeignKey.js";
+import { type ForeignKeyId } from "../schema/ForeignKey.js";
 
 export class DropForeignKeyAction implements Action {
   constructor(

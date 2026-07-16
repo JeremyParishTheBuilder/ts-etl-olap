@@ -1,7 +1,7 @@
 import { Dialect, type DialectRules, DIALECT_RULES } from "../dialect/index.js";
 import { type EnginePolicy } from "./EnginePolicy.js";
 import { RuleResolver } from "./RuleResolver.js";
-import { RulesFacadeShape, RulesFacade } from "./RulesFacade.js";
+import { type RulesFacadeShape, RulesFacade } from "./RulesFacade.js";
 
 import { type InputBatch } from "../input/InputBatch.js";
 

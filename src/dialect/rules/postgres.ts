@@ -1,5 +1,4 @@
-import { ReferentialAction } from "../../schema/ReferentialAction.js";
-import { DialectRules } from "../DialectRules.js";
+import { type DialectRules } from "../DialectRules.js";
 import { CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP, DEFAULT, NOW, type Keyword } from "../keywords.js";
 
 //export const DEFAULT = Symbol("DEFAULT");

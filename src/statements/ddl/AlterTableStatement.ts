@@ -1,6 +1,6 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { Column, InlineColumnSpec }  from "../../schema/Column.js";
-import { ForeignKeySpec, type ConstraintSpec } from "../../schema/Constraint.js";
+import { Column, type InlineColumnSpec }  from "../../schema/Column.js";
+import { type ForeignKeySpec, type ConstraintSpec } from "../../schema/Constraint.js";
 import { CONSTRAINT_KIND } from "../../schema/ConstraintKind.js";
 import { type ReferentialAction } from "../../schema/ReferentialAction.js";
 import { type PredicateNode } from "../../semantic/ast/predicate/PredicateNode.js";

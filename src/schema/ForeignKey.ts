@@ -3,7 +3,7 @@ import { type ColumnId } from "./Column.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
 import { type IndexId } from "./Index.js";
-import { ReferentialAction } from "./ReferentialAction.js";
+import { type ReferentialAction } from "./ReferentialAction.js";
 import { type TableId } from "./Table.js";
 
 export type ForeignKeyId = number & { readonly __brand: "ForeignKeyId" };

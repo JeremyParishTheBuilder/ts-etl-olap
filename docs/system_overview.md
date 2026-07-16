@@ -1,6 +1,6 @@
 # System Overview
 
-Embedded in-memory ETL and validation engine for structured datasets such as filesystem-based JSON registries.
+Embedded in-memory ETL and validation engine for hierarchical structured datasets such as filesystem registries, JSON documents, and similar sources.
 
 The system treats external structured data as a relational database:
 
@@ -26,11 +26,11 @@ Export
 
 ## Capabilities
 
-* Declarative filesystem discovery
+* Declarative hierarchical discovery
 * Typed discovery results with scoped captures and stable import identities
-* Declarative import mappings from external data to relational tables
+* Declarative import mappings from discovered values to relational tables
 * Expression-based computed fields and captures
-* Automatic flattening of nested objects
+* Automatic mapping of nested structured data
 * Automatic inference of array mappings
 * Automatic inference of table names and column prefixes
 * Automatic relational schema inference
@@ -56,12 +56,14 @@ Export
 * Separation of discovery, import, schema inference, execution, validation, and export
 * Stable runtime identifiers with case-insensitive user-facing names
 * Pure execution over immutable database state
+* Discovery is independent of the underlying storage medium.
+* Navigation and decoding are separate concerns.
 
 ## Execution Model
 
-* Discovery traverses external sources and produces immutable `DiscoveryResult`s.
+* Discovery traverses hierarchical data through navigators and optional decoders to produce immutable DiscoveryResults.
 * Import nodes consume discovery results to produce immutable `ImportResult`s.
-* Import mappings evaluate expressions to produce relational fields and descendant captures.
+* Import mappings evaluate expressions over captured values to produce relational fields.
 * Import results sharing the same import identity are assembled into logical relational rows.
 * Schema inference constructs a relational schema from imported data.
 * Database construction builds immutable relational objects.

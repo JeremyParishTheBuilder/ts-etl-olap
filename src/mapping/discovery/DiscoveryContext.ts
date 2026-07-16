@@ -1,19 +1,22 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { type ImportRowIdentity } from "../import/ImportRowIdentity.js";
-import { type CaptureContext } from "../value/CaptureContext.js";
+import { type CaptureContext } from "./CaptureContext.js";
+import type { DiscoveryValue } from "../value/DiscoveryValue.js";
 import { type FsObject } from "./FsObject.js";
+import type { CaptureValue } from "../value/CaptureValue.js";
+import type { DiscoveryIdentity } from "./DiscoveryIdentity.js";
 
 export class DiscoveryContext implements CaptureContext {
 
   constructor(
-    readonly current: FsObject,
-    readonly captures:
-      ReadonlyMap<string, ColumnValue> = new Map(),
-    readonly identity: ImportRowIdentity,
+    readonly current: DiscoveryValue,
+    readonly captures: ReadonlyMap<string, CaptureValue> = new Map(),
+    //readonly identity: ImportRowIdentity,
+    readonly identity: DiscoveryIdentity,
   ) {}
 
   withCurrent(
-    current: FsObject
+    current: DiscoveryValue
   ): DiscoveryContext {
     return new DiscoveryContext(
       current,
@@ -22,9 +25,9 @@ export class DiscoveryContext implements CaptureContext {
     );
   }
 
-  withScopeCapture(
+  withCapture(
     name: string,
-    value: ColumnValue
+    value: CaptureValue
   ): DiscoveryContext {
     return new DiscoveryContext(
       this.current,
@@ -48,8 +51,8 @@ export class DiscoveryContext implements CaptureContext {
 
   selectCaptures(
     names: readonly string[]
-  ): Map<string, ColumnValue> {
-    const result = new Map<string, ColumnValue>();
+  ): Map<string, CaptureValue> {
+    const result = new Map<string, CaptureValue>();
 
     for (const name of names) {
       if (

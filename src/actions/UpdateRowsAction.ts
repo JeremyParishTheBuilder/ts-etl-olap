@@ -7,7 +7,7 @@ import { type Predicate } from "../evaluation/predicate/Predicate.js";
 import { FilterNode } from "../evaluation/plan/FilterNode.js";
 import { TableScanNode } from "../evaluation/plan/TableScanNode.js";
 import { type PlanNode } from "../evaluation/plan/PlanNode.js";
-import { ResolvedUpdate } from "../types/ResolvedUpdate.js";
+import { type ResolvedUpdate } from "../types/ResolvedUpdate.js";
 
 export class UpdateRowsAction implements Action {
   constructor(

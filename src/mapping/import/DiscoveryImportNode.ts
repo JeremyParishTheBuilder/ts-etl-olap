@@ -1,8 +1,9 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { toPascalCase } from "../../utils/format.js";
 import { type DiscoveryResult } from "../discovery/DiscoveryResult.js";
+import type { CaptureValue } from "../value/CaptureValue.js";
 import { type ImportMapping } from "./ImportMapping.js";
-import { ImportNode } from "./ImportNode.js";
+import { type ImportNode } from "./ImportNode.js";
 import { ImportResult } from "./ImportResult.js";
 
 export interface DiscoveryImportNodeSpec {
@@ -32,7 +33,7 @@ export class DiscoveryImportNode implements ImportNode {
     const resolverContext = {
       source: null,
       captures: discovery.captures,
-      capture(name: string): ColumnValue {
+      capture(name: string): CaptureValue {
         const value = discovery.captures.get(name);
 
         if (value === undefined) {

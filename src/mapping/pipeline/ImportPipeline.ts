@@ -7,11 +7,16 @@ import { type ImportNode } from "../import/ImportNode.js";
 import { collectImports } from "./collectImports.js";
 import { inferSchema } from "./inferSchema.js";
 import { ImportRowIdentity } from "../import/ImportRowIdentity.js";
-import { ImportPipelineResult } from "./ImportPipelineResult.js";
+import { type ImportPipelineResult } from "./ImportPipelineResult.js";
 import { type ColumnValue } from "../../types/ColumnValue.js";
+import type { DiscoveryValue } from "../value/DiscoveryValue.js";
 
-export interface ImportPipelineSpec {
-  readonly registry: DiscoveryNode;
+export interface ImportPipelineSpec//<
+  //TCurrent extends DiscoveryValue,
+  //TNext extends DiscoveryValue
+//> {
+{
+  readonly registry: DiscoveryNode;//<TCurrent, TNext>;
   readonly importers: readonly ImportNode[];
   readonly databaseName: string;
   readonly root: Directory;
@@ -19,8 +24,14 @@ export interface ImportPipelineSpec {
   readonly sourceIdentity?: ColumnValue;
 }
 
-export class ImportPipeline {
-  static build(spec: ImportPipelineSpec): ImportPipelineResult {
+export class ImportPipeline<TCurrent extends DiscoveryValue, TNext extends DiscoveryValue> {
+  static build//<
+    //TCurrent extends DiscoveryValue,
+    //TNext extends DiscoveryValue
+  //>(
+  (
+    spec: ImportPipelineSpec//<TCurrent, TNext>
+  ): ImportPipelineResult {
     const discoveries = spec.registry.discover(
       new DiscoveryContext(
         spec.root,

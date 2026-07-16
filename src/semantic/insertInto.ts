@@ -5,7 +5,7 @@ import { type ColumnId, type Column } from "../schema/Column.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { getOrderedColumns, resolveUniqueColumnList } from "./resolveColumnList.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
-import { ExplicitInput } from "../types/ExplicitInput.js";
+import { type ExplicitInput } from "../types/ExplicitInput.js";
 
   // Handles interpretation and completion of user intent:
 

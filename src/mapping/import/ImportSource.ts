@@ -1,4 +1,4 @@
-import { type JsonValue } from "../value/JsonValue.js";
+import { type JsonValue } from "../value/json/JsonValue.js";
 
 export interface ImportSource {
   resolveMany(source: JsonValue): readonly JsonValue[];
