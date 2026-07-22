@@ -20,9 +20,9 @@ import { CaptureExpression } from "../../evaluation/expression/CaptureExpression
 import type { CaptureContext } from "../../mapping/discovery/CaptureContext.js";
 import type { CaptureValue } from "../../mapping/value/CaptureValue.js";
 import { DiscoveryExpressionBuilder } from "./DiscoveryExpressionBuilder.js";
-//import { CaptureObjectExpression } from "../../evaluation/expression/CaptureObjectExpression.js";
-// import { CaptureContext } from "../../mapping/value/CaptureContext.js";
-// import { JsonValue } from "../../mapping/value/JsonValue.js";
+import { PathExpression } from "../../evaluation/expression/PathExpression.js";
+import { SourceExpression } from "../../evaluation/expression/SourceExpression.js";
+import { PropertyPath } from "../../mapping/import/PropertyPath.js";
 
 export function case_<TContext>(
   branches: CaseBranch<TContext>[],
@@ -55,15 +55,15 @@ export function directoryName() {
   );
 }
 
-export function propertyName() {
-  return new ScalarExpressionBuilder(
-    new PropertyNameExpression()
-  );
-}
-
 export function basename() {
   return new ScalarExpressionBuilder(
     new BasenameExpression()
+  );
+}
+
+export function propertyName() {
+  return new ScalarExpressionBuilder(
+    new PropertyNameExpression()
   );
 }
 
@@ -91,18 +91,22 @@ export function captureScalar(
   );
 }
 
-export function capture(
+export function capture<TContext extends CaptureContext>(
   name: string
-) {
+): DiscoveryExpressionBuilder<TContext, CaptureValue> {
+
   return new DiscoveryExpressionBuilder(
-    new CaptureExpression(name)
+    new CaptureExpression<TContext>(name)
   );
 }
 
-// export function captureObject(
-//   name: string
+// export function path(
+//   path: string
 // ) {
-//   return new ExpressionBuilder(
-//     new CaptureObjectExpression(name)
+//   return new DiscoveryExpressionBuilder(
+//     new PathExpression(
+//       new SourceExpression(),
+//       PropertyPath.parse(path)
+//     )
 //   );
 // }

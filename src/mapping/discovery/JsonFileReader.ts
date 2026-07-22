@@ -1,10 +1,11 @@
 import fs from "fs";
 import { type FileReader } from "./FileReader.js";
 import { type File } from "./File.js";
-import { type JsonValue } from "../value/json/JsonValue.js";
+import type { StructuredValue } from "../value/StructuredValue.js";
 
-export class JsonFileReader implements FileReader<JsonValue> {
-  read(file: File): JsonValue {
+// TODO - delete
+export class JsonFileReader implements FileReader<StructuredValue> {
+  read(file: File): StructuredValue {
     if (!file.basename.endsWith(".json")) {
       return null;
     }

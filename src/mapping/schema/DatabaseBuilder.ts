@@ -57,11 +57,17 @@ function groupImports(imports: ImportResult[]): Map<string, ImportResult[]> {
   const groupedImports = new Map<string, ImportResult[]>();
 
   for (const importResult of imports) {
-    if (!groupedImports.get(importResult.mapping.tableName)) {
-      groupedImports.set(importResult.mapping.tableName, [])
+    // if (!groupedImports.get(importResult.mapping.tableName)) {
+    //   groupedImports.set(importResult.mapping.tableName, [])
+    // }
+
+    if (!groupedImports.get(importResult.tableName)) {
+      groupedImports.set(importResult.tableName, [])
     }
 
-    groupedImports.get(importResult.mapping.tableName)!.push(importResult);
+    //groupedImports.get(importResult.mapping.tableName)!.push(importResult);
+
+    groupedImports.get(importResult.tableName)!.push(importResult);
   }
 
   return groupedImports;

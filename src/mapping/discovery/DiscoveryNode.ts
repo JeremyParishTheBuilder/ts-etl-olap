@@ -18,7 +18,6 @@ export interface DiscoveryNodeSpec<
   readonly matcher: PredicateBuilder<TNavigation>,
   readonly children: readonly DiscoveryNode[],
   readonly captures?: Record<string, ExpressionBuilder<DiscoveryContext, CaptureValue>>,
-  readonly objectName?: string,
   readonly decoder?: DiscoveryDecoder<TNavigation, TDecoded>,
 }
 
@@ -27,14 +26,12 @@ export class DiscoveryNode {
     DiscoveryValue,
     DiscoveryValue,
     DiscoveryValue
-    >) {}
+  >) {}
 
   discover(
     context: DiscoveryContext
   ): DiscoveryResult[] {
     const results: DiscoveryResult[] = [];
-
-    const objectName = this.spec.objectName ?? this.spec.nodeType;
 
     const decoder = this.spec.decoder;
 
@@ -67,40 +64,47 @@ export class DiscoveryNode {
         current = decoded;
       }
 
-      let candidateContext = context.withCurrent(current);
-
-      candidateContext = candidateContext.withIdentityParts(
-        navigator.identityParts(context.current, candidate)
-      )
+      let childContext = context
+        .withCurrent(current)
+        .withIdentityParts(
+          navigator.identityParts(context.current, candidate)
+        );
 
       for (const [name, builder] of Object.entries(this.spec.captures?? {})) {
-        candidateContext = candidateContext.withCapture(
+        childContext = childContext.withCapture(
           name,
-          builder.evaluate(candidateContext)
+          builder.evaluate(childContext)
         );
       }
 
-      results.push(
-        new DiscoveryResult(
-          this.spec.nodeType,
-          candidateContext.identity,
-          new Map(candidateContext.captures),
-          new Map([
-            [
-              objectName,
-              current
-            ]
-          ])
-        )
+      const result = new DiscoveryResult(
+        this.spec.nodeType,
+        childContext.identity,
+        current,
+        new Map(childContext.captures),
+        []
       );
 
       for (const childNode of this.spec.children) {
-        results.push(
-          ...childNode.discover(
-            candidateContext
-          )
+        result.children.push(
+          ...childNode.discover(childContext)
         );
       }
+
+      console.log({
+        node: this.spec.nodeType,
+        captures: [...childContext.captures.keys()],
+        identity: childContext.identity.toString(),
+        current
+      });
+
+      results.push(result);
+
+      console.log(
+        this.spec.nodeType,
+        "children:",
+        this.spec.children.length
+      );
     }
 
     return results;

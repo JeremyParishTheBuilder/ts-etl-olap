@@ -20,6 +20,7 @@ export interface Expression<
   TValue = ColumnValue
 > {
   evaluate(context: TContext): TValue;
+  consumedKeys?(): readonly string[];
 }
 
 export type ResolvedExpressionNode =

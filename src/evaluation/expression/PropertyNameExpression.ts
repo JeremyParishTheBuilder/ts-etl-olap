@@ -1,11 +1,11 @@
-import type { JsonProperty } from "../../mapping/value/json/JsonProperty.js";
+import type { StructuredProperty } from "../../mapping/value/StructuredValue.js";
 import { type Expression } from "./Expression.js";
 
 export class PropertyNameExpression
-  implements Expression<JsonProperty, string> {
+  implements Expression<StructuredProperty, string> {
 
   evaluate(
-    context: JsonProperty
+    context: StructuredProperty
   ): string {
     return context.key;
   }

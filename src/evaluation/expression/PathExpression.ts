@@ -1,6 +1,5 @@
-import type { Path } from "../../mapping/import/Path.js";
+import type { PropertyPath } from "../../mapping/import/PropertyPath.js";
 import type { CaptureValue } from "../../mapping/value/CaptureValue.js";
-import { isColumnValue, type ColumnValue } from "../../types/ColumnValue.js";
 import type { Expression } from "./Expression.js";
 
 export class PathExpression<TContext>
@@ -8,19 +7,21 @@ export class PathExpression<TContext>
 
   constructor(
     readonly source: Expression<TContext, CaptureValue>,
-    readonly path: Path
+    readonly path: PropertyPath
   ) {}
 
   evaluate(
     context: TContext
   ): CaptureValue {
-    return this.path.resolveFirst(
+    return this.path.resolve(
       this.source.evaluate(context)
     );
-    // const root = this.source.evaluate(context);
+  }
 
-    // const value = this.path.resolveFirst(root);
-
-    // return value;
+  //TODO remove
+  consumedKeys?(): readonly string[] {
+    return this.path.parts.length > 0
+      ? [this.path.parts[0]]
+      : [];
   }
 }

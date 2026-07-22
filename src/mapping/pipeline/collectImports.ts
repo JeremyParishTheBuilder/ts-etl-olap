@@ -1,23 +1,42 @@
 import { type DiscoveryResult } from "../discovery/DiscoveryResult.js";
-import { type ImportNode } from "../import/ImportNode.js";
+import type { ImportMapping } from "../import/ImportMapping.js";
 import { type ImportResult } from "../import/ImportResult.js";
+import { ObjectImporter } from "../import/ObjectImporter.js";
 
 export function collectImports(
   discoveries: readonly DiscoveryResult[],
-  importers: readonly ImportNode[]
+  importMappings: readonly ImportMapping[]
 ): ImportResult[] {
   const results: ImportResult[] = [];
 
-  for (const discovery of discoveries) {
-    for (const importer of importers) {
+  const objectImporter = new ObjectImporter();
 
-      if (!importer.accepts(discovery)) {
-        continue;
-      }
+  for (const root of discoveries) {
+    for (const importMapping of importMappings) {
 
-      results.push(
-        ...importer.import(discovery)
-      );
+      // const discovery = discoveries.find(
+      //   d => d.resultType === importMapping.accepts
+      // );
+
+      // if (!discovery) {
+      //   continue;
+      // }
+
+      console.log("collectImports(): This is the importMapping:");
+      console.log(importMapping);
+      console.log("collectImports(): This is the discovery:");
+      console.log(root);
+      // if (
+      //   importMapping.accepts !== undefined &&
+      //   importMapping.accepts !== discovery.resultType
+      // ) {
+      //   continue;
+      // }
+
+      console.log("-----------------------------------------");
+      
+
+      results.push(...objectImporter.import(root, importMapping));
     }
   }
 

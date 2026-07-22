@@ -11,20 +11,18 @@ import { type PostgresInputBatch } from '../input/PostgresInputBatch.js';
 
 import { Directory } from "../mapping/discovery/Directory.js";
 import { ImportMapping } from '../mapping/import/ImportMapping.js';
-import { FileImportNode } from '../mapping/import/FileImportNode.js';
-import { type ImportNode } from '../mapping/import/ImportNode.js';
-import { JsonFileReader } from '../mapping/discovery/JsonFileReader.js';
-import { IdentitySource } from '../mapping/import/IdentitySource.js';
-import { Path } from '../mapping/import/Path.js';
 import { ImportPipeline } from '../mapping/pipeline/ImportPipeline.js';
-import { DiscoveryImportNode } from '../mapping/import/DiscoveryImportNode.js';
-import { basename, capture, captureScalar, case_, concat, current, directoryName, json, literal, propertyName } from '../dsl/expression/functions.js';
+import { basename, capture, captureScalar, case_, concat, current, directoryName, json, literal } from '../dsl/expression/functions.js';
 import { every, some, isDirectory, isFile, contains, isNull, isNotNull } from '../dsl/predicate/functions.js';
 import { SelfNavigator } from '../mapping/discovery/navigation/SelfNavigator.js';
 import { DirectoryNavigator } from '../mapping/discovery/navigation/DirectoryNavigator.js';
 import { DiscoveryNode } from '../mapping/discovery/DiscoveryNode.js';
 import { JsonDecoder } from '../mapping/discovery/decoding/JsonDecoder.js';
-import { JsonObjectNavigator } from '../mapping/discovery/navigation/JsonObjectNavigator.js';
+import { StructuredObjectNavigator } from '../mapping/discovery/navigation/StructuredObjectNavigator.js';
+import type { ImportContext } from '../mapping/import/ImportContext.js';
+import { ImportRoot } from '../mapping/import/ImportRoot.js';
+import { discovery, path } from '../mapping/import/dsl.js';
+import { StructuredArrayNavigator } from '../mapping/discovery/navigation/StructuredArrayNavigator.js';
 
 const CCR1_PATH: string = '../chain-registry';
 
@@ -36,116 +34,37 @@ export const getChainRegContents = () => {
 
   console.log("starting chain reg");
 
-  const chainDirectoryImportMapping = new ImportMapping({
-    tableName: "Chains",
-    source: new IdentitySource(),
-    fields: {
-      chainDirectoryName: captureScalar("chainDirectoryName"),
-      networkKind: captureScalar("networkKind"),
-      networkType: captureScalar("networkType")
-    }
-  });
+  // const logoUrisNode = new DiscoveryNode({
+  //   navigator: new StructuredObjectNavigator(),
+  //   matcher: propertyName().eq("logo_URIs"),
+  //   nodeType: "LogoUris",
+  //   children: [],
+  // });
 
-  // const chainDirectoryImportMapping2 = new ImportMapping({
-  //   accepts: "chainDirectory", // the import identity will be the same as this discovery node type's identity
-  //   tableName: "Chains",
-  //   fields: {
-  //     chainDirectoryName: captureScalar("chainDirectoryName"),
-  //     networkKind: captureScalar("networkKind"),
-  //     networkType: captureScalar("networkType")
+  // const assetNode = new DiscoveryNode({
+  //   navigator: new StructuredArrayNavigator(),
+  //   decoder: new JsonDecoder(),
+  //   nodeType: "asset",
+  //   captures: {
+  //     base: json("base"),
+  //     owner: concat(
+  //       literal("Asset:"),
+  //       captureScalar("chainDirectoryName"),
+  //       literal(":"),
+  //       current().path("base").scalar()
+  //     ),
   //   },
+  //   children: [],   
+  // });
+
+  // const assetlistFileNode = new DiscoveryNode({
+  //   navigator: new DirectoryNavigator(),
+  //   matcher: every(isFile(), basename().eq("assetlist.json")),
+  //   decoder: new JsonDecoder(),
+  //   nodeType: "assetlistFile",
   //   children: [
-  //     chainFileImportMapping3 // when these child import mappings are triggered to be imported,
-  //     // we also pass the identity of this very mapping (the chain direcoty name )
-  //     // as "chain.json" would be excluded, unless overridden
-  //   ]
-  // });
-
-  // const chainFileImportMapping3 = new ImportMapping({
-  //   source: capture("chain"),
-  //   fields: {
-  //     displayName: concat(
-  //       path("pretty_name"),
-  //       literal(" ("),
-  //       path("chain_id"),
-  //       literal(")")
-  //     )
-  //   },
-  //   prefix: "ChainFile",
-  //   children: [
-  //     logoUrisImportMapping4
-  //   ],
-  // });
-
-  // const logoURIsImportMapping4 = new ImportMapping({
-  //   accepts: "logoUrisNode", // overrides parent identity strategy,
-  //   // can be used to infer source (because logo_URIs is sometimes in chain, other times in asset)
-  //   tableName: "Images",
-  //   //source: parent().path("logo_URIs"), might not need
-  //   fields: {
-  //     type: literal("logo"),
-  //     owner: captureScalar("owner")
-  //   }
-  // });
-
-  const chainDirectoryImporter = new DiscoveryImportNode({
-    acceptsNodeType: "chainDirectory",
-    mapping: chainDirectoryImportMapping,
-  });
-
-  // const chainDirectoryImporter2 = new DiscoveryImportNode({
-  //   acceptsNodeType: "chainFile",
-  //   mapping: chainDirectoryImportMapping2,
-  // });
-
-  const logoUrisNode = new DiscoveryNode({
-    navigator: new JsonObjectNavigator(),
-    matcher: propertyName().eq("logo_URIs"),
-    nodeType: "LogoUris",
-    children: [],
-  });
-
-  const chainFileImportMapping2 = new ImportMapping({
-    tableName: "Chains",
-    source: new IdentitySource(),
-    fields: {
-      prettyName: capture("chain").path("pretty_name").scalar()
-    }
-  });
-
-  const chainFileImporter2 =
-    new DiscoveryImportNode({
-      acceptsNodeType: "chainFile",
-      mapping: chainFileImportMapping2,
-    });
-
-  // const chainFileImportMapping3 = new ImportMapping({
-  //   tableName: "Chains",
-  //   source: capture("chain"), // an entire object, not a scalar. Flatten and import all properties of entire object
-  //   fields: {
-  //     displayName: concat(
-  //       path("pretty_name"), // i.e., path from the source object
-  //       literal(" ("),
-  //       path("chain_id"),
-  //       literal(")")
-  //     )
-  //   },
-  //   prefix: "ChainFile",
-  //   children: [
-  //     logoUrisImportMapping3 // within the flattened source object, "logo_URIs" will be skipped,
-  //   ],
-  //   identityNode: "chainDirectory"
-  // });
-
-  // const logoURIsImportMapping4 = new ImportMapping({
-  //   tableName: "Images",
-  //   source: capture("logo_URIs"), // an entire object, not a scalar. Flatten and import all properties of entire object
-  //   fields: {
-  //     type: literal("logo"),
-  //     owner: captureScalar("owner")
-  //   },
-  //   //identityNode: "???" // could be used by either chain or by asset, so I can't really say chainDirectory or asset index
-  //   identity: field("owner") // just another idea
+  //     assetNode
+  //   ],   
   // });
 
   const chainFileNode = new DiscoveryNode({
@@ -154,11 +73,13 @@ export const getChainRegContents = () => {
     decoder: new JsonDecoder(),
     nodeType: "chainFile",
     captures: {
-      chain: current()
+      chain: current(),
+      owner: concat(
+        literal("Chain:"),
+        capture("chain").path("chain_name").scalar()
+      ),
     },
-    children: [
-      logoUrisNode
-    ],   
+    children: [],   
   });
 
   const chainCollection = 
@@ -171,7 +92,8 @@ export const getChainRegContents = () => {
         )
       ),
       children: [
-        chainFileNode
+        chainFileNode,
+        //assetlistFileNode,
       ],
       nodeType: "chainDirectory",
       captures: {
@@ -184,7 +106,6 @@ export const getChainRegContents = () => {
     new DiscoveryNode({
       matcher: isDirectory(),
       navigator: new SelfNavigator(Directory),
-      //traversalMode: TraversalMode.Self,
       children: [
         chainCollection
       ],
@@ -198,7 +119,6 @@ export const getChainRegContents = () => {
     new DiscoveryNode({
       navigator: new DirectoryNavigator(),
       matcher: every(isDirectory(), basename().eq("_non-cosmos")),
-      //traversalMode: TraversalMode.Children,
       children: [
         chainCollection
       ],
@@ -236,10 +156,13 @@ export const getChainRegContents = () => {
       }
     });
 
-  const registry =
+  const testRegistryDiscoveryRoot =
     new DiscoveryNode({
       navigator: new SelfNavigator(Directory),
       matcher: isDirectory(),
+      captures: {
+        registryName: literal("Test Cosmos Chain Registry")
+      },
       children: [
         mainnetScope,
         testnetScope
@@ -247,36 +170,12 @@ export const getChainRegContents = () => {
       nodeType: "registry"
     });
 
-  const registryRootDirectory = new Directory("./temp");
-
-  const feeTokenImportMapping = 
-    new ImportMapping({
-      tableName: "FeeTokens",
-      source: Path.parse("fees.fee_tokens"),
-    });
-
-  const stakingTokenImportMapping = 
-    new ImportMapping({
-      tableName: "StakingTokens",
-      source: Path.parse("staking.staking_tokens")
-  });
-    
-  const logoUrisImportMapping = 
-    new ImportMapping({
-      tableName: "Images",
-      source: Path.parse("logo_URIs"),
-      prefix: "",
-      fields: {
-        owner: captureScalar("owner"),
-        type: literal("logo")
-      }
-    });
+// -----------------------
 
   const imagesImportMapping = 
     new ImportMapping({
       tableName: "Images",
-      source: Path.parse("images"),
-      prefix: "",
+      source: path("images"),
       fields: {
         owner: captureScalar("owner"),
         imageSyncOwner: case_([
@@ -303,89 +202,90 @@ export const getChainRegContents = () => {
       }
     });
 
+  const logoUrisImportMapping = 
+    new ImportMapping({
+      tableName: "Images",
+      source: path("logo_URIs"),
+      fields: {
+        owner: captureScalar("owner"),
+        type: literal("logo")
+      }
+    });
+
   const chainFileImportMapping = new ImportMapping({
+    source: discovery("chainFile"),
     tableName: "Chains",
-    source: new IdentitySource(),
+    prefix: "ChainFile",
     fields: {
       displayName: concat(
           json("pretty_name"),
           literal(" ("),
           json("chain_id"),
           literal(")")
-        )
-    },
-    captures: {
-      owner: concat(
-          literal("Chain:"),
-          captureScalar("chainDirectoryName")
-        )
+        ),
+      owner: captureScalar("owner"),
     },
     children: [
-      feeTokenImportMapping,
-      stakingTokenImportMapping,
       logoUrisImportMapping,
-      imagesImportMapping
+      imagesImportMapping,
     ]
   });
 
-  const chainFileImporter =
-    new FileImportNode({
-      acceptsNodeType: "chainDirectory",
-      matcher: every(isFile(), basename().eq("chain.json")),
-      reader: new JsonFileReader(),
-      mapping: chainFileImportMapping,
-      directoryObjectName: "chainDirectory",
-    });
-
-  const assetsImportMapping = 
-    new ImportMapping({
-      tableName: "Assets",
-      source: Path.parse("assets"),
-      captures: {
-        owner: concat(
-            literal("Asset:"),
-            captureScalar("chainDirectoryName"),
-            literal(":"),
-            json("base")
-          ),
-        assetBase: json("base")
-      },
-      children: [
-        logoUrisImportMapping,
-        imagesImportMapping
-      ],
-    });
-
-  const assetlistFileImportMapping = new ImportMapping({
+  const chainDirectoryImportMapping = new ImportMapping({
+    source: discovery("chainDirectory"),
     tableName: "Chains",
-    source: new IdentitySource(),
+    flatten: false,
+    fields: {
+      chainDirectoryName: captureScalar("chainDirectoryName"),
+      networkKind: captureScalar("networkKind"),
+      networkType: captureScalar("networkType")
+    },
     children: [
-      assetsImportMapping,
+      chainFileImportMapping
     ]
   });
 
-  const assetlistFileImporter =
-    new FileImportNode({
-      acceptsNodeType: "chainDirectory",
-      matcher: every(isFile(), basename().eq("assetlist.json")),
-      reader: new JsonFileReader(),
-      mapping: assetlistFileImportMapping,
-      directoryObjectName: "chainDirectory",
-    });
+  const networkTypeImportMapping = new ImportMapping({
+    source: discovery("networkType"),
+    children: [
+      chainDirectoryImportMapping,
+      //ibcConnectionImportMapping,
+    ]
+  });
 
-  const importers: ImportNode[] = [
-    chainDirectoryImporter,
-    chainFileImporter2,
-    //chainFileImporter,
-    assetlistFileImporter,
-    //versionsFileImporter,
+  const networkKindImportMapping = new ImportMapping({
+    source: discovery("networkKind"),
+    children: [
+      networkTypeImportMapping
+    ]
+  });
+
+  const testRegistryImportMapping = new ImportMapping({
+    tableName: "Registries",
+    fields: {
+      registryName: captureScalar("registryName")
+    },
+    children: [
+      networkKindImportMapping,
+    ]
+  });
+
+  const testRegistryImportRoot = new ImportRoot({
+    discovery: testRegistryDiscoveryRoot,
+    mapping: testRegistryImportMapping
+  });
+
+  const importRoots: ImportRoot[] = [
+    testRegistryImportRoot,
   ];
 
+  const registryRootDirectory = new Directory("./temp");
+
   const result = ImportPipeline.build({
-    registry,
-    importers,
+    //registry: testRegistry, // should be an array of discovery roots
+    importRoots: importRoots, // specifically, 'root' import mappings
     databaseName: "Test Registry",
-    root: registryRootDirectory,
+    root: registryRootDirectory, // should no longer need a Directory--only the discovery roots
     existingDatabases: engine.databases,
     sourceIdentity: "Test Registry"
   });

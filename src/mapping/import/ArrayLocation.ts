@@ -1,6 +1,6 @@
-import { type JsonValue } from "../value/json/JsonValue.js";
+import type { StructuredValue } from "../value/StructuredValue.js";
 
 export interface ArrayLocation {
   readonly path: readonly string[];
-  readonly values: readonly JsonValue[];
+  readonly values: readonly StructuredValue[];
 }

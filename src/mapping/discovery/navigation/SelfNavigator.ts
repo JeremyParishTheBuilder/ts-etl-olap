@@ -5,10 +5,6 @@ import type { DiscoveryValue } from "../../value/DiscoveryValue.js";
 export class SelfNavigator<T extends DiscoveryValue>
   implements DiscoveryNavigator<T, T> {
 
-  // constructor(
-  //   private readonly acceptsFn: (value: DiscoveryValue) => value is T
-  // ) {}
-
   constructor(
     private readonly ctor: new (...args: never[]) => T
   ) {}

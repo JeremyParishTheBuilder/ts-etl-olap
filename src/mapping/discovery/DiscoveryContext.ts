@@ -5,14 +5,15 @@ import type { DiscoveryValue } from "../value/DiscoveryValue.js";
 import { type FsObject } from "./FsObject.js";
 import type { CaptureValue } from "../value/CaptureValue.js";
 import type { DiscoveryIdentity } from "./DiscoveryIdentity.js";
+import type { DiscoveryResult } from "./DiscoveryResult.js";
 
 export class DiscoveryContext implements CaptureContext {
 
   constructor(
     readonly current: DiscoveryValue,
     readonly captures: ReadonlyMap<string, CaptureValue> = new Map(),
-    //readonly identity: ImportRowIdentity,
     readonly identity: DiscoveryIdentity,
+    readonly result?: DiscoveryResult,
   ) {}
 
   withCurrent(
@@ -21,7 +22,8 @@ export class DiscoveryContext implements CaptureContext {
     return new DiscoveryContext(
       current,
       this.captures,
-      this.identity
+      this.identity,
+      this.result,
     );
   }
 
@@ -35,7 +37,8 @@ export class DiscoveryContext implements CaptureContext {
         ...this.captures,
         [name, value]
       ]),
-      this.identity
+      this.identity,
+      this.result,
     );
   }
 
@@ -45,7 +48,18 @@ export class DiscoveryContext implements CaptureContext {
     return new DiscoveryContext(
       this.current,
       this.captures,
-      this.identity.append(...parts), 
+      this.identity.append(...parts),
+      this.result,
+    );
+  }
+
+  // TODO this is unused, maybe remoove result from DiscoveryResult.
+  withResult(result: DiscoveryResult): DiscoveryContext {
+    return new DiscoveryContext(
+      this.current,
+      this.captures,
+      this.identity, 
+      result,
     );
   }
 

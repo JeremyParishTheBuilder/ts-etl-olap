@@ -1,11 +1,9 @@
-import { type ColumnValue } from "../../types/ColumnValue.js";
 import { type ImportRowIdentity } from "../import/ImportRowIdentity.js";
 import type { CaptureValue } from "./CaptureValue.js";
-import { type JsonValue } from "./json/JsonValue.js";
+import type { StructuredValue } from "./StructuredValue.js";
 
 export interface ValueResolverContext {
-  source: JsonValue;
-  //captures: ReadonlyMap<string, ColumnValue>;
+  source: StructuredValue;
   captures: ReadonlyMap<string, CaptureValue>;
   capture(name: string): CaptureValue;
   rowIdentity?: ImportRowIdentity;

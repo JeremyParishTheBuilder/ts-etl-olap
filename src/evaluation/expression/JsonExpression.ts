@@ -1,4 +1,4 @@
-import { Path } from "../../mapping/import/Path.js";
+import { PropertyPath } from "../../mapping/import/PropertyPath.js";
 import { type ValueResolverContext } from "../../mapping/value/ValueResolverContext.js";
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { type Expression } from "./Expression.js";
@@ -6,16 +6,16 @@ import { type Expression } from "./Expression.js";
 export class JsonExpression
   implements Expression<ValueResolverContext, ColumnValue> {
 
-  private readonly path: Path;
+  private readonly path: PropertyPath;
 
   constructor(
     public name: string,
   ) {
-    this.path = Path.parse(name);
+    this.path = PropertyPath.parse(name);
   }
 
   evaluate(context: ValueResolverContext): ColumnValue {
-    const value = this.path.resolveFirst(context.source);
+    const value = this.path.resolve(context.source);
 
     if (value === undefined) {
       return null;

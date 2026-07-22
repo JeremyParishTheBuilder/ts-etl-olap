@@ -1,32 +1,70 @@
-import { type ColumnValue } from "../../types/ColumnValue.js";
+import type { CaptureContext } from "../discovery/CaptureContext.js";
+import type { DiscoveryResult } from "../discovery/DiscoveryResult.js";
 import type { CaptureValue } from "../value/CaptureValue.js";
 import { type ImportRowIdentity } from "./ImportRowIdentity.js";
 
-export class ImportContext {
+export class ImportContext implements CaptureContext {
   constructor(
-    readonly captures: Map<string, CaptureValue>,
-    readonly identity: ImportRowIdentity
+    readonly discovery: DiscoveryResult,
+    readonly identity: ImportRowIdentity,
+    readonly source: CaptureValue,
+    readonly tableName?: string,
+    readonly namespace: readonly string[] = [],
   ) {}
 
-  withCapture(
-    name: string,
-    value: ColumnValue
-  ): ImportContext {
+  get captures() {
+    return this.discovery.captures;
+  }
+
+  withIdentity(identity: ImportRowIdentity): ImportContext {
     return new ImportContext(
-      new Map([
-        ...this.captures,
-        [name, value]
-      ]),
-      this.identity
+      this.discovery,
+      identity,
+      this.source,
+      this.tableName,
+      this.namespace,
     );
   }
 
-  withIdentity(
-    identity: ImportRowIdentity
+  withSource(source: CaptureValue): ImportContext {
+    return new ImportContext(
+      this.discovery,
+      this.identity,
+      source,
+      this.tableName,
+      this.namespace,
+    );
+  }
+
+  withDiscovery(discovery: DiscoveryResult): ImportContext {
+    return new ImportContext(
+      discovery,
+      this.identity,
+      discovery.value,
+      this.tableName,
+      this.namespace,
+    );
+  }
+
+  withTable(tableName: string): ImportContext {
+    return new ImportContext(
+      this.discovery,
+      this.identity,
+      this.source,
+      tableName,
+      this.namespace,
+    );
+  }
+
+  withNamespace(
+    namespace: readonly string[]
   ): ImportContext {
     return new ImportContext(
-      this.captures,
-      identity
+      this.discovery,
+      this.identity,
+      this.source,
+      this.tableName,
+      namespace,
     );
   }
 }

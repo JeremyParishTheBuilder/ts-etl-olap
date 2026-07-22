@@ -1,8 +1,9 @@
-import { type JsonValue } from "../value/json/JsonValue.js";
+import type { ImportContext } from "./ImportContext.js";
 
 export interface ImportSource {
-  resolveMany(source: JsonValue): readonly JsonValue[];
-  resolveFirst(source: JsonValue): JsonValue;
-  consumedKeys(): string[];
-  identityParts(): readonly string[];
+  navigate(
+    context: ImportContext
+  ): ImportContext[];
+  consumedKeys(): readonly string[];
+  columnNamespace(): string | undefined;
 }

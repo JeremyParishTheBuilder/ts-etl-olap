@@ -3,67 +3,83 @@ import { type Databases } from "../../schema/Databases.js";
 import { DatabaseBuilder } from "../schema/DatabaseBuilder.js";
 import { DiscoveryContext } from "../discovery/DiscoveryContext.js";
 import { type DiscoveryNode } from "../discovery/DiscoveryNode.js";
-import { type ImportNode } from "../import/ImportNode.js";
 import { collectImports } from "./collectImports.js";
 import { inferSchema } from "./inferSchema.js";
 import { ImportRowIdentity } from "../import/ImportRowIdentity.js";
 import { type ImportPipelineResult } from "./ImportPipelineResult.js";
 import { type ColumnValue } from "../../types/ColumnValue.js";
-import type { DiscoveryValue } from "../value/DiscoveryValue.js";
+import type { ImportMapping } from "../import/ImportMapping.js";
+import type { ImportRoot } from "../import/ImportRoot.js";
+import { ObjectImporter } from "../import/ObjectImporter.js";
+import type { ImportResult } from "../import/ImportResult.js";
+import type { DiscoveryResult } from "../discovery/DiscoveryResult.js";
 
-export interface ImportPipelineSpec//<
-  //TCurrent extends DiscoveryValue,
-  //TNext extends DiscoveryValue
-//> {
-{
-  readonly registry: DiscoveryNode;//<TCurrent, TNext>;
-  readonly importers: readonly ImportNode[];
+export interface ImportPipelineSpec {
+  //readonly registry: DiscoveryNode;
+  readonly importRoots: readonly ImportRoot[];
   readonly databaseName: string;
   readonly root: Directory;
   readonly existingDatabases: Databases;
   readonly sourceIdentity?: ColumnValue;
 }
 
-export class ImportPipeline<TCurrent extends DiscoveryValue, TNext extends DiscoveryValue> {
-  static build//<
-    //TCurrent extends DiscoveryValue,
-    //TNext extends DiscoveryValue
-  //>(
+export class ImportPipeline {
+  static build
   (
-    spec: ImportPipelineSpec//<TCurrent, TNext>
+    spec: ImportPipelineSpec
   ): ImportPipelineResult {
-    const discoveries = spec.registry.discover(
-      new DiscoveryContext(
-        spec.root,
-        new Map(),
-        ImportRowIdentity.from([
-          spec.sourceIdentity ??
-          spec.root.basename
-        ])
-      )
-    );
 
-    const imports = collectImports(
-      discoveries,
-      spec.importers
-    );
+    const importResults: ImportResult[] = [];
 
-    for (const i of imports) {
-      console.log(i);
+    const objectImporter = new ObjectImporter();
+
+    let discoveryResults: DiscoveryResult[];
+
+    for (const importRoot of spec.importRoots) {
+
+      const nodeType = importRoot.spec.discovery.spec.nodeType;
+
+      discoveryResults = importRoot.discovery.discover(
+        new DiscoveryContext(
+          spec.root,
+          new Map(),
+          ImportRowIdentity.from([
+            spec.sourceIdentity ??
+            spec.root.basename
+          ])
+        )
+      );
+
+      console.log("discoveryResults.length:");
+      console.log(discoveryResults.length);
+
+      const discoveryRoot = discoveryResults.find(
+        dr =>
+          dr.resultType === nodeType
+      );
+
+      if (!discoveryRoot) {
+        throw new Error(`No discovery result matching node type: ${nodeType}`);
+      }
+
+      importResults.push(
+        ...objectImporter.import(discoveryRoot, importRoot.mapping)
+      );
+
     }
 
-    const schema = inferSchema(imports);
+    const schema = inferSchema(importResults);
 
     const databases = new DatabaseBuilder(
       spec.databaseName,
       schema,
-      imports
+      importResults
     ).build(spec.existingDatabases);
 
     return {
-      discoveries,
+      discoveries: discoveryResults!,
       schema,
-      imports,
+      imports: importResults,
       databases,
     }
   }

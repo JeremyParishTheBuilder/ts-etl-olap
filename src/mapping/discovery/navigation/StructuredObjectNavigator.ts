@@ -1,22 +1,21 @@
 import type { ColumnValue } from "../../../types/ColumnValue.js";
 import { type DiscoveryNavigator } from "./DiscoveryNavigator.js";
 import type { DiscoveryValue } from "../../value/DiscoveryValue.js";
-import type { JsonObject } from "../../value/json/JsonValue.js";
-import type { JsonProperty } from "../../value/json/JsonProperty.js";
+import type { StructuredObject, StructuredProperty } from "../../value/StructuredValue.js";
 
-export class JsonObjectNavigator
-  implements DiscoveryNavigator<JsonObject, JsonProperty> {
+export class StructuredObjectNavigator
+  implements DiscoveryNavigator<StructuredObject, StructuredProperty> {
 
-  accepts(value: DiscoveryValue): value is JsonObject {
-  return (
+  accepts(value: DiscoveryValue): value is StructuredObject {
+    return (
       value !== null &&
       typeof value === "object" &&
       !Array.isArray(value)
     );
   }
 
-  next(json: JsonObject): readonly JsonProperty[] {
-    return Object.entries(json).map(
+  next(obj: StructuredObject): readonly StructuredProperty[] {
+    return Object.entries(obj).map(
       ([key, value]) => ({
         key,
         value
@@ -25,8 +24,8 @@ export class JsonObjectNavigator
   }
 
   identityParts(
-    current: JsonObject,
-    next: JsonProperty
+    current: StructuredObject,
+    next: StructuredProperty
   ): readonly ColumnValue[] {
     return [next.key];
   }

@@ -1,6 +1,6 @@
 import { PathExpression } from "../../evaluation/expression/PathExpression.js";
 import { ScalarCastExpression } from "../../evaluation/expression/ScalarCastExpression.js";
-import { Path } from "../../mapping/import/Path.js";
+import { PropertyPath } from "../../mapping/import/PropertyPath.js";
 import type { CaptureValue } from "../../mapping/value/CaptureValue.js";
 import { ExpressionBuilder } from "./ExpressionBuilder.js";
 import { ScalarExpressionBuilder } from "./ScalarExpressionBuilder.js";
@@ -14,7 +14,7 @@ export class DiscoveryExpressionBuilder<
     return new DiscoveryExpressionBuilder(
       new PathExpression(
         this.expression,
-        Path.parse(path)
+        PropertyPath.parse(path)
       )
     );
   }
