@@ -19,9 +19,9 @@ export class PathExpression<TContext>
   }
 
   //TODO remove
-  consumedKeys?(): readonly string[] {
-    return this.path.parts.length > 0
-      ? [this.path.parts[0]]
-      : [];
-  }
+  // consumedKeys?(): readonly string[] {
+  //   return this.path.parts.length > 0
+  //     ? [this.path.parts[0]]
+  //     : [];
+  // }
 }

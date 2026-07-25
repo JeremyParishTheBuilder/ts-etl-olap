@@ -3,7 +3,7 @@ import type { CaptureValue } from "./CaptureValue.js";
 import type { StructuredValue } from "./StructuredValue.js";
 
 export interface ValueResolverContext {
-  source: StructuredValue;
+  current: StructuredValue;
   captures: ReadonlyMap<string, CaptureValue>;
   capture(name: string): CaptureValue;
   rowIdentity?: ImportRowIdentity;

@@ -1,166 +1,315 @@
 # Mapping Module Overview
 
-The mapping module transforms hierarchical external data (filesystem, JSON, and future formats such as XML) into relational databases. It separates the process into distinct stages so that discovery, import, and schema inference remain independent concerns.
+## Purpose
 
-Most consumers interact only with `ImportPipeline`, which orchestrates the complete process.
+The Mapping module transforms external structured data into an immutable relational representation suitable for querying, mutation, validation, and export.
+
+It intentionally separates three independent concerns:
+
+1. **Discovery**
+
+   * Locate data within an external source.
+   * Navigate hierarchical structures.
+   * Decode values when required.
+   * Capture metadata.
+   * Produce immutable `DiscoveryResult` trees.
+
+2. **Import**
+
+   * Traverse `DiscoveryResult` trees.
+   * Select logical objects.
+   * Transform values through expressions.
+   * Produce immutable relational rows.
+
+3. **Schema Inference**
+
+   * Observe imported rows.
+   * Infer relational tables, columns, and relationships.
+   * Produce a `DatabaseSchema`.
+
+The Mapping module is responsible only for representing external data relationally. It does not perform relational constraint enforcement or business validation.
+
+---
+
+# High-level architecture
 
 ```text
-Filesystem
-    ↓
-Discovery
-    ↓
-Discovery Tree
-    ↓
-Import
-    ↓
-Import Results
-    ↓
-Schema Inference
-    ↓
-DatabaseBuilder
-    ↓
-Database
+External source
+      │
+      ▼
+ DiscoveryPipeline
+      │
+      ▼
+ DiscoveryResults
+      │
+      ▼
+ ImportPipeline
+      │
+      ▼
+ ImportResults
+      │
+      ▼
+ Schema Inference
+      │
+      ▼
+ DatabaseBuilder
+      │
+      ▼
+ Immutable Database
 ```
 
-`ImportPipeline.build()` returns an `ImportPipelineResult`, exposing each intermediate stage for inspection while still providing a simple end-to-end import workflow.
+Each stage consumes immutable output from the previous stage and produces immutable results for the next stage.
 
 ---
 
 # Discovery
 
-Discovery traverses arbitrary hierarchical data and produces a tree of `DiscoveryResult`s.
+Discovery is responsible only for locating and describing data.
 
-Each `DiscoveryResult` represents a discovered object and records:
+A discovery is defined by a `DiscoveryRoot`, which combines:
 
-- discovery node type
-- discovery identity
-- discovered value
-- captured values
-- child discoveries
+* a `DiscoverySource`
+* a root `DiscoveryNode`
 
-Discovery is composed from three independent concepts:
+The source determines where discovery begins, while the discovery graph determines how data is traversed.
 
-- **DiscoveryNode** — defines one step in the discovery graph.
-- **DiscoveryNavigator** — navigates from one value to another.
-- **DiscoveryDecoder** — converts values between representations (for example `File → JsonObject`).
+Discovery is independent of relational concepts such as tables, columns, and keys.
 
-These abstractions allow discovery to operate across filesystems, structured documents, and future data sources without coupling discovery logic to any particular format.
+Each `DiscoveryNode` describes:
+
+* navigation
+* matching
+* optional decoding
+* captures
+* child discoveries
+
+Executing one or more `DiscoveryRoot`s produces immutable `DiscoveryResult` trees.
+
+Each `DiscoveryResult` contains:
+
+* result type
+* discovered value
+* captures
+* stable identity
+* child results
+
+Discovery understands physical structure but not logical schema.
+
+---
+
+# Discovery Sources
+
+`DiscoverySource` abstracts the origin of discovered data.
+
+The Mapping module depends only on this abstraction rather than any particular storage medium.
+
+Examples include:
+
+* filesystem objects
+* archives
+* JSON documents
+* HTTP resources
+* databases
+* in-memory structures
+
+Each source opens a root value from which discovery begins.
+
+This separation allows the same discovery graph to operate over different kinds of external data.
 
 ---
 
 # Import
 
-Import walks the discovery tree and produces relational rows.
+Import transforms discovery results into logical relational rows.
 
-Import is described declaratively using `ImportMapping`s.
+Import is driven by `ImportRoot`s.
 
-Each mapping defines:
+Each `ImportRoot` explicitly connects:
 
-- which discovery node begins an import subtree (`accepts`)
-- which structured value contributes columns (`source`)
-- computed fields
-- child mappings
-- destination table
+* one `DiscoveryRoot`
+* one root `ImportMapping`
 
-Import mappings form their own tree, independent of the discovery tree.
-
-A mapping may contribute additional columns to an existing relational row or establish rows for additional tables. Multiple mappings may contribute to the same logical row before schema inference merges them.
-
-`source` is an expression evaluated against the current `ImportContext`. It typically references captured values or navigates within previously selected structured data.
-
-Examples:
-
-```ts
-source: capture("chain")
-
-source: path("logo_URIs")
-```
+Import never performs discovery itself. It consumes the immutable discovery results produced by the discovery pipeline.
 
 ---
 
-# Expressions
+# Import Mapping
 
-Expressions provide a strongly-typed DSL for computing values during both discovery and import.
+`ImportMapping` describes how logical objects become relational rows.
 
-Specialized builders distinguish between:
+A mapping may specify:
 
-- discovery values
-- structured values
-- scalar column values
-- predicates
+* table name
+* source
+* fields
+* child mappings
+* flattening behaviour
+* namespace prefix
 
-allowing fluent navigation while preserving type safety.
+Mappings without a table name act purely as navigation and grouping nodes.
 
-For example:
+They participate in traversal without producing rows.
 
-```ts
-capture("chain")
-    .path("pretty_name")
-    .scalar()
+---
+
+# Import Sources
+
+`ImportSource`s navigate within imported data.
+
+Examples include:
+
+* a discovery result
+* the current object
+* child paths
+
+Navigation produces zero or more `ImportContext`s:
+
+```text
+navigate(context) → ImportContext[]
 ```
 
-Expressions are used for:
+This naturally supports:
 
-- captures during discovery
-- import sources
-- computed fields
-- predicates
-- arithmetic and comparison operations
+* arrays
+* optional objects
+* sibling discoveries
+* repeated logical structures
+
+without requiring special traversal logic.
 
 ---
 
 # Import Context
 
-Import evaluates mappings using an `ImportContext`.
+`ImportContext` represents the current state during import.
 
-The context contains:
+It carries:
 
-- current discovery
-- current row identity
-- current source value
+* current discovery result
+* current value
+* row identity
+* current table
+* current namespace
 
-Child mappings inherit their parent's context while selecting new sources through expressions.
+Contexts are immutable.
 
-This allows multiple mappings to contribute to the same logical row while evaluating against different structured objects.
-
----
-
-# Row Identity
-
-Each imported row has an `ImportRowIdentity`.
-
-Identity determines which partial imports are merged together during schema inference.
-
-Discovery identities describe where data was found.
-
-Import identities describe which relational row receives imported values.
-
-Although discovery identity often provides the initial identity, child import mappings may continue contributing to the same row while evaluating different discovery nodes.
+Methods such as `withValue(...)` or `withNamespace(...)` produce modified contexts while preserving the remaining state.
 
 ---
 
-# Schema Inference
+# Row Identities
 
-Schema inference observes imported values to construct relational tables automatically.
+Stable identities originate during discovery.
 
-Rows are grouped by:
+Import preserves an identity while contributing data to the same logical row.
 
-- table name
-- `ImportRowIdentity`
+Crossing into a different table adopts the identity of the discovered child object.
 
-Partial rows sharing the same identity are merged before producing the final relational schema.
+This allows:
 
-This allows information originating from multiple discovery nodes (for example a directory and its decoded JSON file) to become a single relational row.
+* multiple mappings to assemble a single row
+* child tables to produce independent rows
+* imported rows to remain independent of business keys
 
 ---
 
-# Design Philosophy
+# Namespaces
 
-The mapping module intentionally separates several independent concerns:
+Namespaces determine relational column qualification.
 
-- **Discovery** locates data.
-- **Import** decides how discovered data becomes relational data.
-- **Expressions** describe value selection and computation.
-- **Schema inference** determines the final relational structure.
+Entering a new table resets the namespace.
 
-Keeping these responsibilities separate allows new navigators, decoders, expression types, and import strategies to be added without requiring changes throughout the pipeline.
+Within a table, each mapping contributes either:
+
+* an explicit namespace prefix, or
+* an inferred namespace from its import source
+
+This produces predictable column names such as:
+
+```text
+ChainFile.ChainName
+ChainFile.Codebase.Version
+```
+
+while allowing intentionally shared columns where appropriate.
+
+---
+
+# Automatic Inference
+
+Most logical objects are imported through explicit mappings.
+
+Object arrays not claimed by explicit child mappings are imported automatically.
+
+For each inferred object array, the Mapping module:
+
+* infers a table name
+* generates row identities
+* creates rows
+* flattens object properties into columns
+
+Explicit mappings always override inferred behaviour.
+
+---
+
+# Flattening
+
+Objects flatten into relational columns.
+
+For example:
+
+```text
+Codebase.Version
+Consensus.Type
+```
+
+Arrays are never flattened.
+
+Instead, arrays become child tables.
+
+This preserves the relational structure while avoiding repeated column groups.
+
+---
+
+# Expressions
+
+Expressions provide a common language across discovery and import.
+
+The primary entry point is:
+
+```text
+current()
+```
+
+Examples include:
+
+```text
+current().path("chain_name").scalar()
+
+current().path("_basename")
+
+capture("owner")
+
+literal("Chain:")
+```
+
+Expressions are evaluated within strongly typed execution contexts and are reusable throughout the Mapping module.
+
+---
+
+# Design Principles
+
+The Mapping module follows several core principles.
+
+* Discovery locates data.
+* Import shapes data.
+* Schema inference derives relational structure.
+* Validation is outside the Mapping module.
+* Tables represent logical entities rather than physical storage.
+* Discovery is independent of storage media.
+* Import is independent of physical layout.
+* Explicit configuration overrides inference.
+* Automatic inference minimises boilerplate.
+* Every stage operates over immutable data.
+* Stable identities are independent of business keys.
+* External data is represented relationally without interpreting business meaning.

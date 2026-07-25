@@ -3,7 +3,7 @@ import { type ValueResolverContext } from "../../mapping/value/ValueResolverCont
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { type Expression } from "./Expression.js";
 
-export class JsonExpression
+export class ValueExpression
   implements Expression<ValueResolverContext, ColumnValue> {
 
   private readonly path: PropertyPath;
@@ -15,7 +15,7 @@ export class JsonExpression
   }
 
   evaluate(context: ValueResolverContext): ColumnValue {
-    const value = this.path.resolve(context.source);
+    const value = this.path.resolve(context.current);
 
     if (value === undefined) {
       return null;

@@ -1,6 +1,6 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { CaptureScalarExpression } from "../../evaluation/expression/CaptureScalarExpression.js";
-import { JsonExpression } from "../../evaluation/expression/JsonExpression.js";
+import { ValueExpression } from "../../evaluation/expression/ValueExpression.js";
 import { LiteralExpression } from "../../evaluation/expression/LiteralExpression.js";
 import { ConcatExpression } from "../../evaluation/expression/ConcatExpression.js";
 import { DirectoryNameExpression } from "../../evaluation/expression/DirectoryNameExpression.js";
@@ -19,10 +19,7 @@ import { ScalarExpressionBuilder } from "./ScalarExpressionBuilder.js";
 import { CaptureExpression } from "../../evaluation/expression/CaptureExpression.js";
 import type { CaptureContext } from "../../mapping/discovery/CaptureContext.js";
 import type { CaptureValue } from "../../mapping/value/CaptureValue.js";
-import { DiscoveryExpressionBuilder } from "./DiscoveryExpressionBuilder.js";
-import { PathExpression } from "../../evaluation/expression/PathExpression.js";
-import { SourceExpression } from "../../evaluation/expression/SourceExpression.js";
-import { PropertyPath } from "../../mapping/import/PropertyPath.js";
+import { ValueExpressionBuilder } from "./ValueExpressionBuilder.js";
 
 export function case_<TContext>(
   branches: CaseBranch<TContext>[],
@@ -33,12 +30,15 @@ export function case_<TContext>(
   );
 }
 
-export function json(
-  name: string
+export function value(
+  path: string
 ) {
-  return new ScalarExpressionBuilder(
-    new JsonExpression(name)
-  );
+  return current()
+    .path(path)
+    .scalar();
+  // return new ScalarExpressionBuilder(
+  //   new ValueExpression(name)
+  // );
 }
 
 export function literal(
@@ -46,12 +46,6 @@ export function literal(
 ) {
   return new ScalarExpressionBuilder(
     new LiteralExpression(value)
-  );
-}
-
-export function directoryName() {
-  return new ScalarExpressionBuilder(
-    new DirectoryNameExpression()
   );
 }
 
@@ -78,7 +72,7 @@ export function concat<TContext>(
 }
 
 export function current() {
-  return new ExpressionBuilder<DiscoveryContext, DiscoveryValue>(
+  return new ValueExpressionBuilder<DiscoveryContext, DiscoveryValue>(
     new CurrentValueExpression()
   );
 }
@@ -93,9 +87,9 @@ export function captureScalar(
 
 export function capture<TContext extends CaptureContext>(
   name: string
-): DiscoveryExpressionBuilder<TContext, CaptureValue> {
+): ValueExpressionBuilder<TContext, CaptureValue> {
 
-  return new DiscoveryExpressionBuilder(
+  return new ValueExpressionBuilder(
     new CaptureExpression<TContext>(name)
   );
 }

@@ -10,7 +10,6 @@ export class SelfNavigator<T extends DiscoveryValue>
   ) {}
 
   accepts(current: DiscoveryValue): current is T {
-    //return this.acceptsFn(current);
     return current instanceof this.ctor;
   }
 

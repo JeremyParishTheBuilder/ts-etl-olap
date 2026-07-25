@@ -12,7 +12,7 @@ import { type PostgresInputBatch } from '../input/PostgresInputBatch.js';
 import { Directory } from "../mapping/discovery/Directory.js";
 import { ImportMapping } from '../mapping/import/ImportMapping.js';
 import { ImportPipeline } from '../mapping/pipeline/ImportPipeline.js';
-import { basename, capture, captureScalar, case_, concat, current, directoryName, json, literal } from '../dsl/expression/functions.js';
+import { basename, capture, captureScalar, case_, concat, current, value, literal, propertyName } from '../dsl/expression/functions.js';
 import { every, some, isDirectory, isFile, contains, isNull, isNotNull } from '../dsl/predicate/functions.js';
 import { SelfNavigator } from '../mapping/discovery/navigation/SelfNavigator.js';
 import { DirectoryNavigator } from '../mapping/discovery/navigation/DirectoryNavigator.js';
@@ -23,6 +23,8 @@ import type { ImportContext } from '../mapping/import/ImportContext.js';
 import { ImportRoot } from '../mapping/import/ImportRoot.js';
 import { discovery, path } from '../mapping/import/dsl.js';
 import { StructuredArrayNavigator } from '../mapping/discovery/navigation/StructuredArrayNavigator.js';
+import { DiscoveryRoot } from '../mapping/discovery/DisscoveryRoot.js';
+import { FsDiscoverySource } from '../mapping/discovery/DiscoverySource.js';
 
 const CCR1_PATH: string = '../chain-registry';
 
@@ -34,10 +36,33 @@ export const getChainRegContents = () => {
 
   console.log("starting chain reg");
 
-  // const logoUrisNode = new DiscoveryNode({
+  const logoUrisNode = new DiscoveryNode({
+    navigator: new StructuredObjectNavigator(),
+    matcher: propertyName().eq("logo_URIs"),
+    nodeType: "LogoUris",
+    children: [],
+  });
+
+  
+
+  const feeTokensNode = new DiscoveryNode({
+    navigator: new StructuredObjectNavigator(),
+    matcher: propertyName().eq("fee_tokens"),
+    nodeType: "FeeTokens",
+    children: [],
+  });
+
+  const feesNode = new DiscoveryNode({
+    navigator: new StructuredObjectNavigator(),
+    matcher: propertyName().eq("fees"),
+    nodeType: "Fees",
+    children: [feeTokensNode],
+  });
+
+  // const explorersNode = new DiscoveryNode({
   //   navigator: new StructuredObjectNavigator(),
-  //   matcher: propertyName().eq("logo_URIs"),
-  //   nodeType: "LogoUris",
+  //   matcher: propertyName().eq("explorers"),
+  //   nodeType: "Explorers",
   //   children: [],
   // });
 
@@ -46,7 +71,7 @@ export const getChainRegContents = () => {
   //   decoder: new JsonDecoder(),
   //   nodeType: "asset",
   //   captures: {
-  //     base: json("base"),
+  //     base: value("base"),
   //     owner: concat(
   //       literal("Asset:"),
   //       captureScalar("chainDirectoryName"),
@@ -79,7 +104,8 @@ export const getChainRegContents = () => {
         capture("chain").path("chain_name").scalar()
       ),
     },
-    children: [],   
+    children: [
+    ],
   });
 
   const chainCollection = 
@@ -88,7 +114,7 @@ export const getChainRegContents = () => {
       matcher: contains(
         some(
           every(isFile(), basename().eq("chain.json")),
-          every(isFile(), basename().eq("assetlist.json"))
+          every(isFile(), basename().eq("assetlist.json")),
         )
       ),
       children: [
@@ -97,8 +123,7 @@ export const getChainRegContents = () => {
       ],
       nodeType: "chainDirectory",
       captures: {
-        "chainDirectoryName": directoryName() // still works
-        //"chainDirectoryName": basename() // error
+        "chainDirectoryName": current().path("_basename")
       }
   });
 
@@ -156,7 +181,7 @@ export const getChainRegContents = () => {
       }
     });
 
-  const testRegistryDiscoveryRoot =
+  const testRegistryDiscoveryNode =
     new DiscoveryNode({
       navigator: new SelfNavigator(Directory),
       matcher: isDirectory(),
@@ -170,6 +195,17 @@ export const getChainRegContents = () => {
       nodeType: "registry"
     });
 
+  const registryRootDirectory = new Directory("./temp");
+
+  const testRegistryRootDirectory =
+    new FsDiscoverySource(registryRootDirectory);
+
+  const testRegistryDiscoveryRoot =
+    new DiscoveryRoot({
+      source: testRegistryRootDirectory,
+      discovery: testRegistryDiscoveryNode,
+    });
+
 // -----------------------
 
   const imagesImportMapping = 
@@ -181,20 +217,20 @@ export const getChainRegContents = () => {
         imageSyncOwner: case_([
           {
             when: every(
-              isNull(json("image_sync.base_denom")),
-              isNotNull(json("image_sync.chain_name"))
+              isNull(value("image_sync.base_denom")),
+              isNotNull(value("image_sync.chain_name"))
             ),
             then: concat(
               literal("Chain:"),
-              json("image_sync.chain_name")
+              value("image_sync.chain_name")
             )
           }, {
-            when: isNotNull(json("image_sync.chain_name")),
+            when: isNotNull(value("image_sync.chain_name")),
             then: concat(
               literal("Asset:"),
-              json("image_sync.chain_name"),
+              value("image_sync.chain_name"),
               literal(":"),
-              json("image_sync.base_denom")
+              value("image_sync.base_denom")
             )
           }],
           literal(null)
@@ -218,9 +254,9 @@ export const getChainRegContents = () => {
     prefix: "ChainFile",
     fields: {
       displayName: concat(
-          json("pretty_name"),
+          current().path("pretty_name").scalar(),
           literal(" ("),
-          json("chain_id"),
+          value("chain_id"),
           literal(")")
         ),
       owner: captureScalar("owner"),
@@ -235,6 +271,7 @@ export const getChainRegContents = () => {
     source: discovery("chainDirectory"),
     tableName: "Chains",
     flatten: false,
+    prefix: "ChainDirectory",
     fields: {
       chainDirectoryName: captureScalar("chainDirectoryName"),
       networkKind: captureScalar("networkKind"),
@@ -279,13 +316,11 @@ export const getChainRegContents = () => {
     testRegistryImportRoot,
   ];
 
-  const registryRootDirectory = new Directory("./temp");
+  
 
   const result = ImportPipeline.build({
-    //registry: testRegistry, // should be an array of discovery roots
-    importRoots: importRoots, // specifically, 'root' import mappings
+    importRoots: importRoots,
     databaseName: "Test Registry",
-    root: registryRootDirectory, // should no longer need a Directory--only the discovery roots
     existingDatabases: engine.databases,
     sourceIdentity: "Test Registry"
   });
@@ -326,6 +361,11 @@ export const getChainRegContents = () => {
   const imagesResult = sql.select("*").from("Images").execute()[0];
   console.log("imagesResult");
   console.log(imagesResult);
+
+  const feeTokens = sql.select("*").from("FeeTokens").execute()[0];
+  console.log("feeTokens");
+  console.log(feeTokens);
+
 
   const denom_units = sql.select("*").from("DenomUnits").execute()[0];
   console.log("denom_units");

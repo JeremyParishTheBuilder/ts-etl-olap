@@ -5,13 +5,13 @@ import type { CaptureValue } from "../../mapping/value/CaptureValue.js";
 import { ExpressionBuilder } from "./ExpressionBuilder.js";
 import { ScalarExpressionBuilder } from "./ScalarExpressionBuilder.js";
 
-export class DiscoveryExpressionBuilder<
+export class ValueExpressionBuilder<
   TContext,
   TValue extends CaptureValue
   > extends ExpressionBuilder<TContext, TValue> {
 
   path(path: string) {
-    return new DiscoveryExpressionBuilder(
+    return new ValueExpressionBuilder(
       new PathExpression(
         this.expression,
         PropertyPath.parse(path)

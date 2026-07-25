@@ -3,7 +3,7 @@
 ## Overall Flow
 
 ```
-Filesystem
+External source
     ↓
 Discovery
     ↓

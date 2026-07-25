@@ -1,5 +1,4 @@
 import { type ExpressionBuilder } from "../../dsl/expression/ExpressionBuilder.js";
-import { toPascalCase } from "../../utils/format.js";
 import { type CaptureContext } from "../discovery/CaptureContext.js";
 import type { ImportSource } from "./ImportSource.js";
 
@@ -21,11 +20,7 @@ export class ImportMapping {
   public children: ImportMapping[];
 
   constructor(readonly spec: ImportMappingSpec) {
-    this.tableName = spec.tableName;// ?? "";
-      // (spec.accepts
-      //   ? toPascalCase(spec.accepts)
-      //   : ""
-      // )
+    this.tableName = spec.tableName;
     this.source = spec.source;
     this.flatten = spec.flatten ?? true;
     this.prefix = spec.prefix;

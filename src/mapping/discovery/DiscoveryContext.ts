@@ -1,8 +1,6 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
-import { type ImportRowIdentity } from "../import/ImportRowIdentity.js";
 import { type CaptureContext } from "./CaptureContext.js";
 import type { DiscoveryValue } from "../value/DiscoveryValue.js";
-import { type FsObject } from "./FsObject.js";
 import type { CaptureValue } from "../value/CaptureValue.js";
 import type { DiscoveryIdentity } from "./DiscoveryIdentity.js";
 import type { DiscoveryResult } from "./DiscoveryResult.js";

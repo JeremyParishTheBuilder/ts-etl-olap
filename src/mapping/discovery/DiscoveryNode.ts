@@ -91,13 +91,6 @@ export class DiscoveryNode {
         );
       }
 
-      console.log({
-        node: this.spec.nodeType,
-        captures: [...childContext.captures.keys()],
-        identity: childContext.identity.toString(),
-        current
-      });
-
       results.push(result);
 
       console.log(
