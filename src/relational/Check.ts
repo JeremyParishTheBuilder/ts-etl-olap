@@ -57,11 +57,7 @@ export class Check extends ColumnBoundImmutable {
       name: newName
     } as Partial<this>);
   }
-
-  // public tryAlterColumn(id: ColumnId, newType: ColumnType): Check {
-  //   return this;
-  // }
-
+  
   public tryBindPredicate(table: Table) {
     return this.with({
       predicate: bindPredicate(this.resolvedPredicate, table),

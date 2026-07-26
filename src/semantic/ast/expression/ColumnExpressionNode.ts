@@ -1,5 +1,5 @@
 import { asExpressionNode } from "../../../dsl/expression/asExpressionNode.js";
-import { type ColumnId } from "../../../schema/Column.js";
+import { type ColumnId } from "../../../relational/Column.js";
 import { type ColumnValue } from "../../../types/ColumnValue.js";
 import { ComparisonPredicateNode } from "../predicate/ComparisonPredicateNode.js";
 import { BinaryExpressionNode } from "./BinaryExpressionNode.js";

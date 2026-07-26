@@ -1,5 +1,5 @@
 import { type Action } from "./Action.js";
-import { type Databases } from "../schema/Databases.js";
+import { type Databases } from "../relational/Databases.js";
 
 export class DropPrimaryKeyAction implements Action {
   constructor(

@@ -1,6 +1,6 @@
 import { type Action } from "./Action.js";
-import { type Databases } from "../schema/Databases.js";
-import { type RowView } from "../schema/RowView.js";
+import { type Databases } from "../relational/Databases.js";
+import { type RowView } from "../relational/RowView.js";
 import { type Predicate } from "../evaluation/predicate/Predicate.js";
 import { FilterNode } from "../evaluation/plan/FilterNode.js";
 import { TableScanNode } from "../evaluation/plan/TableScanNode.js";

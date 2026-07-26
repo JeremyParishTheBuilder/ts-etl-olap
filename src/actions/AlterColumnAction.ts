@@ -1,6 +1,6 @@
 import { type Action } from "./Action.js";
 import { type ColumnType } from "../types/ColumnType.js";
-import { type Databases } from "../schema/Databases.js";
+import { type Databases } from "../relational/Databases.js";
 
 export class AlterColumnAction implements Action {
   constructor(
@@ -12,18 +12,12 @@ export class AlterColumnAction implements Action {
 
   apply(databases: Databases): Databases {
     const db = databases.requireByName(this.dbName);
-    const table = db.tables.requireByName(this.tableName);
-    //const columnId = table.requireColumnIdByName(this.columnName);
-
-    //TODO: altering a column needs to check FKs, so should go to Database, not Table.
-    const updatedTable = table
-      .alterColumn(this.columnName, this.newType);
 
     const updatedDatabase = db
-    //  .alterColumn(this.tableName, this.columnName, this.newType);
+      .alterColumn(this.tableName, this.columnName, this.newType);
 
     return databases.update(
-      db.updateTable(updatedTable)
+      updatedDatabase
     );
   }
 }

@@ -1,6 +1,6 @@
 import { type Action } from "./Action.js";
-import { type IndexSpec } from "../schema/Index.js";
-import { type Databases } from "../schema/Databases.js";
+import { type IndexSpec } from "../relational/Index.js";
+import { type Databases } from "../relational/Databases.js";
 
 export class AddIndexAction implements Action {
   constructor(

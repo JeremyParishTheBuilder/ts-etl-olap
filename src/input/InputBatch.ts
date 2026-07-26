@@ -13,9 +13,9 @@ import {
   type Builder,
   isStatementBuilder,
 } from "../statements/index.js";
-import { type InlineColumnSpec } from "../schema/Column.js";
-import { type ConstraintSpec } from "../schema/Constraint.js";
-import { type ReferentialAction } from "../schema/ReferentialAction.js";
+import { type InlineColumnSpec } from "../relational/Column.js";
+import { type ConstraintSpec } from "../relational/Constraint.js";
+import { type ReferentialAction } from "../relational/ReferentialAction.js";
 import { CaseBuilder } from "../semantic/ast/expression/CaseBuilder.js";
 import { type ExpressionNode } from "../evaluation/expression/Expression.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";

@@ -1,6 +1,6 @@
-import { type ColumnId } from "../schema/Column";
-import { type ForeignKeyId } from "../schema/ForeignKey";
-import { type IndexId } from "../schema/Index";
+import { type ColumnId } from "../relational/Column";
+import { type ForeignKeyId } from "../relational/ForeignKey";
+import { type IndexId } from "../relational/Index";
 import { type IdService, type IdAllocator } from "../types/IdAllocator.js";
 
 // export class EngineIdService implements IdService {

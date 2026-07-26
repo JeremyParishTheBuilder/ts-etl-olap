@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Database } from '../../src/schema/Database.js';
+import { Database } from '../../src/relational/Database.js';
 import { ExecutionContext } from '../../src/engine/ExecutionContext.js';
 import { SemanticAnalyzer } from '../../src/semantic/SemanticAnalyzer.js';
 import { SelectBuilder } from '../../src/statements/index.js';

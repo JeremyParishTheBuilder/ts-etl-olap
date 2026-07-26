@@ -1,5 +1,5 @@
 import { type PlanNode } from "./PlanNode.js";
-import { type RowView } from "../../schema/RowView.js";
+import { type RowView } from "../../relational/RowView.js";
 import { type Predicate } from "../predicate/Predicate.js";
 
 export class FilterNode implements PlanNode {

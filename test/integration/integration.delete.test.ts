@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
 import { freshEngine } from '../engine/freshEngine.js';
-import { CONSTRAINT_KIND } from '../../src/schema/ConstraintKind.js';
+import { CONSTRAINT_KIND } from '../../src/relational/ConstraintKind.js';
 
 function createTestSql() {
   return freshEngine().input() as PostgresInputBatch;

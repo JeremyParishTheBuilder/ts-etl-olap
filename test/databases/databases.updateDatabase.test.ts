@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Databases } from '../../src/schema/Databases.js';
+import { Databases } from '../../src/relational/Databases.js';
 import { buildDatabase } from '../utils/buildSchema.js';
 
 describe('Databases::update', () => {

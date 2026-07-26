@@ -27,7 +27,6 @@ export type ForeignKeySpec = {
 export type CheckSpec = {
   kind: CONSTRAINT_KIND.check,
   name: string,
-  //columns: string[],
   predicate: PredicateNode,
 }
 

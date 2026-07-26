@@ -1,4 +1,4 @@
-import { type Databases } from "../../schema/Databases.js";
+import { type Databases } from "../../relational/Databases.js";
 import { DatabaseBuilder } from "../schema/DatabaseBuilder.js";
 import { DiscoveryContext } from "../discovery/DiscoveryContext.js";
 import { inferSchema } from "./inferSchema.js";

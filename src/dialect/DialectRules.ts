@@ -1,4 +1,4 @@
-import { type ReferentialAction } from "../schema/ReferentialAction.js";
+import { type ReferentialAction } from "../relational/ReferentialAction.js";
 import { type Keyword } from "./keywords.js";
 
 export interface DialectRules {

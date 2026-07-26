@@ -1,7 +1,7 @@
 import { type Action } from "./Action.js";
-import { type Databases } from "../schema/Databases.js";
-import { type ForeignKeySpec } from "../schema/Constraint.js";
-import { type ReferentialAction } from "../schema/ReferentialAction.js";
+import { type Databases } from "../relational/Databases.js";
+import { type ForeignKeySpec } from "../relational/Constraint.js";
+import { type ReferentialAction } from "../relational/ReferentialAction.js";
 
 export class AddForeignKeyAction implements Action {
   constructor(

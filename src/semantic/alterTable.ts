@@ -7,11 +7,11 @@ import { DropForeignKeyAction } from "../actions/DropForeignKeyAction.js";
 
 
 import { type AlterTableStatement } from "../statements/index.js";
-import { CONSTRAINT_KIND } from "../schema/ConstraintKind.js";
-import { PrimaryKey } from "../schema/PrimaryKey.js";
-import { ForeignKey } from "../schema/ForeignKey.js";
-import { Unique } from "../schema/Unique.js";
-import { Check } from "../schema/Check.js";
+import { CONSTRAINT_KIND } from "../relational/ConstraintKind.js";
+import { PrimaryKey } from "../relational/PrimaryKey.js";
+import { ForeignKey } from "../relational/ForeignKey.js";
+import { Unique } from "../relational/Unique.js";
+import { Check } from "../relational/Check.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { DropPrimaryKeyAction } from "../actions/DropPrimaryKeyAction.js";
 import { DropCheckAction } from "../actions/DropCheckAction.js";
@@ -19,7 +19,7 @@ import { DropIndexAction } from "../actions/DropIndexAction.js";
 import { AddIndexAction } from "../actions/AddIndexAction.js";
 import { AddUniqueAction } from "../actions/AddUniqueAction.js";
 import { DropUniqueAction } from "../actions/DropUniqueAction.js";
-import { type Column } from "../schema/Column.js";
+import { type Column } from "../relational/Column.js";
 
 
 export function bindAlterTable(

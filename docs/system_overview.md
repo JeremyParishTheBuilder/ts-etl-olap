@@ -5,7 +5,7 @@ Embedded in-memory ETL and validation engine for hierarchical structured dataset
 The system treats external structured data as a relational database:
 
 ```text
-Filesystem
+External Data
     ↓
 Discovery
     ↓

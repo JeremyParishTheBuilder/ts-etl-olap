@@ -1,6 +1,6 @@
 import { InputBatch } from "./InputBatch.js";
-import { type InlineColumnSpec } from "../schema/Column.js";
-import { type ConstraintSpec } from "../schema/Constraint.js";
+import { type InlineColumnSpec } from "../relational/Column.js";
+import { type ConstraintSpec } from "../relational/Constraint.js";
 import { type Statement } from "../statements/Statement.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type ExpressionNode } from "../evaluation/expression/Expression.js";

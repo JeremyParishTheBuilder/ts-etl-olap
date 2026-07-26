@@ -1,5 +1,5 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
-import { type RowView } from "../../schema/RowView.js";
+import { type RowView } from "../../relational/RowView.js";
 import {
   type ResolvedCaseExpressionNode,
   type CaseExpressionNode

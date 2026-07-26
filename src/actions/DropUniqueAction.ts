@@ -1,6 +1,6 @@
 import { type Action } from "./Action.js";
-import { type Databases } from "../schema/Databases.js";
-import { type UniqueId } from "../schema/Unique.js";
+import { type Databases } from "../relational/Databases.js";
+import { type UniqueId } from "../relational/Unique.js";
 
 export class DropUniqueAction implements Action {
   constructor(

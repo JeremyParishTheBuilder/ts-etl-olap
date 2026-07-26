@@ -1,6 +1,6 @@
 import { type Action } from "./Action.js";
-import { type Databases } from "../schema/Databases.js";
-import { type IndexId } from "../schema/Index.js";
+import { type Databases } from "../relational/Databases.js";
+import { type IndexId } from "../relational/Index.js";
 
 export class DropIndexAction implements Action {
   constructor(

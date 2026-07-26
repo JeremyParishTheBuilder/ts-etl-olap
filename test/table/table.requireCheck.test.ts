@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createCheckTestSpec } from '../utils/buildSchema.js';
-import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
 
 describe('Table::requireCheck', () => {
 

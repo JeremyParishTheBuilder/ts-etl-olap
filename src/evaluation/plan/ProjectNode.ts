@@ -1,4 +1,4 @@
-import { type RowView } from "../../schema/RowView.js";
+import { type RowView } from "../../relational/RowView.js";
 import { type PlanNode } from "./PlanNode.js";
 
 export class ProjectNode implements PlanNode {

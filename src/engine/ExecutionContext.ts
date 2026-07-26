@@ -1,8 +1,8 @@
 import { Transaction } from "./Transaction.js";
 import type { RulesFacadeShape } from "./RulesFacade.js";
 
-import { type Database } from "../schema/Database.js";
-import { type Table } from "../schema/Table.js";
+import { type Database } from "../relational/Database.js";
+import { type Table } from "../relational/Table.js";
 
 export class ExecutionContext {
   constructor(

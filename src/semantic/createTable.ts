@@ -4,15 +4,15 @@ import { type CreateTableStatement } from "../statements/index.js";
 import { type Action } from "../actions/Action.js";
 import { CreateTableAction } from "../actions/CreateTableAction.js";
 import { AddColumnAction } from "../actions/AddColumnAction.js";
-import { type ColumnSpec, type InlineColumnSpec } from "../schema/Column.js";
-import { type ConstraintSpec } from "../schema/Constraint.js";
+import { type ColumnSpec, type InlineColumnSpec } from "../relational/Column.js";
+import { type ConstraintSpec } from "../relational/Constraint.js";
 import { AddForeignKeyAction } from "../actions/AddForeignKeyAction.js";
 import { AddPrimaryKeyAction } from "../actions/AddPrimaryKeyAction.js";
 import { AddCheckAction } from "../actions/AddCheckAction.js";
 import { AddIndexAction } from "../actions/AddIndexAction.js";
-import { CONSTRAINT_KIND } from "../schema/ConstraintKind.js";
-import { PrimaryKey } from "../schema/PrimaryKey.js";
-import { ForeignKey } from "../schema/ForeignKey.js";
+import { CONSTRAINT_KIND } from "../relational/ConstraintKind.js";
+import { PrimaryKey } from "../relational/PrimaryKey.js";
+import { ForeignKey } from "../relational/ForeignKey.js";
 import { AddUniqueAction } from "../actions/AddUniqueAction.js";
 
 export function bindCreateTable(

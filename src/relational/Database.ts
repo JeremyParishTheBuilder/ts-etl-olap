@@ -1,7 +1,7 @@
 import { Table, type TableId } from './Table.js';
 import { normalizeIdentifier } from '../utils/normalizeIdentifier.js';
 import { type Column, type ColumnId } from './Column.js';
-import { isTypeCompatible } from "../types/ColumnType.js";
+import { isTypeCompatible, type ColumnType } from "../types/ColumnType.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { 
   CompiledForeignKey,
@@ -1114,17 +1114,76 @@ export class Database extends Immutable {
     return this.updateTable(updatedTable);
   }
 
+  public alterColumn(
+    tableName: string,
+    columnName: string,
+    newType: ColumnType
+  ): Database {
+    const table = this.tables.requireByName(tableName);
+
+    const columnId = table.columns.requireIdByName(columnName);
+
+    this.assertColumnCanBeAltered(
+      table,
+      columnId,
+      newType
+    );
+
+    return this.updateTable(
+      table.alterColumnById(columnId, newType)
+    );
+  }
+
+  private assertColumnCanBeAltered(
+    alteredTable: Table,
+    columnId: ColumnId,
+    newType: ColumnType
+  ): void {
+    for (const table of this.tables.values()) {
+      for (const fk of table.foreignKeys.values()) {
+        if (
+          table.id === alteredTable.id &&
+          fk.columns.includes(columnId)
+        ) {
+          const fkColumnPositionIndex = fk.columns.findIndex(c => c === columnId);
+          const counterpartColumnId = fk.parentColumns[fkColumnPositionIndex];
+          const parentTable = this.tables.require(fk.parentTable);
+
+          assertTypeIsCompatible(
+            parentTable.columns.require(counterpartColumnId).type,
+            newType
+          );
+        }
+
+        if (
+          fk.parentTable === alteredTable.id &&
+          fk.parentColumns.includes(columnId)
+        ) {
+          const fkColumnPositionIndex = fk.parentColumns.findIndex(c => c === columnId);
+          const counterpartColumnId = fk.columns[fkColumnPositionIndex];
+          
+          assertTypeIsCompatible(
+            table.columns.require(counterpartColumnId).type, 
+            newType
+          );
+        }
+      }
+    }
+  }
 }
 
-// export function arraysEqual(a: readonly any[], b: readonly any[]): boolean {
-//   if (a.length !== b.length) return false;
-
-//   for (let i = 0; i < a.length; i++) {
-//     if (a[i] !== b[i]) return false;
-//   }
-
-//   return true;
-// }
+function assertTypeIsCompatible(
+  oldType: ColumnType,
+  newType: ColumnType
+): void {
+   if (!isTypeCompatible(oldType, newType)) {
+    throw new Error(
+      `Column type mismatch: ` +
+      `${oldType}` +
+      `!= ${newType}`
+    );
+  }
+}
 
 //used for: addForeignKey
 function assertForeignKeyColumnCompatibility(

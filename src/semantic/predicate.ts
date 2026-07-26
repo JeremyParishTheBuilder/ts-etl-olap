@@ -5,7 +5,7 @@ import {
   type ResolvedPredicateNode
 } from "./ast/predicate/PredicateNode.js";
 import { type Predicate } from "../evaluation/predicate/Predicate.js";
-import { type Table } from "../schema/Table.js";
+import { type Table } from "../relational/Table.js";
 import { ResolvedNotPredicateNode } from "./ast/predicate/NotPredicateNode.js";
 import { bindExpression, resolveExpression } from "./expression.js";
 import { ResolvedComparisonPredicateNode } from "./ast/predicate/ComparisonPredicateNode.js";

@@ -1,7 +1,7 @@
 import { type Action } from "./Action.js";
-import { type Databases } from "../schema/Databases.js";
+import { type Databases } from "../relational/Databases.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
-import { type ColumnId } from "../schema/Column.js";
+import { type ColumnId } from "../relational/Column.js";
 
 export class InsertRowAction implements Action {
   constructor(

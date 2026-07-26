@@ -7,8 +7,8 @@ import {
   type ResolvedExpressionNode
 } from "../evaluation/expression/Expression.js";
 import { LiteralExpression } from "../evaluation/expression/LiteralExpression.js";
-import { type RowView } from "../schema/RowView.js";
-import { type Table } from "../schema/Table.js";
+import { type RowView } from "../relational/RowView.js";
+import { type Table } from "../relational/Table.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
 import { CaseExpression } from "../evaluation/expression/CaseExpression.js";
 import { ResolvedColumnExpressionNode } from "./ast/expression/ColumnExpressionNode.js";

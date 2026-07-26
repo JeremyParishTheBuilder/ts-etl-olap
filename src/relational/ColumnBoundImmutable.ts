@@ -1,4 +1,3 @@
-//import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
 import { Immutable } from "../infrastructure/Immutable.js";
 import { type ColumnId } from "./Column.js";
 

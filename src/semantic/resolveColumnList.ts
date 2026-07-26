@@ -1,5 +1,5 @@
-import { type Column } from "../schema/Column.js";
-import { type Table } from "../schema/Table.js";
+import { type Column } from "../relational/Column.js";
+import { type Table } from "../relational/Table.js";
 
 export function getOrderedColumns(table: Table): Column[] {
   return Array.from(table.columns.values())

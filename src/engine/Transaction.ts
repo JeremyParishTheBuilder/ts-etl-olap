@@ -1,5 +1,5 @@
 import { type Statement } from "../statements/Statement.js";
-import { type Databases } from "../schema/Databases.js";
+import { type Databases } from "../relational/Databases.js";
 import { type Action } from "../actions/Action.js";
 
 export class Transaction {

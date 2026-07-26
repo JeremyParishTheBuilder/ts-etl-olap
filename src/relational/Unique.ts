@@ -28,7 +28,7 @@ export class Unique extends Immutable {
   validate(): void {}
 
   public static create(spec: {
-    id: UniqueId
+    id: UniqueId,
     name: string,
     index: IndexId,
     ownsIndex: boolean,

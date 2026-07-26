@@ -1,8 +1,8 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { Column, type InlineColumnSpec }  from "../../schema/Column.js";
-import { type ForeignKeySpec, type ConstraintSpec } from "../../schema/Constraint.js";
-import { CONSTRAINT_KIND } from "../../schema/ConstraintKind.js";
-import { type ReferentialAction } from "../../schema/ReferentialAction.js";
+import { Column, type InlineColumnSpec }  from "../../relational/Column.js";
+import { type ForeignKeySpec, type ConstraintSpec } from "../../relational/Constraint.js";
+import { CONSTRAINT_KIND } from "../../relational/ConstraintKind.js";
+import { type ReferentialAction } from "../../relational/ReferentialAction.js";
 import { type PredicateNode } from "../../semantic/ast/predicate/PredicateNode.js";
 
 export type AlterTableStatement =

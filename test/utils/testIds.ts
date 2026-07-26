@@ -1,4 +1,4 @@
-import { type ColumnId } from "../../src/schema/Column.js";
+import { type ColumnId } from "../../src/relational/Column.js";
 
 let nextColumnId = 1;
 

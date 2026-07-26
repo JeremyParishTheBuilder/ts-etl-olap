@@ -1,4 +1,4 @@
-import { type Databases } from "../../schema/Databases.js";
+import { type Databases } from "../../relational/Databases.js";
 import { type DiscoveryResult } from "../discovery/DiscoveryResult.js";
 import { type DatabaseSchema } from "../schema/DatabaseSchema.js";
 import { type ImportResult } from "../import/ImportResult.js";

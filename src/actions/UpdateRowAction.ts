@@ -1,6 +1,6 @@
 import { type Action } from "./Action.js";
-import { type Databases } from "../schema/Databases.js";
-import { type ColumnId } from "../schema/Column.js";
+import { type Databases } from "../relational/Databases.js";
+import { type ColumnId } from "../relational/Column.js";
 import { type Expression } from "../evaluation/expression/Expression.js";
 
 // export class UpdateRowAction implements Action {

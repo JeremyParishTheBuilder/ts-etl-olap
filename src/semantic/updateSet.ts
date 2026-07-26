@@ -1,12 +1,12 @@
 import { type Action } from "../actions/Action.js";
 import { UpdateRowsAction } from "../actions/UpdateRowsAction.js";
 import { type UpdateSetStatement } from "../statements/index.js";
-import { type ColumnId } from "../schema/Column.js";
+import { type ColumnId } from "../relational/Column.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { bindExpression, resolveExpression } from "./expression.js";
 import { type Expression } from "../evaluation/expression/Expression.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
-import { type RowView } from "../schema/RowView.js";
+import { type RowView } from "../relational/RowView.js";
 
 export function bindUpdateSet(
   semantic: SemanticAnalyzer,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Table } from '../../src/schema/Table.js';
+import { Table } from '../../src/relational/Table.js';
 import { buildTable, createCheckTestSpec } from '../utils/buildSchema.js';
 
 describe('Table::removeCheck', () => {

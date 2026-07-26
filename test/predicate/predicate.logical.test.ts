@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { type Predicate } from '../../src/evaluation/predicate/Predicate.js';
-import { RowView } from '../../src/schema/RowView';
+import { RowView } from '../../src/relational/RowView.js';
 import { NotPredicate } from '../../src/evaluation/predicate/NotPredicate.js';
 import { AndPredicate } from '../../src/evaluation/predicate/AndPredicate.js';
 import { OrPredicate } from '../../src/evaluation/predicate/OrPredicate.js';

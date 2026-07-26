@@ -13,7 +13,7 @@ import { ExecutionContext } from "./ExecutionContext.js";
 import { Transaction } from "./Transaction.js";
 
 import { type Statement } from "../statements/index.js";
-import { Databases } from "../schema/Databases.js";
+import { Databases } from "../relational/Databases.js";
 import { SemanticAnalyzer } from "../semantic/SemanticAnalyzer.js";
 
 export class Engine {

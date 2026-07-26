@@ -5,7 +5,7 @@ import { ProjectNode } from "../evaluation/plan/ProjectNode.js";
 
 import { type SelectStatement } from "../statements/index.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
-import { type Column } from "../schema/Column.js";
+import { type Column } from "../relational/Column.js";
 import { getColumnIndexMap, getOrderedColumns, resolveSelectColumnList } from "./resolveColumnList.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
 

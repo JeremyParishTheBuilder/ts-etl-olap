@@ -230,10 +230,6 @@ export class Table extends Immutable {
       assertTypeIndexable(newType);
     }
 
-    if (this.foreignKeys.some(fk => fk.referencesColumn(id))) {
-      throw new Error(`Cannot alter column: ${column.name}, referenced by foreignKeys.`);
-    }
-
     const updatedColumns = this.columns.update(
       column.alter(newType)
     );
@@ -660,7 +656,6 @@ export class Table extends Immutable {
   public removeIndexById(id: IndexId): Table {
     const index = this.indexes.require(id);
 
-    //assert index unreferenced
     if (id === this.primaryKey?.index) {
       throw new Error(`Cannot remove index when referenced by Primary Key`);
     }
@@ -672,7 +667,6 @@ export class Table extends Immutable {
     if (Array.from(this.uniques.values()).some(u => u.index === id)) {
       throw new Error(`Cannot remove index when referenced by Unique constraint`);
     }
-    //assert index unreferenced
 
     const updatedIndexes = this.indexes.remove(id);
 

@@ -1,6 +1,6 @@
 import { type Action } from "./Action.js";
-import { type ColumnSpec } from "../schema/Column.js";
-import { type Databases } from "../schema/Databases.js";
+import { type ColumnSpec } from "../relational/Column.js";
+import { type Databases } from "../relational/Databases.js";
 
 export class AddColumnAction implements Action {
   constructor(
