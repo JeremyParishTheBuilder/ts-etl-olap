@@ -204,11 +204,11 @@ describe('Query::projectNode', () => {
     const scan = new TableScanNode(table);
 
     const project = new ProjectNode(
-      [1],
+      [0, 1],
       scan
     );
 
-    [...project.execute()];
+    project.execute();
 
     expect([...table.iterateAliveRows()]).toEqual([
       {

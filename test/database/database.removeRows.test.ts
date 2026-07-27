@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { ReferentialAction } from '../../src/relational/ReferentialAction.js';
 import {
   buildDatabase,
   buildTable,
@@ -19,7 +18,7 @@ describe('Database::removeRow', () => {
 
     users = users.addRow([1]);
 
-    let db = buildDatabase()
+    const db = buildDatabase()
       .addTable(users);
 
     const updated = db.removeRows(

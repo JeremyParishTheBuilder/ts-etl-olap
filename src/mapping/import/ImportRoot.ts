@@ -1,4 +1,4 @@
-import type { DiscoveryRoot } from "../discovery/DisscoveryRoot.js";
+import type { DiscoveryRoot } from "../discovery/DiscoveryRoot.js";
 import type { ImportMapping } from "./ImportMapping.js";
 
 export interface ImportRootSpec {

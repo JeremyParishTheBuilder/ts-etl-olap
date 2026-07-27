@@ -12,8 +12,6 @@ import { ColumnExpressionNode } from '../../src/semantic/ast/expression/ColumnEx
 describe('SemanticAnalyzer::bindSelect', () => {
   let engine: Engine;
 
-  const dbName = "DB1";
-
   beforeEach(() => {
     engine = freshEngine();
   });
@@ -22,7 +20,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
     const ctx = new ExecutionContext(
       engine.requireTx(),
       engine.rules,
-      dbName
+      database.name
     );
 
     return new SemanticAnalyzer(ctx);

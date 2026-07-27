@@ -18,7 +18,7 @@ export class PropertyPath {
         return null;
       }
 
-      current = (current as any)[part];
+      current = (current as Record<string, unknown>)[part] as CaptureValue;
     }
 
     return current;
@@ -28,7 +28,7 @@ export class PropertyPath {
     path: string,
   ): PropertyPath {
     return new PropertyPath(
-        path.split(".")
+      path.split(".")
     );
   }
 }

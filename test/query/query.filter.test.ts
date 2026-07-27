@@ -179,7 +179,7 @@ describe('Query::filterNode', () => {
 
     const filter = new FilterNode(predicate, scan);
 
-    [...filter.execute()];
+    filter.execute();
 
     expect([...table.iterateAliveRows()]).toEqual([
       {

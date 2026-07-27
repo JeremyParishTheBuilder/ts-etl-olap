@@ -23,9 +23,9 @@ export function bindExpression(
       return new LiteralExpression(expr.value);
 
     case "column":
-      const columnIndex = table.columns.require(expr.columnId).position;
-
-      return new ColumnExpression(columnIndex);
+      return new ColumnExpression(
+        table.columns.require(expr.columnId).position
+      );
 
     case "case":
       return new CaseExpression(
@@ -69,9 +69,9 @@ export function resolveExpression(
       return expr;
 
     case "column":
-      const columnId = table.columns.requireIdByName(expr.columnName);
-
-      return new ResolvedColumnExpressionNode(columnId);
+      return new ResolvedColumnExpressionNode(
+        table.columns.requireIdByName(expr.columnName)
+      );
 
     case "case":
       return new ResolvedCaseExpressionNode(

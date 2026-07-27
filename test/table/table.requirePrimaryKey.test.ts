@@ -3,7 +3,7 @@ import { buildTable } from '../utils/buildSchema';
 
 describe('Table::requirePrimaryKey', () => {
   it('returns the primary key', () => {
-    let table = buildTable()
+    const table = buildTable()
       .createColumn({
         name: "Id",
         type: Number,

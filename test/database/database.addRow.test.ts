@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { ReferentialAction } from '../../src/relational/ReferentialAction.js';
 import { buildDatabase, createColumnTestSpec } from '../utils/buildSchema.js';
 
 describe('Database::addRow', () => {
@@ -8,7 +7,7 @@ describe('Database::addRow', () => {
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
-    let roles = database.tables.requireByName("Roles")
+    const roles = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -20,7 +19,7 @@ describe('Database::addRow', () => {
         unique: true,
       });
 
-    let users = database.tables.requireByName("Users")
+    const users = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "RoleId",
         type: Number,
@@ -64,7 +63,7 @@ describe('Database::addRow', () => {
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
-    let roles = database.tables.requireByName("Roles")
+    const roles = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -76,7 +75,7 @@ describe('Database::addRow', () => {
         unique: true,
       });
 
-    let users = database.tables.requireByName("Users")
+    const users = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "RoleId",
         type: Number,
@@ -115,7 +114,7 @@ describe('Database::addRow', () => {
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
-    let roles = database.tables.requireByName("Roles")
+    const roles = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -127,7 +126,7 @@ describe('Database::addRow', () => {
         unique: true,
       });
 
-    let users = database.tables.requireByName("Users")
+    const users = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "RoleId",
         type: Number,
@@ -179,7 +178,7 @@ describe('Database::addRow', () => {
 
     parent = parent.addRow([1]);
 
-    let child = database.tables.requireByName("Users")
+    const child = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
@@ -229,7 +228,7 @@ describe('Database::addRow', () => {
 
     parent = parent.addRow([1]);
 
-    let child = database.tables.requireByName("Users")
+    const child = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,
@@ -266,7 +265,7 @@ describe('Database::addRow', () => {
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
 
-    let parent = database.tables.requireByName("Roles")
+    const parent = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
@@ -277,7 +276,7 @@ describe('Database::addRow', () => {
         unique: true,
       });
 
-    let child = database.tables.requireByName("Users")
+    const child = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,

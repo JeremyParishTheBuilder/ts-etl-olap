@@ -4,7 +4,7 @@ import { buildTable } from '../utils/buildSchema.js';
 
 describe('Table::requireUnique', () => {
   it('returns the unique constraint', () => {
-    let table = buildTable()
+    const table = buildTable()
       .createColumn({
         name: "Id",
         type: Number,

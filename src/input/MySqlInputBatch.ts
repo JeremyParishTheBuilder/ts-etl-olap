@@ -5,6 +5,7 @@ import { type Statement } from "../statements/Statement.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type ExpressionNode } from "../evaluation/expression/Expression.js";
 import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
+import type { ColumnValue } from "../types/ColumnValue.js";
 
 export class MySqlInputBatch extends InputBatch {
   constructor(
@@ -53,7 +54,7 @@ export class MySqlInputBatch extends InputBatch {
     return super.insertInto(table, columns);
   }
 
-  values(data: any[][]) {
+  values(data: ColumnValue[][]) {
     return super.values(data);
   }
 

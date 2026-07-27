@@ -246,8 +246,9 @@ export class AlterTableBuilder implements StatementBuilder {
             return { required: ["references"], optional: [] };
           }
         }
+        break;
 
-      case "add_constraint_references":
+      case "add_constraint_references": {
         if (!this.state.constraint || this.state.constraint.kind !== CONSTRAINT_KIND.foreignKey) {
           return { required: [], optional: [] };
         };
@@ -259,10 +260,13 @@ export class AlterTableBuilder implements StatementBuilder {
           optionalCalls.push("onUpdate");
         }
         return { required: [], optional: optionalCalls };
+      }
 
       default:
         return { required: [], optional: [] };
     }
+
+    return { required: [], optional: [] };
   }
 
   createStatement(): AlterTableStatement {

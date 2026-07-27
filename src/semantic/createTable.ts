@@ -63,7 +63,7 @@ export function bindCreateTable(
       //let action: Action | undefined = undefined;
 
       switch (spec.kind) {
-        case CONSTRAINT_KIND.foreignKey:
+        case CONSTRAINT_KIND.foreignKey: {
           // optionally skip FK if dialect disallows inline FKs
           if (!semantic.ctx.rules.ddl.supportsInlineForeignKeys) break; // TODO, need error here?
 
@@ -96,6 +96,7 @@ export function bindCreateTable(
           );
 
           break;
+        }
 
         case CONSTRAINT_KIND.unique:
           stmtActions.push(
@@ -168,7 +169,7 @@ export function bindCreateTable(
   // add constraints
   for (const spec of Object.values(stmt.constraintSchema ?? {})) {
     switch (spec.kind) {
-      case CONSTRAINT_KIND.foreignKey:
+      case CONSTRAINT_KIND.foreignKey: {
         const reverseIndexName = ForeignKey.defaultIndexName(spec.name);
 
         stmtActions.push(
@@ -198,6 +199,7 @@ export function bindCreateTable(
         );
 
         break;
+      }
 
       case CONSTRAINT_KIND.unique:
         stmtActions.push(

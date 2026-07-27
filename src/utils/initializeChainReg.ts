@@ -12,21 +12,18 @@ import { type PostgresInputBatch } from '../input/PostgresInputBatch.js';
 import { Directory } from "../mapping/discovery/Directory.js";
 import { ImportMapping } from '../mapping/import/ImportMapping.js';
 import { ImportPipeline } from '../mapping/pipeline/ImportPipeline.js';
-import { basename, capture, captureScalar, case_, concat, current, value, literal, propertyName } from '../dsl/expression/functions.js';
+import { basename, capture, captureScalar, case_, concat, current, value, literal } from '../dsl/expression/functions.js';
 import { every, some, isDirectory, isFile, contains, isNull, isNotNull } from '../dsl/predicate/functions.js';
 import { SelfNavigator } from '../mapping/discovery/navigation/SelfNavigator.js';
 import { DirectoryNavigator } from '../mapping/discovery/navigation/DirectoryNavigator.js';
 import { DiscoveryNode } from '../mapping/discovery/DiscoveryNode.js';
 import { JsonDecoder } from '../mapping/discovery/decoding/JsonDecoder.js';
-import { StructuredObjectNavigator } from '../mapping/discovery/navigation/StructuredObjectNavigator.js';
-import type { ImportContext } from '../mapping/import/ImportContext.js';
 import { ImportRoot } from '../mapping/import/ImportRoot.js';
 import { discovery, path } from '../mapping/import/dsl.js';
-import { StructuredArrayNavigator } from '../mapping/discovery/navigation/StructuredArrayNavigator.js';
-import { DiscoveryRoot } from '../mapping/discovery/DisscoveryRoot.js';
+import { DiscoveryRoot } from '../mapping/discovery/DiscoveryRoot.js';
 import { FsDiscoverySource } from '../mapping/discovery/DiscoverySource.js';
 
-const CCR1_PATH: string = '../chain-registry';
+const _CCR1_PATH: string = '../chain-registry';
 
 EngineRegistry.getInstance().newEngine();
 const engine = EngineRegistry.getInstance().engine();
@@ -36,33 +33,10 @@ export const getChainRegContents = () => {
 
   console.log("starting chain reg");
 
-  const logoUrisNode = new DiscoveryNode({
-    navigator: new StructuredObjectNavigator(),
-    matcher: propertyName().eq("logo_URIs"),
-    nodeType: "LogoUris",
-    children: [],
-  });
-
-  
-
-  const feeTokensNode = new DiscoveryNode({
-    navigator: new StructuredObjectNavigator(),
-    matcher: propertyName().eq("fee_tokens"),
-    nodeType: "FeeTokens",
-    children: [],
-  });
-
-  const feesNode = new DiscoveryNode({
-    navigator: new StructuredObjectNavigator(),
-    matcher: propertyName().eq("fees"),
-    nodeType: "Fees",
-    children: [feeTokensNode],
-  });
-
-  // const explorersNode = new DiscoveryNode({
+  // const logoUrisNode = new DiscoveryNode({
   //   navigator: new StructuredObjectNavigator(),
-  //   matcher: propertyName().eq("explorers"),
-  //   nodeType: "Explorers",
+  //   matcher: propertyName().eq("logo_URIs"),
+  //   nodeType: "LogoUris",
   //   children: [],
   // });
 

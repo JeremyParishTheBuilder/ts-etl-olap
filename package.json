@@ -7,7 +7,9 @@
     "test": "vitest run",
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "type": "module",
   "keywords": [],
@@ -17,11 +19,15 @@
     "@eslint/js": "^9.39.5",
     "@types/dotenv": "^6.1.1",
     "eslint": "^9.39.5",
+    "jiti": "^2.7.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.65.0",
     "vitest": "^3.0.8"
   },
   "dependencies": {
     "dotenv": "^16.4.7"
+  },
+  "overrides": {
+    "rollup": "npm:@rollup/wasm-node@^4.0.0"
   }
 }

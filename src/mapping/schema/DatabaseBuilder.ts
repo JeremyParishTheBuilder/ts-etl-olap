@@ -13,7 +13,7 @@ export class DatabaseBuilder {
   ) {}
 
   build(databases: Databases): Databases {
-    let updatedDatabases: Databases = databases.create({
+    const updatedDatabases: Databases = databases.create({
       name: this.dbName,
     });
 
@@ -112,7 +112,7 @@ function assembleLogicalRows(groupedImports: GroupedImports): MergedGroupedImpor
         })
       }
 
-      let logicalRow = logicalRows.get(key);
+      const logicalRow = logicalRows.get(key);
 
       for (const [propertyName, value] of importResult.values) {
         logicalRow!.values[propertyName] = value as ColumnValue;
@@ -125,8 +125,6 @@ function assembleLogicalRows(groupedImports: GroupedImports): MergedGroupedImpor
   return mergedGroupedImports;
 }
 
-type BoundMergedGroupedImports = Map<string, Map<string, ResolvedInsert>>;
-
 // Phase 3: Bind to the schema.
 function bindLogicalRows(
   mergedGroupedImports: MergedGroupedImports,
@@ -138,7 +136,7 @@ function bindLogicalRows(
     // find the table from db
     const table = database.tables.requireByName(tableName);
     // for each LogicalRow
-    for (const [rowIdentity, logicalRow] of logicalRows) {
+    for (const logicalRow of logicalRows.values()) {
       // create a ResolvedInsert--later
       const values: ColumnValue[] =
         new Array(table.columns.size()).fill(null);

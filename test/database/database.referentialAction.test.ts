@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { ReferentialAction } from "../../src/relational/ReferentialAction.js";
 import {
   buildDatabase,
   buildTable,

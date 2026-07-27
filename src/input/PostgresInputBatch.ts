@@ -6,6 +6,7 @@ import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type ReferentialAction } from "../relational/ReferentialAction.js";
 import { type ExpressionNode } from "../evaluation/expression/Expression.js";
 import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
+import type { ColumnValue } from "../types/ColumnValue.js";
 
 export class PostgresInputBatch extends InputBatch {
   constructor(
@@ -74,7 +75,7 @@ export class PostgresInputBatch extends InputBatch {
     return super.insertInto(table, columns);
   }
 
-  values(data: any[][]) {
+  values(data: ColumnValue[][]) {
     return super.values(data);
   }
 

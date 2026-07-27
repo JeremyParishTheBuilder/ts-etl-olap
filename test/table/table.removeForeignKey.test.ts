@@ -3,7 +3,6 @@ import {
   addForeignKeyByName,
   buildTable,
   buildTableWithForeignKey,
-  createForeignKeyTestSpec_Table,
 } from '../utils/buildSchema.js';
 
 describe('Table::removeForeignKey', () => {

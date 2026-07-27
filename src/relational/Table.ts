@@ -17,7 +17,6 @@ import {
   requiresIndexRebuild,
 } from "./Index.js";
 import { Immutable } from "../infrastructure/Immutable.js";
-import { PersistentMap } from "../infrastructure/PersistentMap.js";
 import { type RowView } from "./RowView.js";
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
 import { type CheckSpec } from "./Constraint.js";
@@ -37,7 +36,6 @@ export class Table extends Immutable {
   public name: string;
 
   public columns: NamedObjectStore<Column, ColumnId>;
-  public columnPositions: PersistentMap<number, ColumnId>;
 
   public primaryKey: PrimaryKey | undefined;
   public indexes: NamedObjectStore<Index, IndexId>;
@@ -66,7 +64,6 @@ export class Table extends Immutable {
     this.name = spec.name;
 
     this.columns = new NamedObjectStore();
-    this.columnPositions = new PersistentMap();
 
     this.primaryKey = undefined;
     this.indexes = new NamedObjectStore();
@@ -100,16 +97,9 @@ export class Table extends Immutable {
     } as Partial<this>);
   }
 
-  public getColumnPosition(id: ColumnId): number | undefined {
-    return this.columnPositions.get(id); // TODO, delete -- wrong logic!
-  }
-
-  public requireColumnPosition(id: ColumnId): number {
-    const position = this.getColumnPosition(id);
-    if (!position) {
-      throw new Error(`Position for Column: ${id} not found`);
-    }
-    return position;
+  public getColumnsInOrder(): Column[] {
+    return Array.from(this.columns.values())
+      .sort((a, b) => a.position - b.position);
   }
 
   public createColumn(spec: ColumnSpec): Table {
@@ -136,11 +126,8 @@ export class Table extends Immutable {
 
     const updatedColumns = this.columns.add(column);
 
-    const updatedColumnPositions = this.columnPositions.add(position, id);
-
     return this.with({
       columns: updatedColumns,
-      columnPositions: updatedColumnPositions,
       columnIds,
     } as Partial<this>);
   }
@@ -158,11 +145,9 @@ export class Table extends Immutable {
       .mapValues(c => c.tryDecrementPosition(column.position))
       .remove(id);
 
-    const updatedColumnPositions = new PersistentMap<number, ColumnId>();
     const columnIdToPositionMap = new Map<ColumnId, number>();
     for(const column of updatedColumns.values()) {
       columnIdToPositionMap.set(column.id, column.position);
-      updatedColumnPositions.add(column.position, column.id);
     }
 
     const updatedIndexes = this.indexes.mapValues(i => 
@@ -171,7 +156,6 @@ export class Table extends Immutable {
 
     const tableWithUpdatesdPositions = this.with({
       columns: updatedColumns,
-      columnPositions: updatedColumnPositions,
       indexes: updatedIndexes,
     } as Partial<this>);
 
@@ -301,7 +285,7 @@ export class Table extends Immutable {
   }
 
   public removePrimaryKey(): Table {
-    const pk = this.requirePrimaryKey();
+    this.requirePrimaryKey();
 
     return this.with({
       primaryKey: undefined,
@@ -581,7 +565,7 @@ export class Table extends Immutable {
   }
 
   public removeUniqueById(id: UniqueId): Table {
-    const unique = this.uniques.require(id);
+    this.uniques.require(id);
 
     const updatedUniques = this.uniques.remove(id);
 
@@ -654,7 +638,7 @@ export class Table extends Immutable {
   }
 
   public removeIndexById(id: IndexId): Table {
-    const index = this.indexes.require(id);
+    this.indexes.require(id);
 
     if (id === this.primaryKey?.index) {
       throw new Error(`Cannot remove index when referenced by Primary Key`);
@@ -680,7 +664,7 @@ export class Table extends Immutable {
   }
 
   public removeCheckById(id: CheckId): Table {
-    const check = this.checks.require(id);
+    this.checks.require(id);
 
     const updatedChecks = this.checks.remove(id);
 
@@ -815,7 +799,7 @@ export class Table extends Immutable {
     return row;
   }
 
-  private assertRowLength(row: any[]): void {
+  private assertRowLength(row: unknown[]): void {
     if (row.length !== this.columns.size()) {
       throw new Error(`Resolved row length mismatch with table columns`);
     }
@@ -966,7 +950,7 @@ export class Table extends Immutable {
 }
 
 //used for: findUniqueIndexByColumns() 
-function arraysEqual(a: any[], b: any[]): boolean {
+function arraysEqual(a: unknown[], b: unknown[]): boolean {
   if (a.length !== b.length) return false;
 
   for (let i = 0; i < a.length; i++) {

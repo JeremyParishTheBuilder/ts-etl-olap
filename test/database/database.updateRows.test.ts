@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { ReferentialAction } from '../../src/relational/ReferentialAction.js';
 import { buildDatabase, buildTable, createColumnTestSpec, createForeignKeyTestSpec_Database, createUpdate } from '../utils/buildSchema.js';
 
 describe('Database::updateRow', () => {
@@ -173,7 +172,7 @@ describe('Database::updateRow', () => {
 
     roles = roles.addRow([1]);
 
-    let users = buildTable({name: "Users"})
+    const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
         type: Number,

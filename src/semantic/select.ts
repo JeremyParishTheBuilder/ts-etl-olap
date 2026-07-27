@@ -6,7 +6,7 @@ import { ProjectNode } from "../evaluation/plan/ProjectNode.js";
 import { type SelectStatement } from "../statements/index.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { type Column } from "../relational/Column.js";
-import { getColumnIndexMap, getOrderedColumns, resolveSelectColumnList } from "./resolveColumnList.js";
+import { resolveSelectColumns } from "./resolveColumnList.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
 
 export function bindSelect(
@@ -16,17 +16,6 @@ export function bindSelect(
   //Get table
   const table = semantic.ctx.requireTable(stmt.tableName);
   const specifiedColumns = stmt.columnNames;
-
-  // 1. Resolve columns -> indexes
-  const allTableColumns: Column[] = getOrderedColumns(table);
-
-  const effectiveColumns = resolveSelectColumnList(
-    allTableColumns,
-    specifiedColumns
-  );
-
-  const columnIndexMap = getColumnIndexMap(table); // TODO, see if position map can eliminate this
-  const columnIndexes = effectiveColumns.map(name => columnIndexMap.get(name)!);
 
   // 2. Base node
   let node: PlanNode = new TableScanNode(table);
@@ -40,6 +29,12 @@ export function bindSelect(
 
   // 4. Projection
   if (specifiedColumns !== "*") {
+    const effectiveColumns: Column[] =
+      resolveSelectColumns(table, specifiedColumns);
+
+    const columnIndexes: number[] =
+      effectiveColumns.map(c => c.position);
+
     node = new ProjectNode(columnIndexes, node);
   }
 

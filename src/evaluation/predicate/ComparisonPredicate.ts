@@ -28,22 +28,23 @@ export class ComparisonPredicate<TContext>
         return leftResult !== rightResult;
 
       case "gt":
+        assertComparable(leftResult, rightResult);
+        return leftResult > rightResult;
+
       case "lt":
+        assertComparable(leftResult, rightResult);
+        return leftResult < rightResult;
+
       case "gte":
+        assertComparable(leftResult, rightResult);
+        return leftResult >= rightResult;
+
       case "lte":
         assertComparable(leftResult, rightResult);
+        return leftResult <= rightResult;
 
-        switch (this.operator) {
-          case "gt": return leftResult > rightResult;
-          case "lt": return leftResult < rightResult;
-          case "gte": return leftResult >= rightResult;
-          case "lte": return leftResult <= rightResult;
-        }
-
-        default:
-        const _exhaustive: never = this.operator;
-        throw new Error(`Unsupported operator: ${_exhaustive}`);
-      }
-
+      default:
+        throw new Error(`Unsupported operator: ${this.operator}`);
+    }
   }
 }

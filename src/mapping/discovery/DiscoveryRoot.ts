@@ -1,5 +1,5 @@
-import type { DiscoveryNode } from "../discovery/DiscoveryNode.js";
-import type { DiscoverySource } from "./DiscoverySource.ts";
+import type { DiscoveryNode } from "./DiscoveryNode.js";
+import type { DiscoverySource } from "./DiscoverySource.js";
 
 export interface DiscoveryRootSpec {
   readonly source: DiscoverySource;

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 
 export class File extends FsObject {
 
-  private _contents: any | null = null;
+  private _contents: unknown | null = null;
   private _failed: boolean = false;
 
   constructor(fullPath: string) {
@@ -11,7 +11,7 @@ export class File extends FsObject {
   }
 
   //don't need?
-  private readJson(): any | null {
+  private readJson(): unknown | null {
     if (!this._basename.endsWith(".json")) {
       console.warn(`Skipping non-JSON file: ${this.basename}`);
       return null;
@@ -27,7 +27,7 @@ export class File extends FsObject {
   }
 
   //might also not need?
-  public get contents(): any | null {
+  public get contents(): unknown | null {
     if (this._failed) {
       return null;  // Return `null` if the previous attempt failed
     }

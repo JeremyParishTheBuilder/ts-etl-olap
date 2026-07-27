@@ -10,7 +10,7 @@ export type IndexSpec = {
   columns: string[],
   unique?: boolean,
   nullsDistinct?: boolean;
-  predicate?: Predicate;//(row: number) => boolean;
+  predicate?: Predicate;
 };
 
 export type IndexId = number & { readonly __brand: "IndexId" };
@@ -248,6 +248,11 @@ export class Index extends ColumnBoundImmutable {
   }
 }
 
-export function requiresIndexRebuild(oldType: ColumnType, newType: ColumnType): boolean {
-  return true; // for now, alway rebuild on type change
+export function requiresIndexRebuild(
+  oldType: ColumnType, newType: ColumnType
+): boolean {
+  if (oldType !== newType) {
+    return true; // for now, alway rebuild on type change
+  } 
+  return false;
 }

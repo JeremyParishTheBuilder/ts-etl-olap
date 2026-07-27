@@ -1,10 +1,7 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { CaptureScalarExpression } from "../../evaluation/expression/CaptureScalarExpression.js";
-import { ValueExpression } from "../../evaluation/expression/ValueExpression.js";
 import { LiteralExpression } from "../../evaluation/expression/LiteralExpression.js";
 import { ConcatExpression } from "../../evaluation/expression/ConcatExpression.js";
-import { DirectoryNameExpression } from "../../evaluation/expression/DirectoryNameExpression.js";
-import { ExpressionBuilder } from "./ExpressionBuilder.js";
 import { BasenameExpression } from "../../evaluation/expression/BasenameExpression.js";
 import {
   type CaseBranch,
@@ -36,9 +33,6 @@ export function value(
   return current()
     .path(path)
     .scalar();
-  // return new ScalarExpressionBuilder(
-  //   new ValueExpression(name)
-  // );
 }
 
 export function literal(

@@ -29,7 +29,8 @@ export class NamedObjectStore<
   protected validate() {};
 
   protected afterClone(instance: this): void {
-    (instance as any).byName = this.rebuildNameIndex(instance.byId);
+    (instance as this & { byName: PersistentMap<string, ID> }).byName =
+      this.rebuildNameIndex(instance.byId);
   }
 
   // -------------------------
@@ -162,8 +163,6 @@ export class NamedObjectStore<
     const newById = this.byId.mapValues(fn);
 
     if (newById === this.byId) return this;
-
-    const newByName = this.rebuildNameIndex(newById);
 
     return new NamedObjectStore<T, ID>({
       byId: newById,

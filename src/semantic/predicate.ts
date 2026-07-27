@@ -63,7 +63,7 @@ export function bindPredicate(
 }
 
 export function resolvePredicate(
-  predicate: PredicateNode,
+  predicate: PredicateNode, // <- union type
   table: Table,
 ): ResolvedPredicateNode {
   switch (predicate.kind) {
@@ -97,7 +97,7 @@ export function resolvePredicate(
 
     default:
       throw new Error(
-        `Unknown predicate kind: ${(predicate as any).kind}`
+        `Unknown predicate kind: ${(predicate as { kind?: string }).kind}`
       );
   }
 }

@@ -43,10 +43,10 @@ export function bindAlterTable(
     }
 
     switch (spec.kind) {
-      case CONSTRAINT_KIND.foreignKey:
+      case CONSTRAINT_KIND.foreignKey: {
 
         const parentTable = ctx.requireTable(spec.parentTable);
-        const parentColumns = spec.parentColumns.map(c => parentTable.columns.requireIdByName(c));
+        spec.parentColumns.map(c => parentTable.columns.requireIdByName(c));
 
         if (!ctx.rules.constraints.allowNullableForeignKeys) {
           for (const col of columns) {
@@ -92,6 +92,7 @@ export function bindAlterTable(
         );
 
         break;
+      }
 
       case CONSTRAINT_KIND.primaryKey:
         stmtActions.push(

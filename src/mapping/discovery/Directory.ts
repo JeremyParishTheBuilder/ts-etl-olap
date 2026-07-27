@@ -45,7 +45,7 @@ export class Directory extends FsObject  {
   }
 
   public find<T extends FsObject>(
-    itemType: new (...args: any[]) => T,
+    itemType: new (...args: unknown[]) => T,
     itemName?: string
   ): T[] {
 

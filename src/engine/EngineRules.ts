@@ -8,6 +8,7 @@ export interface EngineRuleSpec<T> {
 
 export const ENGINE_RULES: Record<
   string, // domain, e.g., "constraints", "transaction"
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Record<string, EngineRuleSpec<any>> // rules inside the domain
 > = {
   ddl: {

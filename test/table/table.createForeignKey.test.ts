@@ -1,5 +1,5 @@
 import { describe, it, expect, } from 'vitest';
-import { addForeignKeyByName, buildTable, buildTableWithForeignKey, createForeignKeyTestSpec_Table, } from '../utils/buildSchema.js';
+import { addForeignKeyByName, buildTable, buildTableWithForeignKey } from '../utils/buildSchema.js';
 
 describe('Table::createForeignKey', () => {
   it('adds a foreign key to the table', () => {

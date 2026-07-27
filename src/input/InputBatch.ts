@@ -25,6 +25,7 @@ import { NotPredicateNode } from "../semantic/ast/predicate/NotPredicateNode.js"
 import { XorPredicateNode } from "../semantic/ast/predicate/XorPredicateNode.js";
 import { OrPredicateNode } from "../semantic/ast/predicate/OrPredicateNode.js";
 import { AndPredicateNode } from "../semantic/ast/predicate/AndPredicateNode.js";
+import type { ColumnValue } from "../types/ColumnValue.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -137,12 +138,12 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected values(data: any[][], fragment: string = "VALUES") {
+  protected values(data: ColumnValue[][], fragment: string = "VALUES") {
     this.assertAllowed("values", fragment);
     if (!(this.currentBuilder instanceof InsertIntoBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of InsertInto`);
     }
-    this.currentBuilder.values(data);
+    this.currentBuilder.values(data); //<- needs a primitive
     return this;
   }
 
@@ -355,7 +356,7 @@ export abstract class InputBatch {
   execute() {
     this.finalizePreviousStatement();
 
-    let resultIterators = [];
+    const resultIterators = [];
 
     const statementsToExecute = [...this.statements];
     this.statements = [];

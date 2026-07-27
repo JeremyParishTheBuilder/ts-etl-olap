@@ -6,7 +6,7 @@ export class LiteralExpression<TContext, TValue>
     public value: TValue
   ) {}
 
-  evaluate(context: TContext): TValue {
+  evaluate(_context: TContext): TValue {
     return this.value;
   }
 }

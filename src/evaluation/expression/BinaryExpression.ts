@@ -24,24 +24,23 @@ export class BinaryExpression<TContext> implements Expression<TContext> {
 
     switch (this.operator) {
       case "add":
+        assertIsNumber(leftResult); assertIsNumber(rightResult);
+        return leftResult + rightResult;
       case "subtract":
+        assertIsNumber(leftResult); assertIsNumber(rightResult);
+        return leftResult - rightResult;
       case "multiply":
+        assertIsNumber(leftResult); assertIsNumber(rightResult);
+        return leftResult * rightResult;
       case "divide":
+        assertIsNumber(leftResult); assertIsNumber(rightResult);
+        return leftResult / rightResult;
       case "mod":
-        assertIsNumber(leftResult);
-        assertIsNumber(rightResult);
+        assertIsNumber(leftResult); assertIsNumber(rightResult);
+        return leftResult % rightResult;
 
-        switch (this.operator) {
-          case "add": return leftResult + rightResult;
-          case "subtract": return leftResult - rightResult;
-          case "multiply": return leftResult * rightResult;
-          case "divide": return leftResult / rightResult;
-          case "mod": return leftResult % rightResult;
-        }
-
-    default:
-      const _exhaustive: never = this.operator;
-      throw new Error(`Unsupported operator: ${_exhaustive}`);
+      default:
+        throw new Error(`Unsupported operator: ${this.operator}`);
     }
   }
 }

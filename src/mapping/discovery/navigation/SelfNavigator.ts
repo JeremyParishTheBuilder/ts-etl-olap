@@ -17,7 +17,7 @@ export class SelfNavigator<T extends DiscoveryValue>
     return [current];
   }
 
-  identityParts(current: T, next: T): readonly ColumnValue[] {
+  identityParts(_current: T, _next: T): readonly ColumnValue[] {
     return [];
   }
 }

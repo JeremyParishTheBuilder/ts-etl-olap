@@ -119,7 +119,7 @@ describe('Query::tableScanNode', () => {
 
     const scan = new TableScanNode(table);
 
-    [...scan.execute()];
+    scan.execute();
 
     const rows = [...table.iterateAliveRows()];
 

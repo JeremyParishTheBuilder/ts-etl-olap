@@ -3,7 +3,7 @@ import { ENGINE_RULES } from "./EngineRules.js";
 import type { Dialect } from "../dialect/Dialect.js";
 
 export class RuleResolver {
-  private cache = new Map<string, any>();
+  private cache = new Map<string, unknown>();
 
   constructor(
     private dialect: Dialect,
@@ -16,14 +16,14 @@ export class RuleResolver {
   ): typeof ENGINE_RULES[D][K]['engineDefault'] {
     const cacheKey = `${domain}.${String(rule)}`;
     if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey);
+      return this.cache.get(cacheKey) as typeof ENGINE_RULES[D][K]['engineDefault'];
     }
 
     const spec = ENGINE_RULES[domain][rule];
 
     const value: typeof spec.engineDefault =
       spec.dialectStrict?.(this.dialect) ?? 
-      (this.policy?.[domain] as any)?.[rule] ??
+      (this.policy?.[domain] as Record<typeof rule, typeof spec.engineDefault>)?.[rule] ??
       spec.dialectDefault?.(this.dialect) ??
       spec.engineDefault;
 
