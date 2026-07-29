@@ -11,6 +11,7 @@ import { type ResolvedUpdate } from "../../src/types/ResolvedUpdate.js";
 import { type ResolvedDelete } from "../../src/types/ResolvedDelete.js";
 import { LiteralExpressionNode } from "../../src/semantic/ast/expression/LiteralExpressionNode.js";
 import { ComparisonPredicateNode } from "../../src/semantic/ast/predicate/ComparisonPredicateNode.js";
+import type { ResolvedInsert } from "../../src/types/ResolvedInsert.js";
 
 let nextId = 1;
 
@@ -23,6 +24,14 @@ export function createTestIdService(): IdService {
     nextIndexId: () => nextId++ as IndexId,
     nextUniqueId: () => nextId++ as UniqueId,
     nextForeignKeyId: () => nextId++ as ForeignKeyId,
+  };
+}
+
+export function createInsert(
+  newRow: ColumnValue[],
+): ResolvedInsert {
+  return {
+    newRow,
   };
 }
 

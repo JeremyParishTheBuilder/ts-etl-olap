@@ -2,12 +2,13 @@ import { type Action } from "./Action.js";
 import { type Databases } from "../relational/Databases.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type ColumnId } from "../relational/Column.js";
+import type { ResolvedInsert } from "../types/ResolvedInsert.js";
 
-export class InsertRowAction implements Action {
+export class InsertRowsAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private inputs: Map<ColumnId, ExplicitInput>,
+    private inputRows: Map<ColumnId, ExplicitInput>[],
   ) {}
 
   apply(databases: Databases) {
@@ -15,11 +16,16 @@ export class InsertRowAction implements Action {
 
     const table = db.tables.requireByName(this.tableName);
 
-    const resolvedRow = table
-      .resolveInsertInputs(this.inputs);
+    const resolvedInserts: ResolvedInsert[] =
+      this.inputRows.map(input => ({
+          newRow: table.resolveInsertInputs(input),
+      }));
 
     const updatedDatabase = db
-      .addRow(this.tableName, resolvedRow);
+      .addRows(
+        this.tableName,
+        resolvedInserts
+      );
 
     return databases.update(updatedDatabase);
   }

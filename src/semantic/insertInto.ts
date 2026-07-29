@@ -1,5 +1,5 @@
 import { type Action } from "../actions/Action.js";
-import { InsertRowAction } from "../actions/InsertRowAction.js";
+import { InsertRowsAction } from "../actions/InsertRowsAction.js";
 import { type InsertIntoStatement } from "../statements/index.js";
 import { type ColumnId, type Column } from "../relational/Column.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
@@ -31,6 +31,8 @@ export function bindInsertInto(
 
   assertAtLeastOneRowOfValues(stmt.values);
 
+  const inputRows: Map<ColumnId, ExplicitInput>[] = [];
+
   for (const row of stmt.values) {
 
     assertRowLengthMatchesColumnLength(row, effectiveColumns);
@@ -44,14 +46,16 @@ export function bindInsertInto(
       );
     }
 
-    stmtActions.push(
-      new InsertRowAction(
-        dbName,
-        tableName,
-        columnIdToValueMap,
-      )
-    );
+    inputRows.push(columnIdToValueMap);
   }
+
+  stmtActions.push(
+    new InsertRowsAction(
+      dbName,
+      tableName,
+      inputRows,
+    )
+  );
 
   return stmtActions;
 }

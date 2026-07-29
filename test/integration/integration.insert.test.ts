@@ -161,4 +161,58 @@ describe("Integration::insert", () => {
         .execute();
     }).not.toThrow();
   });
+
+  it("allows mutually-referencing rows to be inserted in a single statement", () => {
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.begin().execute();
+
+    sql.createTable("Employees", {
+      Id: {
+        type: Number,
+        nullable: false,
+        primaryKey: true,
+      },
+      ManagerId: {
+        type: Number,
+        nullable: false,
+      },
+    }).execute();
+
+    sql.alterTable("Employees")
+      .addConstraint("FK1")
+      .foreignKey(
+        ["ManagerId"]
+      ).references(
+        "Employees",
+        ["Id"],
+      )
+      .execute();
+
+    sql.commit().execute();
+
+    expect(() => {
+      sql.begin().execute();
+
+      sql
+        .insertInto("Employees", ["Id", "ManagerId"])
+        .values([
+          [1, 2],
+          [2, 1],
+        ])
+        .execute();
+
+      sql.commit().execute();
+    }).not.toThrow();
+
+    expect(
+      sql.select("*").from("Employees").execute()[0]
+    ).toEqual([
+      { index: 0, values: [1, 2] },
+      { index: 1, values: [2, 1] },
+    ]);
+  });
 });

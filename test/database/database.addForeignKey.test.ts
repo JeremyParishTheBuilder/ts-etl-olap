@@ -4,7 +4,8 @@ import {
   buildParentChildDatabase,
   buildTable,
   createColumnTestSpec,
-  createForeignKeyTestSpec_Database
+  createForeignKeyTestSpec_Database,
+  createInsert
 } from '../utils/buildSchema.js';
 
 describe('Database::createForeignKey', () => {
@@ -380,7 +381,9 @@ describe('Database::createForeignKey', () => {
         type: Number,
         nullable: false,
       })
-      .addRow([1])
+      .addRows(
+        [createInsert([1])]
+      )
       .createIndex({
         name: "PK_Users",
         columns: ["Id"],
@@ -398,7 +401,9 @@ describe('Database::createForeignKey', () => {
         columns: ["UserId"],
         unique: false,
       })
-      .addRow([999]);
+      .addRows(
+        [createInsert([999])]
+      );
 
     const database = buildDatabase()
       .addTable(users)
@@ -425,7 +430,9 @@ describe('Database::createForeignKey', () => {
         type: Number,
         nullable: false,
       })
-      .addRow([1])
+      .addRows(
+        [createInsert([1])]
+      )
       .createIndex({
         name: "PK_Users",
         columns: ["Id"],
@@ -443,7 +450,9 @@ describe('Database::createForeignKey', () => {
         columns: ["UserId"],
         unique: false,
       })
-      .addRow([1])
+      .addRows(
+        [createInsert([1])]
+      );
 
     const database = buildDatabase()
       .addTable(users)
@@ -487,7 +496,9 @@ describe('Database::createForeignKey', () => {
         columns: ["UserId"],
         unique: false,
       })
-      .addRow([null]);
+      .addRows(
+        [createInsert([null])]
+      );
 
     const database = buildDatabase()
       .addTable(users)

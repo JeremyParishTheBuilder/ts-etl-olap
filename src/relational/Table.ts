@@ -28,6 +28,7 @@ import { type ResolvedUpdate } from "../types/ResolvedUpdate.js";
 import { type ResolvedDelete } from "../types/ResolvedDelete.js";
 import { type Expression } from "../evaluation/expression/Expression.js";
 import { bindPredicate, resolvePredicate } from "../semantic/predicate.js";
+import type { ResolvedInsert } from "../types/ResolvedInsert.js";
 
 export type TableId = number & { readonly __brand: "TableId" };
 
@@ -52,7 +53,15 @@ export class Table extends Immutable {
   public readonly foreignKeyIds;
   public readonly checkIds;
   
-  public validate(): void {}
+  public validate(): void {
+    for (const column of this.columns.values()) {
+      if (column.data.length !== this.numRows) {
+        throw new Error(
+          `Column ${column.name} contains ${column.data.length} values, expected ${this.numRows}.`
+        );
+      }
+    }
+  }
 
   constructor(spec: {
     id: TableId,
@@ -119,12 +128,14 @@ export class Table extends Immutable {
 
     const position = this.columns.size();
 
-    const column = Column.create({...spec, id, position});
+    const emptyColumn = Column.create({...spec, id, position});
 
-    // TODO: later, consider the need to backfill its data[] with values
-    //column.backfill();
+    const backfillValue = spec.defaultValue ?? null;
 
-    const updatedColumns = this.columns.add(column);
+    const initializedColumn =
+      emptyColumn.backfill(this.numRows, backfillValue);
+
+    const updatedColumns = this.columns.add(initializedColumn);
 
     return this.with({
       columns: updatedColumns,
@@ -843,29 +854,6 @@ export class Table extends Immutable {
     return resolvedRow;
   }
 
-  public addRow(row: ColumnValue[]): Table {
-    this.assertRowLength(row);
-
-    const rowView = {
-      index: this.numRows,
-      values: row,
-    };
-
-    this.assertRowAgainstChecks(row);
-
-    const updatedIndexes = this.indexes.mapValues(i => i.tryAddRow(rowView));
-
-    const updatedColumns = this.columns.mapValues(column =>
-      column.addDatum(row[column.position])
-    );
-
-    return this.with({
-      indexes: updatedIndexes,
-      columns: updatedColumns,
-      numRows: this.numRows + 1,
-    } as Partial<this>);
-  }
-
   public resolveUpdateExpressions(
     expressions: Map<ColumnId, Expression<RowView>>,
     rowNum: number
@@ -891,6 +879,60 @@ export class Table extends Immutable {
     };
   }
 
+  public addRow(row: ColumnValue[]): Table {
+    this.assertRowLength(row);
+
+    const rowView = {
+      index: this.numRows,
+      values: row,
+    };
+
+    this.assertRowAgainstChecks(row);
+
+    const updatedIndexes = this.indexes.mapValues(i => i.tryAddRow(rowView));
+
+    const updatedColumns = this.columns.mapValues(column =>
+      column.addDatum(row[column.position])
+    );
+
+    return this.with({
+      indexes: updatedIndexes,
+      columns: updatedColumns,
+      numRows: this.numRows + 1,
+    } as Partial<this>);
+  }
+
+  public addRows(inserts: ResolvedInsert[]): Table {
+    let updatedColumns = this.columns;
+
+    for (const insert of inserts) {
+      this.assertRowLength(insert.newRow);
+
+      this.assertRowAgainstChecks(insert.newRow);
+
+      updatedColumns = updatedColumns.mapValues(column =>
+        column.addDatum(insert.newRow[column.position])
+      );
+    }
+
+    const updateNumRows = this.numRows + inserts.length;
+
+    const tableWithUpdatedColumns = this.with({
+      columns: updatedColumns,
+      numRows: updateNumRows,
+    } as Partial<this>);
+
+    const updatedIndexes =
+      this.indexes.mapValues(index =>
+        index.build(tableWithUpdatedColumns.iterateAliveRows()));
+
+    return this.with({
+      indexes: updatedIndexes,
+      columns: updatedColumns,
+      numRows: updateNumRows,
+    } as Partial<this>);
+  }
+
   public updateRows(updates: ResolvedUpdate[]): Table {
     let updatedColumns = this.columns;
 
@@ -909,7 +951,8 @@ export class Table extends Immutable {
     } as Partial<this>);
 
     const updatedIndexes =
-      this.indexes.mapValues(index => index.build(tableWithUpdatedColumns.iterateAliveRows()));
+      this.indexes.mapValues(index =>
+        index.build(tableWithUpdatedColumns.iterateAliveRows()));
 
     return tableWithUpdatedColumns.with({
       indexes: updatedIndexes,
@@ -927,7 +970,8 @@ export class Table extends Immutable {
     } as Partial<this>);
 
     const updatedIndexes =
-      this.indexes.mapValues(index => index.build(tableWithUpdatedRowAlive.iterateAliveRows()));
+      this.indexes.mapValues(index =>
+        index.build(tableWithUpdatedRowAlive.iterateAliveRows()));
 
     return tableWithUpdatedRowAlive.with({
       indexes: updatedIndexes,

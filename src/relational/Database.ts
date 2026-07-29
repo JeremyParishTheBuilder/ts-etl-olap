@@ -15,6 +15,7 @@ import { NamedObjectStore } from '../infrastructure/NamedObjectStore.js';
 import { type ResolvedUpdate } from '../types/ResolvedUpdate.js';
 import { type ResolvedDelete } from '../types/ResolvedDelete.js';
 import { arraysEqual } from '../utils/arrayHelpers.js';
+import type { ResolvedInsert } from '../types/ResolvedInsert.js';
 
 const _MAX_DEPTH = 25;
 
@@ -243,16 +244,6 @@ export class Database extends Immutable {
     }
   }
 
-  public addRow(tableName: string, row: ColumnValue[]): Database {
-    const table: Table = this.tables.requireByName(tableName);
-
-    const updatedTable = table.addRow(row);
-
-    this.validateChildRowAgainstForeignKeys(row, updatedTable);
-
-    return this.updateTable(updatedTable);
-  }
-
   private findImpactedChildRowReferences(
     parentTableId: TableId,
     parentRow: RowView,
@@ -299,6 +290,49 @@ export class Database extends Immutable {
     }
 
     return childRowReferences;
+  }
+
+  public addRow(tableName: string, row: ColumnValue[]): Database {
+    const table: Table = this.tables.requireByName(tableName);
+
+    const updatedTable = table.addRow(row);
+
+    this.validateChildRowAgainstForeignKeys(row, updatedTable);
+
+    return this.updateTable(updatedTable);
+  }
+
+  private applyResolvedInserts(
+    tableId: TableId,
+    inserts: ResolvedInsert[],
+  ): Database {
+    if (inserts.length === 0) {
+      return this;
+    }
+
+    const table: Table = this.tables.require(tableId);
+
+    const updatedTable =
+      table.addRows(inserts);
+
+    return this.updateTable(updatedTable);
+  }
+
+  public addRows(
+    tableName: string,
+    inserts: ResolvedInsert[],
+  ): Database {
+    const tableId = this.tables.requireIdByName(tableName);
+
+    const updatedDatabase =
+      this.applyResolvedInserts(
+        tableId,
+        inserts,
+      );
+
+    updatedDatabase.assertAllForeignKeysValid();
+
+    return updatedDatabase;
   }
 
   public removeRows(
@@ -706,7 +740,6 @@ export class Database extends Immutable {
       if (projected.includes(null)) return;
 
       const latestParentTable =
-        //fk.parentTable === normalizeIdentifier(childTable.name) ?
         fk.parentTable === childTable.id ?
         childTable :
         this.tables.require(fk.parentTable);

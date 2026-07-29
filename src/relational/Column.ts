@@ -61,6 +61,15 @@ export class Column extends Immutable {
     return new this(spec);
   }
 
+  public backfill(
+    numRows: number,
+    value: ColumnValue,
+  ): Column {
+    return this.with({
+      data: Array(numRows).fill(value)
+    } as Partial<this>);
+  }
+
   public alter(newType: ColumnType): Column {
     const oldType = this.type;
 
