@@ -7,7 +7,7 @@ export interface QueryResult {
 }
 
 export function createQueryResult(columns: Column[], data: ColumnValue[][]) {
-  const columnNames = columns.map(c => c.name);
+  const columnNames = columns.map((c) => c.name);
 
   if (columns.length === 0) {
     return { columns: [], rows: [] };
@@ -34,6 +34,6 @@ export function createQueryResult(columns: Column[], data: ColumnValue[][]) {
 
   return {
     columns: columnNames,
-    rows
+    rows,
   };
 }

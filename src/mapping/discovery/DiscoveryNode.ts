@@ -12,24 +12,27 @@ export interface DiscoveryNodeSpec<
   TNavigation extends DiscoveryValue,
   TDecoded extends DiscoveryValue,
 > {
-  readonly nodeType: string,
+  readonly nodeType: string;
   readonly navigator: DiscoveryNavigator<TCurrent, TNavigation>;
-  readonly matcher: PredicateBuilder<TNavigation>,
-  readonly children: readonly DiscoveryNode[],
-  readonly captures?: Record<string, ExpressionBuilder<DiscoveryContext, CaptureValue>>,
-  readonly decoder?: DiscoveryDecoder<TNavigation, TDecoded>,
+  readonly matcher: PredicateBuilder<TNavigation>;
+  readonly children: readonly DiscoveryNode[];
+  readonly captures?: Record<
+    string,
+    ExpressionBuilder<DiscoveryContext, CaptureValue>
+  >;
+  readonly decoder?: DiscoveryDecoder<TNavigation, TDecoded>;
 }
 
 export class DiscoveryNode {
-  constructor(readonly spec: DiscoveryNodeSpec<
-    DiscoveryValue,
-    DiscoveryValue,
-    DiscoveryValue
-  >) {}
+  constructor(
+    readonly spec: DiscoveryNodeSpec<
+      DiscoveryValue,
+      DiscoveryValue,
+      DiscoveryValue
+    >,
+  ) {}
 
-  discover(
-    context: DiscoveryContext
-  ): DiscoveryResult[] {
+  discover(context: DiscoveryContext): DiscoveryResult[] {
     const results: DiscoveryResult[] = [];
 
     const decoder = this.spec.decoder;
@@ -65,14 +68,12 @@ export class DiscoveryNode {
 
       let childContext = context
         .withCurrent(current)
-        .withIdentityParts(
-          navigator.identityParts(context.current, candidate)
-        );
+        .withIdentityParts(navigator.identityParts(context.current, candidate));
 
-      for (const [name, builder] of Object.entries(this.spec.captures?? {})) {
+      for (const [name, builder] of Object.entries(this.spec.captures ?? {})) {
         childContext = childContext.withCapture(
           name,
-          builder.evaluate(childContext)
+          builder.evaluate(childContext),
         );
       }
 
@@ -81,22 +82,16 @@ export class DiscoveryNode {
         childContext.identity,
         current,
         new Map(childContext.captures),
-        []
+        [],
       );
 
       for (const childNode of this.spec.children) {
-        result.children.push(
-          ...childNode.discover(childContext)
-        );
+        result.children.push(...childNode.discover(childContext));
       }
 
       results.push(result);
 
-      console.log(
-        this.spec.nodeType,
-        "children:",
-        this.spec.children.length
-      );
+      console.log(this.spec.nodeType, "children:", this.spec.children.length);
     }
 
     return results;

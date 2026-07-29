@@ -9,7 +9,6 @@ import { type Table } from "./Table.js";
 export type CheckId = number & { readonly __brand: "CheckId" };
 
 export class Check extends ColumnBoundImmutable {
-
   public readonly id: CheckId;
   public readonly name: string;
   public readonly columns: ColumnId[];
@@ -17,11 +16,11 @@ export class Check extends ColumnBoundImmutable {
   public readonly predicate: Predicate;
 
   protected constructor(spec: {
-    id: CheckId,
-    name: string,
-    columns: ColumnId[],
-    resolvedPredicate: ResolvedPredicateNode,
-    predicate: Predicate,
+    id: CheckId;
+    name: string;
+    columns: ColumnId[];
+    resolvedPredicate: ResolvedPredicateNode;
+    predicate: Predicate;
   }) {
     super();
 
@@ -39,25 +38,26 @@ export class Check extends ColumnBoundImmutable {
   }
 
   public static create(spec: {
-    id: CheckId,
-    name: string,
-    resolvedPredicate: ResolvedPredicateNode,
-    predicate: Predicate,
+    id: CheckId;
+    name: string;
+    resolvedPredicate: ResolvedPredicateNode;
+    predicate: Predicate;
   }): Check {
-    const columnIds =
-      ResolvedPredicateColumnCollector.collect(spec.resolvedPredicate);
+    const columnIds = ResolvedPredicateColumnCollector.collect(
+      spec.resolvedPredicate,
+    );
     return new this({
       ...spec,
-      columns: columnIds
+      columns: columnIds,
     });
   }
 
   public rename(newName: string): Check {
     return this.with({
-      name: newName
+      name: newName,
     } as Partial<this>);
   }
-  
+
   public tryBindPredicate(table: Table) {
     return this.with({
       predicate: bindPredicate(this.resolvedPredicate, table),

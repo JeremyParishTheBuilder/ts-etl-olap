@@ -9,10 +9,7 @@ import { type Column } from "../relational/Column.js";
 import { resolveSelectColumns } from "./resolveColumnList.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
 
-export function bindSelect(
-  semantic: SemanticAnalyzer,
-  stmt: SelectStatement
-) {
+export function bindSelect(semantic: SemanticAnalyzer, stmt: SelectStatement) {
   //Get table
   const table = semantic.ctx.requireTable(stmt.tableName);
   const specifiedColumns = stmt.columnNames;
@@ -23,17 +20,21 @@ export function bindSelect(
   // 3. WHERE -> predicate -> filter
   const whereClause = stmt.where;
   if (whereClause) {
-    const predicate = bindPredicate(resolvePredicate(whereClause, table), table);
+    const predicate = bindPredicate(
+      resolvePredicate(whereClause, table),
+      table,
+    );
     node = new FilterNode(predicate, node);
   }
 
   // 4. Projection
   if (specifiedColumns !== "*") {
-    const effectiveColumns: Column[] =
-      resolveSelectColumns(table, specifiedColumns);
+    const effectiveColumns: Column[] = resolveSelectColumns(
+      table,
+      specifiedColumns,
+    );
 
-    const columnIndexes: number[] =
-      effectiveColumns.map(c => c.position);
+    const columnIndexes: number[] = effectiveColumns.map((c) => c.position);
 
     node = new ProjectNode(columnIndexes, node);
   }

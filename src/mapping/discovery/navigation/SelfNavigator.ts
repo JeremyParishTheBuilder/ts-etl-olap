@@ -2,12 +2,10 @@ import type { ColumnValue } from "../../../types/ColumnValue.js";
 import type { DiscoveryNavigator } from "./DiscoveryNavigator.js";
 import type { DiscoveryValue } from "../../value/DiscoveryValue.js";
 
-export class SelfNavigator<T extends DiscoveryValue>
-  implements DiscoveryNavigator<T, T> {
-
-  constructor(
-    private readonly ctor: new (...args: never[]) => T
-  ) {}
+export class SelfNavigator<
+  T extends DiscoveryValue,
+> implements DiscoveryNavigator<T, T> {
+  constructor(private readonly ctor: new (...args: never[]) => T) {}
 
   accepts(current: DiscoveryValue): current is T {
     return current instanceof this.ctor;

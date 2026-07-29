@@ -44,9 +44,7 @@ export abstract class InputBatch {
     "deleteFrom",
   ];
 
-  constructor(
-    protected readonly executeStatement: (stmt: Statement) => void,
-  ) {}
+  constructor(protected readonly executeStatement: (stmt: Statement) => void) {}
 
   private addStatement(stmt: Statement) {
     this.statements.push(stmt);
@@ -63,7 +61,7 @@ export abstract class InputBatch {
     if (!this.currentBuilder) {
       if (!InputBatch.statementStarters.includes(canonical)) {
         throw new Error(
-          `'${fragment}' cannot be used outside of a statement (or must start a statement)`
+          `'${fragment}' cannot be used outside of a statement (or must start a statement)`,
         );
       }
       return;
@@ -72,7 +70,9 @@ export abstract class InputBatch {
     const { required, optional } = this.currentBuilder.getNextCalls();
 
     if (required.length > 0 && !required.includes(canonical)) {
-      throw new Error(`Expected ${required.join(" or ")}, but got '${fragment}'`);
+      throw new Error(
+        `Expected ${required.join(" or ")}, but got '${fragment}'`,
+      );
     }
 
     if (
@@ -110,7 +110,10 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected createDatabase(dbName: string, fragment: string = "CREATE DATABASE") {
+  protected createDatabase(
+    dbName: string,
+    fragment: string = "CREATE DATABASE",
+  ) {
     this.assertAllowed("createDatabase", fragment);
     this.finalizePreviousStatement();
     this.currentBuilder = new CreateDatabaseBuilder(dbName);
@@ -122,17 +125,25 @@ export abstract class InputBatch {
     name: string,
     columnSchema: Record<string, InlineColumnSpec>,
     constraintSchema: Record<string, ConstraintSpec>,
-    fragment: string = "CREATE TABLE"
+    fragment: string = "CREATE TABLE",
   ) {
     this.assertAllowed("createTable", fragment);
     this.finalizePreviousStatement();
-    this.currentBuilder = new CreateTableBuilder(name, columnSchema, constraintSchema);
+    this.currentBuilder = new CreateTableBuilder(
+      name,
+      columnSchema,
+      constraintSchema,
+    );
     this.finalizePreviousStatement();
     return this;
   }
 
-  protected insertInto(table: string, columns: string[], fragment: string = "INSERT INTO") {
-    this.assertAllowed("insertInto", fragment); 
+  protected insertInto(
+    table: string,
+    columns: string[],
+    fragment: string = "INSERT INTO",
+  ) {
+    this.assertAllowed("insertInto", fragment);
     this.finalizePreviousStatement();
     this.currentBuilder = new InsertIntoBuilder(table, columns);
     return this;
@@ -157,13 +168,16 @@ export abstract class InputBatch {
   }
 
   protected update(table: string, fragment: string = "UPDATE") {
-    this.assertAllowed("update", fragment); 
+    this.assertAllowed("update", fragment);
     this.finalizePreviousStatement();
     this.currentBuilder = new UpdateSetBuilder(table);
     return this;
   }
 
-  protected set(data: Record<string, ExpressionNode | ExplicitInput>, fragment: string = "SET") {
+  protected set(
+    data: Record<string, ExpressionNode | ExplicitInput>,
+    fragment: string = "SET",
+  ) {
     this.assertAllowed("set", fragment);
     if (!(this.currentBuilder instanceof UpdateSetBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of Update`);
@@ -172,20 +186,14 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected deleteFrom(
-    table: string,
-    fragment: string = "DELETE FROM"
-  ) {
-    this.assertAllowed("deleteFrom", fragment); 
+  protected deleteFrom(table: string, fragment: string = "DELETE FROM") {
+    this.assertAllowed("deleteFrom", fragment);
     this.finalizePreviousStatement();
     this.currentBuilder = new DeleteFromBuilder(table);
     return this;
   }
 
-  protected alterTable(
-    name: string,
-    fragment: string = "ALTER TABLE"
-  ) {
+  protected alterTable(name: string, fragment: string = "ALTER TABLE") {
     this.assertAllowed("alterTable", fragment);
     this.finalizePreviousStatement();
     this.currentBuilder = new AlterTableBuilder(name);
@@ -195,7 +203,7 @@ export abstract class InputBatch {
   protected addColumn(
     columnName: string,
     inlineColumnSpec: InlineColumnSpec,
-    fragment: string = "ADD COLUMN"
+    fragment: string = "ADD COLUMN",
   ) {
     this.assertAllowed("addColumn", fragment);
     if (!(this.currentBuilder instanceof AlterTableBuilder)) {
@@ -205,10 +213,7 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected addConstraint(
-    name: string,
-    fragment: string = "ADD CONSTRAINT"
-  ) {
+  protected addConstraint(name: string, fragment: string = "ADD CONSTRAINT") {
     this.assertAllowed("addConstraint", fragment);
     if (!(this.currentBuilder instanceof AlterTableBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of AlterTable`);
@@ -217,10 +222,7 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected foreignKey(
-    columns: string[],
-    fragment: string = "FOREIGN KEY"
-  ) {
+  protected foreignKey(columns: string[], fragment: string = "FOREIGN KEY") {
     this.assertAllowed("foreignKey", fragment);
     if (!(this.currentBuilder instanceof AlterTableBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of AlterTable`);
@@ -229,10 +231,7 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected check(
-    predicate: PredicateNode,
-    fragment: string = "CHECK"
-  ) {
+  protected check(predicate: PredicateNode, fragment: string = "CHECK") {
     this.assertAllowed("check", fragment);
     if (!(this.currentBuilder instanceof AlterTableBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of AlterTable`);
@@ -244,7 +243,7 @@ export abstract class InputBatch {
   protected references(
     parentTable: string,
     parentColumns: string[],
-    fragment: string = "REFERENCES"
+    fragment: string = "REFERENCES",
   ) {
     this.assertAllowed("references", fragment);
     if (!(this.currentBuilder instanceof AlterTableBuilder)) {
@@ -256,7 +255,7 @@ export abstract class InputBatch {
 
   protected onDelete(
     action: ReferentialAction,
-    fragment: string = "ON DELETE"
+    fragment: string = "ON DELETE",
   ) {
     this.assertAllowed("onDelete", fragment);
     if (!(this.currentBuilder instanceof AlterTableBuilder)) {
@@ -268,7 +267,7 @@ export abstract class InputBatch {
 
   protected onUpdate(
     action: ReferentialAction,
-    fragment: string = "ON UPDATE"
+    fragment: string = "ON UPDATE",
   ) {
     this.assertAllowed("onUpdate", fragment);
     if (!(this.currentBuilder instanceof AlterTableBuilder)) {
@@ -278,20 +277,14 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected select(
-    columns: string[] | "*",
-    fragment: string = "SELECT"
-  ) {
+  protected select(columns: string[] | "*", fragment: string = "SELECT") {
     this.assertAllowed("select", fragment);
     this.finalizePreviousStatement();
     this.currentBuilder = new SelectBuilder(columns);
     return this;
   }
 
-  protected from(
-    name: string,
-    fragment: string = "FROM"
-  ) {
+  protected from(name: string, fragment: string = "FROM") {
     this.assertAllowed("from", fragment);
     if (!(this.currentBuilder instanceof SelectBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of Select`);
@@ -300,56 +293,42 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected where(
-    predicate: PredicateNode,
-    fragment: string = "WHERE",
-  ) {
+  protected where(predicate: PredicateNode, fragment: string = "WHERE") {
     this.assertAllowed("where", fragment);
     if (
       !(this.currentBuilder instanceof SelectBuilder) &&
       !(this.currentBuilder instanceof UpdateSetBuilder) &&
       !(this.currentBuilder instanceof DeleteFromBuilder)
     ) {
-      throw new Error(`Cannot call '${fragment}' outside of SELECT/UPDATE/DELETE`);
+      throw new Error(
+        `Cannot call '${fragment}' outside of SELECT/UPDATE/DELETE`,
+      );
     }
     this.currentBuilder.where(predicate);
     return this;
   }
 
-  protected and(left: PredicateNode, right: PredicateNode) {   
-    return new AndPredicateNode([
-      left,
-      right
-    ]);
+  protected and(left: PredicateNode, right: PredicateNode) {
+    return new AndPredicateNode([left, right]);
   }
 
-  protected or(left: PredicateNode, right: PredicateNode) {   
-    return new OrPredicateNode([
-      left,
-      right
-    ]);
+  protected or(left: PredicateNode, right: PredicateNode) {
+    return new OrPredicateNode([left, right]);
   }
 
-  protected xor(left: PredicateNode, right: PredicateNode) {   
-    return new XorPredicateNode(
-      left,
-      right
-    );
+  protected xor(left: PredicateNode, right: PredicateNode) {
+    return new XorPredicateNode(left, right);
   }
 
-  protected not(inner: PredicateNode) {   
-    return new NotPredicateNode(
-      inner,
-    );
+  protected not(inner: PredicateNode) {
+    return new NotPredicateNode(inner);
   }
 
-  protected case() {   
+  protected case() {
     return new CaseBuilder();
   }
 
-  protected column(
-    name: string,
-  ) {
+  protected column(name: string) {
     return new ColumnExpressionNode(name);
   }
 

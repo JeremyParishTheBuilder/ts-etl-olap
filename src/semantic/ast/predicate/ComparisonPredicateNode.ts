@@ -1,6 +1,6 @@
 import {
   type ResolvedExpressionNode,
-  type ExpressionNode
+  type ExpressionNode,
 } from "../expression/ExpressionNode.js";
 
 export class ComparisonPredicateNode {

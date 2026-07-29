@@ -11,13 +11,13 @@ export class RenameColumnAction implements Action {
 
   apply(databases: Databases): Databases {
     const db = databases.requireByName(this.dbName);
-    
-    const updatedTable = db
-      .tables.requireByName(this.tableName)
+
+    const updatedTable = db.tables
+      .requireByName(this.tableName)
       .renameColumn(this.oldColumnName, this.newColumnName);
 
     const updatedDb = db.updateTable(updatedTable);
-    
+
     return databases.update(updatedDb);
   }
 }

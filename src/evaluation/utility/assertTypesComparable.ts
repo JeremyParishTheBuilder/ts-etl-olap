@@ -1,13 +1,8 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
 
-export function assertComparable(
-  left: ColumnValue,
-  right: ColumnValue,
-): void {
+export function assertComparable(left: ColumnValue, right: ColumnValue): void {
   if (!typesAreComparable(left, right)) {
-    throw new Error(
-      `Values are not comparable`
-    );
+    throw new Error(`Values are not comparable`);
   }
 }
 

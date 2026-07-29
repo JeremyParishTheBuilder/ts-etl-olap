@@ -6,21 +6,19 @@ export class AddUniqueAction implements Action {
     private dbName: string,
     private tableName: string,
     private spec: {
-      name: string,
-      indexName: string,
-      ownsIndex: boolean,
+      name: string;
+      indexName: string;
+      ownsIndex: boolean;
     },
   ) {}
 
   apply(databases: Databases): Databases {
     const db = databases.requireByName(this.dbName);
 
-    const updatedTable = db
-      .tables.requireByName(this.tableName)
+    const updatedTable = db.tables
+      .requireByName(this.tableName)
       .createUnique(this.spec);
 
-    return databases.update(
-      db.updateTable(updatedTable)
-    );
+    return databases.update(db.updateTable(updatedTable));
   }
 }

@@ -1,8 +1,8 @@
 import { ComparisonPredicate } from "../evaluation/predicate/ComparisonPredicate.js";
 import { NotPredicate } from "../evaluation/predicate/NotPredicate.js";
-import { 
+import {
   type PredicateNode,
-  type ResolvedPredicateNode
+  type ResolvedPredicateNode,
 } from "./ast/predicate/PredicateNode.js";
 import { type Predicate } from "../evaluation/predicate/Predicate.js";
 import { type Table } from "../relational/Table.js";
@@ -25,33 +25,31 @@ export function bindPredicate(
       return new ComparisonPredicate(
         bindExpression(pred.left, table),
         pred.operator,
-        bindExpression(pred.right, table)
+        bindExpression(pred.right, table),
       );
     }
 
     case "and": {
       return new AndPredicate(
-        pred.predicates.map(p => bindPredicate(p, table))
+        pred.predicates.map((p) => bindPredicate(p, table)),
       );
     }
 
     case "or": {
       return new OrPredicate(
-        pred.predicates.map(p => bindPredicate(p, table))
+        pred.predicates.map((p) => bindPredicate(p, table)),
       );
     }
 
     case "xor": {
       return new XorPredicate(
         bindPredicate(pred.left, table),
-        bindPredicate(pred.right, table)
+        bindPredicate(pred.right, table),
       );
     }
 
     case "not": {
-      return new NotPredicate(
-        bindPredicate(pred.inner, table)
-      );
+      return new NotPredicate(bindPredicate(pred.inner, table));
     }
 
     //TODO: BETWEEN, LIKE, IN
@@ -76,18 +74,18 @@ export function resolvePredicate(
 
     case "and":
       return new ResolvedAndPredicateNode(
-        predicate.predicates.map(p => resolvePredicate(p, table))
+        predicate.predicates.map((p) => resolvePredicate(p, table)),
       );
 
     case "or":
       return new ResolvedOrPredicateNode(
-        predicate.predicates.map(p => resolvePredicate(p, table))
+        predicate.predicates.map((p) => resolvePredicate(p, table)),
       );
 
     case "xor":
       return new ResolvedXorPredicateNode(
         resolvePredicate(predicate.left, table),
-        resolvePredicate(predicate.right, table)
+        resolvePredicate(predicate.right, table),
       );
 
     case "not":
@@ -97,7 +95,7 @@ export function resolvePredicate(
 
     default:
       throw new Error(
-        `Unknown predicate kind: ${(predicate as { kind?: string }).kind}`
+        `Unknown predicate kind: ${(predicate as { kind?: string }).kind}`,
       );
   }
 }

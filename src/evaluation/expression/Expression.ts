@@ -2,23 +2,20 @@ import { type ColumnValue } from "../../types/ColumnValue.js";
 import { type RowView } from "../../relational/RowView.js";
 import {
   type ResolvedCaseExpressionNode,
-  type CaseExpressionNode
+  type CaseExpressionNode,
 } from "../../semantic/ast/expression/CaseExpressionNode.js";
-import { 
+import {
   type ResolvedColumnExpressionNode,
-  type ColumnExpressionNode
+  type ColumnExpressionNode,
 } from "../../semantic/ast/expression/ColumnExpressionNode.js";
 import { type LiteralExpressionNode } from "../../semantic/ast/expression/LiteralExpressionNode.js";
 import { type ConcatExpressionNode } from "../../semantic/ast/expression/ConcatExpressionNode.js";
 import {
   type BinaryExpressionNode,
-  type ResolvedBinaryExpressionNode
+  type ResolvedBinaryExpressionNode,
 } from "../../semantic/ast/expression/BinaryExpressionNode.js";
 
-export interface Expression<
-  TContext = RowView,
-  TValue = ColumnValue
-> {
+export interface Expression<TContext = RowView, TValue = ColumnValue> {
   evaluate(context: TContext): TValue;
   consumedKeys?(): readonly string[];
 }
@@ -41,12 +38,6 @@ export abstract class ExpressionNodeBase {
   abstract readonly kind: string;
 }
 
-export function isExpressionNode(
-  value: unknown,
-): value is ExpressionNode {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "kind" in value
-  );
+export function isExpressionNode(value: unknown): value is ExpressionNode {
+  return typeof value === "object" && value !== null && "kind" in value;
 }

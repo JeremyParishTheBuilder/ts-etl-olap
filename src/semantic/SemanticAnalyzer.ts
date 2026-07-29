@@ -11,7 +11,6 @@ import { bindUpdateSet } from "./updateSet.js";
 import { bindDeleteFrom } from "./deleteFrom.js";
 
 export class SemanticAnalyzer {
-
   constructor(public readonly ctx: ExecutionContext) {}
 
   public bindStatement(stmt: Statement): BindResult {

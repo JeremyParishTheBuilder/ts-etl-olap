@@ -8,10 +8,7 @@ export class Transaction {
   public stmts: Statement[] = [];
   public actions: Action[] = [];
 
-  constructor(
-    id: number,
-    databases: Databases,
-  ) {
+  constructor(id: number, databases: Databases) {
     this.id = id;
     this.databases = databases;
   }
@@ -24,7 +21,7 @@ export class Transaction {
     for (const action of actions) {
       this.databases = action.apply(this.databases);
     }
-    
+
     this.actions.push(...actions);
   }
 }

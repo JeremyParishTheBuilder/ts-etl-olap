@@ -2,14 +2,10 @@ import { DiscoveryImportSource } from "./DiscoveryImportSource.js";
 import type { ImportSource } from "./ImportSource.js";
 import { PathImportSource } from "./PathImportSource.js";
 
-export function discovery(
-  nodeType: string
-): ImportSource {
+export function discovery(nodeType: string): ImportSource {
   return new DiscoveryImportSource(nodeType);
 }
 
-export function path(
-  path: string
-): ImportSource {
+export function path(path: string): ImportSource {
   return new PathImportSource(path);
 }

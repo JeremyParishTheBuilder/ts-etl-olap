@@ -1,7 +1,5 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
-import {
-  type Predicate,
-} from "../predicate/Predicate.js";
+import { type Predicate } from "../predicate/Predicate.js";
 import { type Expression } from "./Expression.js";
 
 export class CaseExpression<TContext> implements Expression<TContext> {

@@ -1,19 +1,16 @@
 import { type ColumnValue } from "./ColumnValue.js";
 
 export type ColumnType =
-  | StringConstructor
-  | NumberConstructor
-  | BooleanConstructor
-  | "unknown";
+  StringConstructor | NumberConstructor | BooleanConstructor | "unknown";
 
-export function isTypeCompatible(type1: ColumnType, type2: ColumnType): boolean {
+export function isTypeCompatible(
+  type1: ColumnType,
+  type2: ColumnType,
+): boolean {
   return type1 === type2;
 }
 
-export function matchesColumnType(
-  value: unknown,
-  type: ColumnType
-): boolean {
+export function matchesColumnType(value: unknown, type: ColumnType): boolean {
   if (value === null) {
     return true;
   }

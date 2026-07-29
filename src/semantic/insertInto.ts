@@ -7,20 +7,20 @@ import { resolveTargetColumns } from "./resolveColumnList.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
 
-  // Handles interpretation and completion of user intent:
+// Handles interpretation and completion of user intent:
 
-  // Expanding partial INSERT into full rows
-  // Resolving:
-  // Default values
-  // Column ordering
-  // Missing columns
-  // Validating statement semantics (before execution)
+// Expanding partial INSERT into full rows
+// Resolving:
+// Default values
+// Column ordering
+// Missing columns
+// Validating statement semantics (before execution)
 export function bindInsertInto(
   semantic: SemanticAnalyzer,
-  stmt: InsertIntoStatement
+  stmt: InsertIntoStatement,
 ) {
   const stmtActions: Action[] = [];
-  
+
   const database = semantic.ctx.requireDatabase();
   const dbName: string = database.name;
 
@@ -34,28 +34,18 @@ export function bindInsertInto(
   const inputRows: Map<ColumnId, ExplicitInput>[] = [];
 
   for (const row of stmt.values) {
-
     assertRowLengthMatchesColumnLength(row, effectiveColumns);
 
     const columnIdToValueMap = new Map<ColumnId, ExplicitInput>();
 
     for (let i = 0; i < effectiveColumns.length; i++) {
-       columnIdToValueMap.set(
-        effectiveColumns[i].id,
-        row[i]
-      );
+      columnIdToValueMap.set(effectiveColumns[i].id, row[i]);
     }
 
     inputRows.push(columnIdToValueMap);
   }
 
-  stmtActions.push(
-    new InsertRowsAction(
-      dbName,
-      tableName,
-      inputRows,
-    )
-  );
+  stmtActions.push(new InsertRowsAction(dbName, tableName, inputRows));
 
   return stmtActions;
 }
@@ -66,7 +56,10 @@ function assertAtLeastOneRowOfValues(values: ColumnValue[][]): void {
   }
 }
 
-function assertRowLengthMatchesColumnLength(row: ColumnValue[], columns: Column[]): void {
+function assertRowLengthMatchesColumnLength(
+  row: ColumnValue[],
+  columns: Column[],
+): void {
   if (row.length !== columns.length) {
     throw new Error(`Row length and Column length mismatch`);
   }

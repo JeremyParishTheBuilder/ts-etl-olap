@@ -20,16 +20,12 @@ export class UpdateRowsAction implements Action {
   apply(databases: Databases) {
     const db = databases.requireByName(this.dbName);
 
-    const table = db
-      .tables.requireByName(this.tableName);
-      
+    const table = db.tables.requireByName(this.tableName);
+
     let node: PlanNode = new TableScanNode(table);
 
     if (this.predicate) {
-      node = new FilterNode(
-        this.predicate,
-        node,
-      );
+      node = new FilterNode(this.predicate, node);
     }
 
     //finds rows
@@ -39,20 +35,11 @@ export class UpdateRowsAction implements Action {
 
     // evaluates expressions
     for (const row of affectedRows) {
-      updates.push(
-        table.resolveUpdateExpressions(
-          this.expressions,
-          row.index,
-        )
-      );
+      updates.push(table.resolveUpdateExpressions(this.expressions, row.index));
     }
 
     // performs bulk update
-    const updatedDatabase =
-      db.updateRows(
-        this.tableName,
-        updates
-      );
+    const updatedDatabase = db.updateRows(this.tableName, updates);
 
     return databases.update(updatedDatabase);
   }

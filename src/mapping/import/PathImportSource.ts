@@ -6,18 +6,12 @@ import { PropertyPath } from "./PropertyPath.js";
 export class PathImportSource implements ImportSource {
   public readonly propertyPath: PropertyPath;
 
-  constructor(
-    public readonly path: string,
-  ) {
+  constructor(public readonly path: string) {
     this.propertyPath = PropertyPath.parse(path);
   }
 
-  navigate(
-    context: ImportContext
-  ): ImportContext[] {
-    return [context.withSource(
-      this.propertyPath.resolve(context.source)
-    )];
+  navigate(context: ImportContext): ImportContext[] {
+    return [context.withSource(this.propertyPath.resolve(context.source))];
   }
 
   consumedKeys(): readonly string[] {

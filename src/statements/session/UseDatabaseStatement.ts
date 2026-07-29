@@ -1,14 +1,12 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 
 export interface UseDatabaseStatement extends BaseStatement {
-  kind: "use_database",
-  dbName: string,
+  kind: "use_database";
+  dbName: string;
 }
 
 export class UseDatabaseBuilder implements StatementBuilder {
-  constructor(
-    private dbName: string
-  ) {}
+  constructor(private dbName: string) {}
 
   getNextCalls() {
     return {
@@ -20,7 +18,7 @@ export class UseDatabaseBuilder implements StatementBuilder {
   createStatement(): UseDatabaseStatement {
     return {
       kind: "use_database",
-      dbName: this.dbName
+      dbName: this.dbName,
     };
   }
 }

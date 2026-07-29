@@ -4,9 +4,7 @@ import { DatabaseSchema } from "./DatabaseSchema.js";
 export class SchemaBuilder {
   readonly schema = new DatabaseSchema();
 
-  observe(
-    result: ImportResult
-  ): void {
+  observe(result: ImportResult): void {
     //const table = this.schema.getOrCreateTable(result.mapping.tableName);
     const table = this.schema.getOrCreateTable(result.tableName);
 

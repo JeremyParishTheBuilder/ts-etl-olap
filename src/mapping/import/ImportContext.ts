@@ -8,7 +8,7 @@ export class ImportContext implements CaptureContext {
     readonly discovery: DiscoveryResult,
     readonly identity: ImportRowIdentity,
     readonly source: CaptureValue,
-    readonly tableName?: string
+    readonly tableName?: string,
   ) {}
 
   get captures() {
@@ -20,7 +20,7 @@ export class ImportContext implements CaptureContext {
       this.discovery,
       identity,
       this.source,
-      this.tableName
+      this.tableName,
     );
   }
 
@@ -29,7 +29,7 @@ export class ImportContext implements CaptureContext {
       this.discovery,
       this.identity,
       source,
-      this.tableName
+      this.tableName,
     );
   }
 
@@ -38,7 +38,7 @@ export class ImportContext implements CaptureContext {
       discovery,
       this.identity,
       discovery.value,
-      this.tableName
+      this.tableName,
     );
   }
 
@@ -47,7 +47,7 @@ export class ImportContext implements CaptureContext {
       this.discovery,
       this.identity,
       this.source,
-      tableName
+      tableName,
     );
   }
 }

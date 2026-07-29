@@ -3,11 +3,7 @@ import { type ResolvedPredicateNode } from "../semantic/ast/predicate/PredicateN
 import { type ColumnId } from "../relational/Column.js";
 
 export class ResolvedPredicateColumnCollector {
-
-  public static collect(
-    predicate: ResolvedPredicateNode
-  ): ColumnId[] {
-
+  public static collect(predicate: ResolvedPredicateNode): ColumnId[] {
     const columns = new Set<ColumnId>();
 
     this.collectPredicate(predicate, columns);
@@ -17,22 +13,20 @@ export class ResolvedPredicateColumnCollector {
 
   private static collectPredicate(
     predicate: ResolvedPredicateNode,
-    columns: Set<ColumnId>
+    columns: Set<ColumnId>,
   ): void {
-
     switch (predicate.kind) {
-
       case "comparison":
         this.collectExpression(predicate.left, columns);
         this.collectExpression(predicate.right, columns);
         return;
 
       case "and":
-        predicate.predicates.map(p => this.collectPredicate(p, columns))
+        predicate.predicates.map((p) => this.collectPredicate(p, columns));
         return;
 
       case "or":
-        predicate.predicates.map(p => this.collectPredicate(p, columns))
+        predicate.predicates.map((p) => this.collectPredicate(p, columns));
         return;
 
       case "xor":
@@ -51,11 +45,9 @@ export class ResolvedPredicateColumnCollector {
 
   private static collectExpression(
     expr: ResolvedExpressionNode,
-    columns: Set<ColumnId>
+    columns: Set<ColumnId>,
   ): void {
-
     switch (expr.kind) {
-
       case "column":
         columns.add(expr.columnId);
         return;
@@ -69,24 +61,14 @@ export class ResolvedPredicateColumnCollector {
         return;
 
       case "case":
-
         for (const branch of expr.branches) {
-          this.collectPredicate(
-            branch.when,
-            columns
-          );
+          this.collectPredicate(branch.when, columns);
 
-          this.collectExpression(
-            branch.then,
-            columns
-          );
+          this.collectExpression(branch.then, columns);
         }
 
         if (expr.elseExpr) {
-          this.collectExpression(
-            expr.elseExpr,
-            columns
-          );
+          this.collectExpression(expr.elseExpr, columns);
         }
 
         return;

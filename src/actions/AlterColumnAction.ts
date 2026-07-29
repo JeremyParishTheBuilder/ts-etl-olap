@@ -13,11 +13,12 @@ export class AlterColumnAction implements Action {
   apply(databases: Databases): Databases {
     const db = databases.requireByName(this.dbName);
 
-    const updatedDatabase = db
-      .alterColumn(this.tableName, this.columnName, this.newType);
-
-    return databases.update(
-      updatedDatabase
+    const updatedDatabase = db.alterColumn(
+      this.tableName,
+      this.columnName,
+      this.newType,
     );
+
+    return databases.update(updatedDatabase);
   }
 }

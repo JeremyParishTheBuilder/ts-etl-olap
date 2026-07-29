@@ -7,23 +7,17 @@ import { ScalarExpressionBuilder } from "./ScalarExpressionBuilder.js";
 
 export class ValueExpressionBuilder<
   TContext,
-  TValue extends CaptureValue
-  > extends ExpressionBuilder<TContext, TValue> {
-
+  TValue extends CaptureValue,
+> extends ExpressionBuilder<TContext, TValue> {
   path(path: string) {
     return new ValueExpressionBuilder(
-      new PathExpression(
-        this.expression,
-        PropertyPath.parse(path)
-      )
+      new PathExpression(this.expression, PropertyPath.parse(path)),
     );
   }
 
   scalar() {
     return new ScalarExpressionBuilder(
-      new ScalarCastExpression(
-        this.expression
-      )
+      new ScalarCastExpression(this.expression),
     );
   }
 }

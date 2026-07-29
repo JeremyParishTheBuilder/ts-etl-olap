@@ -2,7 +2,10 @@ import { type ColumnValue, isColumnValue } from "../../types/ColumnValue.js";
 import { toPascalCase } from "../../utils/format.js";
 import { type DiscoveryResult } from "../discovery/DiscoveryResult.js";
 import type { CaptureValue } from "../value/CaptureValue.js";
-import { isStructuredValue, type StructuredValue } from "../value/StructuredValue.js";
+import {
+  isStructuredValue,
+  type StructuredValue,
+} from "../value/StructuredValue.js";
 import { type ValueResolverContext } from "../value/ValueResolverContext.js";
 import { ImportContext } from "./ImportContext.js";
 import { ImportMapping } from "./ImportMapping.js";
@@ -10,22 +13,14 @@ import { ImportResult } from "./ImportResult.js";
 import { InferredImport } from "./InferredImport.js";
 
 export class ObjectImporter {
-
-  import(
-    discovery: DiscoveryResult,
-    mapping: ImportMapping,
-  ): ImportResult[] {
-
+  import(discovery: DiscoveryResult, mapping: ImportMapping): ImportResult[] {
     const context = new ImportContext(
       discovery,
       discovery.identity,
       discovery.value,
     );
 
-    return this.importInternal(
-      context,
-      mapping,
-    );
+    return this.importInternal(context, mapping);
   }
 
   importInternal(
@@ -37,14 +32,7 @@ export class ObjectImporter {
     const contexts = mapping.source?.navigate(context) ?? [context];
 
     for (const childContext of contexts) {
-
-      results.push(
-        ...this.importObject(
-          childContext,
-          mapping,
-        )
-      );
-      
+      results.push(...this.importObject(childContext, mapping));
     }
 
     return results;
@@ -62,23 +50,19 @@ export class ObjectImporter {
       throw new Error("Import source must be structured.");
     }
 
-     const currentNamespace = mapping
+    const currentNamespace = mapping
       ? this.currentNamespace(context, mapping)
       : [];
 
-    const inferredChildren = this.inferChildren(
-      context,
-      source,
-    );
+    const inferredChildren = this.inferChildren(context, source);
 
     const excludedProperties = new Set<string>([
       ...(mapping?.children.flatMap(
-          child => child.source?.consumedKeys() ?? []
+        (child) => child.source?.consumedKeys() ?? [],
       ) ?? []),
     ]);
 
-    const tableName =
-      mapping?.tableName ?? context.tableName;
+    const tableName = mapping?.tableName ?? context.tableName;
 
     if (!isStructuredValue(source)) {
       throw new Error("Import source must be structured.");
@@ -92,12 +76,7 @@ export class ObjectImporter {
       !Array.isArray(source) &&
       mapping?.flatten !== false
     ) {
-      this.flattenColumns(
-        values,
-        currentNamespace,
-        source,
-        excludedProperties,
-      );
+      this.flattenColumns(values, currentNamespace, source, excludedProperties);
     }
 
     const rowIdentity =
@@ -122,46 +101,27 @@ export class ObjectImporter {
 
     for (const [name, builder] of Object.entries(mapping?.fields ?? {})) {
       values.set(
-        this.qualifyColumn(
-          currentNamespace,
-          name
-        ),
-        builder.evaluate(resolverContext)
-      );
-    }
-    
-    if (tableName) {
-      results.push(
-        new ImportResult(
-          tableName,
-          rowIdentity,
-          values
-        )
+        this.qualifyColumn(currentNamespace, name),
+        builder.evaluate(resolverContext),
       );
     }
 
-    let nextContext = context.withIdentity(rowIdentity)
+    if (tableName) {
+      results.push(new ImportResult(tableName, rowIdentity, values));
+    }
+
+    let nextContext = context.withIdentity(rowIdentity);
 
     if (mapping?.tableName) {
       nextContext = nextContext.withTable(mapping.tableName);
     }
 
     if (mapping) {
-      results.push(
-        ...this.importChildren(
-          nextContext,
-          mapping,
-        )
-      );
+      results.push(...this.importChildren(nextContext, mapping));
     }
 
     for (const inferred of inferredChildren) {
-      results.push(
-        ...this.importObject(
-          inferred.context,
-          inferred.mapping,
-        )
-      );
+      results.push(...this.importObject(inferred.context, inferred.mapping));
     }
 
     return results;
@@ -169,17 +129,12 @@ export class ObjectImporter {
 
   private importChildren(
     context: ImportContext,
-    mapping: ImportMapping
+    mapping: ImportMapping,
   ): ImportResult[] {
     const results: ImportResult[] = [];
-      
+
     for (const childMapping of mapping.children) {
-      results.push(
-        ...this.importInternal(
-          context,
-          childMapping,
-        )
-      );
+      results.push(...this.importInternal(context, childMapping));
     }
 
     return results;
@@ -192,16 +147,10 @@ export class ObjectImporter {
     excludedProperties: ReadonlySet<string>,
     path: string[] = [],
   ): void {
-    const fullNamespace = [
-      ...namespace,
-      ...path.map(toPascalCase),
-    ];
+    const fullNamespace = [...namespace, ...path.map(toPascalCase)];
 
     if (isColumnValue(value)) {
-      values.set(
-        fullNamespace.join("."),
-        value
-      );
+      values.set(fullNamespace.join("."), value);
       return;
     }
 
@@ -209,41 +158,23 @@ export class ObjectImporter {
       return;
     }
 
-    if (
-      value !== null &&
-      typeof value === "object"
-    ) {
+    if (value !== null && typeof value === "object") {
       for (const [key, child] of Object.entries(value)) {
-        if (
-          path.length === 0 &&
-          excludedProperties.has(key)
-        ) {
+        if (path.length === 0 && excludedProperties.has(key)) {
           continue;
         }
 
         path.push(key);
 
-        this.flattenColumns(
-          values,
-          namespace,
-          child,
-          excludedProperties,
-          path
-        );
+        this.flattenColumns(values, namespace, child, excludedProperties, path);
 
         path.pop();
       }
     }
   }
 
-  private qualifyColumn(
-    namespace: readonly string[],
-    name: string,
-  ): string {
-    const parts = [
-      ...namespace,
-      toPascalCase(name),
-    ];
+  private qualifyColumn(namespace: readonly string[], name: string): string {
+    const parts = [...namespace, toPascalCase(name)];
 
     return parts.join(".");
   }
@@ -252,7 +183,6 @@ export class ObjectImporter {
     context: ImportContext,
     mapping: ImportMapping,
   ): readonly string[] {
-
     if (mapping.prefix) {
       return [mapping.prefix];
     }
@@ -263,9 +193,7 @@ export class ObjectImporter {
 
     const columnNamespace = mapping.source?.columnNamespace();
 
-    return columnNamespace
-      ? [columnNamespace]
-      : [];
+    return columnNamespace ? [columnNamespace] : [];
   }
 
   private inferChildren(
@@ -273,23 +201,15 @@ export class ObjectImporter {
     value: StructuredValue,
     path: readonly string[] = [],
   ): InferredImport[] {
-
     const results: InferredImport[] = [];
 
-    if (
-      value == null ||
-      typeof value !== "object" ||
-      Array.isArray(value)
-    ) {
+    if (value == null || typeof value !== "object" || Array.isArray(value)) {
       return results;
     }
 
     for (const [propertyName, child] of Object.entries(value)) {
-
       if (Array.isArray(child)) {
-
         child.forEach((element, index) => {
-
           results.push({
             context: new ImportContext(
               context.discovery,
@@ -303,18 +223,12 @@ export class ObjectImporter {
             }),
           });
         });
-      }
-      else if (
-        child != null &&
-        typeof child === "object"
-      ) {
-
+      } else if (child != null && typeof child === "object") {
         results.push(
-          ...this.inferChildren(
-            context,
-            child,
-            [...path, toPascalCase(propertyName)],
-          )
+          ...this.inferChildren(context, child, [
+            ...path,
+            toPascalCase(propertyName),
+          ]),
         );
       }
     }

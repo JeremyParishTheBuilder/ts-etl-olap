@@ -1,7 +1,6 @@
 // const chain_reg = new RegistryRoot(CosmosChainRegistry, "Cosmos", CCR1_PATH);
 //   console.log("started");
 
-
 //   let registryRootReturn = sql.select("*").from("RegistryRoot").execute();
 //   console.log("Registry Root Select:");
 //   //console.log(registryRootReturn);
@@ -14,8 +13,7 @@
 //   //console.log(obj?.get("RegistryRoot", "Cosmos"));
 //   //console.log(chain_reg);
 //   console.log("there was the chain_reg");
-  
-  
+
 //   const chain = chain_reg.get("Chain", "osmosis");
 //   console.log("chain");
 //   console.log(chain)
@@ -23,7 +21,6 @@
 //     console.log("Pretty Name");
 //     console.log(chain.property("pretty_name")); // Osmosis
 //     console.log("That was the pretty_name--should be Osmosis");
-
 
 //     console.log(chain.property("blah")); // undefined
 //     console.log("That was the blah--should be undefined");
@@ -59,15 +56,12 @@
 //     console.log(traces);
 //     console.log(traces[0].property("counterparty"));
 
-
 //     console.log("Decimals:");
 //     console.log(chain_reg.
 //       get("Chain", "cosmoshub")?.
 //       get("Asset", "uatom")?.
 //       property("decimals")
 //     );
-
-
 
 //     //console.log(chain_reg.chain("cosmoshub")?.asset("uatom")?.property("decimals"));
 //     console.log("Atom:");
@@ -97,7 +91,6 @@
 //       property(Asset.PropertyName.TRACES)
 //     ));*/
 
-
 //     console.log(chain_reg.
 //       get("Chain", "osmosis")?.
 //       get("Asset", "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858")?.
@@ -112,15 +105,11 @@
 //     console.log("multiTrace:");
 //     console.log(multiTrace);*/
 
-
-
 //     console.log(
 //       chain_reg.
 //         get("IbcConnection", "cosmoshub-osmosis")?.
 //         property("channels")
 //     );
-
-
 
 //     /*const filter2 = (chainPtr: Pointer) => chain_reg.get("Chain", chainPtr.key)
 //       ?.property(Chain.PropertyName.BECH32_PREFIX) === "osmo";
@@ -145,9 +134,6 @@
 
 //     console.log("Done2");*/
 
-
-
-
 //     //const filter3 = (asset: AssetPointer) => chain_reg.asset(asset)?.property("symbol") === "OSMO";
 //     const filter3 = (assetPointer: Pointer) =>
 //       assetPointer.object?.property("symbol") === "OSMO";
@@ -167,7 +153,6 @@
 
 //     console.log("those were the assets");
 
-
 //     console.log("IBC Connections:");
 
 //     /*const filteredConnections45: any[] = chain_reg.find("IbcConnection", [()=>true]);
@@ -176,14 +161,11 @@
 //       console.log(ptr.object?.property("chain_2"));
 //     });*/
 
-
 //     const property = chain_reg.
 //       get("IbcConnection", "juno-osmosis")?.
 //       get("IbcChannel", 1)?.
 //       property("chain_1");
 //     console.log(property);
-
-
 
 //     /*console.log("IBC Channels:");
 //     const filter4 = (ptr: Pointer) => {
@@ -262,7 +244,6 @@
 //       console.log(denomUnitPtr.parent?.key);
 //       //console.log(denomUnitPtr.key);
 //     });*/
-
 
 //     /*//challenge for images
 //     //find all cases where the chain logo is defined in logo_URIs but not in the images array.

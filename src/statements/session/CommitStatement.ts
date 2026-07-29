@@ -1,7 +1,7 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 
 export interface CommitStatement extends BaseStatement {
-  kind: "commit"
+  kind: "commit";
 }
 
 export class CommitBuilder implements StatementBuilder {

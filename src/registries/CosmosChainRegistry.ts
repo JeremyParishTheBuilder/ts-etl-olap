@@ -6,12 +6,9 @@
 // import { Dialect } from "../dialect/Dialect.js";
 // import { type PostgresInputBatch } from '../input/PostgresInputBatch.js';
 
-
 // EngineRegistry.getInstance().newEngine("DEFAULT_POSTGRES", Dialect.Postgres);
 // EngineRegistry.getInstance().setDefaultEngine("DEFAULT_POSTGRES");
 // const sql: PostgresInputBatch = EngineRegistry.getInstance().engine().input() as PostgresInputBatch;
-
-
 
 // sql.createDatabase("Cosmos Chain Registry").execute();
 // console.log("Created CCR");
@@ -29,7 +26,6 @@
 
 // sql.commit().execute();
 // console.log("Commit");
-
 
 // // console.log("Now what");
 // // sql.createDatabase("DB1").execute();
@@ -118,7 +114,6 @@
 
 // console.log("trying to create Table");
 
-
 // sql.createTable("Users", {
 //       Id: {
 //         type: Number,
@@ -149,11 +144,7 @@
 
 //       console.log("ALTERED");
 
-      
-
 //     //sql.commit().execute();
-    
-
 
 // const predicate = new ComparisonPredicate(
 //   /* columnIndex */ new ColumnExpression(0),
@@ -190,7 +181,6 @@
 // const results = [...projNode.execute()];
 // console.log(results);
 // console.log("End of results");
-
 
 // console.log("attempting Select");
 // let select = sql.select("*").from("RegistryRoot").execute();
@@ -309,7 +299,6 @@
 // // sql.
 // //   insertInto("StorageBinding", ["id", "structureId", "storageType"]).
 // //   values([["VersionsFile", "Chain", "Fs.File", { f: () => "versions.json" }]]);
-
 
 // // sql.
 // //   insertInto("Structure", ["level", "parentLevel", "dataType"])?.
@@ -471,7 +460,6 @@
 //   const chainFileExists = directory.find(File, chainFile.name()) ? true : false;
 //   return assetlistFileExists || chainFileExists;
 // }
-
 
 // import RegistryObject from '../mapping/oldTypes/RegistryObject.js';
 // import RegistryStructureEntry from '../mapping/oldTypes/RegistryStructureEntry.js';

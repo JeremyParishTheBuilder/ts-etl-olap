@@ -1,8 +1,4 @@
-export type PrimitiveValue =
-  | null
-  | string
-  | number
-  | boolean;
+export type PrimitiveValue = null | string | number | boolean;
 
 export interface StructuredObject {
   [key: string]: StructuredValue;
@@ -11,13 +7,9 @@ export interface StructuredObject {
 export type StructuredArray = StructuredValue[];
 
 export type StructuredValue =
-  | StructuredObject
-  | StructuredArray
-  | PrimitiveValue;
+  StructuredObject | StructuredArray | PrimitiveValue;
 
-export function isStructuredValue(
-  value: unknown
-): value is StructuredValue {
+export function isStructuredValue(value: unknown): value is StructuredValue {
   if (
     value === null ||
     typeof value === "string" ||
@@ -31,13 +23,8 @@ export function isStructuredValue(
     return value.every(isStructuredValue);
   }
 
-  if (
-    typeof value === "object" &&
-    value !== null
-  ) {
-    return Object.values(value).every(
-      isStructuredValue
-    );
+  if (typeof value === "object" && value !== null) {
+    return Object.values(value).every(isStructuredValue);
   }
 
   return false;

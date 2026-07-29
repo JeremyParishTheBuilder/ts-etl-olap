@@ -4,9 +4,10 @@ import { type DiscoveryNavigator } from "./DiscoveryNavigator.js";
 import type { DiscoveryValue } from "../../value/DiscoveryValue.js";
 import { type FsObject } from "../FsObject.js";
 
-export class DirectoryNavigator
-  implements DiscoveryNavigator<Directory, FsObject> {
-
+export class DirectoryNavigator implements DiscoveryNavigator<
+  Directory,
+  FsObject
+> {
   accepts(current: DiscoveryValue): current is Directory {
     return current instanceof Directory;
   }

@@ -6,11 +6,7 @@ export class BinaryExpression<TContext> implements Expression<TContext> {
   constructor(
     public readonly left: Expression<TContext>,
     public readonly operator:
-      | "add"
-      | "subtract"
-      | "multiply"
-      | "divide"
-      | "mod",
+      "add" | "subtract" | "multiply" | "divide" | "mod",
     public readonly right: Expression<TContext>,
   ) {}
 
@@ -24,19 +20,24 @@ export class BinaryExpression<TContext> implements Expression<TContext> {
 
     switch (this.operator) {
       case "add":
-        assertIsNumber(leftResult); assertIsNumber(rightResult);
+        assertIsNumber(leftResult);
+        assertIsNumber(rightResult);
         return leftResult + rightResult;
       case "subtract":
-        assertIsNumber(leftResult); assertIsNumber(rightResult);
+        assertIsNumber(leftResult);
+        assertIsNumber(rightResult);
         return leftResult - rightResult;
       case "multiply":
-        assertIsNumber(leftResult); assertIsNumber(rightResult);
+        assertIsNumber(leftResult);
+        assertIsNumber(rightResult);
         return leftResult * rightResult;
       case "divide":
-        assertIsNumber(leftResult); assertIsNumber(rightResult);
+        assertIsNumber(leftResult);
+        assertIsNumber(rightResult);
         return leftResult / rightResult;
       case "mod":
-        assertIsNumber(leftResult); assertIsNumber(rightResult);
+        assertIsNumber(leftResult);
+        assertIsNumber(rightResult);
         return leftResult % rightResult;
 
       default:

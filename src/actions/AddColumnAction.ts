@@ -12,11 +12,10 @@ export class AddColumnAction implements Action {
   apply(databases: Databases) {
     const db = databases.requireByName(this.dbName);
 
-    const updatedTable = db.tables.requireByName(this.tableName)
+    const updatedTable = db.tables
+      .requireByName(this.tableName)
       .createColumn(this.columnSpec);
 
-    return databases.update(
-      db.updateTable(updatedTable)
-    );
+    return databases.update(db.updateTable(updatedTable));
   }
 }

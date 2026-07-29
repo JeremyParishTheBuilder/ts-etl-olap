@@ -4,4 +4,4 @@ import { type CheckId } from "../relational/Check.js";
 export type BoundCheck = {
   id: CheckId;
   predicate: Predicate;
-}
+};

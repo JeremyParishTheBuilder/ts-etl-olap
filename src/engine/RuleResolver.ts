@@ -10,20 +10,24 @@ export class RuleResolver {
     private policy: Partial<EnginePolicy>,
   ) {}
 
-  get<D extends keyof typeof ENGINE_RULES, K extends keyof typeof ENGINE_RULES[D]>(
-    domain: D,
-    rule: K
-  ): typeof ENGINE_RULES[D][K]['engineDefault'] {
+  get<
+    D extends keyof typeof ENGINE_RULES,
+    K extends keyof (typeof ENGINE_RULES)[D],
+  >(domain: D, rule: K): (typeof ENGINE_RULES)[D][K]["engineDefault"] {
     const cacheKey = `${domain}.${String(rule)}`;
     if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey) as typeof ENGINE_RULES[D][K]['engineDefault'];
+      return this.cache.get(
+        cacheKey,
+      ) as (typeof ENGINE_RULES)[D][K]["engineDefault"];
     }
 
     const spec = ENGINE_RULES[domain][rule];
 
     const value: typeof spec.engineDefault =
-      spec.dialectStrict?.(this.dialect) ?? 
-      (this.policy?.[domain] as Record<typeof rule, typeof spec.engineDefault>)?.[rule] ??
+      spec.dialectStrict?.(this.dialect) ??
+      (
+        this.policy?.[domain] as Record<typeof rule, typeof spec.engineDefault>
+      )?.[rule] ??
       spec.dialectDefault?.(this.dialect) ??
       spec.engineDefault;
 
@@ -35,9 +39,9 @@ export class RuleResolver {
     // shallow merge the update into the current policy
     this.policy = {
       ...this.policy,
-      ...update
+      ...update,
     };
-    this.invalidate();  // clear cache so get() recomputes
+    this.invalidate(); // clear cache so get() recomputes
   }
 
   invalidate() {

@@ -17,7 +17,6 @@
 //     super(new Pointer(null, -1, ""));
 //   }
 
-
 //   protected container(
 //     objectType: string = "RegistryRoot"
 //   ): Container | undefined {

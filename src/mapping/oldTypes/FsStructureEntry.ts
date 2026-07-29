@@ -27,7 +27,7 @@
 //     this._fsType = fsType;
 //     this._parent = parent;
 //     this._types = types;
-//     this._name = name; 
+//     this._name = name;
 //     this._qualify = qualify ?? (() => true);
 //   }
 
@@ -71,7 +71,7 @@
 //     ).filter(item => this._qualify(item));
 
 //   }
-  
+
 // }
 
 // export default FsStructureEntry;

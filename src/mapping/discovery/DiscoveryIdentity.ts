@@ -12,26 +12,18 @@ export type DiscoveryIdentityPart = ColumnValue;
 // identity.untilNodeType("chainDirectory")
 
 export class DiscoveryIdentity {
-  constructor(
-    readonly parts: readonly ColumnValue[]
-  ) {}
+  constructor(readonly parts: readonly ColumnValue[]) {}
 
   static empty(): DiscoveryIdentity {
     return new DiscoveryIdentity([]);
   }
 
   append(...parts: readonly DiscoveryIdentityPart[]): DiscoveryIdentity {
-    return new DiscoveryIdentity([
-      ...this.parts,
-      ...parts,
-    ]);
+    return new DiscoveryIdentity([...this.parts, ...parts]);
   }
 
   appendIdentity(identity: DiscoveryIdentity): DiscoveryIdentity {
-    return new DiscoveryIdentity([
-      ...this.parts,
-      ...identity.parts,
-    ]);
+    return new DiscoveryIdentity([...this.parts, ...identity.parts]);
   }
 
   static from(parts: readonly DiscoveryIdentityPart[]): DiscoveryIdentity {

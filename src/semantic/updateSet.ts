@@ -33,17 +33,12 @@ export function bindUpdateSet(
     );
   }
 
-  const whereClause = stmt.where ?
-    bindPredicate(resolvePredicate(stmt.where, table), table) :
-    undefined;
+  const whereClause = stmt.where
+    ? bindPredicate(resolvePredicate(stmt.where, table), table)
+    : undefined;
 
   stmtActions.push(
-    new UpdateRowsAction(
-      dbName,
-      tableName,
-      updateMap,
-      whereClause,
-    )
+    new UpdateRowsAction(dbName, tableName, updateMap, whereClause),
   );
 
   return stmtActions;

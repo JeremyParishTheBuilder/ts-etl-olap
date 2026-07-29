@@ -2,7 +2,7 @@ import { ENGINE_RULES } from "./EngineRules.js";
 
 export type EnginePolicy = {
   [D in keyof typeof ENGINE_RULES]?: {
-    [K in keyof typeof ENGINE_RULES[D]]?: typeof ENGINE_RULES[D][K]
+    [K in keyof (typeof ENGINE_RULES)[D]]?: (typeof ENGINE_RULES)[D][K];
   };
 };
 

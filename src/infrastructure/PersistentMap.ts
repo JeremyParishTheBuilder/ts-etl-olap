@@ -17,7 +17,9 @@ export class PersistentMap<K, V> {
 
   public requireHasNot(key: K): boolean {
     if (this.map.has(key)) {
-      throw new Error(`${this.constructor.name}: key ${String(key)} already used`);
+      throw new Error(
+        `${this.constructor.name}: key ${String(key)} already used`,
+      );
     }
     return true;
   }
@@ -35,7 +37,7 @@ export class PersistentMap<K, V> {
 
   public add(key: K, value: V): this {
     this.requireHasNot(key);
-    
+
     const clone = this.clone();
     clone.map.set(key, value);
     return clone;
@@ -94,9 +96,7 @@ export class PersistentMap<K, V> {
     }
   }
 
-  public mapValues(
-    callback: (value: V, key: K) => V
-  ): this {
+  public mapValues(callback: (value: V, key: K) => V): this {
     let changed = false;
 
     const newMap = new Map<K, V>();

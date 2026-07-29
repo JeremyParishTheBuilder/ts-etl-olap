@@ -2,12 +2,11 @@ import { Directory } from "../../mapping/discovery/Directory.js";
 import { type DiscoveryContext } from "../../mapping/discovery/DiscoveryContext.js";
 import { type Expression } from "./Expression.js";
 
-export class DirectoryNameExpression
-  implements Expression<DiscoveryContext, string> {
-
-  evaluate(
-    context: DiscoveryContext
-  ): string {
+export class DirectoryNameExpression implements Expression<
+  DiscoveryContext,
+  string
+> {
+  evaluate(context: DiscoveryContext): string {
     const current = context.current;
 
     if (!(current instanceof Directory)) {

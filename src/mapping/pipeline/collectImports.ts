@@ -5,7 +5,7 @@ import { ObjectImporter } from "../import/ObjectImporter.js";
 
 export function collectImports(
   discoveries: readonly DiscoveryResult[],
-  importMappings: readonly ImportMapping[]
+  importMappings: readonly ImportMapping[],
 ): ImportResult[] {
   const results: ImportResult[] = [];
 
@@ -13,7 +13,6 @@ export function collectImports(
 
   for (const root of discoveries) {
     for (const importMapping of importMappings) {
-
       // const discovery = discoveries.find(
       //   d => d.resultType === importMapping.accepts
       // );
@@ -34,7 +33,6 @@ export function collectImports(
       // }
 
       console.log("-----------------------------------------");
-      
 
       results.push(...objectImporter.import(root, importMapping));
     }

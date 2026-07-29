@@ -3,13 +3,10 @@ import { ColumnSchema } from "./ColumnSchema.js";
 export class TableSchema {
   constructor(
     readonly name: string,
-    readonly columns = new Map<string, ColumnSchema>()
+    readonly columns = new Map<string, ColumnSchema>(),
   ) {}
 
-  observe(
-    columnName: string,
-    value: unknown
-  ): void {
+  observe(columnName: string, value: unknown): void {
     let column = this.columns.get(columnName);
 
     if (!column) {

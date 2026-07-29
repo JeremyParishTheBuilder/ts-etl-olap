@@ -6,7 +6,6 @@ import type { DiscoveryIdentity } from "./DiscoveryIdentity.js";
 import type { DiscoveryResult } from "./DiscoveryResult.js";
 
 export class DiscoveryContext implements CaptureContext {
-
   constructor(
     readonly current: DiscoveryValue,
     readonly captures: ReadonlyMap<string, CaptureValue> = new Map(),
@@ -14,9 +13,7 @@ export class DiscoveryContext implements CaptureContext {
     readonly result?: DiscoveryResult,
   ) {}
 
-  withCurrent(
-    current: DiscoveryValue
-  ): DiscoveryContext {
+  withCurrent(current: DiscoveryValue): DiscoveryContext {
     return new DiscoveryContext(
       current,
       this.captures,
@@ -25,24 +22,16 @@ export class DiscoveryContext implements CaptureContext {
     );
   }
 
-  withCapture(
-    name: string,
-    value: CaptureValue
-  ): DiscoveryContext {
+  withCapture(name: string, value: CaptureValue): DiscoveryContext {
     return new DiscoveryContext(
       this.current,
-      new Map([
-        ...this.captures,
-        [name, value]
-      ]),
+      new Map([...this.captures, [name, value]]),
       this.identity,
       this.result,
     );
   }
 
-  withIdentityParts(
-    parts: readonly ColumnValue[]
-  ): DiscoveryContext {
+  withIdentityParts(parts: readonly ColumnValue[]): DiscoveryContext {
     return new DiscoveryContext(
       this.current,
       this.captures,
@@ -56,24 +45,17 @@ export class DiscoveryContext implements CaptureContext {
     return new DiscoveryContext(
       this.current,
       this.captures,
-      this.identity, 
+      this.identity,
       result,
     );
   }
 
-  selectCaptures(
-    names: readonly string[]
-  ): Map<string, CaptureValue> {
+  selectCaptures(names: readonly string[]): Map<string, CaptureValue> {
     const result = new Map<string, CaptureValue>();
 
     for (const name of names) {
-      if (
-        this.captures.get(name) !== undefined
-      ) {
-        result.set(
-          name,
-          this.captures.get(name)!
-        );
+      if (this.captures.get(name) !== undefined) {
+        result.set(name, this.captures.get(name)!);
       }
     }
 

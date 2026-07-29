@@ -1,6 +1,6 @@
-import { 
+import {
   type PredicateNode,
-  type ResolvedPredicateNode
+  type ResolvedPredicateNode,
 } from "./PredicateNode.js";
 
 export class XorPredicateNode {
@@ -8,7 +8,7 @@ export class XorPredicateNode {
 
   constructor(
     public left: PredicateNode,
-    public right: PredicateNode
+    public right: PredicateNode,
   ) {}
 }
 
@@ -17,6 +17,6 @@ export class ResolvedXorPredicateNode {
 
   constructor(
     public left: ResolvedPredicateNode,
-    public right: ResolvedPredicateNode
+    public right: ResolvedPredicateNode,
   ) {}
 }

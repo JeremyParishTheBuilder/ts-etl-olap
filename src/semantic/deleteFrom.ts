@@ -16,15 +16,11 @@ export function bindDeleteFrom(
   const tableName: string = stmt.table;
   const table = database.tables.requireByName(tableName);
 
-  const whereClause = stmt.where ? bindPredicate(resolvePredicate(stmt.where, table), table) : undefined;
+  const whereClause = stmt.where
+    ? bindPredicate(resolvePredicate(stmt.where, table), table)
+    : undefined;
 
-  stmtActions.push(
-    new DeleteRowsAction(
-      dbName,
-      tableName,
-      whereClause,
-    )
-  );
+  stmtActions.push(new DeleteRowsAction(dbName, tableName, whereClause));
 
   return stmtActions;
 }

@@ -16,9 +16,10 @@ export class AddPrimaryKeyAction implements Action {
     //const columnIds = this.spec.columns.map(c => table.columns.requireIdByName(c));
     //const index = table.requireUniqueIndexByColumns(columnIds);
 
-    const updatedTable = db.tables.requireByName(this.tableName)
+    const updatedTable = db.tables
+      .requireByName(this.tableName)
       .createPrimaryKey({
-        ...this.spec
+        ...this.spec,
       });
 
     const updatedDb = db.updateTable(updatedTable);

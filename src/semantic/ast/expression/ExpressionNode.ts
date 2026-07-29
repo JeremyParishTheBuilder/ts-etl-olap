@@ -1,11 +1,14 @@
-import { BinaryExpressionNode, type ResolvedBinaryExpressionNode } from "./BinaryExpressionNode.js";
+import {
+  BinaryExpressionNode,
+  type ResolvedBinaryExpressionNode,
+} from "./BinaryExpressionNode.js";
 import {
   type ResolvedCaseExpressionNode,
-  type CaseExpressionNode
+  type CaseExpressionNode,
 } from "./CaseExpressionNode.js";
 import {
   type ResolvedColumnExpressionNode,
-  type ColumnExpressionNode
+  type ColumnExpressionNode,
 } from "./ColumnExpressionNode.js";
 import { type LiteralExpressionNode } from "./LiteralExpressionNode.js";
 import { ConcatExpressionNode } from "./ConcatExpressionNode.js";
@@ -28,12 +31,6 @@ export abstract class ExpressionNodeBase {
   abstract readonly kind: string;
 }
 
-export function isExpressionNode(
-  value: unknown,
-): value is ExpressionNode {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "kind" in value
-  );
+export function isExpressionNode(value: unknown): value is ExpressionNode {
+  return typeof value === "object" && value !== null && "kind" in value;
 }

@@ -9,9 +9,7 @@ import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
 import type { ColumnValue } from "../types/ColumnValue.js";
 
 export class PostgresInputBatch extends InputBatch {
-  constructor(
-    executeStatement: (stmt: Statement) => void,
-  ) {
+  constructor(executeStatement: (stmt: Statement) => void) {
     super(executeStatement);
   }
 
@@ -34,7 +32,7 @@ export class PostgresInputBatch extends InputBatch {
   createTable(
     table: string,
     columnSchema: Record<string, InlineColumnSpec>,
-    constraintSchema: Record<string, ConstraintSpec> = {}
+    constraintSchema: Record<string, ConstraintSpec> = {},
   ) {
     return super.createTable(table, columnSchema, constraintSchema);
   }

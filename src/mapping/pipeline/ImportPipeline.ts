@@ -18,10 +18,7 @@ export interface ImportPipelineSpec {
 }
 
 export class ImportPipeline {
-  static build(
-    spec: ImportPipelineSpec
-  ): ImportPipelineResult {
-
+  static build(spec: ImportPipelineSpec): ImportPipelineResult {
     const importResults: ImportResult[] = [];
 
     const objectImporter = new ObjectImporter();
@@ -29,22 +26,18 @@ export class ImportPipeline {
     let discoveryResults: DiscoveryResult[];
 
     for (const importRoot of spec.importRoots) {
-
       const nodeType = importRoot.discovery.node.spec.nodeType;
 
       discoveryResults = importRoot.discovery.node.discover(
         new DiscoveryContext(
           importRoot.discovery.source.open(),
           new Map(),
-          ImportRowIdentity.from([
-            spec.sourceIdentity ?? ""
-          ])
-        )
+          ImportRowIdentity.from([spec.sourceIdentity ?? ""]),
+        ),
       );
 
       const discoveryRoot = discoveryResults.find(
-        dr =>
-          dr.resultType === nodeType
+        (dr) => dr.resultType === nodeType,
       );
 
       if (!discoveryRoot) {
@@ -52,9 +45,8 @@ export class ImportPipeline {
       }
 
       importResults.push(
-        ...objectImporter.import(discoveryRoot, importRoot.spec.mapping)
+        ...objectImporter.import(discoveryRoot, importRoot.spec.mapping),
       );
-
     }
 
     const schema = inferSchema(importResults);
@@ -62,7 +54,7 @@ export class ImportPipeline {
     const databases = new DatabaseBuilder(
       spec.databaseName,
       schema,
-      importResults
+      importResults,
     ).build(spec.existingDatabases);
 
     return {
@@ -70,6 +62,6 @@ export class ImportPipeline {
       schema,
       imports: importResults,
       databases,
-    }
+    };
   }
 }

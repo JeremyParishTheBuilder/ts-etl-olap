@@ -2,11 +2,11 @@ import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 import { type ColumnValue } from "../../types/ColumnValue.js";
 
 export interface InsertIntoStatement extends BaseStatement {
-  kind: "insert_into",
-  table: string,
-  columns: string[],
-  values: ColumnValue[][],
-  returning?: string[],
+  kind: "insert_into";
+  table: string;
+  columns: string[];
+  values: ColumnValue[][];
+  returning?: string[];
 }
 
 export class InsertIntoBuilder implements StatementBuilder {
@@ -30,10 +30,11 @@ export class InsertIntoBuilder implements StatementBuilder {
   }
 
   getNextCalls() {
-    if (!this.valuesData) return {
-      required: ["values"],
-      optional: []
-    };
+    if (!this.valuesData)
+      return {
+        required: ["values"],
+        optional: [],
+      };
     return {
       required: [],
       optional: ["returning"],
@@ -50,8 +51,7 @@ export class InsertIntoBuilder implements StatementBuilder {
       table: this.table,
       columns: this.columns,
       values: this.valuesData,
-      returning: this.returningCols
+      returning: this.returningCols,
     };
   }
-
 }

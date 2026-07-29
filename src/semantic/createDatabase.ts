@@ -5,7 +5,7 @@ import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 
 export function bindCreateDatabase(
   semantic: SemanticAnalyzer,
-  stmt: CreateDatabaseStatement
+  stmt: CreateDatabaseStatement,
 ) {
   const stmtActions: Action[] = [];
   const dbName: string = stmt.dbName;

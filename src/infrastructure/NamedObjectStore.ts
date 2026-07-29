@@ -9,14 +9,12 @@ export interface NamedObject<ID extends number> {
 
 export class NamedObjectStore<
   T extends NamedObject<ID> & Immutable,
-  ID extends number
+  ID extends number,
 > extends Immutable {
   public readonly byId: PersistentMap<ID, T>;
-  protected readonly byName: PersistentMap<string, ID>; 
+  protected readonly byName: PersistentMap<string, ID>;
 
-  constructor(spec?: {
-    byId: PersistentMap<ID, T>
-  }) {
+  constructor(spec?: { byId: PersistentMap<ID, T> }) {
     super();
 
     this.byId = spec?.byId ?? new PersistentMap();
@@ -26,7 +24,7 @@ export class NamedObjectStore<
     this.seal();
   }
 
-  protected validate() {};
+  protected validate() {}
 
   protected afterClone(instance: this): void {
     (instance as this & { byName: PersistentMap<string, ID> }).byName =
@@ -98,7 +96,7 @@ export class NamedObjectStore<
 
     const existing = this.byId.require(obj.id);
     if (obj === existing) return this;
-    
+
     const oldNorm = normalizeIdentifier(existing.name);
     const newNorm = normalizeIdentifier(obj.name);
 
@@ -138,9 +136,7 @@ export class NamedObjectStore<
     const id = this.getIdByName(name);
 
     if (id !== undefined) {
-      throw new Error(
-        `Name "${name}" is already used by Id: ${id}`
-      );
+      throw new Error(`Name "${name}" is already used by Id: ${id}`);
     }
   }
 
@@ -156,10 +152,7 @@ export class NamedObjectStore<
     return this.byId.some(fn);
   }
 
-  public mapValues(
-    fn: (value: T, id: ID) => T
-  ): NamedObjectStore<T, ID> {
-
+  public mapValues(fn: (value: T, id: ID) => T): NamedObjectStore<T, ID> {
     const newById = this.byId.mapValues(fn);
 
     if (newById === this.byId) return this;
@@ -170,9 +163,8 @@ export class NamedObjectStore<
   }
 
   private rebuildNameIndex(
-    byId: PersistentMap<ID, T>
+    byId: PersistentMap<ID, T>,
   ): PersistentMap<string, ID> {
-
     let acc = new PersistentMap<string, ID>();
 
     for (const [id, value] of byId.entries()) {

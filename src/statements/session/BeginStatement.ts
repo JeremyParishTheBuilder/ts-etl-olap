@@ -1,7 +1,7 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 
 export interface BeginStatement extends BaseStatement {
-  kind: "begin"
+  kind: "begin";
 }
 
 export class BeginBuilder implements StatementBuilder {

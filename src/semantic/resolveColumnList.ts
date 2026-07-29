@@ -5,13 +5,9 @@ export function resolveTargetColumns(
   table: Table,
   statementColumns: string[],
 ): Column[] {
-
   if (
     statementColumns.length === 0 ||
-    (
-      statementColumns.length === 1 &&
-      statementColumns[0] === "*"
-    )
+    (statementColumns.length === 1 && statementColumns[0] === "*")
   ) {
     return table.getColumnsInOrder();
   }
@@ -20,32 +16,27 @@ export function resolveTargetColumns(
   const result: Column[] = [];
 
   for (const name of statementColumns) {
+    const normalized = name.toLowerCase();
 
-      const normalized = name.toLowerCase();
+    if (seen.has(normalized)) {
+      throw new Error(`Duplicate column: ${name}`);
+    }
 
-      if (seen.has(normalized)) {
-          throw new Error(`Duplicate column: ${name}`);
-      }
+    seen.add(normalized);
 
-      seen.add(normalized);
-
-      result.push(
-          table.columns.requireByName(name)
-      );
+    result.push(table.columns.requireByName(name));
   }
 
   return result;
 }
 
 export function resolveSelectColumns(
-    table: Table,
-    columns: "*" | string[]
+  table: Table,
+  columns: "*" | string[],
 ): Column[] {
   if (columns === "*") {
     return table.getColumnsInOrder();
   }
 
-  return columns.map(name =>
-    table.columns.requireByName(name)
-  );
+  return columns.map((name) => table.columns.requireByName(name));
 }

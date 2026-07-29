@@ -40,7 +40,7 @@ export class Databases extends Immutable {
 
     const [id, databaseIds] = this.databaseIds.allocate();
 
-    const database = Database.create({...spec, id});
+    const database = Database.create({ ...spec, id });
 
     const updatedDatabases = this.databases.add(database);
 
@@ -58,7 +58,7 @@ export class Databases extends Immutable {
 
   public update(database: Database): Databases {
     return this.with({
-      databases: this.databases.update(database)
+      databases: this.databases.update(database),
     } as Partial<this>);
   }
 

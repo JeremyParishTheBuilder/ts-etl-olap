@@ -2,9 +2,9 @@ import { type PredicateNode } from "../../semantic/ast/predicate/PredicateNode.j
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 
 export interface SelectStatement extends BaseStatement {
-  kind: "select",
+  kind: "select";
   tableName: string;
-  columnNames: string[] | '*';
+  columnNames: string[] | "*";
   where?: PredicateNode;
 }
 
@@ -12,9 +12,7 @@ export class SelectBuilder implements StatementBuilder {
   private tableName?: string;
   private whereClause?: PredicateNode;
 
-  constructor(
-    private columnNames: string[] | "*" = [],
-  ) {}
+  constructor(private columnNames: string[] | "*" = []) {}
 
   from(tableName: string) {
     this.tableName = tableName;
@@ -25,21 +23,23 @@ export class SelectBuilder implements StatementBuilder {
   }
 
   getNextCalls() {
-    if (!this.tableName) return {
-      required: ["from"],
-      optional: []
-    };
-    if (!this.whereClause) return {
-      required: [],
-      optional: ["where"]
-    };
-    
+    if (!this.tableName)
+      return {
+        required: ["from"],
+        optional: [],
+      };
+    if (!this.whereClause)
+      return {
+        required: [],
+        optional: ["where"],
+      };
+
     return {
       required: [],
       optional: [],
     };
   }
-  
+
   createStatement(): SelectStatement {
     if (!this.tableName) {
       throw new Error("Missing required call: from()");

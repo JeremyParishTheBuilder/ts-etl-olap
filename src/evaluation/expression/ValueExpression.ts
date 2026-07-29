@@ -3,14 +3,13 @@ import { type ValueResolverContext } from "../../mapping/value/ValueResolverCont
 import { type ColumnValue } from "../../types/ColumnValue.js";
 import { type Expression } from "./Expression.js";
 
-export class ValueExpression
-  implements Expression<ValueResolverContext, ColumnValue> {
-
+export class ValueExpression implements Expression<
+  ValueResolverContext,
+  ColumnValue
+> {
   private readonly path: PropertyPath;
 
-  constructor(
-    public name: string,
-  ) {
+  constructor(public name: string) {
     this.path = PropertyPath.parse(name);
   }
 
@@ -31,7 +30,7 @@ export class ValueExpression
     }
 
     throw new Error(
-      `Expected '${this.name}' to contain a primitive JSON value.`
+      `Expected '${this.name}' to contain a primitive JSON value.`,
     );
   }
 }

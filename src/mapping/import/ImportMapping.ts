@@ -27,5 +27,4 @@ export class ImportMapping {
     this.fields = spec.fields;
     this.children = spec.children ?? [];
   }
-
 }

@@ -4,7 +4,7 @@ import { ColumnExpression } from "../evaluation/expression/ColumnExpression.js";
 import {
   type ExpressionNode,
   type Expression,
-  type ResolvedExpressionNode
+  type ResolvedExpressionNode,
 } from "../evaluation/expression/Expression.js";
 import { LiteralExpression } from "../evaluation/expression/LiteralExpression.js";
 import { type RowView } from "../relational/RowView.js";
@@ -16,7 +16,7 @@ import { ResolvedBinaryExpressionNode } from "./ast/expression/BinaryExpressionN
 
 export function bindExpression(
   expr: ResolvedExpressionNode,
-  table: Table
+  table: Table,
 ): Expression<RowView> {
   switch (expr.kind) {
     case "literal":
@@ -24,24 +24,16 @@ export function bindExpression(
 
     case "column":
       return new ColumnExpression(
-        table.columns.require(expr.columnId).position
+        table.columns.require(expr.columnId).position,
       );
 
     case "case":
       return new CaseExpression(
-        expr.branches.map(branch => ({
-          when: bindPredicate(
-            branch.when,
-            table,
-          ),
-          then: bindExpression(
-            branch.then,
-            table,
-          ),
+        expr.branches.map((branch) => ({
+          when: bindPredicate(branch.when, table),
+          then: bindExpression(branch.then, table),
         })),
-        expr.elseExpr
-          ? bindExpression(expr.elseExpr, table)
-          : undefined,
+        expr.elseExpr ? bindExpression(expr.elseExpr, table) : undefined,
       );
 
     case "binary": {
@@ -53,16 +45,14 @@ export function bindExpression(
     }
 
     default: {
-      throw new Error(
-        `Unsupported expression kind: ${expr}`
-      );
+      throw new Error(`Unsupported expression kind: ${expr}`);
     }
   }
 }
 
 export function resolveExpression(
   expr: ExpressionNode,
-  table: Table
+  table: Table,
 ): ResolvedExpressionNode {
   switch (expr.kind) {
     case "literal":
@@ -70,24 +60,16 @@ export function resolveExpression(
 
     case "column":
       return new ResolvedColumnExpressionNode(
-        table.columns.requireIdByName(expr.columnName)
+        table.columns.requireIdByName(expr.columnName),
       );
 
     case "case":
       return new ResolvedCaseExpressionNode(
-        expr.branches.map(branch => ({
-          when: resolvePredicate(
-            branch.when,
-            table,
-          ),
-          then: resolveExpression(
-            branch.then,
-            table,
-          ),
+        expr.branches.map((branch) => ({
+          when: resolvePredicate(branch.when, table),
+          then: resolveExpression(branch.then, table),
         })),
-        expr.elseExpr
-          ? resolveExpression(expr.elseExpr, table)
-          : undefined,
+        expr.elseExpr ? resolveExpression(expr.elseExpr, table) : undefined,
       );
 
     case "binary": {
@@ -99,9 +81,7 @@ export function resolveExpression(
     }
 
     default: {
-      throw new Error(
-        `Unsupported expression kind: ${expr}`
-      );
+      throw new Error(`Unsupported expression kind: ${expr}`);
     }
   }
 }

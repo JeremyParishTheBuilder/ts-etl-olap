@@ -17,34 +17,25 @@ export class DeleteRowsAction implements Action {
   apply(databases: Databases) {
     const db = databases.requireByName(this.dbName);
 
-    const table = db
-      .tables.requireByName(this.tableName);
-      
+    const table = db.tables.requireByName(this.tableName);
+
     let node: PlanNode = new TableScanNode(table);
 
     if (this.predicate) {
-      node = new FilterNode(
-        this.predicate,
-        node,
-      );
+      node = new FilterNode(this.predicate, node);
     }
 
     //finds rows
     const affectedRows: RowView[] = [...node.execute()];
 
-    const deletedRows: ResolvedDelete[] =
-      affectedRows.map(row => ({
-        tableId: table.id,
-        rowNum: row.index,
-        oldRow: [...row.values],
-      }));
+    const deletedRows: ResolvedDelete[] = affectedRows.map((row) => ({
+      tableId: table.id,
+      rowNum: row.index,
+      oldRow: [...row.values],
+    }));
 
     // performs bulk update
-    const updatedDatabase =
-      db.removeRows(
-        this.tableName,
-        deletedRows
-      );
+    const updatedDatabase = db.removeRows(this.tableName, deletedRows);
 
     return databases.update(updatedDatabase);
   }

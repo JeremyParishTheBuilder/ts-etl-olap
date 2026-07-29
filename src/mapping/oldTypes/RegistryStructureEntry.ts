@@ -22,7 +22,7 @@
 //     if (this.extractKey === null) return [];
 //     const elements: E[] = this.elementsArray(parent);
 //     if (!elements || elements.length <= 0) return [];
-    
+
 //     return elements.map(this.extractKey);
 
 //   }

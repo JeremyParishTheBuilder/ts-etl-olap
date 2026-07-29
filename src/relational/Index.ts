@@ -6,9 +6,9 @@ import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
 import { type RowView } from "./RowView.js";
 
 export type IndexSpec = {
-  name: string,
-  columns: string[],
-  unique?: boolean,
+  name: string;
+  columns: string[];
+  unique?: boolean;
   nullsDistinct?: boolean;
   predicate?: Predicate;
 };
@@ -16,7 +16,6 @@ export type IndexSpec = {
 export type IndexId = number & { readonly __brand: "IndexId" };
 
 export class Index extends ColumnBoundImmutable {
-
   public readonly name: string;
   public readonly columns: ColumnId[];
   public readonly columnIndexes: number[];
@@ -28,17 +27,17 @@ export class Index extends ColumnBoundImmutable {
   public readonly map: Map<string, number[]> = new Map();
 
   protected constructor(spec: {
-    name: string,
-    columns: ColumnId[],
-    columnIndexes: number[],
-    unique?: boolean,
-    nullsDistinct?: boolean,
-    internal?: boolean,
-    predicate?: Predicate,
-    id: IndexId,
+    name: string;
+    columns: ColumnId[];
+    columnIndexes: number[];
+    unique?: boolean;
+    nullsDistinct?: boolean;
+    internal?: boolean;
+    predicate?: Predicate;
+    id: IndexId;
   }) {
     super();
-    
+
     this.name = spec.name;
     this.columns = spec.columns;
     this.columnIndexes = spec.columnIndexes;
@@ -57,20 +56,20 @@ export class Index extends ColumnBoundImmutable {
   }
 
   public static create(spec: {
-    id: IndexId,
-    name: string,
-    columns: ColumnId[],
-    columnIndexes: number[],
-    unique?: boolean,
-    nullsDistinct?: boolean,
-    predicate?: Predicate
+    id: IndexId;
+    name: string;
+    columns: ColumnId[];
+    columnIndexes: number[];
+    unique?: boolean;
+    nullsDistinct?: boolean;
+    predicate?: Predicate;
   }): Index {
     return new this(spec);
   }
 
   public build(rows: Iterable<RowView>): Index {
     const map = new Map<string, number[]>();
-    
+
     for (const row of rows) {
       if (!this.matches(row)) continue;
 
@@ -88,20 +87,18 @@ export class Index extends ColumnBoundImmutable {
     }
 
     return this.with({
-      map
+      map,
     } as Partial<this>);
   }
 
   public rename(newName: string): Index {
     return this.with({
-      name: newName
+      name: newName,
     } as Partial<this>);
   }
 
   private matches(row: RowView): boolean {
-    return this.predicate
-      ? this.predicate.evaluate(row)
-      : true;
+    return this.predicate ? this.predicate.evaluate(row) : true;
   }
 
   public assertColumnUnreferenced(id: ColumnId): void {
@@ -114,7 +111,7 @@ export class Index extends ColumnBoundImmutable {
     const projectedValues = this.projectValues(row.values);
 
     if (projectedValues.includes(null) && this.nullsDistinct == true) return;
-    
+
     const key = this.getKeyFromProjection(projectedValues);
 
     if (this.map.has(key)) {
@@ -163,7 +160,7 @@ export class Index extends ColumnBoundImmutable {
       throw new Error(`Existing Row ID not mapped to Key`);
     }
 
-    const next = existing.filter(mappedRowNum => mappedRowNum !== rowNum);
+    const next = existing.filter((mappedRowNum) => mappedRowNum !== rowNum);
 
     if (next.length === 0) {
       newMap.delete(key);
@@ -176,14 +173,8 @@ export class Index extends ColumnBoundImmutable {
     } as Partial<this>);
   }
 
-  public tryUpdateRow(
-    oldRow: RowView,
-    newRow: RowView,
-  ): Index {
-    if (
-      !this.matches(oldRow) &&
-      !this.matches(newRow)
-    ) return this;
+  public tryUpdateRow(oldRow: RowView, newRow: RowView): Index {
+    if (!this.matches(oldRow) && !this.matches(newRow)) return this;
 
     if (oldRow.index !== newRow.index) {
       throw new Error(`Mistmatching row indexes`);
@@ -201,15 +192,17 @@ export class Index extends ColumnBoundImmutable {
     return this.tryRemoveRow(oldRow).tryAddRow(newRow);
   }
 
-  public tryUpdateColumnIndexes(columnIdToIndexMap: Map<ColumnId, number>): Index {
+  public tryUpdateColumnIndexes(
+    columnIdToIndexMap: Map<ColumnId, number>,
+  ): Index {
     const updatedColumnIndexes = [...this.columnIndexes];
-    
+
     for (let i = 0; i < this.columns.length; i++) {
       updatedColumnIndexes[i] = columnIdToIndexMap.get(this.columns[i])!;
     }
 
     return this.with({
-      columnIndexes: updatedColumnIndexes
+      columnIndexes: updatedColumnIndexes,
     } as Partial<this>);
   }
 
@@ -218,41 +211,34 @@ export class Index extends ColumnBoundImmutable {
   }
 
   private getKeyFromRow(row: RowView): string {
-    return this.getKeyFromProjection(
-      this.projectValues(row.values)
-    );
+    return this.getKeyFromProjection(this.projectValues(row.values));
   }
 
   public projectValues(values: readonly ColumnValue[]): ColumnValue[] {
-    return this.columnIndexes.map(i => values[i]);
+    return this.columnIndexes.map((i) => values[i]);
   }
 
   public hasProjectedValues(projection: readonly ColumnValue[]): boolean {
-    return this.map.has(
-      this.getKeyFromProjection(projection)
-    );
+    return this.map.has(this.getKeyFromProjection(projection));
   }
 
   public hasRow(values: readonly ColumnValue[]): boolean {
-    return this.map.has(
-      this.getKeyFromProjection(
-        this.projectValues(values)
-      )
-    );
+    return this.map.has(this.getKeyFromProjection(this.projectValues(values)));
   }
 
-  public getRowNumsFromProjection(projection: readonly ColumnValue[]): number[] | undefined {
-    return this.map.get(
-      this.getKeyFromProjection(projection)
-    )
+  public getRowNumsFromProjection(
+    projection: readonly ColumnValue[],
+  ): number[] | undefined {
+    return this.map.get(this.getKeyFromProjection(projection));
   }
 }
 
 export function requiresIndexRebuild(
-  oldType: ColumnType, newType: ColumnType
+  oldType: ColumnType,
+  newType: ColumnType,
 ): boolean {
   if (oldType !== newType) {
     return true; // for now, alway rebuild on type change
-  } 
+  }
   return false;
 }

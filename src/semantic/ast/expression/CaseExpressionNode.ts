@@ -1,11 +1,11 @@
 import {
   type ExpressionNode,
   type ResolvedExpressionNode,
-  ExpressionNodeBase
+  ExpressionNodeBase,
 } from "../../../evaluation/expression/Expression.js";
 import {
   type PredicateNode,
-  type ResolvedPredicateNode
+  type ResolvedPredicateNode,
 } from "../predicate/PredicateNode.js";
 
 export class CaseExpressionNode extends ExpressionNodeBase {

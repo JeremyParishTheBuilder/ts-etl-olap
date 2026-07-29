@@ -12,19 +12,13 @@ export class PrimaryKey extends Immutable {
   }
   validate(): void {}
 
-  public static create(spec: {
-    name: string,
-    index: IndexId
-  }): PrimaryKey {
-    return new this(
-      spec.name,
-      spec.index,
-    )
+  public static create(spec: { name: string; index: IndexId }): PrimaryKey {
+    return new this(spec.name, spec.index);
   }
 
   public rename(newName: string): PrimaryKey {
     return this.with({
-      name: newName
+      name: newName,
     } as Partial<this>);
   }
 

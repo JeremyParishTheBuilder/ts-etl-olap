@@ -12,8 +12,8 @@ export class DropIndexAction implements Action {
   apply(databases: Databases): Databases {
     const db = databases.requireByName(this.dbName);
 
-    const updatedTable = db
-      .tables.requireByName(this.tableName)
+    const updatedTable = db.tables
+      .requireByName(this.tableName)
       .removeIndexById(this.indexId);
 
     const updatedDb = db.updateTable(updatedTable);

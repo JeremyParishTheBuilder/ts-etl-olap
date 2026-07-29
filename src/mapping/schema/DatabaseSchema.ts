@@ -1,13 +1,9 @@
 import { TableSchema } from "./TableSchema.js";
 
 export class DatabaseSchema {
-  constructor(
-    readonly tables = new Map<string, TableSchema>()
-  ) {}
+  constructor(readonly tables = new Map<string, TableSchema>()) {}
 
-  getOrCreateTable(
-    name: string
-  ): TableSchema {
+  getOrCreateTable(name: string): TableSchema {
     let table = this.tables.get(name);
 
     if (!table) {

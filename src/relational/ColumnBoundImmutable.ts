@@ -3,7 +3,7 @@ import { type ColumnId } from "./Column.js";
 
 interface ColumnBoundObject {
   readonly columns: ColumnId[];
-  
+
   referencesColumn(id: ColumnId): boolean;
 }
 

@@ -1,4 +1,7 @@
-export function arraysEqual(a: readonly unknown[], b: readonly unknown[]): boolean {
+export function arraysEqual(
+  a: readonly unknown[],
+  b: readonly unknown[],
+): boolean {
   if (a.length !== b.length) return false;
 
   for (let i = 0; i < a.length; i++) {

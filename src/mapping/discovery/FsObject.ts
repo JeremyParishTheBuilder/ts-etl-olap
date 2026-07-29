@@ -1,4 +1,4 @@
-import path from 'path';
+import path from "path";
 
 export class FsObject {
   protected _fullPath: string;

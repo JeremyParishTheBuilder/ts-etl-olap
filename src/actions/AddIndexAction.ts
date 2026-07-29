@@ -7,19 +7,17 @@ export class AddIndexAction implements Action {
     private dbName: string,
     private tableName: string,
     private spec: IndexSpec & {
-      internal?: boolean
+      internal?: boolean;
     },
   ) {}
 
   apply(databases: Databases): Databases {
     const db = databases.requireByName(this.dbName);
 
-    const updatedTable = db
-      .tables.requireByName(this.tableName)
+    const updatedTable = db.tables
+      .requireByName(this.tableName)
       .createIndex(this.spec);
 
-    return databases.update(
-      db.updateTable(updatedTable)
-    );
+    return databases.update(db.updateTable(updatedTable));
   }
 }

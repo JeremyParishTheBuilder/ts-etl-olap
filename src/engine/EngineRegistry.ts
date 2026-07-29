@@ -13,18 +13,20 @@ export class EngineRegistry {
   private engines = new Map<string, Engine>();
   private _currentDefaultEngine: string | undefined = undefined;
 
-  public engine(
-    name: string | undefined = this._currentDefaultEngine,
-  ): Engine {
-    if (!name) { throw new Error(`No engine specified`); }
+  public engine(name: string | undefined = this._currentDefaultEngine): Engine {
+    if (!name) {
+      throw new Error(`No engine specified`);
+    }
     const engine = this.engines.get(name);
-    if (!engine) { throw new Error(`Engine ${name} not found`); }
+    if (!engine) {
+      throw new Error(`Engine ${name} not found`);
+    }
     return engine;
   }
 
   public newEngine(
     name: string = "DEFAULT",
-    dialect: Dialect = Dialect.Postgres
+    dialect: Dialect = Dialect.Postgres,
   ) {
     if (this.engines.has(name)) {
       throw new Error(`Engine ${name} already exists`);

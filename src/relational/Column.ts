@@ -1,6 +1,6 @@
 import { Immutable } from "../infrastructure/Immutable.js";
-import { type ReferentialAction } from './ReferentialAction.js';
-import { type ExplicitInput } from '../types/ExplicitInput.js';
+import { type ReferentialAction } from "./ReferentialAction.js";
+import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { type ColumnType, matchesColumnType } from "../types/ColumnType.js";
@@ -8,7 +8,6 @@ import { type ColumnType, matchesColumnType } from "../types/ColumnType.js";
 export type ColumnId = number & { readonly __brand: "ColumnId" };
 
 export class Column extends Immutable {
-
   public readonly name: string;
   public readonly type: ColumnType;
   public readonly nullable: boolean;
@@ -25,11 +24,12 @@ export class Column extends Immutable {
 
   validate(): void {}
 
-  private constructor(spec:
-    ColumnSpec & {
-    id: ColumnId,
-    position: number,
-  }) {
+  private constructor(
+    spec: ColumnSpec & {
+      id: ColumnId;
+      position: number;
+    },
+  ) {
     super();
 
     this.name = spec.name;
@@ -51,46 +51,44 @@ export class Column extends Immutable {
     this.seal();
   }
 
-  public static create(spec:
-    ColumnSpec & {
-    id: ColumnId,
-    position: number
-  }): Column {
+  public static create(
+    spec: ColumnSpec & {
+      id: ColumnId;
+      position: number;
+    },
+  ): Column {
     validateColumnSpec(spec);
 
     return new this(spec);
   }
 
-  public backfill(
-    numRows: number,
-    value: ColumnValue,
-  ): Column {
+  public backfill(numRows: number, value: ColumnValue): Column {
     return this.with({
-      data: Array(numRows).fill(value)
+      data: Array(numRows).fill(value),
     } as Partial<this>);
   }
 
   public alter(newType: ColumnType): Column {
     const oldType = this.type;
 
-    if(oldType === newType) {
+    if (oldType === newType) {
       throw new Error(`Column types already identical`);
     }
-    
+
     if (!widens(oldType, newType)) {
       throw new Error(
         `Cannot alter column ${this.name}:
-        ${oldType} cannot convert to ${newType}`
+        ${oldType} cannot convert to ${newType}`,
       );
     }
 
-    const newSpec: ColumnSpec = {...this, type: newType};
+    const newSpec: ColumnSpec = { ...this, type: newType };
     validateColumnSpec(newSpec);
 
-    const widenedData: ColumnValue[] = this.data.map(value =>
-      widenValue(newType, value)
+    const widenedData: ColumnValue[] = this.data.map((value) =>
+      widenValue(newType, value),
     );
-    
+
     return this.with({
       type: newType,
       data: widenedData,
@@ -115,7 +113,9 @@ export class Column extends Immutable {
 
   public requireDatumAtRow(rowNum: number): ColumnValue {
     const datum = this.getDatumAtRow(rowNum);
-    if (datum === undefined) { throw new Error(`Value undefined.`); }
+    if (datum === undefined) {
+      throw new Error(`Value undefined.`);
+    }
     return datum;
   }
 
@@ -137,14 +137,13 @@ export class Column extends Immutable {
     }
   }
 
-  public normalizeDatum(datum: ColumnValue, mode: "insert" | "update"): ColumnValue {
+  public normalizeDatum(
+    datum: ColumnValue,
+    mode: "insert" | "update",
+  ): ColumnValue {
     let normalizedDatum = datum;
-    
-    if (
-      mode === "insert" &&
-      datum === null &&
-      this.isAutoIncrement()
-    ) {
+
+    if (mode === "insert" && datum === null && this.isAutoIncrement()) {
       normalizedDatum = this.autoIncrementNext;
     }
 
@@ -154,15 +153,14 @@ export class Column extends Immutable {
     this.assertNullabilityConstraint(normalizedDatum);
     this.assertEnumValuesConstraint(normalizedDatum);
 
-    return normalizedDatum; 
+    return normalizedDatum;
   }
 
   private resolveDefaultOrThrow(mode: "insert" | "update"): ColumnValue {
     if (this.defaultValue !== undefined) return this.defaultValue;
     else if (this.isAutoIncrement() && mode === "insert") {
       return this.autoIncrementNext;
-    }
-    else if (this.nullable) return null;
+    } else if (this.nullable) return null;
     else {
       throw new Error(`Cannot resolve default the Column ${this.name}`);
     }
@@ -193,8 +191,10 @@ export class Column extends Immutable {
     autoIncrementStep: number;
     autoIncrementNext: number;
   } {
-    return  this.autoIncrementStep !== undefined &&
-            this.autoIncrementNext !== undefined;
+    return (
+      this.autoIncrementStep !== undefined &&
+      this.autoIncrementNext !== undefined
+    );
   }
 
   public addDatum(datum: ColumnValue): Column {
@@ -219,7 +219,7 @@ export class Column extends Immutable {
     this.requireDatumAtRow(rowNum);
 
     this.assertDatum(datum);
-    
+
     const updatedData = [...this.data];
     updatedData[rowNum] = datum;
 
@@ -230,7 +230,7 @@ export class Column extends Immutable {
 
   public rename(newName: string): Column {
     return this.with({
-      name: newName
+      name: newName,
     } as Partial<this>);
   }
 }
@@ -247,28 +247,30 @@ export type ColumnSpec = {
 
 export function validateColumnSpec(spec: ColumnSpec): void {
   if (spec.autoIncrementStep !== undefined && spec.type !== Number) {
-    throw new Error(`Column: "${spec.name}" can only autoIncrement as type Number.`);
+    throw new Error(
+      `Column: "${spec.name}" can only autoIncrement as type Number.`,
+    );
   }
 }
 
-export type InlineColumnSpec = Omit<ColumnSpec, 'name'> & {
+export type InlineColumnSpec = Omit<ColumnSpec, "name"> & {
   unique?: boolean;
   primaryKey?: boolean;
   references?: {
-    table: string,
-    column: string,
-    onDelete?: ReferentialAction,
-    onUpdate?: ReferentialAction,
+    table: string;
+    column: string;
+    onDelete?: ReferentialAction;
+    onUpdate?: ReferentialAction;
   };
   check?: PredicateNode;
 };
 
-export type ColumnShape = Omit<ColumnSpec, 'name'> & {
+export type ColumnShape = Omit<ColumnSpec, "name"> & {
   autoIncrement?: {
-    next?: number;  // must be reset on copy
+    next?: number; // must be reset on copy
     step: number;
   };
-}
+};
 
 //Column Utils
 export function widens(oldType: ColumnType, newType: ColumnType): boolean {
@@ -281,9 +283,12 @@ export function widens(oldType: ColumnType, newType: ColumnType): boolean {
   return false;
 }
 
-export function widenValue(newType: ColumnType, value: ColumnValue): ColumnValue {
-  if (value === null) return null;  
-  
+export function widenValue(
+  newType: ColumnType,
+  value: ColumnValue,
+): ColumnValue {
+  if (value === null) return null;
+
   if (newType === String) return String(value);
   if (newType === Number) return Number(value);
   if (newType === Boolean) return Boolean(value);

@@ -14,9 +14,7 @@ export abstract class Immutable {
   }
 
   private clone(changes?: Partial<this>): this {
-    const clone = Object.create(
-      this.constructor.prototype
-    ) as this;
+    const clone = Object.create(this.constructor.prototype) as this;
 
     Object.assign(clone, this, changes);
 

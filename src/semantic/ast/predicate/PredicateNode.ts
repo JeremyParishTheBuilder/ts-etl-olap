@@ -1,22 +1,22 @@
 import {
   type ResolvedAndPredicateNode,
-  type AndPredicateNode
+  type AndPredicateNode,
 } from "./AndPredicateNode.js";
 import {
   type ResolvedOrPredicateNode,
-  type OrPredicateNode
+  type OrPredicateNode,
 } from "./OrPredicateNode.js";
 import {
   type ResolvedXorPredicateNode,
-  type XorPredicateNode
+  type XorPredicateNode,
 } from "./XorPredicateNode.js";
 import {
   type NotPredicateNode,
-  type ResolvedNotPredicateNode
+  type ResolvedNotPredicateNode,
 } from "./NotPredicateNode.js";
-import { 
+import {
   type ComparisonPredicateNode,
-  type ResolvedComparisonPredicateNode
+  type ResolvedComparisonPredicateNode,
 } from "./ComparisonPredicateNode.js";
 
 export type ResolvedPredicateNode =

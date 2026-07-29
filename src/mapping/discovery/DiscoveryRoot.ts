@@ -7,9 +7,7 @@ export interface DiscoveryRootSpec {
 }
 
 export class DiscoveryRoot {
-  constructor(
-    public readonly spec: DiscoveryRootSpec
-  ) {}
+  constructor(public readonly spec: DiscoveryRootSpec) {}
 
   get node() {
     return this.spec.discovery;

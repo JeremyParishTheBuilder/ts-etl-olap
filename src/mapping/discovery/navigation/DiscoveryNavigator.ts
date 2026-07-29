@@ -3,7 +3,7 @@ import type { DiscoveryValue } from "../../value/DiscoveryValue.js";
 
 export interface DiscoveryNavigator<
   TCurrent extends DiscoveryValue,
-  TNext extends DiscoveryValue
+  TNext extends DiscoveryValue,
 > {
   accepts(current: DiscoveryValue): current is TCurrent;
   next(current: TCurrent): readonly TNext[];

@@ -14,21 +14,14 @@ export function capitalize(str: string): string {
 //     .join("");
 // }
 
-export function pathToPascalCase(
-  parts: readonly string[]
-): string {
-  return parts
-    .map(toPascalCase)
-    .join("");
+export function pathToPascalCase(parts: readonly string[]): string {
+  return parts.map(toPascalCase).join("");
 }
 
 export function toPascalCase(text: string): string {
   return text
     .split("_")
-    .filter(part => part.length > 0)
-    .map(part =>
-      part[0].toUpperCase() +
-      part.slice(1)
-    )
+    .filter((part) => part.length > 0)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
     .join("");
 }

@@ -17,7 +17,6 @@ import { Databases } from "../relational/Databases.js";
 import { SemanticAnalyzer } from "../semantic/SemanticAnalyzer.js";
 
 export class Engine {
-
   public databases: Databases = new Databases();
   private currentDb?: string;
 
@@ -66,22 +65,18 @@ export class Engine {
   private createInputBatch(): InputBatch {
     switch (this.dialect) {
       case Dialect.Postgres:
-        return new PostgresInputBatch(
-          this.executeStatement.bind(this),
-        );
+        return new PostgresInputBatch(this.executeStatement.bind(this));
 
       case Dialect.SQLServer:
-        return new SqlServerInputBatch(
-          this.executeStatement.bind(this),
-        );
+        return new SqlServerInputBatch(this.executeStatement.bind(this));
 
       case Dialect.MySQL:
-        return new MySqlInputBatch(
-          this.executeStatement.bind(this),
-        );
+        return new MySqlInputBatch(this.executeStatement.bind(this));
 
       default:
-        throw new Error(`InputBatch for Dialect: ${this.dialect} not supported`);
+        throw new Error(
+          `InputBatch for Dialect: ${this.dialect} not supported`,
+        );
     }
   }
 
@@ -106,16 +101,12 @@ export class Engine {
       return this.tryExecuteAutoCommit(stmt);
     }
 
-    const ctx = new ExecutionContext(
-      tx,
-      this.rules,
-      this.currentDb
-    );
+    const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
     const analyzer = new SemanticAnalyzer(ctx);
 
     tx.addStatement(stmt);
 
-    const result = analyzer.bindStatement(stmt);    
+    const result = analyzer.bindStatement(stmt);
 
     if (result.kind === "actions") {
       tx.addActions(result.actions);
@@ -136,11 +127,7 @@ export class Engine {
     try {
       const tx = this.requireTx();
 
-      const ctx = new ExecutionContext(
-        tx,
-        this.rules,
-        this.currentDb
-      );
+      const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
       const analyzer = new SemanticAnalyzer(ctx);
 
       tx.addStatement(stmt);
@@ -198,16 +185,13 @@ export class Engine {
       throw new Error("Transaction already in progress");
     }
 
-    this._currentTransaction = new Transaction(
-      this.nextTxId(),
-      this.databases,
-    );
+    this._currentTransaction = new Transaction(this.nextTxId(), this.databases);
   }
 
   commitTx(): void {
-    const tx = this._currentTransaction
+    const tx = this._currentTransaction;
     if (!tx) {
-      throw new Error("No active transaction to commit")
+      throw new Error("No active transaction to commit");
     }
 
     this.databases = tx.databases;

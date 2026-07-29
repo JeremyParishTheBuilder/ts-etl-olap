@@ -16,7 +16,6 @@
 //     this._jsonProperties = json; //optional json at construction (when not lazy loading)
 //   }
 
-
 //   public getEntry(objectType: string): any {
 //     return this.root.getEntry(objectType);
 //   }
@@ -44,7 +43,6 @@
 //     this._containers.set(objectType, container);
 //   }
 
-
 //   protected loadProperties(): void {
 //     if (this._jsonProperties === null) {
 //       this._jsonProperties = this.root.getEntry(this.pointer.objectType).
@@ -63,7 +61,6 @@
 //       if (overrideProperty) {
 //         return overrideProperty(this, args);
 //       }
-
 
 //       const argsProperty = entry.argsProperty;
 //       if (argsProperty) {
@@ -110,7 +107,6 @@
 //   public print(): void {
 //     console.log(this.toJSON());
 //   }
-
 
 //   protected _containers: Map<string, Container> = new Map();
 
@@ -189,7 +185,6 @@
 //     return result;
 //   }
 
-
 //   public static objects<T>(array: Array<T>, conditions?: Array<(item: T) => boolean>): T[] {
 //     if (!array.length) return [];
 //     let result = [...array]; // Copy to prevent mutation
@@ -199,9 +194,8 @@
 //     return result;
 //   }
 
-
 //   public registerJsonArray(propertyName: string) {
-  
+
 //     const map = (this.root as RegistryRoot).registryStructureMap!;
 //     const entryName = `${this.pointer.objectType}::${propertyName}Element`;
 

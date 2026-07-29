@@ -16,16 +16,11 @@ export class InsertRowsAction implements Action {
 
     const table = db.tables.requireByName(this.tableName);
 
-    const resolvedInserts: ResolvedInsert[] =
-      this.inputRows.map(input => ({
-          newRow: table.resolveInsertInputs(input),
-      }));
+    const resolvedInserts: ResolvedInsert[] = this.inputRows.map((input) => ({
+      newRow: table.resolveInsertInputs(input),
+    }));
 
-    const updatedDatabase = db
-      .addRows(
-        this.tableName,
-        resolvedInserts
-      );
+    const updatedDatabase = db.addRows(this.tableName, resolvedInserts);
 
     return databases.update(updatedDatabase);
   }

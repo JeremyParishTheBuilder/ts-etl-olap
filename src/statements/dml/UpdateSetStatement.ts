@@ -5,11 +5,11 @@ import { type ExplicitInput } from "../../types/ExplicitInput.js";
 import { type PredicateNode } from "../../semantic/ast/predicate/PredicateNode.js";
 
 export interface UpdateSetStatement extends BaseStatement {
-  kind: "update_set",
-  table: string,
-  values: Record<string, ExpressionNode>,
-  where?: PredicateNode,
-  returning?: string[],
+  kind: "update_set";
+  table: string;
+  values: Record<string, ExpressionNode>;
+  where?: PredicateNode;
+  returning?: string[];
 }
 
 export class UpdateSetBuilder implements StatementBuilder {
@@ -17,16 +17,13 @@ export class UpdateSetBuilder implements StatementBuilder {
   private whereClause?: PredicateNode;
   private returningCols?: string[];
 
-  constructor(
-    private table: string,
-  ) {}
+  constructor(private table: string) {}
 
   set(data: Record<string, ExpressionNode | ExplicitInput>) {
     const normalized: Record<string, ExpressionNode> = {};
 
     for (const key in data) {
-      normalized[key] =
-        asExpressionNode(data[key]);
+      normalized[key] = asExpressionNode(data[key]);
     }
 
     this.values = normalized;
@@ -45,15 +42,17 @@ export class UpdateSetBuilder implements StatementBuilder {
   }
 
   getNextCalls() {
-    if (!this.values) return {
-      required: ["set"],
-      optional: []
-    };
+    if (!this.values)
+      return {
+        required: ["set"],
+        optional: [],
+      };
 
-    if (!this.whereClause) return {
-      required: [],
-      optional: ["where", "returning"]
-    };
+    if (!this.whereClause)
+      return {
+        required: [],
+        optional: ["where", "returning"],
+      };
 
     return {
       required: [],
@@ -71,8 +70,7 @@ export class UpdateSetBuilder implements StatementBuilder {
       table: this.table,
       values: this.values,
       where: this.whereClause,
-      returning: this.returningCols
+      returning: this.returningCols,
     };
   }
-
 }

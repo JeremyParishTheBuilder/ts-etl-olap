@@ -1,4 +1,8 @@
-import { type ExpressionNode, ExpressionNodeBase, type ResolvedExpressionNode } from "./ExpressionNode.js";
+import {
+  type ExpressionNode,
+  ExpressionNodeBase,
+  type ResolvedExpressionNode,
+} from "./ExpressionNode.js";
 
 export class BinaryExpressionNode extends ExpressionNodeBase {
   readonly kind = "binary" as const;
@@ -6,11 +10,7 @@ export class BinaryExpressionNode extends ExpressionNodeBase {
   constructor(
     public readonly left: ExpressionNode,
     public readonly operator:
-      | "add"
-      | "subtract"
-      | "multiply"
-      | "divide"
-      | "mod",
+      "add" | "subtract" | "multiply" | "divide" | "mod",
     public readonly right: ExpressionNode,
   ) {
     super();
@@ -23,11 +23,7 @@ export class ResolvedBinaryExpressionNode {
   constructor(
     public readonly left: ResolvedExpressionNode,
     public readonly operator:
-      | "add"
-      | "subtract"
-      | "multiply"
-      | "divide"
-      | "mod",
+      "add" | "subtract" | "multiply" | "divide" | "mod",
     public readonly right: ResolvedExpressionNode,
   ) {}
 }

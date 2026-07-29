@@ -1,4 +1,9 @@
-import { DEFAULT, Dialect, DIALECT_RULES, type Keyword } from "../dialect/index.js";
+import {
+  DEFAULT,
+  Dialect,
+  DIALECT_RULES,
+  type Keyword,
+} from "../dialect/index.js";
 
 export interface EngineRuleSpec<T> {
   engineDefault: T; // fallback default
@@ -16,7 +21,7 @@ export const ENGINE_RULES: Record<
       dialectStrict: (d: Dialect) =>
         DIALECT_RULES[d].ddl.supportsInlineForeignKeys,
       engineDefault: true,
-    }
+    },
   },
 
   constraints: {
@@ -63,8 +68,7 @@ export const ENGINE_RULES: Record<
     },
 
     autoCommit: {
-      dialectDefault: (d: Dialect) =>
-        DIALECT_RULES[d].transaction?.autoCommit,
+      dialectDefault: (d: Dialect) => DIALECT_RULES[d].transaction?.autoCommit,
       engineDefault: true,
     },
 
@@ -75,9 +79,8 @@ export const ENGINE_RULES: Record<
 
   input: {
     keywords: {
-      dialectDefault: (d: Dialect) =>
-        DIALECT_RULES[d].input?.keywords,
-      engineDefault: new Set<Keyword>([DEFAULT])
+      dialectDefault: (d: Dialect) => DIALECT_RULES[d].input?.keywords,
+      engineDefault: new Set<Keyword>([DEFAULT]),
     },
   },
 };

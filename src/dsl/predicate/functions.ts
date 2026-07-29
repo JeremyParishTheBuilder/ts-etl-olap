@@ -11,84 +11,47 @@ import { type FsObject } from "../../mapping/discovery/FsObject.js";
 import { type ExpressionBuilder } from "../expression/ExpressionBuilder.js";
 import { PredicateBuilder } from "./PredicateBuilder.js";
 
-export function every<TContext>(
-  ...predicates: PredicateBuilder<TContext>[]
-) {
+export function every<TContext>(...predicates: PredicateBuilder<TContext>[]) {
   return new PredicateBuilder(
-    new AndPredicate(
-      predicates.map(
-        p => p.predicate
-      )
-    )
+    new AndPredicate(predicates.map((p) => p.predicate)),
   );
 }
 
-export function some<TContext>(
-  ...predicates: PredicateBuilder<TContext>[]
-) {
+export function some<TContext>(...predicates: PredicateBuilder<TContext>[]) {
   return new PredicateBuilder(
-    new OrPredicate(
-      predicates.map(
-        p => p.predicate
-      )
-    )
+    new OrPredicate(predicates.map((p) => p.predicate)),
   );
 }
 
-export function not<TContext>(
-  predicate: PredicateBuilder<TContext>
-) {
-  return new PredicateBuilder(
-    new NotPredicate(
-      predicate.predicate
-    )
-  );
+export function not<TContext>(predicate: PredicateBuilder<TContext>) {
+  return new PredicateBuilder(new NotPredicate(predicate.predicate));
 }
 
 export function xor<TContext>(
   left: PredicateBuilder<TContext>,
-  right: PredicateBuilder<TContext>
+  right: PredicateBuilder<TContext>,
 ) {
-  return new PredicateBuilder(
-    new XorPredicate(
-      left,
-      right
-    )
-  );
+  return new PredicateBuilder(new XorPredicate(left, right));
 }
 
 export function isDirectory() {
-  return new PredicateBuilder<FsObject>(
-    new IsDirectoryPredicate()
-  );
+  return new PredicateBuilder<FsObject>(new IsDirectoryPredicate());
 }
 
 export function isFile() {
+  return new PredicateBuilder<FsObject>(new IsFilePredicate());
+}
+
+export function contains(predicate: PredicateBuilder<FsObject>) {
   return new PredicateBuilder<FsObject>(
-    new IsFilePredicate()
+    new ContainsPredicate(predicate.predicate),
   );
 }
 
-export function contains(
-  predicate: PredicateBuilder<FsObject>
-) {
-  return new PredicateBuilder<FsObject>(
-    new ContainsPredicate(predicate.predicate)
-  );
+export function isNull<TContext>(inner: ExpressionBuilder<TContext>) {
+  return new PredicateBuilder<TContext>(new IsNullPredicate(inner));
 }
 
-export function isNull<TContext>(
-  inner: ExpressionBuilder<TContext>,
-) {
-  return new PredicateBuilder<TContext>(
-    new IsNullPredicate(inner)
-  );
-}
-
-export function isNotNull<TContext>(
-  inner: ExpressionBuilder<TContext>,
-) {
-  return new PredicateBuilder<TContext>(
-    new IsNotNullPredicate(inner)
-  );
+export function isNotNull<TContext>(inner: ExpressionBuilder<TContext>) {
+  return new PredicateBuilder<TContext>(new IsNotNullPredicate(inner));
 }

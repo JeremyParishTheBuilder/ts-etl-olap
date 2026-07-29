@@ -1,4 +1,7 @@
-import { type ColumnType, columnTypeFromValue } from "../../types/ColumnType.js";
+import {
+  type ColumnType,
+  columnTypeFromValue,
+} from "../../types/ColumnType.js";
 import { isColumnValue } from "../../types/ColumnValue.js";
 
 export class ColumnSchema {
@@ -8,7 +11,7 @@ export class ColumnSchema {
   ) {}
 
   observe(value: unknown): void {
-     if (!isColumnValue(value)) {
+    if (!isColumnValue(value)) {
       return;
     }
 
@@ -20,9 +23,7 @@ export class ColumnSchema {
     }
 
     if (this.type !== observed) {
-      throw new Error(
-        `Column '${this.name}' has inconsistent observed types.`
-      );
+      throw new Error(`Column '${this.name}' has inconsistent observed types.`);
     }
   }
 }

@@ -1,6 +1,6 @@
-import { 
+import {
   type PredicateNode,
-  type ResolvedPredicateNode
+  type ResolvedPredicateNode,
 } from "./PredicateNode.js";
 
 export class AndPredicateNode {

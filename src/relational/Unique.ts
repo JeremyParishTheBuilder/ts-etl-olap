@@ -10,10 +10,10 @@ export class Unique extends Immutable {
   public readonly ownsIndex: boolean;
 
   protected constructor(spec: {
-    id: UniqueId,
-    name: string,
-    index: IndexId,
-    ownsIndex: boolean,
+    id: UniqueId;
+    name: string;
+    index: IndexId;
+    ownsIndex: boolean;
   }) {
     super();
 
@@ -28,17 +28,17 @@ export class Unique extends Immutable {
   validate(): void {}
 
   public static create(spec: {
-    id: UniqueId,
-    name: string,
-    index: IndexId,
-    ownsIndex: boolean,
+    id: UniqueId;
+    name: string;
+    index: IndexId;
+    ownsIndex: boolean;
   }): Unique {
     return new this(spec);
   }
 
   public rename(newName: string): Unique {
     return this.with({
-      name: newName
+      name: newName,
     } as Partial<this>);
   }
 

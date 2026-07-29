@@ -3,10 +3,10 @@ import { type InlineColumnSpec } from "../../relational/Column.js";
 import { type ConstraintSpec } from "../../relational/Constraint.js";
 
 export interface CreateTableStatement extends BaseStatement {
-  kind: "create_table",
-  table: string,
-  columnSchema: Record<string, InlineColumnSpec>,
-  constraintSchema: Record<string, ConstraintSpec>,
+  kind: "create_table";
+  table: string;
+  columnSchema: Record<string, InlineColumnSpec>;
+  constraintSchema: Record<string, ConstraintSpec>;
 }
 
 export class CreateTableBuilder implements StatementBuilder {
@@ -28,7 +28,7 @@ export class CreateTableBuilder implements StatementBuilder {
       kind: "create_table",
       table: this.table,
       columnSchema: this.columns,
-      constraintSchema: this.constraints
+      constraintSchema: this.constraints,
     };
   }
 }

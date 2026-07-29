@@ -9,7 +9,6 @@ import { type TableId } from "./Table.js";
 export type ForeignKeyId = number & { readonly __brand: "ForeignKeyId" };
 
 export class ForeignKey extends ColumnBoundImmutable {
-  
   public readonly id: ForeignKeyId;
   public readonly name: string;
   public readonly columns: ColumnId[];
@@ -21,15 +20,15 @@ export class ForeignKey extends ColumnBoundImmutable {
   public readonly onUpdate: ReferentialAction;
 
   protected constructor(spec: {
-    id: ForeignKeyId,
-    name: string,
-    columns: ColumnId[],
-    parentTable: TableId,
-    parentColumns: ColumnId[],
-    parentIndex: IndexId,
-    reverseIndex: IndexId,
-    onDelete?: ReferentialAction,
-    onUpdate?: ReferentialAction,
+    id: ForeignKeyId;
+    name: string;
+    columns: ColumnId[];
+    parentTable: TableId;
+    parentColumns: ColumnId[];
+    parentIndex: IndexId;
+    reverseIndex: IndexId;
+    onDelete?: ReferentialAction;
+    onUpdate?: ReferentialAction;
   }) {
     super();
 
@@ -50,21 +49,21 @@ export class ForeignKey extends ColumnBoundImmutable {
   validate() {
     super.validateColumns();
 
-    if(this.columns.length !== this.parentColumns.length) {
+    if (this.columns.length !== this.parentColumns.length) {
       throw new Error(`Child-Parent Columns length mismatch`);
     }
   }
 
   public static create(spec: {
-    id: ForeignKeyId,
-    name: string,
-    columns: ColumnId[],
-    parentTable: TableId,
-    parentColumns: ColumnId[],
-    parentIndex: IndexId,
-    reverseIndex: IndexId,
-    onDelete?: ReferentialAction,
-    onUpdate?: ReferentialAction,
+    id: ForeignKeyId;
+    name: string;
+    columns: ColumnId[];
+    parentTable: TableId;
+    parentColumns: ColumnId[];
+    parentIndex: IndexId;
+    reverseIndex: IndexId;
+    onDelete?: ReferentialAction;
+    onUpdate?: ReferentialAction;
   }): ForeignKey {
     return new this(spec);
   }
@@ -92,11 +91,11 @@ export class CompiledForeignKey {
   ) {}
 
   public projectChildValues(values: readonly ColumnValue[]): ColumnValue[] {
-    return this.columnIndexes.map(i => values[i]);
+    return this.columnIndexes.map((i) => values[i]);
   }
 
   public projectParentValues(values: readonly ColumnValue[]): ColumnValue[] {
-    return this.parentColumnIndexes.map(i => values[i]);
+    return this.parentColumnIndexes.map((i) => values[i]);
   }
 
   public applyReferentialActionToRow(
@@ -111,22 +110,20 @@ export class CompiledForeignKey {
         return existingChildRow;
       case "setNull":
         next = [...existingChildRow];
-        
-        this.columnIndexes.forEach(idx => {
+
+        this.columnIndexes.forEach((idx) => {
           next[idx] = null;
         });
 
         return next;
       case "cascade":
         if (!replacementParentRow) {
-          throw new Error(
-            "Replacement parent row required for CASCADE update"
-          );
+          throw new Error("Replacement parent row required for CASCADE update");
         }
 
         next = [...existingChildRow];
 
-        this.columnIndexes.forEach((childIdx, i) => {         
+        this.columnIndexes.forEach((childIdx, i) => {
           const parentIdx = this.parentColumnIndexes[i];
           next[childIdx] = replacementParentRow[parentIdx];
         });

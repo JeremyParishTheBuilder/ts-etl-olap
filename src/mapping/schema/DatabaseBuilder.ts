@@ -20,8 +20,7 @@ export class DatabaseBuilder {
     let database = updatedDatabases.requireByName(this.dbName);
 
     for (const tableSchema of this.schema.tables.values()) {
-
-      database = database.createTable({name: tableSchema.name});
+      database = database.createTable({ name: tableSchema.name });
 
       let table = database.tables.requireByName(tableSchema.name);
 
@@ -62,7 +61,7 @@ function groupImports(imports: ImportResult[]): Map<string, ImportResult[]> {
     // }
 
     if (!groupedImports.get(importResult.tableName)) {
-      groupedImports.set(importResult.tableName, [])
+      groupedImports.set(importResult.tableName, []);
     }
 
     //groupedImports.get(importResult.mapping.tableName)!.push(importResult);
@@ -72,7 +71,6 @@ function groupImports(imports: ImportResult[]): Map<string, ImportResult[]> {
 
   return groupedImports;
 }
-
 
 interface ResolvedInsert {
   tableName: string;
@@ -88,7 +86,9 @@ interface LogicalRow {
 type MergedGroupedImports = Map<TableName, Map<string, LogicalRow>>;
 
 // Phase 2: Merge imports belonging to the same logical row.
-function assembleLogicalRows(groupedImports: GroupedImports): MergedGroupedImports {
+function assembleLogicalRows(
+  groupedImports: GroupedImports,
+): MergedGroupedImports {
   const mergedGroupedImports = new Map<TableName, Map<string, LogicalRow>>();
 
   for (const [tableName, imports] of groupedImports) {
@@ -108,8 +108,8 @@ function assembleLogicalRows(groupedImports: GroupedImports): MergedGroupedImpor
         logicalRows.set(key, {
           tableName,
           rowIdentity,
-          values: {}
-        })
+          values: {},
+        });
       }
 
       const logicalRow = logicalRows.get(key);
@@ -138,12 +138,12 @@ function bindLogicalRows(
     // for each LogicalRow
     for (const logicalRow of logicalRows.values()) {
       // create a ResolvedInsert--later
-      const values: ColumnValue[] =
-        new Array(table.columns.size()).fill(null);
+      const values: ColumnValue[] = new Array(table.columns.size()).fill(null);
       // for each property in values
       for (const [propertyName, value] of Object.entries(logicalRow.values)) {
         // find the column position
-        const columnPosition = table.columns.requireByName(propertyName).position;
+        const columnPosition =
+          table.columns.requireByName(propertyName).position;
         // add value to resolved insert's values array
         values[columnPosition] = value;
       }

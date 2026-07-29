@@ -1,6 +1,9 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { Column, type InlineColumnSpec }  from "../../relational/Column.js";
-import { type ForeignKeySpec, type ConstraintSpec } from "../../relational/Constraint.js";
+import { Column, type InlineColumnSpec } from "../../relational/Column.js";
+import {
+  type ForeignKeySpec,
+  type ConstraintSpec,
+} from "../../relational/Constraint.js";
 import { CONSTRAINT_KIND } from "../../relational/ConstraintKind.js";
 import { type ReferentialAction } from "../../relational/ReferentialAction.js";
 import { type PredicateNode } from "../../semantic/ast/predicate/PredicateNode.js";
@@ -15,8 +18,8 @@ export type AlterTableStatement =
   | AlterDropPrimaryKey;
 
 interface AlterTableBaseStatement extends BaseStatement {
-  kind: "alter_table",
-  table: string,
+  kind: "alter_table";
+  table: string;
 }
 
 interface AlterAddColumn extends AlterTableBaseStatement {
@@ -58,14 +61,22 @@ interface AlterDropPrimaryKey extends AlterTableBaseStatement {
 
 type AlterTableBuilderState =
   | { state: "init" }
-  | { state: "add_column"; columnName: string; inlineColumnSpec: InlineColumnSpec }
+  | {
+      state: "add_column";
+      columnName: string;
+      inlineColumnSpec: InlineColumnSpec;
+    }
   | { state: "drop_column"; columnName: string }
   | { state: "rename_column"; from: string; to: string }
   | { state: "modify_column"; columnName: string; column: Column }
-  | { state: "add_constraint"; partial: Partial<ConstraintSpec>, constraint?: ConstraintSpec }
+  | {
+      state: "add_constraint";
+      partial: Partial<ConstraintSpec>;
+      constraint?: ConstraintSpec;
+    }
   | {
       state: "add_constraint_references";
-      constraint: ForeignKeySpec
+      constraint: ForeignKeySpec;
     }
   | { state: "drop_constraint"; constraintName: string }
   | { state: "drop_primary_key" };
@@ -76,11 +87,11 @@ export class AlterTableBuilder implements StatementBuilder {
   constructor(private table: string) {}
 
   private assertState<S extends AlterTableBuilderState["state"]>(
-    expected: S
+    expected: S,
   ): Extract<AlterTableBuilderState, { state: S }> {
     if (this.state.state !== expected) {
       throw new Error(
-        `AlterTableBuilder in ${this.state.state} state, expected ${expected}`
+        `AlterTableBuilder in ${this.state.state} state, expected ${expected}`,
       );
     }
     return this.state as Extract<AlterTableBuilderState, { state: S }>;
@@ -89,7 +100,7 @@ export class AlterTableBuilder implements StatementBuilder {
   private transitionState(next: AlterTableBuilderState) {
     this.state = next;
   }
-  
+
   addColumn(columnName: string, inlineColumnSpec: InlineColumnSpec) {
     this.assertState("init");
     this.transitionState({ state: "add_column", columnName, inlineColumnSpec });
@@ -122,7 +133,10 @@ export class AlterTableBuilder implements StatementBuilder {
 
   addConstraint(constraintName: string) {
     this.assertState("init");
-    this.transitionState({ state: "add_constraint", partial: { name: constraintName } });
+    this.transitionState({
+      state: "add_constraint",
+      partial: { name: constraintName },
+    });
   }
 
   primaryKey(columns: string[]) {
@@ -137,7 +151,7 @@ export class AlterTableBuilder implements StatementBuilder {
     this.state.constraint = {
       ...partial,
       kind: CONSTRAINT_KIND.primaryKey,
-      columns: columns
+      columns: columns,
     } as ConstraintSpec;
   }
 
@@ -153,7 +167,7 @@ export class AlterTableBuilder implements StatementBuilder {
     this.state.constraint = {
       ...partial,
       kind: CONSTRAINT_KIND.unique,
-      columns: columns
+      columns: columns,
     } as ConstraintSpec;
   }
 
@@ -184,7 +198,7 @@ export class AlterTableBuilder implements StatementBuilder {
     this.state.partial = {
       ...partial,
       kind: CONSTRAINT_KIND.foreignKey,
-      columns: childColumns
+      columns: childColumns,
     };
   }
 
@@ -193,19 +207,27 @@ export class AlterTableBuilder implements StatementBuilder {
 
     const partial = this.state.partial;
 
-    if (partial.kind !== CONSTRAINT_KIND.foreignKey || !partial?.columns || !partial.name) {
+    if (
+      partial.kind !== CONSTRAINT_KIND.foreignKey ||
+      !partial?.columns ||
+      !partial.name
+    ) {
       throw new Error("Incomplete foreign key definition");
     }
 
     if (partial.kind !== CONSTRAINT_KIND.foreignKey) {
-      throw new Error(`References is only used for foreign keys, not ${partial.kind}`);
+      throw new Error(
+        `References is only used for foreign keys, not ${partial.kind}`,
+      );
     }
 
-    this.transitionState({ state: "add_constraint_references", constraint: {
+    this.transitionState({
+      state: "add_constraint_references",
+      constraint: {
         ...partial,
         parentTable,
-        parentColumns
-      } as ForeignKeySpec
+        parentColumns,
+      } as ForeignKeySpec,
     });
   }
 
@@ -234,13 +256,16 @@ export class AlterTableBuilder implements StatementBuilder {
             "dropConstraint",
             "dropPrimaryKey",
           ],
-          optional: []
+          optional: [],
         };
 
       case "add_constraint":
         if (!this.state.constraint) {
           if (!this.state.partial.kind) {
-            return { required: ["primaryKey", "unique", "foreignKey", "check"], optional: [] };
+            return {
+              required: ["primaryKey", "unique", "foreignKey", "check"],
+              optional: [],
+            };
           }
           if (this.state.partial.kind === CONSTRAINT_KIND.foreignKey) {
             return { required: ["references"], optional: [] };
@@ -249,9 +274,12 @@ export class AlterTableBuilder implements StatementBuilder {
         break;
 
       case "add_constraint_references": {
-        if (!this.state.constraint || this.state.constraint.kind !== CONSTRAINT_KIND.foreignKey) {
+        if (
+          !this.state.constraint ||
+          this.state.constraint.kind !== CONSTRAINT_KIND.foreignKey
+        ) {
           return { required: [], optional: [] };
-        };
+        }
         const optionalCalls = [];
         if (!this.state.constraint.onDelete) {
           optionalCalls.push("onDelete");
@@ -285,7 +313,7 @@ export class AlterTableBuilder implements StatementBuilder {
           kind: "alter_table",
           op: "drop_column",
           table: this.table,
-          columnName: this.state.columnName
+          columnName: this.state.columnName,
         };
 
       case "rename_column":
@@ -294,7 +322,7 @@ export class AlterTableBuilder implements StatementBuilder {
           op: "rename_column",
           table: this.table,
           from: this.state.from,
-          to: this.state.to
+          to: this.state.to,
         };
 
       case "modify_column":
@@ -303,29 +331,33 @@ export class AlterTableBuilder implements StatementBuilder {
           op: "modify_column",
           table: this.table,
           columnName: this.state.columnName,
-          column: this.state.column
+          column: this.state.column,
         };
 
       case "add_constraint":
         if (!this.state.constraint) {
-          throw new Error("Cannot create AlterTableStatement: constraint not fully defined");
+          throw new Error(
+            "Cannot create AlterTableStatement: constraint not fully defined",
+          );
         }
         return {
           kind: "alter_table",
           op: "add_constraint",
           table: this.table,
-          constraint: this.state.constraint
+          constraint: this.state.constraint,
         };
 
       case "add_constraint_references":
         if (!this.state.constraint) {
-          throw new Error("Cannot create AlterTableStatement: constraint not fully defined");
+          throw new Error(
+            "Cannot create AlterTableStatement: constraint not fully defined",
+          );
         }
         return {
           kind: "alter_table",
           op: "add_constraint",
           table: this.table,
-          constraint: this.state.constraint
+          constraint: this.state.constraint,
         };
 
       case "drop_primary_key":
@@ -334,13 +366,13 @@ export class AlterTableBuilder implements StatementBuilder {
           op: "drop_primary_key",
           table: this.table,
         };
-      
+
       case "drop_constraint":
         return {
           kind: "alter_table",
           op: "drop_constraint",
           table: this.table,
-          constraintName: this.state.constraintName
+          constraintName: this.state.constraintName,
         };
 
       default:

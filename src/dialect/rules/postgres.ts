@@ -1,5 +1,12 @@
 import { type DialectRules } from "../DialectRules.js";
-import { CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP, DEFAULT, NOW, type Keyword } from "../keywords.js";
+import {
+  CURRENT_DATE,
+  CURRENT_TIME,
+  CURRENT_TIMESTAMP,
+  DEFAULT,
+  NOW,
+  type Keyword,
+} from "../keywords.js";
 
 //export const DEFAULT = Symbol("DEFAULT");
 // TODO, implement keyword detection\
@@ -7,7 +14,6 @@ import { CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP, DEFAULT, NOW, type Keywo
 
 export const POSTGRES_FRAGMENTS: Record<string, string> = {
   createTable: "createTable",
-
 
   insertInto: "insertInto",
   values: "values",
@@ -18,7 +24,7 @@ export const POSTGRES_FRAGMENTS: Record<string, string> = {
 
 export const POSTGRES_RULES: DialectRules = {
   fragments: POSTGRES_FRAGMENTS,
-  
+
   identifiers: {
     quote: `"`,
     caseSensitive: true,
@@ -74,7 +80,7 @@ export const POSTGRES_RULES: DialectRules = {
       CURRENT_DATE,
       CURRENT_TIME,
       NOW,
-    ])
+    ]),
   },
 
   transaction: {

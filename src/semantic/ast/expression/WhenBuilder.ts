@@ -1,7 +1,5 @@
 import { type ExpressionNode } from "../../../evaluation/expression/Expression.js";
-import {
-  type PredicateNode,
-} from "../predicate/PredicateNode.js";
+import { type PredicateNode } from "../predicate/PredicateNode.js";
 import { type ExplicitInput } from "../../../types/ExplicitInput.js";
 import { asExpressionNode } from "../../../dsl/expression/asExpressionNode.js";
 import { type CaseBranchNode } from "./CaseBranchNode.js";
@@ -14,12 +12,10 @@ export class WhenBuilder {
   ) {}
 
   then(expr: ExpressionNode | ExplicitInput) {
-    this.caseBuilder.addBranch(
-      {
-        when: this.predicate,
-        then: asExpressionNode(expr),
-      } as CaseBranchNode
-    );
+    this.caseBuilder.addBranch({
+      when: this.predicate,
+      then: asExpressionNode(expr),
+    } as CaseBranchNode);
 
     return this.caseBuilder;
   }

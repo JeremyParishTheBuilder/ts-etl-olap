@@ -1,20 +1,13 @@
 import type { CaptureValue } from "../value/CaptureValue.js";
 
 export class PropertyPath {
-  constructor(
-    readonly parts: readonly string[],
-  ) {}
+  constructor(readonly parts: readonly string[]) {}
 
-  resolve(
-    value: CaptureValue,
-  ): CaptureValue {
+  resolve(value: CaptureValue): CaptureValue {
     let current = value;
 
     for (const part of this.parts) {
-      if (
-        current == null ||
-        typeof current !== "object"
-      ) {
+      if (current == null || typeof current !== "object") {
         return null;
       }
 
@@ -24,11 +17,7 @@ export class PropertyPath {
     return current;
   }
 
-  static parse(
-    path: string,
-  ): PropertyPath {
-    return new PropertyPath(
-      path.split(".")
-    );
+  static parse(path: string): PropertyPath {
+    return new PropertyPath(path.split("."));
   }
 }
