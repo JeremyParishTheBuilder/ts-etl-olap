@@ -853,28 +853,13 @@ export class Table extends Immutable {
       newRow,
     };
   }
-
+  
   public addRow(row: ColumnValue[]): Table {
-    this.assertRowLength(row);
-
-    const rowView = {
-      index: this.numRows,
-      values: row,
-    };
-
-    this.assertRowAgainstChecks(row);
-
-    const updatedIndexes = this.indexes.mapValues((i) => i.tryAddRow(rowView));
-
-    const updatedColumns = this.columns.mapValues((column) =>
-      column.addDatum(row[column.position]),
-    );
-
-    return this.with({
-      indexes: updatedIndexes,
-      columns: updatedColumns,
-      numRows: this.numRows + 1,
-    } as Partial<this>);
+    return this.addRows([
+      {
+        newRow: row,
+      },
+    ]);
   }
 
   public addRows(inserts: ResolvedInsert[]): Table {

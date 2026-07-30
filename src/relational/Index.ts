@@ -73,13 +73,17 @@ export class Index extends ColumnBoundImmutable {
     for (const row of rows) {
       if (!this.matches(row)) continue;
 
-      const key = this.getKeyFromRow(row);
+      const projection = this.projectValues(row.values);
 
-      if (key === null && this.nullsDistinct) continue;
+      const key = this.getKeyFromRow(row);
 
       const existing = map.get(key) ?? [];
 
-      if (this.unique && existing.length > 0) {
+      if (
+        this.unique &&
+        existing.length > 0 &&
+        (!this.nullsDistinct || !projection.includes(null))
+      ) {
         throw new Error(`Unique constraint violation`);
       }
 
@@ -117,79 +121,6 @@ export class Index extends ColumnBoundImmutable {
     if (this.map.has(key)) {
       throw new Error(`UNIQUE violation ${row.values}`);
     }
-  }
-
-  public tryAddRow(row: RowView): Index {
-    if (!this.matches(row)) return this;
-
-    if (this.unique) {
-      this.assertUniqueFromRow(row);
-    }
-
-    const newMap = new Map(this.map);
-
-    const key = this.getKeyFromRow(row);
-
-    const rowNumsMappedToKey = newMap.get(key) ?? [];
-
-    if (rowNumsMappedToKey.includes(row.index)) {
-      throw new Error(`Row ID already in Index`);
-    }
-
-    rowNumsMappedToKey.push(row.index);
-
-    newMap.set(key, rowNumsMappedToKey);
-
-    return this.with({
-      map: newMap,
-    } as Partial<this>);
-  }
-
-  public tryRemoveRow(row: RowView): Index {
-    if (!this.matches(row)) return this;
-
-    const key = this.getKeyFromRow(row);
-
-    const newMap = new Map(this.map);
-
-    const existing = newMap.get(key);
-
-    const rowNum = row.index;
-
-    if (!existing || !existing.includes(rowNum)) {
-      throw new Error(`Existing Row ID not mapped to Key`);
-    }
-
-    const next = existing.filter((mappedRowNum) => mappedRowNum !== rowNum);
-
-    if (next.length === 0) {
-      newMap.delete(key);
-    } else {
-      newMap.set(key, next);
-    }
-
-    return this.with({
-      map: newMap,
-    } as Partial<this>);
-  }
-
-  public tryUpdateRow(oldRow: RowView, newRow: RowView): Index {
-    if (!this.matches(oldRow) && !this.matches(newRow)) return this;
-
-    if (oldRow.index !== newRow.index) {
-      throw new Error(`Mistmatching row indexes`);
-    }
-
-    const oldValues = oldRow.values;
-    const newValues = newRow.values;
-
-    const SAME_VALUES: boolean =
-      oldValues.length === newValues.length &&
-      oldValues.every((v, i) => v === newValues[i]);
-
-    if (SAME_VALUES) return this;
-
-    return this.tryRemoveRow(oldRow).tryAddRow(newRow);
   }
 
   public tryUpdateColumnIndexes(

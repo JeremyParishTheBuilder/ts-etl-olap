@@ -217,7 +217,7 @@ describe('Table::addRow', () => {
 
     const index = table.indexes.requireByName("UQ_Composite");
 
-    expect(index.hasProjectedValues(["X", null])).toBe(true);
+    expect(index.hasProjectedValues(["X", null])).toBe(true); // <- ends up being false
     expect(index.hasProjectedValues(["X", "Y"])).toBe(true);
   });
 
