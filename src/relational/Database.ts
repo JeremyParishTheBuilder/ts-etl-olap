@@ -326,7 +326,12 @@ export class Database extends Immutable {
 
     let updatedDatabase = this.applyResolvedDeletes(tableId, deletes);
 
-    updatedDatabase = updatedDatabase.applyReferentialDeletes(tableId, deletes);
+    //updatedDatabase = updatedDatabase.applyReferentialDeletes(tableId, deletes);
+    updatedDatabase = updatedDatabase.applyReferentialWork({
+      kind: "delete",
+      tableId,
+      deletes,
+    });
 
     updatedDatabase.assertAllForeignKeysValid();
 
@@ -338,7 +343,12 @@ export class Database extends Immutable {
 
     let updatedDatabase = this.applyResolvedUpdates(tableId, updates);
 
-    updatedDatabase = updatedDatabase.applyReferentialUpdates(tableId, updates);
+    //updatedDatabase = updatedDatabase.applyReferentialUpdates(tableId, updates);
+    updatedDatabase = updatedDatabase.applyReferentialWork({
+      kind: "update",
+      tableId,
+      updates,
+    });
 
     updatedDatabase.assertAllForeignKeysValid();
 
@@ -375,40 +385,29 @@ export class Database extends Immutable {
     return this.updateTable(updatedTable);
   }
 
-  private applyReferentialUpdates(
-    tableId: TableId,
-    updates: ResolvedUpdate[],
-  ): Database {
+  private applyReferentialWork(initialWork: ReferentialWork): Database {
     let db: Database = this as this;
 
-    type ReferentialUpdateWork = {
-      tableId: TableId;
-      updates: ResolvedUpdate[];
-    };
-
-    const queue: ReferentialUpdateWork[] = [
-      {
-        tableId,
-        updates,
-      },
-    ];
+    const queue: ReferentialWork[] = [initialWork];
 
     while (queue.length > 0) {
       const current = queue.shift()!;
 
       const tableId = current.tableId;
-      const updates = current.updates;
-
       const table = db.tables.require(tableId);
 
+      const childDeletesByTable = new Map<TableId, ResolvedDelete[]>();
       const childUpdatesByTable = new Map<TableId, ResolvedUpdate[]>();
 
       const compiledFks = new Map<ForeignKey, CompiledForeignKey>();
 
-      for (const update of updates) {
+      const rows =
+        current.kind === "update" ? current.updates : current.deletes;
+
+      for (const row of rows) {
         const oldRowView: RowView = {
-          index: update.rowNum,
-          values: update.oldRow,
+          index: row.rowNum,
+          values: row.oldRow,
         };
 
         const refs = db.findImpactedChildRowReferences(tableId, oldRowView);
@@ -433,116 +432,62 @@ export class Database extends Immutable {
             foreignKey: compiledFk,
           };
 
-          const childMutation = db.resolveReferentialUpdateAction(
-            compiledChildRowReference,
-            update.newRow,
-          );
+          let childMutation: ResolvedDelete | ResolvedUpdate | undefined;
+
+          if (current.kind === "update") {
+            childMutation = db.resolveReferentialUpdateAction(
+              compiledChildRowReference,
+              (row as ResolvedUpdate).newRow,
+            );
+          } else {
+            childMutation = db.resolveReferentialDeleteAction(
+              compiledChildRowReference,
+            );
+          }
 
           if (!childMutation) continue;
 
-          let tableUpdates = childUpdatesByTable.get(ref.childTableId);
+          if ("newRow" in childMutation) {
+            let tableUpdates = childUpdatesByTable.get(ref.childTableId);
 
-          if (!tableUpdates) {
-            tableUpdates = [];
-            childUpdatesByTable.set(ref.childTableId, tableUpdates);
+            if (!tableUpdates) {
+              tableUpdates = [];
+              childUpdatesByTable.set(ref.childTableId, tableUpdates);
+            }
+
+            tableUpdates.push(childMutation);
+          } else {
+            let tableDeletes = childDeletesByTable.get(ref.childTableId);
+
+            if (!tableDeletes) {
+              tableDeletes = [];
+              childDeletesByTable.set(ref.childTableId, tableDeletes);
+            }
+
+            tableDeletes.push(childMutation);
           }
-
-          tableUpdates.push(childMutation);
         }
       }
 
-      for (const [childTableId, childUpdates] of childUpdatesByTable) {
-        db = db.applyResolvedUpdates(childTableId, childUpdates);
+      for (const [tableId, deletes] of childDeletesByTable) {
+        db = db.applyResolvedDeletes(tableId, deletes);
 
         queue.push({
-          tableId: childTableId,
-          updates: childUpdates,
+          kind: "delete",
+          tableId,
+          deletes,
         });
       }
-    }
 
-    return db;
-  }
+      for (const [tableId, updates] of childUpdatesByTable) {
+        db = db.applyResolvedUpdates(tableId, updates);
 
-  private applyReferentialDeletes(
-    tableId: TableId,
-    deletes: ResolvedDelete[],
-  ): Database {
-    let db: Database = this as this;
-
-    const table = this.tables.require(tableId);
-
-    const childDeletesByTable = new Map<TableId, ResolvedDelete[]>();
-
-    const childUpdatesByTable = new Map<TableId, ResolvedUpdate[]>();
-
-    const compiledFks = new Map<ForeignKey, CompiledForeignKey>();
-
-    for (const deleteRow of deletes) {
-      const oldRowView: RowView = {
-        index: deleteRow.rowNum,
-        values: deleteRow.oldRow,
-      };
-
-      const refs = db.findImpactedChildRowReferences(tableId, oldRowView);
-
-      for (const ref of refs) {
-        const fk = ref.foreignKey;
-        let compiledFk = compiledFks.get(fk);
-
-        if (!compiledFk) {
-          const childReferenceTable = db.tables.require(ref.childTableId);
-          compiledFk = new CompiledForeignKey(
-            fk,
-            childReferenceTable.indexes.require(fk.reverseIndex).columnIndexes,
-            table.indexes.require(fk.parentIndex).columnIndexes,
-          );
-          compiledFks.set(fk, compiledFk);
-        }
-
-        const compiledChildRowReference = {
-          ...ref,
-          foreignKey: compiledFk,
-        };
-
-        const childMutation = db.resolveReferentialDeleteAction(
-          compiledChildRowReference,
-        );
-
-        if (!childMutation) continue;
-
-        if ("newRow" in childMutation) {
-          let tableUpdates = childUpdatesByTable.get(ref.childTableId);
-
-          if (!tableUpdates) {
-            tableUpdates = [];
-            childUpdatesByTable.set(ref.childTableId, tableUpdates);
-          }
-
-          tableUpdates.push(childMutation);
-        } else {
-          let tableDeletes = childDeletesByTable.get(ref.childTableId);
-
-          if (!tableDeletes) {
-            tableDeletes = [];
-            childDeletesByTable.set(ref.childTableId, tableDeletes);
-          }
-
-          tableDeletes.push(childMutation);
-        }
+        queue.push({
+          kind: "update",
+          tableId,
+          updates,
+        });
       }
-    }
-
-    for (const [tableId, deletes] of childDeletesByTable) {
-      db = db.applyResolvedDeletes(tableId, deletes);
-
-      db = db.applyReferentialDeletes(tableId, deletes);
-    }
-
-    for (const [tableId, updates] of childUpdatesByTable) {
-      db = db.applyResolvedUpdates(tableId, updates);
-
-      db = db.applyReferentialUpdates(tableId, updates);
     }
 
     return db;
@@ -825,3 +770,15 @@ function assertForeignKeyColumnCompatibility(
     }
   }
 }
+
+type ReferentialWork =
+  | {
+      kind: "delete";
+      tableId: TableId;
+      deletes: ResolvedDelete[];
+    }
+  | {
+      kind: "update";
+      tableId: TableId;
+      updates: ResolvedUpdate[];
+    };
