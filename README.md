@@ -4,7 +4,7 @@ TS-ETL-OLAP is an embedded, in-memory relational engine for importing, editing, 
 
 Although originally designed for blockchain registries such as the Cosmos Chain Registry, the architecture is intentionally generic and can be adapted to other structured data sources.
 
-Instead of treating JSON files as isolated documents, ChainReg-TS imports them into a relational database where consistency rules, queries, and transformations can be expressed declaratively.
+Instead of treating JSON files as isolated documents, TS-ETL-OLAP imports them into a relational database where consistency rules, queries, and transformations can be expressed declaratively.
 
 ## Overview
 
