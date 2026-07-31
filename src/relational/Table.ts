@@ -853,7 +853,7 @@ export class Table extends Immutable {
       newRow,
     };
   }
-  
+
   public addRow(row: ColumnValue[]): Table {
     return this.addRows([
       {

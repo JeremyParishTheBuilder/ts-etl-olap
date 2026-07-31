@@ -381,61 +381,84 @@ export class Database extends Immutable {
   ): Database {
     let db: Database = this as this;
 
-    const table = this.tables.require(tableId);
+    type ReferentialUpdateWork = {
+      tableId: TableId;
+      updates: ResolvedUpdate[];
+    };
 
-    const childUpdatesByTable = new Map<TableId, ResolvedUpdate[]>();
+    const queue: ReferentialUpdateWork[] = [
+      {
+        tableId,
+        updates,
+      },
+    ];
 
-    const compiledFks = new Map<ForeignKey, CompiledForeignKey>();
+    while (queue.length > 0) {
+      const current = queue.shift()!;
 
-    for (const update of updates) {
-      const oldRowView: RowView = {
-        index: update.rowNum,
-        values: update.oldRow,
-      };
+      const tableId = current.tableId;
+      const updates = current.updates;
 
-      const refs = db.findImpactedChildRowReferences(tableId, oldRowView);
+      const table = db.tables.require(tableId);
 
-      for (const ref of refs) {
-        const fk = ref.foreignKey;
-        let compiledFk = compiledFks.get(fk);
+      const childUpdatesByTable = new Map<TableId, ResolvedUpdate[]>();
 
-        if (!compiledFk) {
-          const childReferenceTable = db.tables.require(ref.childTableId);
-          compiledFk = new CompiledForeignKey(
-            fk,
-            childReferenceTable.indexes.require(fk.reverseIndex).columnIndexes,
-            table.indexes.require(fk.parentIndex).columnIndexes,
-          );
-          compiledFks.set(fk, compiledFk);
-        }
+      const compiledFks = new Map<ForeignKey, CompiledForeignKey>();
 
-        const compiledChildRowReference = {
-          ...ref,
-          foreignKey: compiledFk,
+      for (const update of updates) {
+        const oldRowView: RowView = {
+          index: update.rowNum,
+          values: update.oldRow,
         };
 
-        const childMutation = db.resolveReferentialUpdateAction(
-          compiledChildRowReference,
-          update.newRow,
-        );
+        const refs = db.findImpactedChildRowReferences(tableId, oldRowView);
 
-        if (!childMutation) continue;
+        for (const ref of refs) {
+          const fk = ref.foreignKey;
+          let compiledFk = compiledFks.get(fk);
 
-        let tableUpdates = childUpdatesByTable.get(ref.childTableId);
+          if (!compiledFk) {
+            const childReferenceTable = db.tables.require(ref.childTableId);
+            compiledFk = new CompiledForeignKey(
+              fk,
+              childReferenceTable.indexes.require(fk.reverseIndex)
+                .columnIndexes,
+              table.indexes.require(fk.parentIndex).columnIndexes,
+            );
+            compiledFks.set(fk, compiledFk);
+          }
 
-        if (!tableUpdates) {
-          tableUpdates = [];
-          childUpdatesByTable.set(ref.childTableId, tableUpdates);
+          const compiledChildRowReference = {
+            ...ref,
+            foreignKey: compiledFk,
+          };
+
+          const childMutation = db.resolveReferentialUpdateAction(
+            compiledChildRowReference,
+            update.newRow,
+          );
+
+          if (!childMutation) continue;
+
+          let tableUpdates = childUpdatesByTable.get(ref.childTableId);
+
+          if (!tableUpdates) {
+            tableUpdates = [];
+            childUpdatesByTable.set(ref.childTableId, tableUpdates);
+          }
+
+          tableUpdates.push(childMutation);
         }
-
-        tableUpdates.push(childMutation);
       }
-    }
 
-    for (const [childTableId, childUpdates] of childUpdatesByTable) {
-      db = db.applyResolvedUpdates(childTableId, childUpdates);
+      for (const [childTableId, childUpdates] of childUpdatesByTable) {
+        db = db.applyResolvedUpdates(childTableId, childUpdates);
 
-      db = db.applyReferentialUpdates(childTableId, childUpdates);
+        queue.push({
+          tableId: childTableId,
+          updates: childUpdates,
+        });
+      }
     }
 
     return db;
