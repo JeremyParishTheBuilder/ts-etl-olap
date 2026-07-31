@@ -1,6 +1,6 @@
-# ChainReg-TS
+# TS-ETL-OLAP
 
-ChainReg-TS is an embedded, in-memory relational engine for importing, editing, validating, querying, and exporting structured file-based datasets.
+TS-ETL-OLAP is an embedded, in-memory relational engine for importing, editing, validating, querying, and exporting structured datasets.
 
 Although originally designed for blockchain registries such as the Cosmos Chain Registry, the architecture is intentionally generic and can be adapted to other structured data sources.
 
@@ -76,12 +76,11 @@ The project is under active development. The architecture is evolving toward a g
 
 ```ts
 const result = ImportPipeline.build({
-    registry,
-    importers,
-    databaseName: "Registry",
-    root,
-    existingDatabases: engine.databases
-});
+    importRoots: importRoots,
+    databaseName: "Test Registry",
+    existingDatabases: engine.databases,
+    sourceIdentity: "Test Registry",
+  });
 
 engine.install(result.databases);
 
