@@ -49,6 +49,10 @@ export class PostgresInputBatch extends InputBatch {
     return super.addColumn(columnName, inlineColumnSpec);
   }
 
+  unique(columns: string[]) {
+    return super.unique(columns);
+  }
+
   check(predicate: PredicateNode) {
     return super.check(predicate);
   }
@@ -127,5 +131,13 @@ export class PostgresInputBatch extends InputBatch {
 
   not(inner: PredicateNode) {
     return super.not(inner);
+  }
+
+  isNull(inner: ExpressionNode) {
+    return super.isNull(inner);
+  }
+  
+  isNotNull(inner: ExpressionNode) {
+    return super.isNotNull(inner);
   }
 }

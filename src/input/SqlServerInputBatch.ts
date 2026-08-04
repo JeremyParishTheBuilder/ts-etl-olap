@@ -44,6 +44,10 @@ export class SqlServerInputBatch extends InputBatch {
     return super.addConstraint(name);
   }
 
+  unique(columns: string[]) {
+    return super.unique(columns);
+  }
+
   check(predicate: PredicateNode) {
     return super.check(predicate);
   }
@@ -106,5 +110,13 @@ export class SqlServerInputBatch extends InputBatch {
 
   not(inner: PredicateNode) {
     return super.not(inner);
+  }
+
+  isNull(inner: ExpressionNode) {
+    return super.isNull(inner);
+  }
+  
+  isNotNull(inner: ExpressionNode) {
+    return super.isNotNull(inner);
   }
 }

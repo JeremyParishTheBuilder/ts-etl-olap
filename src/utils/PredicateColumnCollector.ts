@@ -38,6 +38,14 @@ export class ResolvedPredicateColumnCollector {
         this.collectPredicate(predicate.inner, columns);
         return;
 
+      case "is_null":
+        this.collectExpression(predicate.inner, columns);
+        return;
+
+      case "is_not_null":
+        this.collectExpression(predicate.inner, columns);
+        return;
+
       default:
         throw new Error(`Predicate Kind not recognized`);
     }

@@ -14,6 +14,7 @@ import {
   Index,
   type IndexId,
   type IndexSpec,
+  IndexUniquenessError,
   requiresIndexRebuild,
 } from "./Index.js";
 import { Immutable } from "../infrastructure/Immutable.js";
@@ -29,6 +30,11 @@ import { type ResolvedDelete } from "../types/ResolvedDelete.js";
 import { type Expression } from "../evaluation/expression/Expression.js";
 import { bindPredicate, resolvePredicate } from "../semantic/predicate.js";
 import type { ResolvedInsert } from "../types/ResolvedInsert.js";
+import {
+  ConstraintViolationError,
+  type ConstraintViolationParticipant,
+} from "./ConstraintViolationError.js";
+import { CONSTRAINT_KIND } from "./ConstraintKind.js";
 
 export type TableId = number & { readonly __brand: "TableId" };
 
@@ -361,9 +367,25 @@ export class Table extends Immutable {
 
   private assertCheckAgainstExistingRows(check: Check): void {
     for (const row of this.iterateAliveRows()) {
-      if (!check.predicate.evaluate(row)) {
-        throw new Error(`Check not compatible with existing rows`);
+      if (check.predicate.evaluate(row)) {
+        continue;
       }
+
+      throw new ConstraintViolationError({
+        constraintName: check.name,
+        constraintKind: CONSTRAINT_KIND.check,
+        participants: [
+          {
+            table: this.id,
+            rowId: row.index,
+            columns: check.columns,
+            columnValues: Index.projectRow(
+              row.values,
+              check.columns.map(c => this.columns.require(c).position)
+            ),
+          },
+        ],
+      });
     }
   }
 
@@ -592,6 +614,108 @@ export class Table extends Immutable {
     } as Partial<this>);
   }
 
+  public resolveOrCreateBackingIndex(spec: {
+    name: string;
+    columns?: string[];
+    using?: string;
+    nullsDistinct: boolean;
+  }): {
+    table: Table;
+    index: Index;
+    created: boolean;
+  } {
+    let index: Index | undefined;
+
+    if (spec.using) {
+      index = this.indexes.requireByName(spec.using);
+
+      return {
+        table: this,
+        index,
+        created: false,
+      };
+    }
+
+    if (!spec.columns || spec.columns.length < 1) {
+      throw new Error(`Column names not provided for backing index`);
+    }
+
+    const columnIds = spec.columns.map((columnName) =>
+      this.columns.requireIdByName(columnName),
+    );
+
+    index = this.getUniqueIndexByColumns(columnIds);
+
+    if (index) {
+      return {
+        table: this,
+        index,
+        created: false,
+      };
+    }
+
+    const tableWithNewIndex = this.createIndex({
+      name: spec.name,
+      columns: spec.columns,
+      unique: true,
+      nullsDistinct: true,
+    });
+
+    return {
+      table: tableWithNewIndex,
+      index: tableWithNewIndex.indexes.requireByName(spec.name),
+      created: true,
+    };
+  }
+
+  public createUniqueConstraint(spec: {
+    name: string;
+    columns?: string[];
+    using?: string;
+    nullsDistinct: boolean;
+  }): Table {
+    try {
+      const backing = this.resolveOrCreateBackingIndex(spec);
+
+      return backing.table.createUnique({
+        name: spec.name,
+        indexName: backing.index.name,
+        ownsIndex: backing.created,
+      });
+    } catch (error) {
+      if (error instanceof IndexUniquenessError) {
+        const participants: ConstraintViolationParticipant[] = [];
+
+        const columnPositions = error.columns.map(
+          (c) => this.columns.require(c).position,
+        );
+
+        for (const row of this.iterateAliveRows()) {
+          const rowProjection = Index.projectRow(row.values, columnPositions);
+
+          if (!arraysEqual(rowProjection, error.projection)) {
+            continue;
+          }
+
+          participants.push({
+            table: this.id,
+            rowId: row.index,
+            columns: error.columns,
+            columnValues: error.projection,
+          });
+        }
+
+        throw new ConstraintViolationError({
+          constraintName: spec.name,
+          constraintKind: CONSTRAINT_KIND.unique,
+          participants,
+        });
+      }
+
+      throw error;
+    }
+  }
+
   public createIndex(spec: IndexSpec & { internal?: boolean }): Table {
     this.assertIndexNameUnused(spec.name);
 
@@ -608,12 +732,38 @@ export class Table extends Immutable {
 
     const [id, indexIds] = this.indexIds.allocate();
 
-    const index = Index.create({
+    let index = Index.create({
       ...spec,
       id,
       columns: columnIds,
       columnIndexes,
-    }).build(this.iterateAliveRows());
+    });
+
+    index = index.build(this.iterateAliveRows());
+
+    // try {
+    //   index = index.build(this.iterateAliveRows());
+    // } catch (e: IndexUniquenessError) {
+    //   //find all rows with the same key or projection
+    //   const rows = index.getRowNumsFromProjection(e.projection);
+    //   const participants: ConstraintParticipant[] = [];
+    //   //for each row, create a constraint participant
+    //   for (const row of rows) {
+    //     participants.push({
+    //       table: this.id,
+    //       rowId: row.index,
+    //       columns: e.columns,
+    //       columnValues: e.projection,
+    //     });
+    //   }
+
+    //   throw new ConstraintViolationError({
+    //     constraint,//still not sure
+    //     participants, // now valid
+    //     message: `Cannot create Unique Index with duplicate values`
+    //     //still not necessarily a constraint--might want to convert it elsewhere
+    //   });
+    // }
 
     const updatedIndexes = this.indexes.add(index);
 
@@ -938,20 +1088,28 @@ export class Table extends Immutable {
     } as Partial<this>);
   }
 
-  public requireUniqueIndexByColumns(columns: ColumnId[]): Index {
+  public getUniqueIndexByColumns(columns: ColumnId[]): Index | undefined {
     for (const index of this.indexes.values()) {
       if (index.unique && arraysEqual(index.columns, columns)) {
         return index;
       }
     }
+  }
+
+  public requireUniqueIndexByColumns(columns: ColumnId[]): Index {
+    const index = this.getUniqueIndexByColumns(columns);
+
+    if (index) {
+      return index;
+    }
+
     throw new Error(
       `No UNIQUE index found for columns [${columns.join(", ")}] in this exact order`,
     );
   }
 }
 
-//used for: findUniqueIndexByColumns()
-function arraysEqual(a: unknown[], b: unknown[]): boolean {
+function arraysEqual(a: readonly unknown[], b: readonly unknown[]): boolean {
   if (a.length !== b.length) return false;
 
   for (let i = 0; i < a.length; i++) {

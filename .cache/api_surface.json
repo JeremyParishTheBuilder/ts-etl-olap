@@ -1,7 +1,7 @@
 [
   {
     "file": "Check.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/Check.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/Check.ts",
     "imports": [
       "./ColumnBoundImmutable.js",
       "./Column.js",
@@ -20,13 +20,13 @@
       {
         "type": "class",
         "name": "Check",
-        "raw": "export class Check extends ColumnBoundImmutable {\n  public readonly id: CheckId\n  public readonly name: string\n  public readonly columns: ColumnId[]\n  public readonly resolvedPredicate: ResolvedPredicateNode\n  public readonly predicate: Predicate\n  validate()\n  public static create(spec: { id: CheckId, name: string, resolvedPredicate: ResolvedPredicateNode, predicate: Predicate, }): Check\n  public rename(newName: string): Check\n  public tryBindPredicate(table: Table)\n}"
+        "raw": "export class Check extends ColumnBoundImmutable {\n  public readonly id: CheckId\n  public readonly name: string\n  public readonly columns: ColumnId[]\n  public readonly resolvedPredicate: ResolvedPredicateNode\n  public readonly predicate: Predicate\n  validate()\n  public static create(spec: { id: CheckId; name: string; resolvedPredicate: ResolvedPredicateNode; predicate: Predicate; }): Check\n  public rename(newName: string): Check\n  public tryBindPredicate(table: Table)\n}"
       }
     ]
   },
   {
     "file": "Column.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/Column.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/Column.ts",
     "imports": [
       "../infrastructure/Immutable.js",
       "./ReferentialAction.js",
@@ -54,18 +54,18 @@
       {
         "type": "signature",
         "name": "InlineColumnSpec",
-        "raw": "export type InlineColumnSpec = Omit<ColumnSpec, 'name'> & {\r\n  unique?: boolean;\r\n  primaryKey?: boolean;\r\n  references?: {\r\n    table: string,\r\n    column: string,\r\n    onDelete?: ReferentialAction,\r\n    onUpdate?: ReferentialAction,\r\n  };\r\n  check?: PredicateNode;\r\n};"
+        "raw": "export type InlineColumnSpec = Omit<ColumnSpec, \"name\"> & {\r\n  unique?: boolean;\r\n  primaryKey?: boolean;\r\n  references?: {\r\n    table: string;\r\n    column: string;\r\n    onDelete?: ReferentialAction;\r\n    onUpdate?: ReferentialAction;\r\n  };\r\n  check?: PredicateNode;\r\n};"
       },
       {
         "type": "signature",
         "name": "ColumnShape",
-        "raw": "export type ColumnShape = Omit<ColumnSpec, 'name'> & {\r\n  autoIncrement?: {\r\n    next?: number;  \r\n    step: number;\r\n  };\r\n}"
+        "raw": "export type ColumnShape = Omit<ColumnSpec, \"name\"> & {\r\n  autoIncrement?: {\r\n    next?: number; \r\n    step: number;\r\n  };\r\n};"
       }
     ]
   },
   {
     "file": "ColumnBoundImmutable.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/ColumnBoundImmutable.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/ColumnBoundImmutable.ts",
     "imports": [
       "../infrastructure/Immutable.js",
       "./Column.js"
@@ -74,7 +74,7 @@
       {
         "type": "signature",
         "name": "ColumnBoundObject",
-        "raw": "interface ColumnBoundObject {\r\n  readonly columns: ColumnId[];\r\n  \r\n  referencesColumn(id: ColumnId): boolean;\r\n}"
+        "raw": "interface ColumnBoundObject {\r\n  readonly columns: ColumnId[];\r\n\r\n  referencesColumn(id: ColumnId): boolean;\r\n}"
       },
       {
         "type": "class",
@@ -85,7 +85,7 @@
   },
   {
     "file": "Constraint.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/Constraint.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/Constraint.ts",
     "imports": [
       "./ConstraintKind.js",
       "./ReferentialAction.js",
@@ -95,33 +95,65 @@
       {
         "type": "signature",
         "name": "PrimaryKeySpec",
-        "raw": "export type PrimaryKeySpec = {\r\n  kind: CONSTRAINT_KIND.primaryKey,\r\n  name: string,\r\n  columns: string[],\r\n}"
+        "raw": "export type PrimaryKeySpec = {\r\n  kind: CONSTRAINT_KIND.primaryKey;\r\n  name: string;\r\n  columns: string[];\r\n};"
       },
       {
         "type": "signature",
         "name": "UniqueSpec",
-        "raw": "export type UniqueSpec = {\r\n  kind: CONSTRAINT_KIND.unique,\r\n  name: string,\r\n  columns: string[]\r\n}"
+        "raw": "export type UniqueSpec = {\r\n  kind: CONSTRAINT_KIND.unique;\r\n  name: string;\r\n  columns?: string[];\r\n  using?: string;\r\n};"
       },
       {
         "type": "signature",
         "name": "ForeignKeySpec",
-        "raw": "export type ForeignKeySpec = {\r\n  kind: CONSTRAINT_KIND.foreignKey,\r\n  name: string,\r\n  columns: string[],\r\n  parentTable: string,\r\n  parentColumns: string[],\r\n  onDelete?: ReferentialAction,\r\n  onUpdate?: ReferentialAction,\r\n}"
+        "raw": "export type ForeignKeySpec = {\r\n  kind: CONSTRAINT_KIND.foreignKey;\r\n  name: string;\r\n  columns: string[];\r\n  parentTable: string;\r\n  parentColumns: string[];\r\n  onDelete?: ReferentialAction;\r\n  onUpdate?: ReferentialAction;\r\n};"
       },
       {
         "type": "signature",
         "name": "CheckSpec",
-        "raw": "export type CheckSpec = {\r\n  kind: CONSTRAINT_KIND.check,\r\n  name: string,\r\n  predicate: PredicateNode,\r\n}"
+        "raw": "export type CheckSpec = {\r\n  kind: CONSTRAINT_KIND.check;\r\n  name: string;\r\n  predicate: PredicateNode;\r\n};"
       },
       {
         "type": "signature",
         "name": "ConstraintSpec",
-        "raw": "export type ConstraintSpec =\r\n  | PrimaryKeySpec\r\n  | UniqueSpec\r\n  | ForeignKeySpec\r\n  | CheckSpec\r\n\r\nexport type DropConstraintSpec =\r\n  | { name: string }\r\n  | { kind: CONSTRAINT_KIND.primaryKey };"
+        "raw": "export type ConstraintSpec =\r\n  PrimaryKeySpec | UniqueSpec | ForeignKeySpec | CheckSpec;"
+      },
+      {
+        "type": "signature",
+        "name": "DropConstraintSpec",
+        "raw": "export type DropConstraintSpec =\r\n  { name: string } | { kind: CONSTRAINT_KIND.primaryKey };"
+      }
+    ]
+  },
+  {
+    "file": "ConstraintViolationError.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/ConstraintViolationError.ts",
+    "imports": [
+      "../types/ColumnValue.js",
+      "./Column.js",
+      "./ConstraintKind.js",
+      "./Table.js"
+    ],
+    "exports": [
+      {
+        "type": "signature",
+        "name": "ConstraintViolationErrorSpec",
+        "raw": "export interface ConstraintViolationErrorSpec {\r\n  constraintName: string;\r\n  constraintKind: CONSTRAINT_KIND;\r\n  participants: readonly ConstraintViolationParticipant[];\r\n  message?: string;\r\n  cause?: Error;\r\n}"
+      },
+      {
+        "type": "class",
+        "name": "ConstraintViolationError",
+        "raw": "export class ConstraintViolationError extends Error {\n  readonly constraintName: string\n  readonly constraintKind: CONSTRAINT_KIND\n  readonly participants: readonly ConstraintViolationParticipant[]\n  readonly cause?: Error\n  constructor(spec: ConstraintViolationErrorSpec)\n}"
+      },
+      {
+        "type": "signature",
+        "name": "ConstraintViolationParticipant",
+        "raw": "export interface ConstraintViolationParticipant {\r\n  readonly table: TableId;\r\n  readonly rowId: number;\r\n  readonly columns: readonly ColumnId[];\r\n  readonly columnValues: readonly ColumnValue[];\r\n\r\n  readonly referencedTable?: TableId;\r\n  readonly referencedColumns?: readonly ColumnId[];\r\n\r\n  readonly tableName?: string;\r\n  readonly columnNames?: readonly string[];\r\n\r\n  readonly referencedTableName?: string;\r\n  readonly referencedColumnNames?: readonly string[];\r\n}"
       }
     ]
   },
   {
     "file": "Database.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/Database.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/Database.ts",
     "imports": [
       "./Table.js",
       "../utils/normalizeIdentifier.js",
@@ -136,7 +168,11 @@
       "../infrastructure/NamedObjectStore.js",
       "../types/ResolvedUpdate.js",
       "../types/ResolvedDelete.js",
-      "../utils/arrayHelpers.js"
+      "../utils/arrayHelpers.js",
+      "../types/ResolvedInsert.js",
+      "./ConstraintViolationError.js",
+      "./ConstraintKind.js",
+      "./Index.js"
     ],
     "exports": [
       {
@@ -147,13 +183,18 @@
       {
         "type": "class",
         "name": "Database",
-        "raw": "export class Database extends Immutable {\n  public readonly id: DatabaseId\n  public readonly name: string\n  public readonly tables: NamedObjectStore<Table, TableId>\n  public readonly tableIds: IdAllocator<TableId>\n  constructor(spec: { id: DatabaseId, name: string, })\n  public validate()\n  public static create(spec: { name: string, id: DatabaseId, }): Database\n  public addTable(table: Table): this\n  public updateTable(table: Table): this\n  public createTable(spec: { name: string }): this\n  public removeTable(name: string): Database\n  public removeTableById(id: TableId): Database\n  public renameTable(name: string, newName: string): Database\n  public renameTableById(id: TableId, newName: string): Database\n  public createForeignKey( tableName: string, spec: { name: string, columns: string[], reverseIndex: string, parentTable: string, parentColumns: string[], onDelete?: ReferentialAction, onUpdate?: ReferentialAction, }): Database\n  public assertExistingRowsSatisfyForeignKey( childTable: Table, foreignKey: ForeignKey, )\n  public assertNoForeignKeyReferencesAny( tableId: TableId, columns: ColumnId[] ): void\n  public assertNoForeignKeyReferencesExact( tableId: TableId, columnNames: string[] ): void\n  public addRow(tableName: string, row: ColumnValue[]): Database\n}"
+        "raw": "export class Database extends Immutable {\n  public readonly id: DatabaseId\n  public readonly name: string\n  public readonly tables: NamedObjectStore<Table, TableId>\n  public readonly tableIds: IdAllocator<TableId>\n  constructor(spec: { id: DatabaseId; name: string })\n  public validate()\n  public static create(spec: { name: string; id: DatabaseId }): Database\n  public addTable(table: Table): this\n  public updateTable(table: Table): this\n  public createTable(spec: { name: string }): this\n  public removeTable(name: string): Database\n  public removeTableById(id: TableId): Database\n  public renameTable(name: string, newName: string): Database\n  public renameTableById(id: TableId, newName: string): Database\n  public createForeignKey( tableName: string, spec: { name: string; columns: string[]; reverseIndex: string; parentTable: string; parentColumns: string[]; onDelete?: ReferentialAction; onUpdate?: ReferentialAction; }, ): Database\n  public assertExistingRowsSatisfyForeignKey( childTable: Table, foreignKey: ForeignKey, )\n  public assertNoForeignKeyReferencesAny( tableId: TableId, columns: ColumnId[], ): void\n  public assertNoForeignKeyReferencesExact( tableId: TableId, columnNames: string[], ): void\n}"
+      },
+      {
+        "type": "signature",
+        "name": "ReferentialWork",
+        "raw": "type ReferentialWork =\r\n  | {\r\n      kind: \"delete\";\r\n      tableId: TableId;\r\n      deletes: ResolvedDelete[];\r\n    }\r\n  | {\r\n      kind: \"update\";\r\n      tableId: TableId;\r\n      updates: ResolvedUpdate[];\r\n    };"
       }
     ]
   },
   {
     "file": "Databases.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/Databases.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/Databases.ts",
     "imports": [
       "../infrastructure/Immutable.js",
       "./Database.js",
@@ -170,7 +211,7 @@
   },
   {
     "file": "ForeignKey.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/ForeignKey.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/ForeignKey.ts",
     "imports": [
       "../utils/normalizeIdentifier.js",
       "./Column.js",
@@ -189,7 +230,7 @@
       {
         "type": "class",
         "name": "ForeignKey",
-        "raw": "export class ForeignKey extends ColumnBoundImmutable {\n  public readonly id: ForeignKeyId\n  public readonly name: string\n  public readonly columns: ColumnId[]\n  public readonly parentTable: TableId\n  public readonly parentColumns: ColumnId[]\n  public readonly parentIndex: IndexId\n  public readonly reverseIndex: IndexId\n  public readonly onDelete: ReferentialAction\n  public readonly onUpdate: ReferentialAction\n  validate()\n  public static create(spec: { id: ForeignKeyId, name: string, columns: ColumnId[], parentTable: TableId, parentColumns: ColumnId[], parentIndex: IndexId, reverseIndex: IndexId, onDelete?: ReferentialAction, onUpdate?: ReferentialAction, }): ForeignKey\n  public rename(newName: string): ForeignKey\n  public static defaultIndexName(name: string): string\n}"
+        "raw": "export class ForeignKey extends ColumnBoundImmutable {\n  public readonly id: ForeignKeyId\n  public readonly name: string\n  public readonly columns: ColumnId[]\n  public readonly parentTable: TableId\n  public readonly parentColumns: ColumnId[]\n  public readonly parentIndex: IndexId\n  public readonly reverseIndex: IndexId\n  public readonly onDelete: ReferentialAction\n  public readonly onUpdate: ReferentialAction\n  validate()\n  public static create(spec: { id: ForeignKeyId; name: string; columns: ColumnId[]; parentTable: TableId; parentColumns: ColumnId[]; parentIndex: IndexId; reverseIndex: IndexId; onDelete?: ReferentialAction; onUpdate?: ReferentialAction; }): ForeignKey\n  public rename(newName: string): ForeignKey\n  public static defaultIndexName(name: string): string\n}"
       },
       {
         "type": "class",
@@ -200,7 +241,7 @@
   },
   {
     "file": "ForeignKeyReference.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/ForeignKeyReference.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/ForeignKeyReference.ts",
     "imports": [
       "./ForeignKey.js"
     ],
@@ -214,20 +255,21 @@
   },
   {
     "file": "Index.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/Index.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/Index.ts",
     "imports": [
       "../evaluation/predicate/Predicate.js",
       "./Column.js",
       "../types/ColumnType.js",
       "../types/ColumnValue.js",
       "./ColumnBoundImmutable.js",
-      "./RowView.js"
+      "./RowView.js",
+      "./ConstraintViolationError.js"
     ],
     "exports": [
       {
         "type": "signature",
         "name": "IndexSpec",
-        "raw": "export type IndexSpec = {\r\n  name: string,\r\n  columns: string[],\r\n  unique?: boolean,\r\n  nullsDistinct?: boolean;\r\n  predicate?: Predicate;\r\n};"
+        "raw": "export type IndexSpec = {\r\n  name: string;\r\n  columns: string[];\r\n  unique?: boolean;\r\n  nullsDistinct?: boolean;\r\n  predicate?: Predicate;\r\n};"
       },
       {
         "type": "signature",
@@ -237,13 +279,23 @@
       {
         "type": "class",
         "name": "Index",
-        "raw": "export class Index extends ColumnBoundImmutable {\n  public readonly name: string\n  public readonly columns: ColumnId[]\n  public readonly columnIndexes: number[]\n  public readonly unique: boolean\n  public readonly nullsDistinct: boolean\n  public readonly predicate?: Predicate\n  public readonly id: IndexId\n  public readonly map: Map<string, number[]>\n  validate()\n  public static create(spec: { id: IndexId, name: string, columns: ColumnId[], columnIndexes: number[], unique?: boolean, nullsDistinct?: boolean, predicate?: Predicate }): Index\n  public build(rows: Iterable<RowView>): Index\n  public rename(newName: string): Index\n  public assertColumnUnreferenced(id: ColumnId): void\n  public tryAddRow(row: RowView): Index\n  public tryRemoveRow(row: RowView): Index\n  public tryUpdateRow( oldRow: RowView, newRow: RowView, ): Index\n  public tryUpdateColumnIndexes(columnIdToIndexMap: Map<ColumnId, number>): Index\n  public projectValues(values: readonly ColumnValue[]): ColumnValue[]\n  public hasProjectedValues(projection: readonly ColumnValue[]): boolean\n  public hasRow(values: readonly ColumnValue[]): boolean\n  public getRowNumsFromProjection(projection: readonly ColumnValue[]): number[] | undefined\n}"
+        "raw": "export class Index extends ColumnBoundImmutable {\n  public readonly name: string\n  public readonly columns: ColumnId[]\n  public readonly columnIndexes: number[]\n  public readonly unique: boolean\n  public readonly nullsDistinct: boolean\n  public readonly predicate?: Predicate\n  public readonly id: IndexId\n  public readonly map: Map<string, number[]>\n  validate()\n  public static create(spec: { id: IndexId; name: string; columns: ColumnId[]; columnIndexes: number[]; unique?: boolean; nullsDistinct?: boolean; predicate?: Predicate; }): Index\n  public build(rows: Iterable<RowView>): Index\n  public rename(newName: string): Index\n  public assertColumnUnreferenced(id: ColumnId): void\n  public tryUpdateColumnIndexes( columnIdToIndexMap: Map<ColumnId, number>, ): Index\n  public projectValues(values: readonly ColumnValue[]): ColumnValue[]\n  public hasProjectedValues(projection: readonly ColumnValue[]): boolean\n  public hasRow(values: readonly ColumnValue[]): boolean\n  public getRowNumsFromProjection( projection: readonly ColumnValue[], ): number[] | undefined\n  static projectRow( values: readonly ColumnValue[], columnPositions: readonly number[], ): readonly ColumnValue[]\n}"
+      },
+      {
+        "type": "signature",
+        "name": "IndexUniquenessErrorSpec",
+        "raw": "export interface IndexUniquenessErrorSpec {\r\n  readonly rowView: RowView;\r\n  readonly columns: readonly ColumnId[];\r\n  readonly projection: readonly ColumnValue[];\r\n  readonly key: string;\r\n  readonly nullsDistinct: boolean;\r\n  message: string;\r\n}"
+      },
+      {
+        "type": "class",
+        "name": "IndexUniquenessError",
+        "raw": "export class IndexUniquenessError extends Error {\n  readonly rowView: RowView\n  readonly columns: readonly ColumnId[]\n  readonly projection: readonly ColumnValue[]\n  readonly key: string\n  readonly nullsDistinct: boolean\n  message: string\n  constructor(spec: IndexUniquenessErrorSpec)\n}"
       }
     ]
   },
   {
     "file": "PrimaryKey.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/PrimaryKey.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/PrimaryKey.ts",
     "imports": [
       "../infrastructure/Immutable.js",
       "./Index.js"
@@ -258,19 +310,19 @@
   },
   {
     "file": "ReferentialAction.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/ReferentialAction.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/ReferentialAction.ts",
     "imports": [],
     "exports": [
       {
         "type": "signature",
         "name": "ReferentialAction",
-        "raw": "export type ReferentialAction =\r\n  | \"restrict\"\r\n  | \"cascade\"\r\n  | \"setNull\"\r\n  | \"noAction\";"
+        "raw": "export type ReferentialAction = \"restrict\" | \"cascade\" | \"setNull\" | \"noAction\";"
       }
     ]
   },
   {
     "file": "RowView.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/RowView.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/RowView.ts",
     "imports": [
       "../types/ColumnValue.js"
     ],
@@ -284,7 +336,7 @@
   },
   {
     "file": "Table.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/Table.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/Table.ts",
     "imports": [
       "./Column.js",
       "../types/ColumnType.js",
@@ -295,7 +347,6 @@
       "./Unique.js",
       "./Index.js",
       "../infrastructure/Immutable.js",
-      "../infrastructure/PersistentMap.js",
       "./RowView.js",
       "../utils/normalizeIdentifier.js",
       "./Constraint.js",
@@ -306,7 +357,10 @@
       "../types/ResolvedUpdate.js",
       "../types/ResolvedDelete.js",
       "../evaluation/expression/Expression.js",
-      "../semantic/predicate.js"
+      "../semantic/predicate.js",
+      "../types/ResolvedInsert.js",
+      "./ConstraintViolationError.js",
+      "./ConstraintKind.js"
     ],
     "exports": [
       {
@@ -317,13 +371,13 @@
       {
         "type": "class",
         "name": "Table",
-        "raw": "export class Table extends Immutable {\n  public id: TableId\n  public name: string\n  public columns: NamedObjectStore<Column, ColumnId>\n  public columnPositions: PersistentMap<number, ColumnId>\n  public primaryKey: PrimaryKey | undefined\n  public indexes: NamedObjectStore<Index, IndexId>\n  public uniques: NamedObjectStore<Unique, UniqueId>\n  public foreignKeys: NamedObjectStore<ForeignKey, ForeignKeyId>\n  public checks: NamedObjectStore<Check, CheckId>\n  public rowAlive: boolean[]\n  public numRows: number\n  public readonly columnIds\n  public readonly indexIds\n  public readonly uniqueIds\n  public readonly foreignKeyIds\n  public readonly checkIds\n  public validate(): void\n  constructor(spec: { id: TableId, name: string, })\n  public static create(spec: { id: TableId, name: string, }): Table\n  public rename(newName: string): Table\n  public getColumnPosition(id: ColumnId): number | undefined\n  public requireColumnPosition(id: ColumnId): number\n  public createColumn(spec: ColumnSpec): Table\n  public removeColumn(name: string): Table\n  public removeColumnById(id: ColumnId): Table\n  public renameColumn(name: string, newName: string): Table\n  public renameColumnById(id: ColumnId, newName: string): Table\n  public alterColumn(name: string, newType: ColumnType): Table\n  public alterColumnById(id: ColumnId, newType: ColumnType): Table\n  public createPrimaryKey(spec: { name: string, columns: string[], }): Table\n  public removePrimaryKey(): Table\n  public *iterateAliveRows(): IterableIterator<RowView>\n  public createForeignKey( spec: { name: string, columns: ColumnId[], reverseIndex: IndexId, parentTable: TableId, parentColumns: ColumnId[], parentIndex: IndexId, onDelete?: ReferentialAction, onUpdate?: ReferentialAction, } ): Table\n  public removeForeignKey(name: string): Table\n  public removeForeignKeyById(id: ForeignKeyId): Table\n  public createCheck(spec: Omit<CheckSpec, \"kind\">): Table\n  public getPrimaryKey(): PrimaryKey | undefined\n  public requirePrimaryKey(): PrimaryKey\n  public renamePrimaryKey(newName: string): Table\n  public renameForeignKey(oldName: string, newName: string): Table\n  public renameForeignKeyById(id: ForeignKeyId, newName: string): Table\n  public getConstraintByName(name: string): PrimaryKey | ForeignKey | Check | Unique | undefined\n  public requireConstraintByName(name: string): PrimaryKey | ForeignKey | Check | Unique\n  public assertTableUnreferenced(id: TableId): void\n  public createUnique(spec: { name: string, indexName: string ownsIndex: boolean, }): Table\n  public removeUnique(name: string): Table\n  public removeUniqueById(id: UniqueId): Table\n  public renameUnique(name: string, newName: string): Table\n  public renameUniqueById(id: UniqueId, newName: string): Table\n  public createIndex(spec: IndexSpec & {internal?: boolean}): Table\n  public removeIndex(name: string): Table\n  public removeIndexById(id: IndexId): Table\n  public removeCheck(name: string): Table\n  public removeCheckById(id: CheckId): Table\n  public renameIndex(name: string, newName: string): Table\n  public renameIndexById(id: IndexId, newName: string): Table\n  public renameCheck(name: string, newName: string): Table\n  public renameCheckById(id: CheckId, newName: string): Table\n  public isRowAlive(rowNum: number): boolean\n  public assertRowAlive(rowNum: number): void\n  public getRow(rowNum: number): ColumnValue[] | undefined\n  public requireRow(rowNum: number): ColumnValue[]\n  public getRowView(rowNum: number): RowView | undefined\n  public requireRowView(rowNum: number): RowView\n  public resolveInsertInputs( inputs: Map<ColumnId, ExplicitInput>, ): ColumnValue[]\n  public resolveUpdateInputs( inputs: Map<ColumnId, ExplicitInput>, rowNum: number, ): ColumnValue[]\n  public addRow(row: ColumnValue[]): Table\n  public resolveUpdateExpressions( expressions: Map<ColumnId, Expression<RowView>>, rowNum: number ): ResolvedUpdate\n  public updateRows(updates: ResolvedUpdate[]): Table\n  public removeRows(deletes: ResolvedDelete[]): Table\n  public requireUniqueIndexByColumns(columns: ColumnId[]): Index\n}"
+        "raw": "export class Table extends Immutable {\n  public id: TableId\n  public name: string\n  public columns: NamedObjectStore<Column, ColumnId>\n  public primaryKey: PrimaryKey | undefined\n  public indexes: NamedObjectStore<Index, IndexId>\n  public uniques: NamedObjectStore<Unique, UniqueId>\n  public foreignKeys: NamedObjectStore<ForeignKey, ForeignKeyId>\n  public checks: NamedObjectStore<Check, CheckId>\n  public rowAlive: boolean[]\n  public numRows: number\n  public readonly columnIds\n  public readonly indexIds\n  public readonly uniqueIds\n  public readonly foreignKeyIds\n  public readonly checkIds\n  public validate(): void\n  constructor(spec: { id: TableId; name: string })\n  public static create(spec: { id: TableId; name: string }): Table\n  public rename(newName: string): Table\n  public getColumnsInOrder(): Column[]\n  public createColumn(spec: ColumnSpec): Table\n  public removeColumn(name: string): Table\n  public removeColumnById(id: ColumnId): Table\n  public renameColumn(name: string, newName: string): Table\n  public renameColumnById(id: ColumnId, newName: string): Table\n  public alterColumn(name: string, newType: ColumnType): Table\n  public alterColumnById(id: ColumnId, newType: ColumnType): Table\n  public createPrimaryKey(spec: { name: string; columns: string[] }): Table\n  public removePrimaryKey(): Table\n  public *iterateAliveRows(): IterableIterator<RowView>\n}"
       }
     ]
   },
   {
     "file": "Unique.ts",
-    "path": "/mnt/e/Git/chain-reg-ts/src/relational/Unique.ts",
+    "path": "/mnt/e/Git/ts-etl-olap/src/relational/Unique.ts",
     "imports": [
       "../infrastructure/Immutable.js",
       "./Index.js"
@@ -337,7 +391,7 @@
       {
         "type": "class",
         "name": "Unique",
-        "raw": "export class Unique extends Immutable {\n  public readonly id: UniqueId\n  public readonly name: string\n  public readonly index: IndexId\n  public readonly ownsIndex: boolean\n  validate(): void\n  public static create(spec: { id: UniqueId, name: string, index: IndexId, ownsIndex: boolean, }): Unique\n  public rename(newName: string): Unique\n  public static defaultIndexName(name: string): string\n}"
+        "raw": "export class Unique extends Immutable {\n  public readonly id: UniqueId\n  public readonly name: string\n  public readonly index: IndexId\n  public readonly ownsIndex: boolean\n  validate(): void\n  public static create(spec: { id: UniqueId; name: string; index: IndexId; ownsIndex: boolean; }): Unique\n  public rename(newName: string): Unique\n  public static defaultIndexName(name: string): string\n}"
       }
     ]
   }

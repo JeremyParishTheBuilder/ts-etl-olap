@@ -13,6 +13,9 @@ import { type ResolvedUpdate } from "../types/ResolvedUpdate.js";
 import { type ResolvedDelete } from "../types/ResolvedDelete.js";
 import { arraysEqual } from "../utils/arrayHelpers.js";
 import type { ResolvedInsert } from "../types/ResolvedInsert.js";
+import { ConstraintViolationError } from "./ConstraintViolationError.js";
+import { CONSTRAINT_KIND } from "./ConstraintKind.js";
+import { Index } from "./Index.js";
 
 const _MAX_DEPTH = 25;
 
@@ -192,9 +195,22 @@ export class Database extends Immutable {
       if (projected.includes(null)) continue;
 
       if (!parentIndex.hasProjectedValues(projected)) {
-        throw new Error(
-          `Foreign key violation on existing row ${row.index}. ${projected}`,
-        );
+        throw new ConstraintViolationError({
+          constraintName: foreignKey.name,
+          constraintKind: CONSTRAINT_KIND.foreignKey,
+          participants: [
+            {
+              table: childTable.id,
+              rowId: row.index,
+              columns: foreignKey.columns,
+              columnValues: projected,
+              referencedTable: foreignKey.parentTable,
+              referencedColumns: foreignKey.parentColumns,
+            },
+          ],
+          message:
+            `Foreign key violation on existing row ${row.index}. ${projected}`,
+        });
       }
     }
   }

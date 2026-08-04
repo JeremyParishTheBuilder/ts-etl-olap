@@ -3,7 +3,10 @@ import { type CommitStatement } from "./session/CommitStatement.js";
 import { type UseDatabaseStatement } from "./session/UseDatabaseStatement.js";
 import { type CreateDatabaseStatement } from "./ddl/CreateDatabaseStatement.js";
 import { type CreateTableStatement } from "./ddl/CreateTableStatement.js";
-import { type AlterTableStatement } from "./ddl/AlterTableStatement.js";
+import {
+  type AlterAddConstraint,
+  type AlterTableStatement,
+} from "./ddl/AlterTableStatement.js";
 import { type InsertIntoStatement } from "./dml/InsertIntoStatement.js";
 import { type SelectStatement } from "./dql/SelectStatement.js";
 import { type UpdateSetStatement } from "./dml/UpdateSetStatement.js";
@@ -37,6 +40,8 @@ export type Statement =
   | UpdateSetStatement
   | DeleteFromStatement
   | SelectStatement;
+
+export type ConstraintStatement = AlterAddConstraint;
 
 export interface StatementBuilder extends Builder {
   createStatement(): Statement;

@@ -39,6 +39,7 @@ import { ImportRoot } from "../mapping/import/ImportRoot.js";
 import { discovery, path } from "../mapping/import/dsl.js";
 import { DiscoveryRoot } from "../mapping/discovery/DiscoveryRoot.js";
 import { FsDiscoverySource } from "../mapping/discovery/DiscoverySource.js";
+import { StructuredArrayNavigator } from "../mapping/discovery/navigation/StructuredArrayNavigator.js";
 
 const _CCR1_PATH: string = "../chain-registry";
 
@@ -56,31 +57,32 @@ export const getChainRegContents = () => {
   //   children: [],
   // });
 
-  // const assetNode = new DiscoveryNode({
-  //   navigator: new StructuredArrayNavigator(),
-  //   decoder: new JsonDecoder(),
-  //   nodeType: "asset",
-  //   captures: {
-  //     base: value("base"),
-  //     owner: concat(
-  //       literal("Asset:"),
-  //       captureScalar("chainDirectoryName"),
-  //       literal(":"),
-  //       current().path("base").scalar()
-  //     ),
-  //   },
-  //   children: [],
-  // });
+  const assetNode = new DiscoveryNode({
+    navigator: new StructuredArrayNavigator(),
+    matcher: isNull(literal(null)),
+    decoder: new JsonDecoder(),
+    nodeType: "asset",
+    captures: {
+      base: value("base"),
+      owner: concat(
+        literal("Asset:"),
+        captureScalar("chainDirectoryName"),
+        literal(":"),
+        current().path("base").scalar()
+      ),
+    },
+    children: [],
+  });
 
-  // const assetlistFileNode = new DiscoveryNode({
-  //   navigator: new DirectoryNavigator(),
-  //   matcher: every(isFile(), basename().eq("assetlist.json")),
-  //   decoder: new JsonDecoder(),
-  //   nodeType: "assetlistFile",
-  //   children: [
-  //     assetNode
-  //   ],
-  // });
+  const assetlistFileNode = new DiscoveryNode({
+    navigator: new DirectoryNavigator(),
+    matcher: every(isFile(), basename().eq("assetlist.json")),
+    decoder: new JsonDecoder(),
+    nodeType: "assetlistFile",
+    children: [
+      assetNode
+    ],
+  });
 
   const chainFileNode = new DiscoveryNode({
     navigator: new DirectoryNavigator(),
@@ -107,7 +109,7 @@ export const getChainRegContents = () => {
     ),
     children: [
       chainFileNode,
-      //assetlistFileNode,
+      assetlistFileNode,
     ],
     nodeType: "chainDirectory",
     captures: {
@@ -216,6 +218,25 @@ export const getChainRegContents = () => {
     },
   });
 
+  const assetImportMapping = new ImportMapping({
+    source: discovery("asset"),
+    tableName: "Assets",
+    fields: {
+      owner: captureScalar("owner"),
+    },
+    children: [
+      logoUrisImportMapping,
+      imagesImportMapping
+    ],
+  });
+
+  const assetlistFileImportMapping = new ImportMapping({
+    source: discovery("assetlistFile"),
+    tableName: "Chains",
+    prefix: "AssetlistFile",
+    children: [assetImportMapping],
+  });
+
   const chainFileImportMapping = new ImportMapping({
     source: discovery("chainFile"),
     tableName: "Chains",
@@ -242,7 +263,10 @@ export const getChainRegContents = () => {
       networkKind: captureScalar("networkKind"),
       networkType: captureScalar("networkType"),
     },
-    children: [chainFileImportMapping],
+    children: [
+      chainFileImportMapping,
+      assetlistFileImportMapping,
+    ],
   });
 
   const networkTypeImportMapping = new ImportMapping({
@@ -318,9 +342,13 @@ export const getChainRegContents = () => {
   console.log("feeTokens");
   console.log(feeTokens);
 
-  const denom_units = sql.select("*").from("DenomUnits").execute()[0];
-  console.log("denom_units");
-  console.log(denom_units);
+  const assets = sql.select("*").from("Assets").execute()[0];
+  console.log("assets");
+  console.log(assets);
+
+  // const denom_units = sql.select("*").from("DenomUnits").execute()[0];
+  // console.log("denom_units");
+  // console.log(denom_units);
 
   console.log("created chain reg");
 };

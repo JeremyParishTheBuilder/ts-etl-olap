@@ -45,7 +45,7 @@ interface AlterModifyColumn extends AlterTableBaseStatement {
   column: Column;
 }
 
-interface AlterAddConstraint extends AlterTableBaseStatement {
+export interface AlterAddConstraint extends AlterTableBaseStatement {
   op: "add_constraint";
   constraint: ConstraintSpec;
 }
