@@ -84,7 +84,14 @@ export class Index extends ColumnBoundImmutable {
         existing.length > 0 &&
         (!this.nullsDistinct || !projection.includes(null))
       ) {
-        throw new Error(`Unique constraint violation`);
+        throw new IndexUniquenessError({
+          rowView: row,
+          columns: this.columns,
+          projection: projection,
+          key,
+          nullsDistinct: this.nullsDistinct,
+          message: `Unique Index contains duplicate values`,
+        });
       }
 
       map.set(key, [...existing, row.index]);
@@ -162,6 +169,13 @@ export class Index extends ColumnBoundImmutable {
   ): number[] | undefined {
     return this.map.get(this.getKeyFromProjection(projection));
   }
+
+  static projectRow(
+    values: readonly ColumnValue[],
+    columnPositions: readonly number[],
+  ): readonly ColumnValue[] {
+    return columnPositions.map((i) => values[i]);
+  }
 }
 
 export function requiresIndexRebuild(
@@ -172,4 +186,31 @@ export function requiresIndexRebuild(
     return true; // for now, alway rebuild on type change
   }
   return false;
+}
+
+export interface IndexUniquenessErrorSpec {
+  readonly rowView: RowView;
+  readonly columns: readonly ColumnId[];
+  readonly projection: readonly ColumnValue[];
+  readonly key: string;
+  readonly nullsDistinct: boolean;
+  message: string;
+}
+
+export class IndexUniquenessError extends Error {
+  readonly rowView: RowView;
+  readonly columns: readonly ColumnId[];
+  readonly projection: readonly ColumnValue[];
+  readonly key: string;
+  readonly nullsDistinct: boolean;
+
+  constructor(spec: IndexUniquenessErrorSpec) {
+    super(spec.message);
+
+    this.rowView = spec.rowView;
+    this.columns = spec.columns;
+    this.projection = spec.projection;
+    this.key = spec.key;
+    this.nullsDistinct = spec.nullsDistinct;
+  }
 }

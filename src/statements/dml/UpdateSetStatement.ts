@@ -1,8 +1,8 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { type ExpressionNode } from "../../evaluation/expression/Expression.js";
-import { asExpressionNode } from "../../dsl/expression/asExpressionNode.js";
-import { type ExplicitInput } from "../../types/ExplicitInput.js";
 import { type PredicateNode } from "../../semantic/ast/predicate/PredicateNode.js";
+import type { ExpressionNode } from "../../semantic/ast/expression/ExpressionNode.js";
+import { asExpressionNode } from "../../semantic/ast/expression/asExpressionNode.js";
+import type { ColumnValue } from "../../types/ColumnValue.js";
 
 export interface UpdateSetStatement extends BaseStatement {
   kind: "update_set";
@@ -19,7 +19,9 @@ export class UpdateSetBuilder implements StatementBuilder {
 
   constructor(private table: string) {}
 
-  set(data: Record<string, ExpressionNode | ExplicitInput>) {
+  //TODO
+  //set(data: Record<string, ExplicitInput>)
+  set(data: Record<string, ExpressionNode | ColumnValue>) {
     const normalized: Record<string, ExpressionNode> = {};
 
     for (const key in data) {

@@ -16,7 +16,7 @@ import { AddIndexAction } from "../actions/AddIndexAction.js";
 import { CONSTRAINT_KIND } from "../relational/ConstraintKind.js";
 import { PrimaryKey } from "../relational/PrimaryKey.js";
 import { ForeignKey } from "../relational/ForeignKey.js";
-import { AddUniqueAction } from "../actions/AddUniqueAction.js";
+import { AddUniqueConstraintAction } from "../actions/AddUniqueConstraintAction.js";
 
 export function bindCreateTable(
   semantic: SemanticAnalyzer,
@@ -97,19 +97,18 @@ export function bindCreateTable(
         }
 
         case CONSTRAINT_KIND.unique:
-          stmtActions.push(
-            new AddIndexAction(dbName, tableName, {
-              ...spec,
-              unique: true,
-              nullsDistinct: ctx.rules.constraints.nullsDistinct,
-            }),
-          );
+          if ((spec.columns === undefined) === (spec.using === undefined)) {
+            throw new Error(
+              "UNIQUE constraint requires exactly one of 'columns' or 'using'.",
+            );
+          }
 
           stmtActions.push(
-            new AddUniqueAction(dbName, tableName, {
+            new AddUniqueConstraintAction(dbName, tableName, {
               name: spec.name,
-              indexName: spec.name,
-              ownsIndex: true,
+              columns: spec.columns,
+              using: spec.using,
+              nullsDistinct: ctx.rules.constraints.nullsDistinct,
             }),
           );
 
@@ -170,18 +169,18 @@ export function bindCreateTable(
       }
 
       case CONSTRAINT_KIND.unique:
-        stmtActions.push(
-          new AddIndexAction(dbName, tableName, {
-            ...spec,
-            unique: true,
-          }),
-        );
+        if ((spec.columns === undefined) === (spec.using === undefined)) {
+          throw new Error(
+            "UNIQUE constraint requires exactly one of 'columns' or 'using'.",
+          );
+        }
 
         stmtActions.push(
-          new AddUniqueAction(dbName, tableName, {
+          new AddUniqueConstraintAction(dbName, tableName, {
             name: spec.name,
-            indexName: /*spec.using ?? */ spec.name,
-            ownsIndex: true,
+            columns: spec.columns,
+            using: spec.using,
+            nullsDistinct: ctx.rules.constraints.nullsDistinct,
           }),
         );
 

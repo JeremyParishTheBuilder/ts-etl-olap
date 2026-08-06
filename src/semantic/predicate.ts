@@ -15,6 +15,10 @@ import { XorPredicate } from "../evaluation/predicate/XorPredicate.js";
 import { ResolvedAndPredicateNode } from "./ast/predicate/AndPredicateNode.js";
 import { ResolvedOrPredicateNode } from "./ast/predicate/OrPredicateNode.js";
 import { ResolvedXorPredicateNode } from "./ast/predicate/XorPredicateNode.js";
+import { ResolvedIsNullPredicateNode } from "./ast/predicate/IsNullPredicateNode.js";
+import { ResolvedIsNotNullPredicateNode } from "./ast/predicate/IsNotNullPredicateNode.js";
+import { IsNullPredicate } from "../evaluation/predicate/IsNull.js";
+import { IsNotNullPredicate } from "../evaluation/predicate/IsNotNull.js";
 
 export function bindPredicate(
   pred: ResolvedPredicateNode,
@@ -50,6 +54,14 @@ export function bindPredicate(
 
     case "not": {
       return new NotPredicate(bindPredicate(pred.inner, table));
+    }
+
+    case "is_null": {
+      return new IsNullPredicate(bindExpression(pred.inner, table));
+    }
+
+    case "is_not_null": {
+      return new IsNotNullPredicate(bindExpression(pred.inner, table));
     }
 
     //TODO: BETWEEN, LIKE, IN
@@ -91,6 +103,16 @@ export function resolvePredicate(
     case "not":
       return new ResolvedNotPredicateNode(
         resolvePredicate(predicate.inner, table),
+      );
+
+    case "is_null":
+      return new ResolvedIsNullPredicateNode(
+        resolveExpression(predicate.inner, table),
+      );
+
+    case "is_not_null":
+      return new ResolvedIsNotNullPredicateNode(
+        resolveExpression(predicate.inner, table),
       );
 
     default:

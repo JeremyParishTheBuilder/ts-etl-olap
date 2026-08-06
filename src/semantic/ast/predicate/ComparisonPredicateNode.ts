@@ -1,3 +1,5 @@
+import type { ColumnValue } from "../../../types/ColumnValue.js";
+import { asExpressionNode } from "../expression/asExpressionNode.js";
 import {
   type ResolvedExpressionNode,
   type ExpressionNode,
@@ -6,11 +8,17 @@ import {
 export class ComparisonPredicateNode {
   readonly kind = "comparison" as const;
 
+  public readonly left: ExpressionNode;
+  public readonly right: ExpressionNode;
+
   constructor(
-    public left: ExpressionNode,
+    left: ExpressionNode | ColumnValue,
     public operator: ComparisonOperator,
-    public right: ExpressionNode,
-  ) {}
+    right: ExpressionNode | ColumnValue,
+  ) {
+    this.left = asExpressionNode(left);
+    this.right = asExpressionNode(right);
+  }
 }
 
 export class ResolvedComparisonPredicateNode {

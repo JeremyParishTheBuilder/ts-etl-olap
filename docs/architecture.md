@@ -2,7 +2,7 @@
 
 ## Overall Flow
 
-```
+```text
 External source
     ↓
 Discovery
@@ -28,28 +28,28 @@ Export
 
 The system is divided into three major layers:
 
-- **Mapping** — converts external data into a relational representation.
-- **Engine** — maintains relational correctness and executes SQL.
-- **Validation** — applies business rules independently of storage.
+* **Mapping** — converts external data into a relational representation.
+* **Engine / Relational** — owns relational state, correctness, and execution.
+* **Validation** — evaluates business rules independently of committed relational state.
 
 ---
 
 # Mapping
 
-The mapping layer transforms external data into relational rows.
+The Mapping layer transforms external data into relational rows.
 
 It consists of four stages:
 
-- Discovery
-- Import
-- Schema Inference
-- Database Construction
+* Discovery
+* Import
+* Schema Inference
+* Database Construction
 
-Discovery traverses arbitrary hierarchical data and produces immutable DiscoveryResults. Discovery is composed of DiscoveryNodes, DiscoveryNavigators, and optional DiscoveryDecoders, allowing the same discovery model to operate across filesystems, JSON, XML, and future structured sources.
+Discovery traverses arbitrary hierarchical data and produces immutable `DiscoveryResult`s. Discovery is composed of `DiscoveryNode`s, `DiscoveryNavigator`s, and optional `DiscoveryDecoder`s, allowing the same model to operate across filesystems, JSON, and other structured sources.
 
-Import consumes DiscoveryResults using ImportNodes and ImportMappings. Expressions transform captured values into relational fields while automatic inference handles common mapping scenarios.
+Import consumes discovery results using `ImportNode`s and `ImportMapping`s. Expressions transform captured values into relational fields while automatic inference handles common mapping scenarios.
 
-Schema inference observes imported values to construct a `DatabaseSchema`.
+Schema inference observes imported values to construct relational schema.
 
 Finally, `DatabaseBuilder` combines schema and imported rows into immutable relational objects.
 
@@ -61,12 +61,12 @@ Finally, `DatabaseBuilder` combines schema and imported rows into immutable rela
 
 It returns an `ImportPipelineResult` containing:
 
-- discoveries
-- imports
-- schema
-- databases
+* discoveries
+* imports
+* schema
+* databases
 
-This exposes every intermediate stage for tooling and debugging while supporting a simple installation workflow:
+This exposes intermediate stages for tooling and debugging while supporting installation through:
 
 ```ts
 engine.install(result.databases);
@@ -74,66 +74,73 @@ engine.install(result.databases);
 
 ---
 
-# Engine
+# Engine and Relational
 
-The engine owns committed relational state and executes SQL.
+The Engine owns committed relational state and executes SQL.
 
-Its primary components are:
+The Relational module provides the immutable relational representation and structural correctness mechanisms used by the Engine.
 
-- `Engine`
-- `Transaction`
-- `ExecutionContext`
-- `Databases`
-- `Database`
-- `Table`
+Primary runtime components include:
 
-Semantic analysis resolves schema references and compiles expressions and predicates into executable runtime objects before execution.
+* `Engine`
+* `Transaction`
+* `ExecutionContext`
+* `Databases`
+* `Database`
+* `Table`
+
+Semantic analysis resolves schema references and compiles expressions, predicates, mutations, and queries before execution.
 
 Mutations produce immutable `Action`s.
 
-Queries produce immutable `QueryPlan`s evaluated against `RowView`s.
+Queries produce immutable `QueryPlan`s evaluated against relational snapshots and `RowView`s.
+
+Relational constraints enforce structural integrity during execution.
 
 ---
 
 # DSL
 
-The DSL provides fluent builders for discovery, import mappings, SQL statements, expressions, and predicates.
+The DSL provides fluent builders for:
 
-Runtime builders evaluate directly against typed contexts, while SQL builders construct abstract syntax trees for semantic analysis.
+* discovery
+* import mappings
+* SQL statements
+* expressions
+* predicates
+
+Runtime builders evaluate directly against typed contexts, while SQL builders construct ASTs for semantic analysis.
 
 ---
 
 # Validation
 
-Validation is intentionally separate from storage.
+Validation is intentionally separate from relational storage and structural integrity.
 
-The engine enforces structural relational rules such as:
+The Relational layer enforces constraints required for relational correctness.
 
-- primary keys
-- unique constraints
-- foreign keys
-- check constraints
+The Validation layer defines additional business rules and evaluates them against an existing relational database.
 
-Business rules are evaluated separately before export or publication.
+Validation rules reuse constraint statements and the existing SQL/semantic infrastructure. They execute inside transactions and roll back after evaluation, producing structured `ValidationReport`s rather than changing committed state.
 
 ---
 
 # Core Invariants
 
-- Tables and databases are immutable.
-- Actions, query plans, expressions, and predicates are pure.
-- Query execution never mutates committed state.
-- Schema references are resolved before execution.
-- Referential propagation operates against immutable snapshots.
-- Structural validation belongs to the engine.
-- Business validation belongs to the validation layer.
-- Discovery is independent of import and relational schema.
+* Tables and databases are immutable.
+* Actions, query plans, expressions, and predicates operate without mutating committed state.
+* Query execution does not mutate committed state.
+* Schema references are resolved before execution.
+* Referential propagation operates against immutable relational state.
+* Structural validation belongs to the Relational/Engine layer.
+* Business validation belongs to the Validation layer.
+* Discovery is independent of import and relational schema.
 
 ---
 
 # Architectural Boundary
 
-```
+```text
 External Data
       │
       ▼
@@ -143,7 +150,7 @@ External Data
 Relational Database
       │
       ▼
- Engine
+ Engine / Relational
       │
       ▼
  Validation
@@ -152,8 +159,8 @@ Relational Database
    Export
 ```
 
-The mapping layer is responsible for **representing** external data.
+The Mapping layer is responsible for **representing external data**.
 
-The engine is responsible for **relational correctness**.
+The Engine and Relational layers are responsible for **relational state, execution, and structural correctness**.
 
-The validation layer is responsible for **business correctness**.
+The Validation layer is responsible for **business correctness**.

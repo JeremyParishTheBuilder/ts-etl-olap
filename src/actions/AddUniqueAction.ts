@@ -1,6 +1,7 @@
 import { type Action } from "./Action.js";
 import { type Databases } from "../relational/Databases.js";
 
+// TODO, confirm unused
 export class AddUniqueAction implements Action {
   constructor(
     private dbName: string,

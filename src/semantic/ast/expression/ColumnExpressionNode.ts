@@ -1,9 +1,12 @@
-import { asExpressionNode } from "../../../dsl/expression/asExpressionNode.js";
 import { type ColumnId } from "../../../relational/Column.js";
-import { type ColumnValue } from "../../../types/ColumnValue.js";
+import type { ColumnValue } from "../../../types/ColumnValue.js";
 import { ComparisonPredicateNode } from "../predicate/ComparisonPredicateNode.js";
+import { IsNotNullPredicateNode } from "../predicate/IsNotNullPredicateNode.js";
+import { IsNullPredicateNode } from "../predicate/IsNullPredicateNode.js";
+import { asExpressionNode } from "./asExpressionNode.js";
 import { BinaryExpressionNode } from "./BinaryExpressionNode.js";
-import { type ExpressionNode, ExpressionNodeBase } from "./ExpressionNode.js";
+import type { ExpressionNode } from "./ExpressionNode.js";
+import { ExpressionNodeBase } from "./ExpressionNodeBase.js";
 
 export class ResolvedColumnExpressionNode {
   readonly kind = "column" as const;
@@ -17,8 +20,6 @@ export class ColumnExpressionNode extends ExpressionNodeBase {
   constructor(public columnName: string) {
     super();
   }
-
-  // -- Predicates --
 
   eq(expr: ExpressionNode | ColumnValue) {
     return new ComparisonPredicateNode(this, "eq", asExpressionNode(expr));
@@ -44,46 +45,13 @@ export class ColumnExpressionNode extends ExpressionNodeBase {
     return new ComparisonPredicateNode(this, "lte", asExpressionNode(expr));
   }
 
-  // isNull() {
-  //   return new UnaryLogicalPredicateNode(
-  //     this.columnNode,
-  //     "is_null",
-  //     asExpressionNode(null),
-  //   );
-  // }
+  isNull() {
+    return new IsNullPredicateNode(this);
+  }
 
-  // isNotNull() {
-  //   this.parent.addWhereClause({
-  //     type: "null_check",
-  //     column: this.column,
-  //     operator: "is_not_null",
-  //   }, this.logicalOp);
-
-  //   return this.parent;
-  // }
-
-  // between(lower: ColumnValue, upper: ColumnValue) {
-  //   this.parent.addWhereClause({
-  //     type: "between",
-  //     column: this.column,
-  //     lower: lower,
-  //     upper: upper,
-  //   }, this.logicalOp);
-
-  //   return this.parent;
-  // }
-
-  // in(values: ColumnValue[]) {
-  //   this.parent.addWhereClause({
-  //     type: "in",
-  //     column: this.column,
-  //     values: values,
-  //   }, this.logicalOp);
-
-  //   return this.parent;
-  // }
-
-  // -- Expressions --
+  isNotNull() {
+    return new IsNotNullPredicateNode(this);
+  }
 
   add(expr: ExpressionNode | ColumnValue) {
     return new BinaryExpressionNode(this, "add", asExpressionNode(expr));

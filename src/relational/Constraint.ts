@@ -11,7 +11,8 @@ export type PrimaryKeySpec = {
 export type UniqueSpec = {
   kind: CONSTRAINT_KIND.unique;
   name: string;
-  columns: string[];
+  columns?: string[];
+  using?: string;
 };
 
 export type ForeignKeySpec = {

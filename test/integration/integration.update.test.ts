@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
-import { freshEngine } from '../engine/freshEngine.js';
-
-function createTestSql() {
-  return freshEngine().input() as PostgresInputBatch;
-}
+import { createTestSql } from '../utils/engineHelpers.ts';
+import { case_, col } from '../../src/semantic/ast/dsl.ts';
 
 describe("Integration::update", () => {
   it("updates a single row", () => {
@@ -37,7 +33,7 @@ describe("Integration::update", () => {
         Name: "Bob",
       })
       .where(
-        sql.column("Id").eq(1)
+        col("Id").eq(1)
       )
       .execute();
 
@@ -87,7 +83,7 @@ describe("Integration::update", () => {
         Name: "Updated",
       })
       .where(
-        sql.column("Id").gt(1)
+        col("Id").gt(1)
       )
       .execute();
 
@@ -145,7 +141,7 @@ describe("Integration::update", () => {
           Id: 2,
         })
         .where(
-          sql.column("Id").eq(1)
+          col("Id").eq(1)
         )
         .execute();
     }).toThrow();
@@ -185,7 +181,7 @@ describe("Integration::update", () => {
           Email: "bob@test.com",
         })
         .where(
-          sql.column("Id").eq(1)
+          col("Id").eq(1)
         )
         .execute();
     }).toThrow();
@@ -240,7 +236,7 @@ describe("Integration::update", () => {
           UserId: 999,
         })
         .where(
-          sql.column("Id").eq(1)
+          col("Id").eq(1)
         )
         .execute();
     }).toThrow();
@@ -295,7 +291,7 @@ describe("Integration::update", () => {
         Id: 2,
       })
       .where(
-        sql.column("Id").eq(1)
+        col("Id").eq(1)
       )
       .execute();
 
@@ -334,10 +330,10 @@ describe("Integration::update", () => {
     sql
       .update("Users")
       .set({
-        Id: sql.case()
-          .when(sql.column("Id").eq(1)).then(2)
-          .when(sql.column("Id").eq(2)).then(1)
-          .else(sql.column("Id")),
+        Id: case_()
+          .when(col("Id").eq(1)).then(2)
+          .when(col("Id").eq(2)).then(1)
+          .else(col("Id")),
       })
       .execute();
 
@@ -371,7 +367,7 @@ describe("Integration::update", () => {
     sql
     .update("Users")
     .set({
-      Id: sql.column("Id").add(1),
+      Id: col("Id").add(1),
     })
     .execute();
 
@@ -401,7 +397,7 @@ describe("Integration::update", () => {
     sql.alterTable("Users")
       .addConstraint("CHK_Adult")
       .check(
-        sql.column("Age").gte(18)
+        col("Age").gte(18)
       )
       .execute();
 
@@ -440,7 +436,7 @@ describe("Integration::update", () => {
     sql.alterTable("Users")
       .addConstraint("CHK_Adult")
       .check(
-        sql.column("Age").gte(18)
+        col("Age").gte(18)
       )
       .execute();
 
@@ -478,7 +474,7 @@ describe("Integration::update", () => {
     sql.alterTable("Users")
       .addConstraint("CHK_Adult")
       .check(
-        sql.column("Age").gte(18)
+        col("Age").gte(18)
       )
       .execute();
 
@@ -493,7 +489,7 @@ describe("Integration::update", () => {
       sql
         .update("Users")
         .set({
-          Age: sql.column("Age").subtract(10)
+          Age: col("Age").subtract(10)
         })
         .execute();
     }).toThrow();

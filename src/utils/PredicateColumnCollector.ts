@@ -1,6 +1,6 @@
-import { type ResolvedExpressionNode } from "../evaluation/expression/Expression.js";
 import { type ResolvedPredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
 import { type ColumnId } from "../relational/Column.js";
+import type { ResolvedExpressionNode } from "../semantic/ast/expression/ExpressionNode.js";
 
 export class ResolvedPredicateColumnCollector {
   public static collect(predicate: ResolvedPredicateNode): ColumnId[] {
@@ -36,6 +36,14 @@ export class ResolvedPredicateColumnCollector {
 
       case "not":
         this.collectPredicate(predicate.inner, columns);
+        return;
+
+      case "is_null":
+        this.collectExpression(predicate.inner, columns);
+        return;
+
+      case "is_not_null":
+        this.collectExpression(predicate.inner, columns);
         return;
 
       default:

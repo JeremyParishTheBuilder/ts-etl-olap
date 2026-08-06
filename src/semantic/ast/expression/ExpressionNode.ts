@@ -26,11 +26,3 @@ export type ExpressionNode =
   | CaseExpressionNode
   | BinaryExpressionNode
   | ConcatExpressionNode;
-
-export abstract class ExpressionNodeBase {
-  abstract readonly kind: string;
-}
-
-export function isExpressionNode(value: unknown): value is ExpressionNode {
-  return typeof value === "object" && value !== null && "kind" in value;
-}

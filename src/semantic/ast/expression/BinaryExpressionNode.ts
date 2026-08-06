@@ -1,19 +1,26 @@
+import type { ColumnValue } from "../../../types/ColumnValue.js";
+import { asExpressionNode } from "./asExpressionNode.js";
 import {
   type ExpressionNode,
-  ExpressionNodeBase,
   type ResolvedExpressionNode,
 } from "./ExpressionNode.js";
+import { ExpressionNodeBase } from "./ExpressionNodeBase.js";
 
 export class BinaryExpressionNode extends ExpressionNodeBase {
   readonly kind = "binary" as const;
 
+  public readonly left: ExpressionNode;
+  public readonly right: ExpressionNode;
+
   constructor(
-    public readonly left: ExpressionNode,
+    left: ExpressionNode | ColumnValue,
     public readonly operator:
       "add" | "subtract" | "multiply" | "divide" | "mod",
-    public readonly right: ExpressionNode,
+    right: ExpressionNode | ColumnValue,
   ) {
     super();
+    this.left = asExpressionNode(left);
+    this.right = asExpressionNode(right);
   }
 }
 

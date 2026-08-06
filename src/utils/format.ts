@@ -3,17 +3,6 @@ export function capitalize(str: string): string {
   return str[0].toUpperCase() + str.slice(1);
 }
 
-// export function pathToPascalCase(parts: readonly string[]): string {
-//   return parts
-//     .flatMap(part => part.split("_"))
-//     .filter(part => part.length > 0)
-//     .map(part =>
-//       part[0].toUpperCase() +
-//       part.slice(1)
-//     )
-//     .join("");
-// }
-
 export function pathToPascalCase(parts: readonly string[]): string {
   return parts.map(toPascalCase).join("");
 }

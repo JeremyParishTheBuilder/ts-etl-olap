@@ -16,9 +16,9 @@ import { DropPrimaryKeyAction } from "../actions/DropPrimaryKeyAction.js";
 import { DropCheckAction } from "../actions/DropCheckAction.js";
 import { DropIndexAction } from "../actions/DropIndexAction.js";
 import { AddIndexAction } from "../actions/AddIndexAction.js";
-import { AddUniqueAction } from "../actions/AddUniqueAction.js";
 import { DropUniqueAction } from "../actions/DropUniqueAction.js";
 import { type Column } from "../relational/Column.js";
+import { AddUniqueConstraintAction } from "../actions/AddUniqueConstraintAction.js";
 
 export function bindAlterTable(
   semantic: SemanticAnalyzer,
@@ -35,7 +35,7 @@ export function bindAlterTable(
     const spec = stmt.constraint;
 
     let columns: Column[] = [];
-    if ("columns" in spec) {
+    if ("columns" in spec && spec.columns) {
       columns = spec.columns?.map((c) => table.columns.requireByName(c));
     }
 
@@ -97,19 +97,18 @@ export function bindAlterTable(
         break;
 
       case CONSTRAINT_KIND.unique:
-        stmtActions.push(
-          new AddIndexAction(dbName, tableName, {
-            ...spec,
-            unique: true,
-            nullsDistinct: ctx.rules.constraints.nullsDistinct,
-          }),
-        );
+        if ((spec.columns === undefined) === (spec.using === undefined)) {
+          throw new Error(
+            "UNIQUE constraint requires exactly one of 'columns' or 'using'.",
+          );
+        }
 
         stmtActions.push(
-          new AddUniqueAction(dbName, tableName, {
+          new AddUniqueConstraintAction(dbName, tableName, {
             name: spec.name,
-            indexName: /*spec.using ?? */ spec.name,
-            ownsIndex: true,
+            columns: spec.columns,
+            using: spec.using,
+            nullsDistinct: ctx.rules.constraints.nullsDistinct,
           }),
         );
 

@@ -32,10 +32,9 @@ Export
 * Expression-based computed fields and captures
 * Automatic mapping of nested structured data
 * Automatic inference of array mappings
-* Automatic inference of table names and column prefixes
 * Automatic relational schema inference
 * Immutable relational database representation
-* SQL-like mutation support (INSERT, UPDATE, DELETE, etc.)
+* SQL-like mutation support
 * Deterministic query execution through compiled query plans
 * Immediate relational constraint enforcement (PRIMARY KEY, UNIQUE, FOREIGN KEY, CHECK)
 * Deferred business validation independent of import
@@ -56,12 +55,12 @@ Export
 * Separation of discovery, import, schema inference, execution, validation, and export
 * Stable runtime identifiers with case-insensitive user-facing names
 * Pure execution over immutable database state
-* Discovery is independent of the underlying storage medium.
-* Navigation and decoding are separate concerns.
+* Discovery is independent of the underlying storage medium
+* Navigation and decoding are separate concerns
 
 ## Execution Model
 
-* Discovery traverses hierarchical data through navigators and optional decoders to produce immutable DiscoveryResults.
+* Discovery traverses hierarchical data through navigators and optional decoders to produce immutable `DiscoveryResult`s.
 * Import nodes consume discovery results to produce immutable `ImportResult`s.
 * Import mappings evaluate expressions over captured values to produce relational fields.
 * Import results sharing the same import identity are assembled into logical relational rows.
@@ -72,7 +71,7 @@ Export
 * Semantic analysis binds schema references and compiles executable mutations and queries.
 * Mutations execute as immutable state transformations.
 * Queries execute as compiled query plans over immutable database snapshots.
-* Validation verifies business-specific rules independently of import.
+* Validation evaluates business rules against relational databases without modifying committed state.
 
 ## Interface Layer
 

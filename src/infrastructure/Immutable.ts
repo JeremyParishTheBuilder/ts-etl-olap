@@ -20,14 +20,13 @@ export abstract class Immutable {
 
     (clone as Immutable).afterClone(clone);
 
-    clone.validate();
-
     return clone.seal();
   }
 
   protected afterClone(_instance: this): void {} // hook
 
   protected seal(): this {
+    this.validate();
     return Object.freeze(this);
   }
 }

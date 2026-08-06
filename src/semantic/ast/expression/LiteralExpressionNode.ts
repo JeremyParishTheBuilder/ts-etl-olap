@@ -1,5 +1,5 @@
 import { type ColumnValue } from "../../../types/ColumnValue.js";
-import { ExpressionNodeBase } from "./ExpressionNode.js";
+import { ExpressionNodeBase } from "./ExpressionNodeBase.js";
 
 export class LiteralExpressionNode extends ExpressionNodeBase {
   readonly kind = "literal" as const;

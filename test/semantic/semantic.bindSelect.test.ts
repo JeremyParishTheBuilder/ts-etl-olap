@@ -4,10 +4,10 @@ import { ExecutionContext } from '../../src/engine/ExecutionContext.js';
 import { SemanticAnalyzer } from '../../src/semantic/SemanticAnalyzer.js';
 import { SelectBuilder } from '../../src/statements/index.js';
 import { bindSelect } from '../../src/semantic/select.js';
-import { freshEngine } from '../engine/freshEngine.js';
 import { Engine } from '../../src/engine/Engine.js';
 import { buildDatabase, buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 import { ColumnExpressionNode } from '../../src/semantic/ast/expression/ColumnExpressionNode.js';
+import { freshEngine } from '../utils/engineHelpers.js';
 
 describe('SemanticAnalyzer::bindSelect', () => {
   let engine: Engine;
@@ -129,8 +129,8 @@ describe('SemanticAnalyzer::bindSelect', () => {
     const builder = new SelectBuilder("*");
     builder.from("Users");
     builder.where(
-          new ColumnExpressionNode("Age").gt(15)
-        );
+      new ColumnExpressionNode("Age").gt(15)
+    );
 
     const stmt = builder.createStatement();
 

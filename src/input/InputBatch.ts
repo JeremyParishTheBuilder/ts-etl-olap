@@ -12,20 +12,15 @@ import {
   DeleteFromBuilder,
   type Builder,
   isStatementBuilder,
+  type ConstraintStatement,
 } from "../statements/index.js";
 import { type InlineColumnSpec } from "../relational/Column.js";
 import { type ConstraintSpec } from "../relational/Constraint.js";
 import { type ReferentialAction } from "../relational/ReferentialAction.js";
-import { CaseBuilder } from "../semantic/ast/expression/CaseBuilder.js";
-import { type ExpressionNode } from "../evaluation/expression/Expression.js";
-import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
-import { ColumnExpressionNode } from "../semantic/ast/expression/ColumnExpressionNode.js";
-import { NotPredicateNode } from "../semantic/ast/predicate/NotPredicateNode.js";
-import { XorPredicateNode } from "../semantic/ast/predicate/XorPredicateNode.js";
-import { OrPredicateNode } from "../semantic/ast/predicate/OrPredicateNode.js";
-import { AndPredicateNode } from "../semantic/ast/predicate/AndPredicateNode.js";
 import type { ColumnValue } from "../types/ColumnValue.js";
+import { CONSTRAINT_KIND } from "../relational/ConstraintKind.js";
+import type { ExpressionNode } from "../semantic/ast/expression/ExpressionNode.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -175,7 +170,7 @@ export abstract class InputBatch {
   }
 
   protected set(
-    data: Record<string, ExpressionNode | ExplicitInput>,
+    data: Record<string, ExpressionNode | ColumnValue>, // TODO, change to ExplicitInput? for Keyword detection
     fragment: string = "SET",
   ) {
     this.assertAllowed("set", fragment);
@@ -222,12 +217,12 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected foreignKey(columns: string[], fragment: string = "FOREIGN KEY") {
-    this.assertAllowed("foreignKey", fragment);
+  protected unique(columns: string[], fragment: string = "UNIQUE") {
+    this.assertAllowed("unique", fragment);
     if (!(this.currentBuilder instanceof AlterTableBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of AlterTable`);
     }
-    this.currentBuilder.foreignKey(columns);
+    this.currentBuilder.unique(columns);
     return this;
   }
 
@@ -237,6 +232,15 @@ export abstract class InputBatch {
       throw new Error(`Cannot call '${fragment}' outside of AlterTable`);
     }
     this.currentBuilder.check(predicate);
+    return this;
+  }
+
+  protected foreignKey(columns: string[], fragment: string = "FOREIGN KEY") {
+    this.assertAllowed("foreignKey", fragment);
+    if (!(this.currentBuilder instanceof AlterTableBuilder)) {
+      throw new Error(`Cannot call '${fragment}' outside of AlterTable`);
+    }
+    this.currentBuilder.foreignKey(columns);
     return this;
   }
 
@@ -308,28 +312,22 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected and(left: PredicateNode, right: PredicateNode) {
-    return new AndPredicateNode([left, right]);
+  asStatement(): Statement | undefined {
+    this.finalizePreviousStatement();
+
+    return this.statements.pop();
   }
 
-  protected or(left: PredicateNode, right: PredicateNode) {
-    return new OrPredicateNode([left, right]);
-  }
+  asConstraintStatement(): ConstraintStatement {
+    const statement = this.asStatement();
 
-  protected xor(left: PredicateNode, right: PredicateNode) {
-    return new XorPredicateNode(left, right);
-  }
+    if (!isConstraintStatement(statement)) {
+      throw new Error(
+        "Statement is not a Unique, Check, or ForeignKey addition statement.",
+      );
+    }
 
-  protected not(inner: PredicateNode) {
-    return new NotPredicateNode(inner);
-  }
-
-  protected case() {
-    return new CaseBuilder();
-  }
-
-  protected column(name: string) {
-    return new ColumnExpressionNode(name);
+    return statement;
   }
 
   execute() {
@@ -347,4 +345,14 @@ export abstract class InputBatch {
 
     return resultIterators;
   }
+}
+
+function isConstraintStatement(
+  statement: Statement | undefined,
+): statement is ConstraintStatement {
+  return (
+    statement?.kind === "alter_table" &&
+    statement.op === "add_constraint" &&
+    statement.constraint.kind !== CONSTRAINT_KIND.primaryKey
+  );
 }

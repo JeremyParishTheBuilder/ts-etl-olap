@@ -1,16 +1,10 @@
 import { describe, it, expect } from 'vitest';
-
+import { case_, col } from "../../src/semantic/ast/dsl.js";
 import { ComparisonPredicate } from '../../src/evaluation/predicate/ComparisonPredicate.js';
 import { ColumnExpression } from '../../src/evaluation/expression/ColumnExpression.js';
 import { LiteralExpression } from '../../src/evaluation/expression/LiteralExpression.js';
 import { type RowView } from '../../src/relational/RowView.js';
-import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
-import { freshEngine } from '../engine/freshEngine.js';
 import { CaseExpression } from '../../src/evaluation/expression/CaseExpression.js';
-
-function createTestSql() {
-  return freshEngine().input() as PostgresInputBatch;
-}
 
 describe('Expression::caseExpression', () => {
   it("evaluates first matching CASE branch", () => {
@@ -47,11 +41,9 @@ describe('Expression::caseExpression', () => {
   });
 
   it("case builder constructs correct expression tree", () => {
-    const sql = createTestSql();
-
-    const expr = sql.case()
-      .when(sql.column("Id").eq(1)).then("A")
-      .when(sql.column("Id").eq(2)).then("B") 
+    const expr = case_()
+      .when(col("Id").eq(1)).then("A")
+      .when(col("Id").eq(2)).then("B") 
       .else("C");
 
     expect(expr.kind).toBe("case");
@@ -59,11 +51,9 @@ describe('Expression::caseExpression', () => {
   });
 
   it("allows column expressions in CASE ELSE", () => {
-    const sql = createTestSql();
-
-    const expr = sql.case()
-      .when(sql.column("Id").eq(1)).then(10)
-      .else(sql.column("Id"));
+    const expr = case_()
+      .when(col("Id").eq(1)).then(10)
+      .else(col("Id"));
 
     expect(expr.kind).toBe("case");
   });
