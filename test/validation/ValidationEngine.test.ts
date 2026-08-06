@@ -600,3 +600,370 @@ describe("ValidationEngine::validate", () => {
     ).toThrow();
   });
 });
+
+describe("ValidationEngine::validate participants", () => {
+  it("resolves CHECK violation participants", () => {
+    const engine = freshEngine();
+    const sql = createTestSql(engine);
+
+    sql.createDatabase("DB1").execute();
+
+    sql.useDatabase("DB1").execute();
+
+    sql.begin().execute();
+
+    sql.createTable("Users", {
+      Id: {
+        type: Number,
+        nullable: false,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Users", ["Id"])
+      .values([
+        [1],
+        [-1],
+      ])
+      .execute();
+
+    sql.commit().execute();
+
+    const ruleset = ValidationRuleset
+      .create({ name: "User Validation" })
+      .withRule({
+        name: "Positive IDs",
+        statements: [
+          sql
+            .alterTable("Users")
+            .addConstraint("PositiveIds")
+            .check(col("Id").gt(0))
+            .asConstraintStatement(),
+        ],
+      });
+
+    const report = ValidationEngine.validate({
+      engine,
+      databaseName: "DB1",
+      ruleset,
+    });
+
+    expect(report.passed).toBe(false);
+    expect(report.violationCount).toBe(1);
+
+    const participants = report.violations[0].participants;
+
+    expect(participants).toHaveLength(1);
+    expect(participants[0].tableName).toBe("Users");
+    expect(participants[0].rowId).toBe(1);
+    expect(participants[0].columnNames).toEqual(["Id"]);
+    expect(participants[0].columnValues).toEqual([-1]);
+  });
+
+  it("resolves UNIQUE violation participants", () => {
+    const engine = freshEngine();
+    const sql = createTestSql(engine);
+
+    sql.createDatabase("DB1").execute();
+
+    sql.useDatabase("DB1").execute();
+
+    sql.begin().execute();
+
+    sql.createTable("Users", {
+      Id: {
+        type: Number,
+        nullable: false,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Users", ["Id"])
+      .values([
+        [1],
+        [1],
+      ])
+      .execute();
+
+    sql.commit().execute();
+
+    const ruleset = ValidationRuleset
+      .create({ name: "User Validation" })
+      .withRule({
+        name: "Unique IDs",
+        statements: [
+          sql
+            .alterTable("Users")
+            .addConstraint("UniqueIds")
+            .unique(["Id"])
+            .asConstraintStatement(),
+        ],
+      });
+
+    const report = ValidationEngine.validate({
+      engine,
+      databaseName: "DB1",
+      ruleset,
+    });
+
+    expect(report.passed).toBe(false);
+    expect(report.violationCount).toBe(1);
+
+    const participants = report.violations[0].participants;
+
+    expect(participants).toHaveLength(2);
+
+    expect(participants[0].tableName).toBe("Users");
+    expect(participants[0].rowId).toBe(0);
+    expect(participants[0].columnNames).toEqual(["Id"]);
+    expect(participants[0].columnValues).toEqual([1]);
+
+    expect(participants[1].tableName).toBe("Users");
+    expect(participants[1].rowId).toBe(1);
+    expect(participants[1].columnNames).toEqual(["Id"]);
+    expect(participants[1].columnValues).toEqual([1]);
+
+    expect(participants[0].referencedTable).toBeUndefined();
+    expect(participants[0].referencedTableName).toBeUndefined();
+    expect(participants[0].referencedColumns).toBeUndefined();
+    expect(participants[0].referencedColumnNames).toBeUndefined();
+  });
+
+  it("resolves FOREIGN KEY violation participants", () => {
+    const engine = freshEngine();
+    const sql = createTestSql(engine);
+
+    sql.createDatabase("DB1").execute();
+
+    sql.useDatabase("DB1").execute();
+
+    sql.begin().execute();
+
+    sql.createTable("Parents", {
+      Id: {
+        type: Number,
+        nullable: false,
+        primaryKey: true,
+      },
+    }).execute();
+
+    sql.createTable("Children", {
+      ParentId: {
+        type: Number,
+        nullable: false,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Parents", ["Id"])
+      .values([
+        [1],
+      ])
+      .execute();
+
+    sql
+      .insertInto("Children", ["ParentId"])
+      .values([
+        [1],
+        [999],
+      ])
+      .execute();
+
+    sql.commit().execute();
+
+    const ruleset = ValidationRuleset
+      .create({ name: "Relationship Validation" })
+      .withRule({
+        name: "Valid Parent References",
+        statements: [
+          sql
+            .alterTable("Children")
+            .addConstraint("ValidParentReferences")
+            .foreignKey(["ParentId"])
+            .references("Parents", ["Id"])
+            .asConstraintStatement(),
+        ],
+      });
+
+    const report = ValidationEngine.validate({
+      engine,
+      databaseName: "DB1",
+      ruleset,
+    });
+
+    expect(report.passed).toBe(false);
+    expect(report.violationCount).toBe(1);
+
+    const participants = report.violations[0].participants;
+
+    expect(participants).toHaveLength(1);
+
+    expect(participants[0].tableName).toBe("Children");
+    expect(participants[0].rowId).toBe(1);
+    expect(participants[0].columnNames).toEqual(["ParentId"]);
+    expect(participants[0].columnValues).toEqual([999]);
+
+    expect(participants[0].referencedTableName).toBe("Parents");
+    expect(participants[0].referencedColumns).toBeDefined();
+    expect(participants[0].referencedColumnNames).toEqual(["Id"]);
+  });
+});
+
+describe("ValidationEngine::validate rule evaluation", () => {
+  it("stops evaluating a rule after its first failing statement", () => {
+    const engine = freshEngine();
+    const sql = createTestSql(engine);
+
+    sql.createDatabase("DB1").execute();
+
+    sql.useDatabase("DB1").execute();
+
+    sql.begin().execute();
+
+    sql.createTable("Users", {
+      Id: {
+        type: Number,
+        nullable: false,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Users", ["Id"])
+      .values([
+        [-1],
+      ])
+      .execute();
+
+    sql.commit().execute();
+
+    const ruleset = ValidationRuleset
+      .create({ name: "User Validation" })
+      .withRule({
+        name: "User Constraints",
+        statements: [
+          sql
+            .alterTable("Users")
+            .addConstraint("PositiveIds")
+            .check(col("Id").gt(0))
+            .asConstraintStatement(),
+
+          sql
+            .alterTable("Users")
+            .addConstraint("AnotherPositiveIds")
+            .check(col("Id").gt(100))
+            .asConstraintStatement(),
+        ],
+      });
+
+    const report = ValidationEngine.validate({
+      engine,
+      databaseName: "DB1",
+      ruleset,
+    });
+
+    expect(report.violationCount).toBe(1);
+    expect(report.ruleResults).toHaveLength(1);
+    expect(report.ruleResults[0].violations).toHaveLength(1);
+  });
+});
+
+it("does not modify committed database state", () => {
+  const engine = freshEngine();
+  const sql = createTestSql(engine);
+
+  sql.createDatabase("DB1").execute();
+
+  sql.useDatabase("DB1").execute();
+
+  sql.begin().execute();
+
+  sql.createTable("Users", {
+    Id: {
+      type: Number,
+      nullable: false,
+    },
+  }).execute();
+
+  sql
+    .insertInto("Users", ["Id"])
+    .values([
+      [1],
+      [1],
+    ])
+    .execute();
+
+  sql.commit().execute();
+
+  const databaseBefore = engine.databases.requireByName("DB1");
+  const tableBefore = databaseBefore.tables.requireByName("Users");
+
+  const ruleset = ValidationRuleset
+    .create({ name: "User Validation" })
+    .withRule({
+      name: "Unique IDs",
+      statements: [
+        sql
+          .alterTable("Users")
+          .addConstraint("UniqueIds")
+          .unique(["Id"])
+          .asConstraintStatement(),
+      ],
+    });
+
+  const report = ValidationEngine.validate({
+    engine,
+    databaseName: "DB1",
+    ruleset,
+  });
+
+  expect(report.failed).toBe(true);
+
+  const databaseAfter = engine.databases.requireByName("DB1");
+  const tableAfter = databaseAfter.tables.requireByName("Users");
+
+  expect(databaseAfter).toBe(databaseBefore);
+  expect(tableAfter).toBe(tableBefore);
+  expect(tableAfter.requireRow(0)).toEqual([1]);
+  expect(tableAfter.requireRow(1)).toEqual([1]);
+});
+
+it("propagates unexpected errors", () => {
+  const engine = freshEngine();
+  const sql = createTestSql(engine);
+
+  sql.createDatabase("DB1").execute();
+
+  sql.useDatabase("DB1").execute();
+
+  sql.begin().execute();
+
+  sql.createTable("Users", {
+    Id: {
+      type: Number,
+      nullable: false,
+    },
+  }).execute();
+
+  sql.commit().execute();
+
+  const ruleset = ValidationRuleset
+    .create({ name: "User Validation" })
+    .withRule({
+      name: "Missing Table",
+      statements: [
+        sql
+          .alterTable("MissingTable")
+          .addConstraint("MissingConstraint")
+          .unique(["Id"])
+          .asConstraintStatement(),
+      ],
+    });
+
+  expect(() =>
+    ValidationEngine.validate({
+      engine,
+      databaseName: "DB1",
+      ruleset,
+    }),
+  ).toThrow();
+});
