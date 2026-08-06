@@ -13,7 +13,7 @@ export class ValidationViolation {
 
   toJSON() {
     return {
-      participants: this.participants.map(participant => ({
+      participants: this.participants.map((participant) => ({
         table: participant.table,
         tableName: participant.tableName,
         rowId: participant.rowId,

@@ -1,10 +1,10 @@
 import { CaseExpressionNode } from "./CaseExpressionNode.js";
-import { type ExpressionNode } from "../../../evaluation/expression/Expression.js";
 import { type PredicateNode } from "../predicate/PredicateNode.js";
 import { WhenBuilder } from "./WhenBuilder.js";
 import { type CaseBranchNode } from "./CaseBranchNode.js";
-import { type ExplicitInput } from "../../../types/ExplicitInput.js";
-import { asExpressionNode } from "../../../dsl/expression/asExpressionNode.js";
+import { asExpressionNode } from "./asExpressionNode.js";
+import type { ExpressionNode } from "./ExpressionNode.js";
+import type { ColumnValue } from "../../../types/ColumnValue.js";
 
 export class CaseBuilder {
   private branches: CaseBranchNode[] = [];
@@ -17,7 +17,7 @@ export class CaseBuilder {
     this.branches.push(branch);
   }
 
-  else(expr: ExpressionNode | ExplicitInput) {
+  else(expr: ExpressionNode | ColumnValue) {
     return new CaseExpressionNode(this.branches, asExpressionNode(expr));
   }
 }

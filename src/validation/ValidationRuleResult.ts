@@ -30,7 +30,7 @@ export class ValidationRuleResult {
       rule: this.rule.name,
       description: this.rule.description,
       passed: this.passed,
-      violations: this.violations.map(violation => violation.toJSON()),
+      violations: this.violations.map((violation) => violation.toJSON()),
     };
   }
 }

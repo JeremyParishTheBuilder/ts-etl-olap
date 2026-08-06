@@ -27,6 +27,7 @@ pnpm-debug.log*
 .vshistory/
 
 # VS Code files for those working on multiple tools
+.vs/
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -37,5 +38,8 @@ pnpm-debug.log*
 # Local History for Visual Studio Code
 .history/
 
-
+# Other directories
 .continue/
+.cache/
+.scripts/
+.ai/

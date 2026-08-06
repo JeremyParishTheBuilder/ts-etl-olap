@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
-import { freshEngine } from '../engine/freshEngine.js';
-
-function createTestSql() {
-  return freshEngine().input() as PostgresInputBatch;
-}
+import { createTestSql } from '../utils/engineHelpers.ts';
+import { col } from '../../src/semantic/ast/dsl.ts';
 
 describe("Integration::insert", () => {
   it("rejects duplicate primary keys", () => {
@@ -116,7 +112,7 @@ describe("Integration::insert", () => {
     sql.alterTable("Users")
       .addConstraint("CHK_Adult")
       .check(
-        sql.column("Age").gte(18)
+        col("Age").gte(18)
       )
       .execute();
 
@@ -148,7 +144,7 @@ describe("Integration::insert", () => {
     sql.alterTable("Users")
       .addConstraint("CHK_Adult")
       .check(
-        sql.column("Age").gte(18)
+        col("Age").gte(18)
       )
       .execute();
 

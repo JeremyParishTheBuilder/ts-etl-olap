@@ -1,7 +1,6 @@
-import { literal } from "../dsl/expression/functions.js";
-import { isNull } from "../dsl/predicate/functions.js";
 import { EngineRegistry } from "../engine/EngineRegistry.js";
 import type { PostgresInputBatch } from "../input/PostgresInputBatch.js";
+import { col, and, or } from "../semantic/ast/dsl.js";
 import { ValidationEngine } from "./ValidationEngine.js";
 import { ValidationRuleset } from "./ValidationRuleset.js";
 
@@ -30,20 +29,18 @@ const exampleChainRegistry_validationRuleset: ValidationRuleset =
           .alterTable("Chains")
           .addConstraint("ChainDirectoryNameMatchesChainFile")
           .check(
-            sql.and(
-              sql.or(
-                sql.isNotNull(
-                  sql.column("ChainFile.ChainName")),
-                sql
-                  .column("ChainFile.ChainName")
-                  .eq(sql.column("ChainDirectory.ChainDirectoryName")),
+            and(
+              or(
+                col("ChainFile.ChainName").isNotNull(),
+                col("ChainFile.ChainName").eq(
+                  col("ChainDirectory.ChainDirectoryName"),
+                ),
               ),
-              sql.or(
-                sql.isNull(
-                  sql.column("AssetlistFile.ChainName")),
-                sql
-                  .column("AssetlistFile.ChainName")
-                  .eq(sql.column("ChainDirectory.ChainDirectoryName")),
+              or(
+                col("AssetlistFile.ChainName").isNull(),
+                col("AssetlistFile.ChainName").eq(
+                  col("ChainDirectory.ChainDirectoryName"),
+                ),
               ),
             ),
           )
@@ -51,17 +48,9 @@ const exampleChainRegistry_validationRuleset: ValidationRuleset =
       ],
     });
 
-// const report = ValidationEngine.validate({
-//   engine: EngineRegistry.getInstance().engine(),
-//   databaseName: "Test Registry",
-//   ruleset: exampleChainRegistry_validationRuleset,
-// });
-
-// console.log(report);
-
 export function runExampleValidation(
   engineName?: string,
-  databaseName?: string
+  databaseName?: string,
 ) {
   const report = ValidationEngine.validate({
     engine: EngineRegistry.getInstance().engine(engineName),
@@ -69,9 +58,7 @@ export function runExampleValidation(
     ruleset: exampleChainRegistry_validationRuleset,
   });
 
-  console.log(
-    `${report.failedRules.length} validation rules failed`,
-  );
+  console.log(`${report.failedRules.length} validation rules failed`);
 
   console.log(JSON.stringify(report, null, 2));
 }

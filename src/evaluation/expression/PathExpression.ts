@@ -14,11 +14,4 @@ export class PathExpression<TContext> implements Expression<
   evaluate(context: TContext): CaptureValue {
     return this.path.resolve(this.source.evaluate(context));
   }
-
-  //TODO remove
-  // consumedKeys?(): readonly string[] {
-  //   return this.path.parts.length > 0
-  //     ? [this.path.parts[0]]
-  //     : [];
-  // }
 }

@@ -35,6 +35,7 @@ import {
   type ConstraintViolationParticipant,
 } from "./ConstraintViolationError.js";
 import { CONSTRAINT_KIND } from "./ConstraintKind.js";
+import { arraysEqual } from "../utils/arrayHelpers.js";
 
 export type TableId = number & { readonly __brand: "TableId" };
 
@@ -381,7 +382,7 @@ export class Table extends Immutable {
             columns: check.columns,
             columnValues: Index.projectRow(
               row.values,
-              check.columns.map(c => this.columns.require(c).position)
+              check.columns.map((c) => this.columns.require(c).position),
             ),
           },
         ],
@@ -1107,16 +1108,6 @@ export class Table extends Immutable {
       `No UNIQUE index found for columns [${columns.join(", ")}] in this exact order`,
     );
   }
-}
-
-function arraysEqual(a: readonly unknown[], b: readonly unknown[]): boolean {
-  if (a.length !== b.length) return false;
-
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
-  }
-
-  return true;
 }
 
 //used for: addUnique()

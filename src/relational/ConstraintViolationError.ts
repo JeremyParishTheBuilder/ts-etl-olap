@@ -18,8 +18,8 @@ export class ConstraintViolationError extends Error {
   readonly cause?: Error;
 
   constructor(spec: ConstraintViolationErrorSpec) {
-    const message = spec.message ??
-      `${spec.constraintKind} constraint violation`;
+    const message =
+      spec.message ?? `${spec.constraintKind} constraint violation`;
 
     super(message);
 

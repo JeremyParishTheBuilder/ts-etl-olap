@@ -1,11 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
-import { freshEngine } from '../engine/freshEngine.js';
 import { CONSTRAINT_KIND } from '../../src/relational/ConstraintKind.js';
-
-function createTestSql() {
-  return freshEngine().input() as PostgresInputBatch;
-}
+import { createTestSql } from '../utils/engineHelpers.js';
+import { col } from '../../src/semantic/ast/dsl.js';
 
 describe("Integration::delete", () => {
   it("deletes a single row", () => {
@@ -35,7 +31,7 @@ describe("Integration::delete", () => {
     sql
       .deleteFrom("Users")
       .where(
-        sql.column("Id").eq(1)
+        col("Id").eq(1)
       )
       .execute();
 
@@ -105,7 +101,7 @@ describe("Integration::delete", () => {
     sql
       .deleteFrom("Users")
       .where(
-        sql.column("Id").gt(1)
+        col("Id").gt(1)
       )
       .execute();
 
@@ -169,7 +165,7 @@ describe("Integration::delete", () => {
       sql
         .deleteFrom("Roles")
         .where(
-          sql.column("Id").eq(1)
+          col("Id").eq(1)
         )
         .execute()
     ).toThrow();
@@ -221,7 +217,7 @@ describe("Integration::delete", () => {
     sql
       .deleteFrom("Roles")
       .where(
-        sql.column("Id").eq(1)
+        col("Id").eq(1)
       )
       .execute();
 

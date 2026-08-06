@@ -16,7 +16,6 @@ import { AddIndexAction } from "../actions/AddIndexAction.js";
 import { CONSTRAINT_KIND } from "../relational/ConstraintKind.js";
 import { PrimaryKey } from "../relational/PrimaryKey.js";
 import { ForeignKey } from "../relational/ForeignKey.js";
-import { AddUniqueAction } from "../actions/AddUniqueAction.js";
 import { AddUniqueConstraintAction } from "../actions/AddUniqueConstraintAction.js";
 
 export function bindCreateTable(
@@ -103,7 +102,7 @@ export function bindCreateTable(
               "UNIQUE constraint requires exactly one of 'columns' or 'using'.",
             );
           }
-  
+
           stmtActions.push(
             new AddUniqueConstraintAction(dbName, tableName, {
               name: spec.name,

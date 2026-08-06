@@ -16,7 +16,6 @@ import { DropPrimaryKeyAction } from "../actions/DropPrimaryKeyAction.js";
 import { DropCheckAction } from "../actions/DropCheckAction.js";
 import { DropIndexAction } from "../actions/DropIndexAction.js";
 import { AddIndexAction } from "../actions/AddIndexAction.js";
-import { AddUniqueAction } from "../actions/AddUniqueAction.js";
 import { DropUniqueAction } from "../actions/DropUniqueAction.js";
 import { type Column } from "../relational/Column.js";
 import { AddUniqueConstraintAction } from "../actions/AddUniqueConstraintAction.js";

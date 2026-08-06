@@ -2,11 +2,10 @@ import { InputBatch } from "./InputBatch.js";
 import { type InlineColumnSpec } from "../relational/Column.js";
 import { type ConstraintSpec } from "../relational/Constraint.js";
 import { type Statement } from "../statements/Statement.js";
-import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type ReferentialAction } from "../relational/ReferentialAction.js";
-import { type ExpressionNode } from "../evaluation/expression/Expression.js";
 import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
 import type { ColumnValue } from "../types/ColumnValue.js";
+import type { ExpressionNode } from "../semantic/ast/expression/ExpressionNode.js";
 
 export class PostgresInputBatch extends InputBatch {
   constructor(executeStatement: (stmt: Statement) => void) {
@@ -85,7 +84,7 @@ export class PostgresInputBatch extends InputBatch {
     return super.update(table);
   }
 
-  set(data: Record<string, ExpressionNode | ExplicitInput>) {
+  set(data: Record<string, ExpressionNode | ColumnValue>) {
     return super.set(data);
   }
 
@@ -107,37 +106,5 @@ export class PostgresInputBatch extends InputBatch {
 
   where(predicate: PredicateNode) {
     return super.where(predicate);
-  }
-
-  case() {
-    return super.case();
-  }
-
-  column(name: string) {
-    return super.column(name);
-  }
-
-  and(left: PredicateNode, right: PredicateNode) {
-    return super.and(left, right);
-  }
-
-  or(left: PredicateNode, right: PredicateNode) {
-    return super.or(left, right);
-  }
-
-  xor(left: PredicateNode, right: PredicateNode) {
-    return super.xor(left, right);
-  }
-
-  not(inner: PredicateNode) {
-    return super.not(inner);
-  }
-
-  isNull(inner: ExpressionNode) {
-    return super.isNull(inner);
-  }
-  
-  isNotNull(inner: ExpressionNode) {
-    return super.isNotNull(inner);
   }
 }

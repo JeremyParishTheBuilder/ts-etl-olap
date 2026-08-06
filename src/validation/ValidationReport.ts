@@ -28,17 +28,17 @@ export class ValidationReport {
   }
 
   get violations(): readonly ValidationViolation[] {
-    return this.ruleResults.flatMap(result => result.violations);
+    return this.ruleResults.flatMap((result) => result.violations);
   }
 
   get failedRules(): readonly ValidationRuleResult[] {
-    return this.ruleResults.filter(result => !result.passed);
+    return this.ruleResults.filter((result) => !result.passed);
   }
 
   toJSON() {
     return {
       passed: this.passed,
-      ruleResults: this.ruleResults.map(result => result.toJSON()),
+      ruleResults: this.ruleResults.map((result) => result.toJSON()),
     };
   }
 }

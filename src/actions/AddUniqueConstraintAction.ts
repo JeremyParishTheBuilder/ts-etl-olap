@@ -20,38 +20,6 @@ export class AddUniqueConstraintAction implements Action {
 
     const updatedTable = table.createUniqueConstraint(this.spec);
 
-    // const existingIndex: boolean = this.spec.using ? true : false;
-
-    // //one option: possibly put some logic here in the Action
-    // let index;
-    // if (!existingIndex) {
-    //   if (!this.spec.columns) {
-    //     throw new Error(`Missing columns.`);
-    //   }
-
-    //   table = table
-    //     .createIndex({
-    //       name: this.spec.name,
-    //       columns: this.spec.columns,
-    //       unique: true,
-    //     })
-
-    //   index = table.indexes.requireByName(this.spec.name);
-    // } else {
-    //   index = table.indexes.requireByName(this.spec.using!);
-    // }
-
-    // //alternatively, move logic into Table, and keep the Action look like a simple orchestrator
-    // table = table
-    //   .assertOrCreateUniqueIndex(this.spec);
-
-    // table = table
-    //   .createUnique({
-    //     name: this.spec.name,
-    //     indexName: index.name,
-    //     ownsIndex: existingIndex ? false : true,
-    //   });
-
     return databases.update(db.updateTable(updatedTable));
   }
 }

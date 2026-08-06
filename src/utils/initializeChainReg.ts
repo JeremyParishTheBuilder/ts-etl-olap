@@ -68,7 +68,7 @@ export const getChainRegContents = () => {
         literal("Asset:"),
         captureScalar("chainDirectoryName"),
         literal(":"),
-        current().path("base").scalar()
+        current().path("base").scalar(),
       ),
     },
     children: [],
@@ -79,9 +79,7 @@ export const getChainRegContents = () => {
     matcher: every(isFile(), basename().eq("assetlist.json")),
     decoder: new JsonDecoder(),
     nodeType: "assetlistFile",
-    children: [
-      assetNode
-    ],
+    children: [assetNode],
   });
 
   const chainFileNode = new DiscoveryNode({
@@ -107,10 +105,7 @@ export const getChainRegContents = () => {
         every(isFile(), basename().eq("assetlist.json")),
       ),
     ),
-    children: [
-      chainFileNode,
-      assetlistFileNode,
-    ],
+    children: [chainFileNode, assetlistFileNode],
     nodeType: "chainDirectory",
     captures: {
       chainDirectoryName: current().path("_basename"),
@@ -224,10 +219,7 @@ export const getChainRegContents = () => {
     fields: {
       owner: captureScalar("owner"),
     },
-    children: [
-      logoUrisImportMapping,
-      imagesImportMapping
-    ],
+    children: [logoUrisImportMapping, imagesImportMapping],
   });
 
   const assetlistFileImportMapping = new ImportMapping({
@@ -263,10 +255,7 @@ export const getChainRegContents = () => {
       networkKind: captureScalar("networkKind"),
       networkType: captureScalar("networkType"),
     },
-    children: [
-      chainFileImportMapping,
-      assetlistFileImportMapping,
-    ],
+    children: [chainFileImportMapping, assetlistFileImportMapping],
   });
 
   const networkTypeImportMapping = new ImportMapping({

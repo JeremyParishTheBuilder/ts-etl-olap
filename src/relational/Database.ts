@@ -15,7 +15,6 @@ import { arraysEqual } from "../utils/arrayHelpers.js";
 import type { ResolvedInsert } from "../types/ResolvedInsert.js";
 import { ConstraintViolationError } from "./ConstraintViolationError.js";
 import { CONSTRAINT_KIND } from "./ConstraintKind.js";
-import { Index } from "./Index.js";
 
 const _MAX_DEPTH = 25;
 
@@ -208,8 +207,7 @@ export class Database extends Immutable {
               referencedColumns: foreignKey.parentColumns,
             },
           ],
-          message:
-            `Foreign key violation on existing row ${row.index}. ${projected}`,
+          message: `Foreign key violation on existing row ${row.index}. ${projected}`,
         });
       }
     }

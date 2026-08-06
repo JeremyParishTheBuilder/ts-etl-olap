@@ -4,7 +4,6 @@ import { type ColumnType } from "../types/ColumnType.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
 import { type RowView } from "./RowView.js";
-import { ConstraintViolationError } from "./ConstraintViolationError.js";
 
 export type IndexSpec = {
   name: string;
@@ -85,14 +84,14 @@ export class Index extends ColumnBoundImmutable {
         existing.length > 0 &&
         (!this.nullsDistinct || !projection.includes(null))
       ) {
-        throw {
+        throw new IndexUniquenessError({
           rowView: row,
           columns: this.columns,
-          ColumnValues: projection,
+          projection: projection,
           key,
           nullsDistinct: this.nullsDistinct,
           message: `Unique Index contains duplicate values`,
-        };
+        });
       }
 
       map.set(key, [...existing, row.index]);
@@ -204,7 +203,6 @@ export class IndexUniquenessError extends Error {
   readonly projection: readonly ColumnValue[];
   readonly key: string;
   readonly nullsDistinct: boolean;
-  message: string;
 
   constructor(spec: IndexUniquenessErrorSpec) {
     super(spec.message);
@@ -214,6 +212,5 @@ export class IndexUniquenessError extends Error {
     this.projection = spec.projection;
     this.key = spec.key;
     this.nullsDistinct = spec.nullsDistinct;
-    this.message = spec.message;
   }
 }

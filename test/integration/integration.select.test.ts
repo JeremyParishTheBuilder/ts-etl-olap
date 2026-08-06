@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { PostgresInputBatch } from '../../src/input/PostgresInputBatch.js';
-import { freshEngine } from '../engine/freshEngine.js';
-
-function createTestSql() {
-  return freshEngine().input() as PostgresInputBatch;
-}
+import { createTestSql } from '../utils/engineHelpers.ts';
+import { and, col, or } from '../../src/semantic/ast/dsl.ts';
 
 describe('Integration::select', () => {
   it("executes select * queries end-to-end", () => {
@@ -128,7 +124,7 @@ describe('Integration::select', () => {
       .select("*")
       .from("Users")
       .where(
-        sql.column("Age").gt(15)
+        col("Age").gt(15)
       )
       .execute();
 
@@ -175,9 +171,9 @@ describe('Integration::select', () => {
       .select("*")
       .from("Users")
       .where(
-        sql.and(
-          sql.column("Age").eq(20),
-          sql.column("Score").eq(100)
+        and(
+          col("Age").eq(20),
+          col("Score").eq(100)
         )
       )
       .execute();
@@ -221,9 +217,9 @@ describe('Integration::select', () => {
       .select("*")
       .from("Users")
       .where(
-        sql.and(
-          sql.column("Age").eq(20),
-          sql.column("Score").eq(100)
+        and(
+          col("Age").eq(20),
+          col("Score").eq(100)
         )
       )
       .execute();
@@ -263,9 +259,9 @@ describe('Integration::select', () => {
       .select("*")
       .from("Users")
       .where(
-        sql.or(
-          sql.column("Age").eq(10),
-          sql.column("Age").eq(30)
+        or(
+          col("Age").eq(10),
+          col("Age").eq(30)
         )
       )
       .execute();

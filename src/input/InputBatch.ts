@@ -17,19 +17,10 @@ import {
 import { type InlineColumnSpec } from "../relational/Column.js";
 import { type ConstraintSpec } from "../relational/Constraint.js";
 import { type ReferentialAction } from "../relational/ReferentialAction.js";
-import { CaseBuilder } from "../semantic/ast/expression/CaseBuilder.js";
-import { type ExpressionNode } from "../evaluation/expression/Expression.js";
-import { type ExplicitInput } from "../types/ExplicitInput.js";
 import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
-import { ColumnExpressionNode } from "../semantic/ast/expression/ColumnExpressionNode.js";
-import { NotPredicateNode } from "../semantic/ast/predicate/NotPredicateNode.js";
-import { XorPredicateNode } from "../semantic/ast/predicate/XorPredicateNode.js";
-import { OrPredicateNode } from "../semantic/ast/predicate/OrPredicateNode.js";
-import { AndPredicateNode } from "../semantic/ast/predicate/AndPredicateNode.js";
 import type { ColumnValue } from "../types/ColumnValue.js";
 import { CONSTRAINT_KIND } from "../relational/ConstraintKind.js";
-import { IsNullPredicateNode } from "../semantic/ast/predicate/IsNullPredicateNode.js";
-import { IsNotNullPredicateNode } from "../semantic/ast/predicate/IsNotNullPredicateNode.js";
+import type { ExpressionNode } from "../semantic/ast/expression/ExpressionNode.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -179,7 +170,7 @@ export abstract class InputBatch {
   }
 
   protected set(
-    data: Record<string, ExpressionNode | ExplicitInput>,
+    data: Record<string, ExpressionNode | ColumnValue>, // TODO, change to ExplicitInput? for Keyword detection
     fragment: string = "SET",
   ) {
     this.assertAllowed("set", fragment);
@@ -319,38 +310,6 @@ export abstract class InputBatch {
     }
     this.currentBuilder.where(predicate);
     return this;
-  }
-
-  protected and(left: PredicateNode, right: PredicateNode) {
-    return new AndPredicateNode([left, right]);
-  }
-
-  protected or(left: PredicateNode, right: PredicateNode) {
-    return new OrPredicateNode([left, right]);
-  }
-
-  protected xor(left: PredicateNode, right: PredicateNode) {
-    return new XorPredicateNode(left, right);
-  }
-
-  protected not(inner: PredicateNode) {
-    return new NotPredicateNode(inner);
-  }
-
-  protected isNull(inner: ExpressionNode) {
-    return new IsNullPredicateNode(inner);
-  }
-
-  protected isNotNull(inner: ExpressionNode) {
-    return new IsNotNullPredicateNode(inner);
-  }
-
-  protected case() {
-    return new CaseBuilder();
-  }
-
-  protected column(name: string) {
-    return new ColumnExpressionNode(name);
   }
 
   asStatement(): Statement | undefined {

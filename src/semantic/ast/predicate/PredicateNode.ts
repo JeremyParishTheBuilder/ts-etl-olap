@@ -18,8 +18,14 @@ import {
   type ComparisonPredicateNode,
   type ResolvedComparisonPredicateNode,
 } from "./ComparisonPredicateNode.js";
-import type { IsNullPredicateNode, ResolvedIsNullPredicateNode } from "./IsNullPredicateNode.js";
-import type { IsNotNullPredicateNode, ResolvedIsNotNullPredicateNode } from "./IsNotNullPredicateNode.js";
+import type {
+  IsNullPredicateNode,
+  ResolvedIsNullPredicateNode,
+} from "./IsNullPredicateNode.js";
+import type {
+  IsNotNullPredicateNode,
+  ResolvedIsNotNullPredicateNode,
+} from "./IsNotNullPredicateNode.js";
 
 export type ResolvedPredicateNode =
   | ResolvedComparisonPredicateNode

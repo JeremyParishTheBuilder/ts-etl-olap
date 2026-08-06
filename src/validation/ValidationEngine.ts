@@ -50,8 +50,9 @@ function evaluateRule(
 
         violations.push(
           new ValidationViolation({
-            participants: error.participants.map(p =>
-              resolveViolationParticipant(p, database)),
+            participants: error.participants.map((p) =>
+              resolveViolationParticipant(p, database),
+            ),
           }),
         );
 
@@ -81,8 +82,8 @@ function resolveViolationParticipant(
     rowId: participant.rowId,
 
     columns: participant.columns,
-    columnNames: participant.columns.map(columnId =>
-      table.columns.require(columnId).name
+    columnNames: participant.columns.map(
+      (columnId) => table.columns.require(columnId).name,
     ),
     columnValues: participant.columnValues,
 
@@ -96,12 +97,11 @@ function resolveViolationParticipant(
     referencedColumnNames:
       participant.referencedTable !== undefined &&
       participant.referencedColumns !== undefined
-        ? participant.referencedColumns.map(columnId =>
-            database.tables
-              .require(participant.referencedTable!)
-              .columns
-              .require(columnId)
-              .name
+        ? participant.referencedColumns.map(
+            (columnId) =>
+              database.tables
+                .require(participant.referencedTable!)
+                .columns.require(columnId).name,
           )
         : undefined,
   };
