@@ -1,9 +1,0 @@
-{
-  "src/statements/dml": ["insert.ts", "update.ts"],
-  "src/statements/ddl": ["create_table.ts"],
-  "src/statements/dql": ["select.ts"],
-  "src/actions": ["resolver.ts"],
-  "src/semantic": ["analyze.ts"],
-  "src/types": ["table.ts"],
-  "tests": ["select.test.ts"]
-}
