@@ -5,20 +5,17 @@ import { type ColumnId, type Column } from "../relational/Column.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { resolveTargetColumns } from "./resolveColumnList.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
-import { type ExplicitInput } from "../types/ExplicitInput.js";
+import { assertInsertExpression, bindInsertExpression } from "./expression.js";
+import { resolveDefaultValue } from "./defaultValue.js";
+import { validateInputNode } from "./toExpressionNode.js";
+import type { ExpressionNode } from "../ast/expression/ExpressionNode.js";
+import type { DefaultValueNode } from "../ast/DefaultValueNode.js";
 
-// Handles interpretation and completion of user intent:
-
-// Expanding partial INSERT into full rows
-// Resolving:
-// Default values
-// Column ordering
-// Missing columns
-// Validating statement semantics (before execution)
 export function bindInsertInto(
   semantic: SemanticAnalyzer,
   stmt: InsertIntoStatement,
 ) {
+  const ctx = semantic.ctx;
   const stmtActions: Action[] = [];
 
   const database = semantic.ctx.requireDatabase();
@@ -31,15 +28,35 @@ export function bindInsertInto(
 
   assertAtLeastOneRowOfValues(stmt.values);
 
-  const inputRows: Map<ColumnId, ExplicitInput>[] = [];
+  const inputRows: Map<ColumnId, ColumnValue>[] = [];
 
   for (const row of stmt.values) {
     assertRowLengthMatchesColumnLength(row, effectiveColumns);
 
-    const columnIdToValueMap = new Map<ColumnId, ExplicitInput>();
+    const columnIdToValueMap = new Map<ColumnId, ColumnValue>();
 
     for (let i = 0; i < effectiveColumns.length; i++) {
-      columnIdToValueMap.set(effectiveColumns[i].id, row[i]);
+      const column = effectiveColumns[i];
+      const valueNode = row[i];
+
+      validateInputNode(valueNode, ctx);
+
+      if (valueNode.kind === "default") {
+        columnIdToValueMap.set(
+          column.id,
+          resolveDefaultValue<undefined>(valueNode, column, "insert").evaluate(
+            undefined,
+          ),
+        );
+
+        continue;
+      }
+
+      assertInsertExpression(valueNode);
+
+      const value = bindInsertExpression(valueNode, table).evaluate(undefined);
+
+      columnIdToValueMap.set(column.id, value);
     }
 
     inputRows.push(columnIdToValueMap);
@@ -50,14 +67,16 @@ export function bindInsertInto(
   return stmtActions;
 }
 
-function assertAtLeastOneRowOfValues(values: ColumnValue[][]): void {
+function assertAtLeastOneRowOfValues(
+  values: (ExpressionNode | DefaultValueNode)[][],
+): void {
   if (values.length === 0) {
     throw new Error(`INSERT must contain at least one row`);
   }
 }
 
 function assertRowLengthMatchesColumnLength(
-  row: ColumnValue[],
+  row: (ExpressionNode | DefaultValueNode)[],
   columns: Column[],
 ): void {
   if (row.length !== columns.length) {

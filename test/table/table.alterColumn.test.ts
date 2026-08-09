@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createCheckTestSpec, createColumnTestSpec } from '../utils/buildSchema.js';
-import { ColumnExpressionNode } from '../../src/semantic/ast/expression/ColumnExpressionNode.js';
-import { LiteralExpressionNode } from '../../src/semantic/ast/expression/LiteralExpressionNode.js';
-import { ComparisonPredicateNode } from '../../src/semantic/ast/predicate/ComparisonPredicateNode.js';
+import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionNode.js';
+import { LiteralExpressionNode } from '../../src/ast/expression/LiteralExpressionNode.js';
+import { ComparisonPredicateNode } from '../../src/ast/predicate/ComparisonPredicateNode.js';
 
 describe('Table::alterColumn', () => {
   it('rejects altering a column rows fail existing checks', () => {

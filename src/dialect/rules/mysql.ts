@@ -1,5 +1,10 @@
 import { type DialectRules } from "../DialectRules.js";
-import { CURRENT_TIMESTAMP, DEFAULT, type Keyword } from "../keywords.js";
+import {
+  CURRENT_TIMESTAMP,
+  DEFAULT,
+  type Keyword,
+  type TemporalExpressionKeyword,
+} from "../keywords.js";
 
 const MYSQL_FRAGMENTS: Record<string, string> = {
   createTable: "createTable",
@@ -56,7 +61,11 @@ export const MYSQL_RULES: DialectRules = {
   },
 
   input: {
-    keywords: new Set<Keyword>([DEFAULT, CURRENT_TIMESTAMP]),
+    keywords: new Set<Keyword>([DEFAULT]),
+
+    temporalExpressions: new Set<TemporalExpressionKeyword>([
+      CURRENT_TIMESTAMP,
+    ]),
   },
 
   transaction: {

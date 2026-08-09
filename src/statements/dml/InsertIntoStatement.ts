@@ -1,16 +1,19 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { type ColumnValue } from "../../types/ColumnValue.js";
+import type { InsertInput } from "../../types/InsertInput.js";
+import type { ExpressionNode } from "../../ast/expression/ExpressionNode.js";
+import type { DefaultValueNode } from "../../ast/DefaultValueNode.js";
+import { toExpressionNode } from "../../semantic/toExpressionNode.js";
 
 export interface InsertIntoStatement extends BaseStatement {
   kind: "insert_into";
   table: string;
   columns: string[];
-  values: ColumnValue[][];
+  values: (ExpressionNode | DefaultValueNode)[][];
   returning?: string[];
 }
 
 export class InsertIntoBuilder implements StatementBuilder {
-  private valuesData?: ColumnValue[][];
+  private valuesData?: (ExpressionNode | DefaultValueNode)[][];
   private returningCols?: string[];
 
   constructor(
@@ -18,8 +21,20 @@ export class InsertIntoBuilder implements StatementBuilder {
     private columns: string[] = [],
   ) {}
 
-  values(data: ColumnValue[][]) {
-    this.valuesData = data;
+  values(data: InsertInput[][]) {
+    const normalized: (ExpressionNode | DefaultValueNode)[][] = [];
+
+    for (const row of data) {
+      const normalizedRow: (ExpressionNode | DefaultValueNode)[] = [];
+
+      for (const value of row) {
+        normalizedRow.push(toExpressionNode(value));
+      }
+
+      normalized.push(normalizedRow);
+    }
+
+    this.valuesData = normalized;
   }
 
   returning(cols: string[]) {

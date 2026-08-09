@@ -4,6 +4,8 @@ import {
   DEFAULT,
   GETDATE,
   type Keyword,
+  type SqlFunctionKeyword,
+  type TemporalExpressionKeyword,
 } from "../keywords.js";
 
 const SQLSERVER_FRAGMENTS: Record<string, string> = {
@@ -61,7 +63,13 @@ export const SQLSERVER_RULES: DialectRules = {
   },
 
   input: {
-    keywords: new Set<Keyword>([DEFAULT, CURRENT_TIMESTAMP, GETDATE]),
+    keywords: new Set<Keyword>([DEFAULT]),
+
+    temporalExpressions: new Set<TemporalExpressionKeyword>([
+      CURRENT_TIMESTAMP,
+    ]),
+
+    sqlFunctions: new Set<SqlFunctionKeyword>([GETDATE]),
   },
 
   transaction: {

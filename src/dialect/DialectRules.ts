@@ -1,5 +1,9 @@
 import { type ReferentialAction } from "../relational/ReferentialAction.js";
-import { type Keyword } from "./keywords.js";
+import {
+  type Keyword,
+  type SqlFunctionKeyword,
+  type TemporalExpressionKeyword,
+} from "./keywords.js";
 
 export interface DialectRules {
   fragments: Record<string, string>;
@@ -47,7 +51,9 @@ export interface DialectRules {
   };
 
   input: {
-    keywords: ReadonlySet<Keyword>;
+    keywords?: ReadonlySet<Keyword>;
+    temporalExpressions?: ReadonlySet<TemporalExpressionKeyword>;
+    sqlFunctions?: ReadonlySet<SqlFunctionKeyword>;
   };
 
   transaction: {

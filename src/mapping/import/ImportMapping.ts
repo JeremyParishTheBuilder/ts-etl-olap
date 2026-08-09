@@ -1,4 +1,4 @@
-import { type ExpressionBuilder } from "../../dsl/expression/ExpressionBuilder.js";
+import { type ExpressionBuilder } from "../dsl/expression/ExpressionBuilder.js";
 import { type CaptureContext } from "../discovery/CaptureContext.js";
 import type { ImportSource } from "./ImportSource.js";
 

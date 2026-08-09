@@ -3,9 +3,9 @@ import { type InlineColumnSpec } from "../relational/Column.js";
 import { type ConstraintSpec } from "../relational/Constraint.js";
 import { type Statement } from "../statements/Statement.js";
 import { type ReferentialAction } from "../relational/ReferentialAction.js";
-import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
-import type { ColumnValue } from "../types/ColumnValue.js";
-import type { ExpressionNode } from "../semantic/ast/expression/ExpressionNode.js";
+import { type PredicateNode } from "../ast/predicate/PredicateNode.js";
+import type { UpdateInput } from "../types/UpdateInput.js";
+import type { InsertInput } from "../types/InsertInput.js";
 
 export class PostgresInputBatch extends InputBatch {
   constructor(executeStatement: (stmt: Statement) => void) {
@@ -76,7 +76,7 @@ export class PostgresInputBatch extends InputBatch {
     return super.insertInto(table, columns);
   }
 
-  values(data: ColumnValue[][]) {
+  values(data: InsertInput[][]) {
     return super.values(data);
   }
 
@@ -84,7 +84,7 @@ export class PostgresInputBatch extends InputBatch {
     return super.update(table);
   }
 
-  set(data: Record<string, ExpressionNode | ColumnValue>) {
+  set(data: Record<string, UpdateInput>) {
     return super.set(data);
   }
 

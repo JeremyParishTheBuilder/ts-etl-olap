@@ -1,7 +1,7 @@
 import { Immutable } from "../infrastructure/Immutable.js";
 import { type ReferentialAction } from "./ReferentialAction.js";
 import { type ExplicitInput } from "../types/ExplicitInput.js";
-import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
+import { type PredicateNode } from "../ast/predicate/PredicateNode.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { type ColumnType, matchesColumnType } from "../types/ColumnType.js";
 
@@ -156,7 +156,8 @@ export class Column extends Immutable {
     return normalizedDatum;
   }
 
-  private resolveDefaultOrThrow(mode: "insert" | "update"): ColumnValue {
+  //TODO, confirm decision public vs private
+  public resolveDefaultOrThrow(mode: "insert" | "update"): ColumnValue {
     if (this.defaultValue !== undefined) return this.defaultValue;
     else if (this.isAutoIncrement() && mode === "insert") {
       return this.autoIncrementNext;

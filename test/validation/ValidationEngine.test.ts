@@ -3,7 +3,7 @@ import { ValidationRuleset } from "../../src/validation/ValidationRuleset.js";
 import { ValidationEngine } from "../../src/validation/ValidationEngine.js";
 import { describe, expect, it } from "vitest";
 import { createTestSql, freshEngine } from "../utils/engineHelpers.js";
-import { col } from "../../src/semantic/ast/dsl.js";
+import { col } from "../../src/ast/dsl.js";
 
 
 describe("ValidationEngine::validate", () => {

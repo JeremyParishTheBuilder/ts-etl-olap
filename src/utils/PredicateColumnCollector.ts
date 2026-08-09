@@ -1,6 +1,6 @@
-import { type ResolvedPredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
+import { type ResolvedPredicateNode } from "../ast/predicate/PredicateNode.js";
 import { type ColumnId } from "../relational/Column.js";
-import type { ResolvedExpressionNode } from "../semantic/ast/expression/ExpressionNode.js";
+import type { ResolvedExpressionNode } from "../ast/expression/ExpressionNode.js";
 
 export class ResolvedPredicateColumnCollector {
   public static collect(predicate: ResolvedPredicateNode): ColumnId[] {

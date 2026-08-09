@@ -1,7 +1,7 @@
 import { type Predicate } from "./Predicate.js";
 import { assertComparable } from "../utility/assertTypesComparable.js";
 import { type Expression } from "../expression/Expression.js";
-import { type ComparisonOperator } from "../../semantic/ast/predicate/ComparisonPredicateNode.js";
+import { type ComparisonOperator } from "../../ast/predicate/ComparisonPredicateNode.js";
 
 export class ComparisonPredicate<TContext> implements Predicate<TContext> {
   constructor(

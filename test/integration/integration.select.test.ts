@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createTestSql } from '../utils/engineHelpers.ts';
-import { and, col, or } from '../../src/semantic/ast/dsl.ts';
+import { and, col, or } from '../../src/ast/dsl.ts';
 
 describe('Integration::select', () => {
   it("executes select * queries end-to-end", () => {

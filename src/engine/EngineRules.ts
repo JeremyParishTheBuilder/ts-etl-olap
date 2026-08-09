@@ -1,8 +1,12 @@
 import {
+  CURRENT_TIMESTAMP,
   DEFAULT,
   Dialect,
   DIALECT_RULES,
+  NOW,
   type Keyword,
+  type SqlFunctionKeyword,
+  type TemporalExpressionKeyword,
 } from "../dialect/index.js";
 
 export interface EngineRuleSpec<T> {
@@ -81,6 +85,17 @@ export const ENGINE_RULES: Record<
     keywords: {
       dialectDefault: (d: Dialect) => DIALECT_RULES[d].input?.keywords,
       engineDefault: new Set<Keyword>([DEFAULT]),
+    },
+
+    temporalExpressions: {
+      dialectDefault: (d: Dialect) =>
+        DIALECT_RULES[d].input?.temporalExpressions,
+      engineDefault: new Set<TemporalExpressionKeyword>([CURRENT_TIMESTAMP]),
+    },
+
+    sqlFunctions: {
+      dialectDefault: (d: Dialect) => DIALECT_RULES[d].input?.sqlFunctions,
+      engineDefault: new Set<SqlFunctionKeyword>([NOW]),
     },
   },
 };
