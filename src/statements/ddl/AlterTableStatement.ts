@@ -6,7 +6,7 @@ import {
 } from "../../relational/Constraint.js";
 import { CONSTRAINT_KIND } from "../../relational/ConstraintKind.js";
 import { type ReferentialAction } from "../../relational/ReferentialAction.js";
-import { type PredicateNode } from "../../semantic/ast/predicate/PredicateNode.js";
+import { type PredicateNode } from "../../ast/predicate/PredicateNode.js";
 
 export type AlterTableStatement =
   | AlterAddColumn

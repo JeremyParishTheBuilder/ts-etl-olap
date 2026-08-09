@@ -17,10 +17,19 @@ import {
 import { type InlineColumnSpec } from "../relational/Column.js";
 import { type ConstraintSpec } from "../relational/Constraint.js";
 import { type ReferentialAction } from "../relational/ReferentialAction.js";
-import { type PredicateNode } from "../semantic/ast/predicate/PredicateNode.js";
-import type { ColumnValue } from "../types/ColumnValue.js";
+import { type PredicateNode } from "../ast/predicate/PredicateNode.js";
 import { CONSTRAINT_KIND } from "../relational/ConstraintKind.js";
-import type { ExpressionNode } from "../semantic/ast/expression/ExpressionNode.js";
+import {
+  CURRENT_DATE,
+  CURRENT_TIME,
+  CURRENT_TIMESTAMP,
+  DEFAULT,
+  GETDATE,
+  NOW,
+} from "../dialect/keywords.js";
+import type { UpdateInput } from "../types/UpdateInput.js";
+import type { RowView } from "../relational/RowView.js";
+import type { InsertInput } from "../types/InsertInput.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -39,7 +48,9 @@ export abstract class InputBatch {
     "deleteFrom",
   ];
 
-  constructor(protected readonly executeStatement: (stmt: Statement) => void) {}
+  constructor(
+    protected readonly executeStatement: (stmt: Statement) => RowView[] | void,
+  ) {}
 
   private addStatement(stmt: Statement) {
     this.statements.push(stmt);
@@ -144,12 +155,12 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected values(data: ColumnValue[][], fragment: string = "VALUES") {
+  protected values(data: InsertInput[][], fragment: string = "VALUES") {
     this.assertAllowed("values", fragment);
     if (!(this.currentBuilder instanceof InsertIntoBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of InsertInto`);
     }
-    this.currentBuilder.values(data); //<- needs a primitive
+    this.currentBuilder.values(data);
     return this;
   }
 
@@ -169,10 +180,7 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected set(
-    data: Record<string, ExpressionNode | ColumnValue>, // TODO, change to ExplicitInput? for Keyword detection
-    fragment: string = "SET",
-  ) {
+  protected set(data: Record<string, UpdateInput>, fragment: string = "SET") {
     this.assertAllowed("set", fragment);
     if (!(this.currentBuilder instanceof UpdateSetBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of Update`);
@@ -312,6 +320,20 @@ export abstract class InputBatch {
     return this;
   }
 
+  readonly DEFAULT: typeof DEFAULT = DEFAULT;
+
+  readonly CURRENT_TIMESTAMP: typeof CURRENT_TIMESTAMP = CURRENT_TIMESTAMP;
+  readonly CURRENT_DATE: typeof CURRENT_DATE = CURRENT_DATE;
+  readonly CURRENT_TIME: typeof CURRENT_TIME = CURRENT_TIME;
+
+  NOW(): typeof NOW {
+    return NOW;
+  }
+
+  GETDATE(): typeof GETDATE {
+    return GETDATE;
+  }
+
   asStatement(): Statement | undefined {
     this.finalizePreviousStatement();
 
@@ -330,17 +352,20 @@ export abstract class InputBatch {
     return statement;
   }
 
-  execute() {
+  execute(): RowView[][] {
     this.finalizePreviousStatement();
 
-    const resultIterators = [];
+    const resultIterators: RowView[][] = [];
 
     const statementsToExecute = [...this.statements];
     this.statements = [];
 
     for (const stmt of statementsToExecute) {
       const result = this.executeStatement(stmt);
-      if (stmt.kind === "select") resultIterators.push(result);
+
+      if (stmt.kind === "select" && result !== undefined) {
+        resultIterators.push(result);
+      }
     }
 
     return resultIterators;

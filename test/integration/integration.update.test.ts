@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createTestSql } from '../utils/engineHelpers.ts';
-import { case_, col } from '../../src/semantic/ast/dsl.ts';
+import { case_, col } from '../../src/ast/dsl.ts';
 
 describe("Integration::update", () => {
   it("updates a single row", () => {
@@ -509,5 +509,267 @@ describe("Integration::update", () => {
         "values": [30],
       },
     ]]);
+  });
+
+  it("uses an explicit DEFAULT value", () => {
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Id: {
+        type: Number,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: String,
+        nullable: false,
+        defaultValue: "Anonymous",
+      },
+    }).execute();
+
+    sql
+      .insertInto("Users", ["Id", "Name"])
+      .values([[1, "Alice"]])
+      .execute();
+
+    sql
+      .update("Users")
+      .set({
+        Name: sql.DEFAULT,
+      })
+      .where(
+        col("Id").eq(1),
+      )
+      .execute();
+
+    const rows = sql
+      .select("*")
+      .from("Users")
+      .execute();
+
+    expect(rows).toEqual([[
+      {
+        index: 0,
+        values: [1, "Anonymous"],
+      },
+    ]]);
+  });
+
+  it("uses NULL for DEFAULT on a nullable column without a default", () => {
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Id: {
+        type: Number,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: String,
+        nullable: true,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Users", ["Id", "Name"])
+      .values([[1, "Alice"]])
+      .execute();
+
+    sql
+      .update("Users")
+      .set({
+        Name: sql.DEFAULT,
+      })
+      .where(
+        col("Id").eq(1),
+      )
+      .execute();
+
+    const rows = sql
+      .select("*")
+      .from("Users")
+      .execute();
+
+    expect(rows).toEqual([[
+      {
+        index: 0,
+        values: [1, null],
+      },
+    ]]);
+  });
+
+  it("rejects DEFAULT on a non-nullable column without a default", () => {
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Id: {
+        type: Number,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: String,
+        nullable: false,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Users", ["Id", "Name"])
+      .values([[1, "Alice"]])
+      .execute();
+
+    expect(() => {
+      sql
+        .update("Users")
+        .set({
+          Name: sql.DEFAULT,
+        })
+        .where(
+          col("Id").eq(1),
+        )
+        .execute();
+    }).toThrow(/Cannot resolve default.*Name/);
+  });
+
+  it("does not use the auto-increment value for DEFAULT during UPDATE", () => {
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Id: {
+        type: Number,
+        nullable: false,
+        primaryKey: true,
+        autoIncrementStep: 1,
+      },
+      Name: {
+        type: String,
+        nullable: false,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Users", ["Name"])
+      .values([["Alice"]])
+      .execute();
+
+    expect(() => {
+      sql
+        .update("Users")
+        .set({
+          Id: sql.DEFAULT,
+        })
+        .where(
+          col("Name").eq("Alice"),
+        )
+        .execute();
+    }).toThrow();
+  });
+
+  it("uses CURRENT_TIMESTAMP in an update expression", () => {
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Id: {
+        type: Number,
+        nullable: false,
+        primaryKey: true,
+      },
+      UpdatedAt: {
+        type: String,
+        nullable: true,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Users", ["Id", "UpdatedAt"])
+      .values([[1, null]])
+      .execute();
+
+    const before = Date.now();
+
+    sql
+      .update("Users")
+      .set({
+        UpdatedAt: sql.CURRENT_TIMESTAMP,
+      })
+      .where(
+        col("Id").eq(1),
+      )
+      .execute();
+
+    const after = Date.now();
+
+    const rows = sql
+      .select("*")
+      .from("Users")
+      .execute();
+
+    const value = rows[0][0].values[1];
+
+    expect(typeof value).toBe("string");
+
+    const timestamp = Date.parse(value as string);
+
+    expect(timestamp).toBeGreaterThanOrEqual(before);
+    expect(timestamp).toBeLessThanOrEqual(after);
+  });
+
+  it("uses NOW in an update expression", () => {
+    const sql = createTestSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Users", {
+      Id: {
+        type: Number,
+        nullable: false,
+        primaryKey: true,
+      },
+      UpdatedAt: {
+        type: String,
+        nullable: false,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Users", ["Id", "UpdatedAt"])
+      .values([[1, "initial"]])
+      .execute();
+
+    sql
+      .update("Users")
+      .set({
+        UpdatedAt: sql.NOW(),
+      })
+      .where(
+        col("Id").eq(1),
+      )
+      .execute();
+
+    const rows = sql
+      .select("*")
+      .from("Users")
+      .execute();
+
+    const value = rows[0][0].values[1];
+
+    expect(typeof value).toBe("string");
+    expect(Number.isNaN(Date.parse(value as string))).toBe(false);
   });
 });

@@ -6,11 +6,9 @@ import {
   DEFAULT,
   NOW,
   type Keyword,
+  type SqlFunctionKeyword,
+  type TemporalExpressionKeyword,
 } from "../keywords.js";
-
-//export const DEFAULT = Symbol("DEFAULT");
-// TODO, implement keyword detection\
-// alternatives: (sql.default(), sql.keyword("default"))
 
 export const POSTGRES_FRAGMENTS: Record<string, string> = {
   createTable: "createTable",
@@ -67,20 +65,15 @@ export const POSTGRES_RULES: DialectRules = {
   },
 
   input: {
-    // keywords: new Set([
-    //   "DEFAULT",
-    //   "CURRENT_TIMESTAMP",
-    //   "CURRENT_DATE",
-    //   "CURRENT_TIME",
-    //   "NOW",
-    // ]),
-    keywords: new Set<Keyword>([
-      DEFAULT,
+    keywords: new Set<Keyword>([DEFAULT]),
+
+    temporalExpressions: new Set<TemporalExpressionKeyword>([
       CURRENT_TIMESTAMP,
       CURRENT_DATE,
       CURRENT_TIME,
-      NOW,
     ]),
+
+    sqlFunctions: new Set<SqlFunctionKeyword>([NOW]),
   },
 
   transaction: {

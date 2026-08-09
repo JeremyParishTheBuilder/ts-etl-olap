@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { case_, col } from "../../src/semantic/ast/dsl.js";
+import { case_, col } from "../../src/ast/dsl.js";
 import { ComparisonPredicate } from '../../src/evaluation/predicate/ComparisonPredicate.js';
 import { ColumnExpression } from '../../src/evaluation/expression/ColumnExpression.js';
 import { LiteralExpression } from '../../src/evaluation/expression/LiteralExpression.js';

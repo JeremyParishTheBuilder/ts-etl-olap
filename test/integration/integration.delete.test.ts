@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { CONSTRAINT_KIND } from '../../src/relational/ConstraintKind.js';
 import { createTestSql } from '../utils/engineHelpers.js';
-import { col } from '../../src/semantic/ast/dsl.js';
+import { col } from '../../src/ast/dsl.js';
 
 describe("Integration::delete", () => {
   it("deletes a single row", () => {

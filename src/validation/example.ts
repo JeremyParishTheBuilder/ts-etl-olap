@@ -1,6 +1,6 @@
 import { EngineRegistry } from "../engine/EngineRegistry.js";
 import type { PostgresInputBatch } from "../input/PostgresInputBatch.js";
-import { col, and, or } from "../semantic/ast/dsl.js";
+import { col, and, or } from "../ast/dsl.js";
 import { ValidationEngine } from "./ValidationEngine.js";
 import { ValidationRuleset } from "./ValidationRuleset.js";
 

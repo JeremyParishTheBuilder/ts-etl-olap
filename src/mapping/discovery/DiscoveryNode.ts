@@ -1,5 +1,5 @@
-import type { ExpressionBuilder } from "../../dsl/expression/ExpressionBuilder.js";
-import type { PredicateBuilder } from "../../dsl/predicate/PredicateBuilder.js";
+import type { ExpressionBuilder } from "../dsl/expression/ExpressionBuilder.js";
+import type { PredicateBuilder } from "../dsl/predicate/PredicateBuilder.js";
 import type { CaptureValue } from "../value/CaptureValue.js";
 import type { DiscoveryDecoder } from "./decoding/DiscoveryDecoder.js";
 import { type DiscoveryContext } from "./DiscoveryContext.js";

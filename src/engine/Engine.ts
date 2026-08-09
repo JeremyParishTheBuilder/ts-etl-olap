@@ -15,6 +15,7 @@ import { Transaction } from "./Transaction.js";
 import { type Statement } from "../statements/index.js";
 import { Databases } from "../relational/Databases.js";
 import { SemanticAnalyzer } from "../semantic/SemanticAnalyzer.js";
+import type { RowView } from "../relational/RowView.js";
 
 export class Engine {
   public databases: Databases = new Databases();
@@ -80,7 +81,24 @@ export class Engine {
     }
   }
 
-  executeStatement(stmt: Statement): unknown {
+  private bindAndExecute(tx: Transaction, stmt: Statement): RowView[] | void {
+    const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
+
+    const analyzer = new SemanticAnalyzer(ctx);
+
+    tx.addStatement(stmt);
+
+    const result = analyzer.bindStatement(stmt);
+
+    if (result.kind === "actions") {
+      tx.addActions(result.actions);
+      return;
+    }
+
+    return [...result.plan.root.execute()];
+  }
+
+  executeStatement(stmt: Statement): RowView[] | void {
     if (stmt.kind === "begin") {
       this.beginTx();
       return;
@@ -101,23 +119,25 @@ export class Engine {
       return this.tryExecuteAutoCommit(stmt);
     }
 
-    const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
-    const analyzer = new SemanticAnalyzer(ctx);
+    return this.bindAndExecute(tx, stmt);
 
-    tx.addStatement(stmt);
+    // const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
+    // const analyzer = new SemanticAnalyzer(ctx);
 
-    const result = analyzer.bindStatement(stmt);
+    // tx.addStatement(stmt);
 
-    if (result.kind === "actions") {
-      tx.addActions(result.actions);
-    }
+    // const result = analyzer.bindStatement(stmt);
 
-    if (result.kind === "query") {
-      return [...result.plan.root.execute()];
-    }
+    // if (result.kind === "actions") {
+    //   tx.addActions(result.actions);
+    // }
+
+    // if (result.kind === "query") {
+    //   return [...result.plan.root.execute()];
+    // }
   }
 
-  tryExecuteAutoCommit(stmt: Statement): unknown {
+  tryExecuteAutoCommit(stmt: Statement): RowView[] | void {
     if (!this.rules.transaction.autoCommit) {
       throw new Error("Auto-commit disabled");
     }
@@ -127,32 +147,39 @@ export class Engine {
     try {
       const tx = this.requireTx();
 
-      const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
-      const analyzer = new SemanticAnalyzer(ctx);
+      const result = this.bindAndExecute(tx, stmt);
 
-      tx.addStatement(stmt);
+      // const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
+      // const analyzer = new SemanticAnalyzer(ctx);
 
-      const result = analyzer.bindStatement(stmt);
+      // tx.addStatement(stmt);
 
-      if (result.kind === "actions") {
-        tx.addActions(result.actions);
-      }
+      // const result = analyzer.bindStatement(stmt);
+
+      // if (result.kind === "actions") {
+      //   tx.addActions(result.actions);
+      // }
 
       this.commitTx();
 
-      if (result.kind === "query") {
-        return [...result.plan.root.execute()];
-      }
+      return result;
+
+      // if (result.kind === "query") {
+      //   return [...result.plan.root.execute()];
+      // }
     } catch (err) {
       this._currentTransaction = undefined;
       throw err;
     }
   }
 
-  execute() {
-    if (!this.inputBatch) return;
-    this.inputBatch.execute();
+  execute(): RowView[][] {
+    if (!this.inputBatch) return [];
+
+    const results = this.inputBatch.execute();
     this.inputBatch = undefined;
+
+    return results;
   }
   //  <input batch>
 

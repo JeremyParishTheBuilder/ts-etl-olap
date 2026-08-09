@@ -1,31 +1,30 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import { type PredicateNode } from "../../semantic/ast/predicate/PredicateNode.js";
-import type { ExpressionNode } from "../../semantic/ast/expression/ExpressionNode.js";
-import { asExpressionNode } from "../../semantic/ast/expression/asExpressionNode.js";
-import type { ColumnValue } from "../../types/ColumnValue.js";
+import { type PredicateNode } from "../../ast/predicate/PredicateNode.js";
+import type { ExpressionNode } from "../../ast/expression/ExpressionNode.js";
+import type { UpdateInput } from "../../types/UpdateInput.js";
+import { DefaultValueNode } from "../../ast/DefaultValueNode.js";
+import { toExpressionNode } from "../../semantic/toExpressionNode.js";
 
 export interface UpdateSetStatement extends BaseStatement {
   kind: "update_set";
   table: string;
-  values: Record<string, ExpressionNode>;
+  values: Record<string, ExpressionNode | DefaultValueNode>;
   where?: PredicateNode;
   returning?: string[];
 }
 
 export class UpdateSetBuilder implements StatementBuilder {
-  private values?: Record<string, ExpressionNode>;
+  private values?: Record<string, ExpressionNode | DefaultValueNode>;
   private whereClause?: PredicateNode;
   private returningCols?: string[];
 
   constructor(private table: string) {}
 
-  //TODO
-  //set(data: Record<string, ExplicitInput>)
-  set(data: Record<string, ExpressionNode | ColumnValue>) {
-    const normalized: Record<string, ExpressionNode> = {};
+  set(data: Record<string, UpdateInput>) {
+    const normalized: Record<string, ExpressionNode | DefaultValueNode> = {};
 
     for (const key in data) {
-      normalized[key] = asExpressionNode(data[key]);
+      normalized[key] = toExpressionNode(data[key]);
     }
 
     this.values = normalized;

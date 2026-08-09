@@ -21,7 +21,7 @@ import {
   current,
   value,
   literal,
-} from "../dsl/expression/functions.js";
+} from "../mapping/dsl/expression/functions.js";
 import {
   every,
   some,
@@ -30,7 +30,7 @@ import {
   contains,
   isNull,
   isNotNull,
-} from "../dsl/predicate/functions.js";
+} from "../mapping/dsl/predicate/functions.js";
 import { SelfNavigator } from "../mapping/discovery/navigation/SelfNavigator.js";
 import { DirectoryNavigator } from "../mapping/discovery/navigation/DirectoryNavigator.js";
 import { DiscoveryNode } from "../mapping/discovery/DiscoveryNode.js";
