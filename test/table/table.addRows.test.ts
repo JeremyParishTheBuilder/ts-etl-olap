@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { buildTable, createCheckTestSpec, createColumnTestSpec, createDelete } from '../utils/buildSchema.js';
+import { buildTable, createCheckTestSpec, createColumnTestSpec, createDelete, createInsert } from '../utils/buildSchema.js';
 import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionNode.js';
 import { LiteralExpressionNode } from '../../src/ast/expression/LiteralExpressionNode.js';
 import { ComparisonPredicateNode } from '../../src/ast/predicate/ComparisonPredicateNode.js';
 
-describe('Table::addRow', () => {
+describe('Table::addRows', () => {
   it('inserts a row into a table with defined columns', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
@@ -15,6 +15,23 @@ describe('Table::addRow', () => {
     const updated = table.addRow(row);
 
     expect(updated.requireRow(0)).toEqual(row);
+  });
+
+  it('inserts a batch of rows into a table with defined columns', () => {
+    const table = buildTable()
+      .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
+
+    const updated = table.addRows([
+      createInsert([1, 2]),
+      createInsert([3, 4]),
+      createInsert([5, 6]),
+    ]);
+
+    expect(updated.numRows).toBe(3);
+    expect(updated.requireRow(0)).toEqual([1, 2]);
+    expect(updated.requireRow(1)).toEqual([3, 4]);
+    expect(updated.requireRow(2)).toEqual([5, 6]);
   });
 
   it('does not mutate original table (immutability)', () => {
@@ -416,5 +433,54 @@ describe('Table::addRow', () => {
     expect(() => {
       table.addRow([20]);
     }).not.toThrow();
+  });
+
+  it("rejects duplicate unique values within a batch", () => {
+    const table = buildTable()
+      .createColumn(
+        createColumnTestSpec({
+          name: "email",
+          type: String,
+        }),
+      )
+      .createIndex({
+        name: "UQ_Email",
+        columns: ["email"],
+        unique: true,
+      });
+
+    expect(() =>
+      table.addRows([
+        createInsert(["a@test.com"]),
+        createInsert(["a@test.com"]),
+      ]),
+    ).toThrow();
+  });
+
+  it("does not partially insert a batch when one row violates a constraint", () => {
+    const table = buildTable()
+      .createColumn(
+        createColumnTestSpec({
+          name: "id",
+          type: Number,
+        }),
+      )
+      .createIndex({
+        name: "UQ_Id",
+        columns: ["id"],
+        unique: true,
+      });
+
+    const original = table;
+
+    expect(() =>
+      table.addRows([
+        createInsert([1]),
+        createInsert([2]),
+        createInsert([1]),
+      ]),
+    ).toThrow();
+
+    expect(original.numRows).toBe(0);
   });
 });
