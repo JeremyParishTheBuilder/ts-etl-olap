@@ -2,14 +2,14 @@ import { type Action } from "../actions/Action.js";
 import { InsertRowsAction } from "../actions/InsertRowsAction.js";
 import { type InsertIntoStatement } from "../statements/index.js";
 import { type ColumnId, type Column } from "../relational/Column.js";
-import { type ColumnValue } from "../types/ColumnValue.js";
 import { resolveTargetColumns } from "./resolveColumnList.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { assertInsertExpression, bindInsertExpression } from "./expression.js";
-import { resolveDefaultValue } from "./defaultValue.js";
 import { validateInputNode } from "./toExpressionNode.js";
 import type { ExpressionNode } from "../ast/expression/ExpressionNode.js";
 import type { DefaultValueNode } from "../ast/DefaultValueNode.js";
+import type { ColumnInput } from "../types/ColumnInput.js";
+import { DEFAULT } from "../dialect/keywords.js";
 
 export function bindInsertInto(
   semantic: SemanticAnalyzer,
@@ -28,12 +28,12 @@ export function bindInsertInto(
 
   assertAtLeastOneRowOfValues(stmt.values);
 
-  const inputRows: Map<ColumnId, ColumnValue>[] = [];
+  const inputRows: Map<ColumnId, ColumnInput>[] = [];
 
   for (const row of stmt.values) {
     assertRowLengthMatchesColumnLength(row, effectiveColumns);
 
-    const columnIdToValueMap = new Map<ColumnId, ColumnValue>();
+    const columnIdToColumnInputMap = new Map<ColumnId, ColumnInput>();
 
     for (let i = 0; i < effectiveColumns.length; i++) {
       const column = effectiveColumns[i];
@@ -42,24 +42,44 @@ export function bindInsertInto(
       validateInputNode(valueNode, ctx);
 
       if (valueNode.kind === "default") {
-        columnIdToValueMap.set(
-          column.id,
-          resolveDefaultValue<undefined>(valueNode, column, "insert").evaluate(
-            undefined,
-          ),
-        );
+        if (
+          column.isAutoIncrement() &&
+          !column.autoIncrementAllowsExplicitDefault
+        ) {
+          throw new Error(
+            `AutoIncrement Column ${column.name} does not accept explicit value.`,
+          );
+        }
+
+        columnIdToColumnInputMap.set(column.id, DEFAULT);
 
         continue;
+      }
+
+      console.log("Somehow this is allowed:");
+      console.log(column.isAutoIncrement());
+      console.log(column.autoIncrementAllowsExplicitValue);
+      console.log(
+        ctx.rules.autoIncrementColumnPolicy.autoIncrementAllowsExplicitValue,
+      );
+
+      if (
+        column.isAutoIncrement() &&
+        !column.autoIncrementAllowsExplicitValue
+      ) {
+        throw new Error(
+          `AutoIncrement Column ${column.name} does not accept explicit value.`,
+        );
       }
 
       assertInsertExpression(valueNode);
 
       const value = bindInsertExpression(valueNode, table).evaluate(undefined);
 
-      columnIdToValueMap.set(column.id, value);
+      columnIdToColumnInputMap.set(column.id, value);
     }
 
-    inputRows.push(columnIdToValueMap);
+    inputRows.push(columnIdToColumnInputMap);
   }
 
   stmtActions.push(new InsertRowsAction(dbName, tableName, inputRows));

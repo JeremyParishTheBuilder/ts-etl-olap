@@ -10,8 +10,7 @@ describe('Query::tableScanNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1])
-      .addRow([2]);
+      .addRows([[1],[2]]);
 
     const scan = new TableScanNode(table);
 
@@ -36,9 +35,7 @@ describe('Query::tableScanNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([10])
-      .addRow([20])
-      .addRow([30]);
+      .addRows([[10],[20],[30]]);
 
     const scan = new TableScanNode(table);
 
@@ -60,9 +57,7 @@ describe('Query::tableScanNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1])
-      .addRow([2])
-      .addRow([3]);
+      .addRows([[1],[2],[3]]);
 
     table = table.removeRows([createDelete(table, 1)]);
 
@@ -94,7 +89,7 @@ describe('Query::tableScanNode', () => {
         type: String,
         nullable: false,
       }))
-      .addRow([1, "Alice"]);
+      .addRows([[1, "Alice"]]);
 
     const scan = new TableScanNode(table);
 
@@ -115,7 +110,7 @@ describe('Query::tableScanNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1]);
+      .addRows([[1]]);
 
     const scan = new TableScanNode(table);
 
@@ -138,8 +133,7 @@ describe('Query::tableScanNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1])
-      .addRow([2]);
+      .addRows([[1],[2]]);
 
     const scan = new TableScanNode(table);
 

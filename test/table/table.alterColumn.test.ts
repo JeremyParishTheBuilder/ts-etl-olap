@@ -23,7 +23,7 @@ describe('Table::alterColumn', () => {
             ),
           })
         )
-        .addRow([20]);
+        .addRows([[20]]);
 
     expect(() => {
       table.alterColumn(
@@ -50,7 +50,7 @@ describe('Table::alterColumn', () => {
             ),
           })
         )
-        .addRow([20]);
+        .addRows([[20]]);
 
     expect(() => {
       table.alterColumn("Age", Number);

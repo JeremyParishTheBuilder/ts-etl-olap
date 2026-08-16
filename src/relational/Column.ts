@@ -1,9 +1,10 @@
 import { Immutable } from "../infrastructure/Immutable.js";
 import { type ReferentialAction } from "./ReferentialAction.js";
-import { type ExplicitInput } from "../types/ExplicitInput.js";
+import { type ColumnInput } from "../types/ColumnInput.js";
 import { type PredicateNode } from "../ast/predicate/PredicateNode.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { type ColumnType, matchesColumnType } from "../types/ColumnType.js";
+import { DEFAULT } from "../dialect/keywords.js";
 
 export type ColumnId = number & { readonly __brand: "ColumnId" };
 
@@ -22,6 +23,13 @@ export class Column extends Immutable {
   public readonly data: ColumnValue[];
   public readonly autoIncrementNext?: number;
 
+  public readonly autoIncrementNullGenerates: boolean;
+  public readonly autoIncrementZeroGenerates: boolean;
+  public readonly autoIncrementExplicitValueAdvances: boolean;
+
+  public readonly autoIncrementAllowsExplicitValue: boolean;
+  public readonly autoIncrementAllowsExplicitDefault: boolean;
+
   validate(): void {}
 
   private constructor(
@@ -29,9 +37,11 @@ export class Column extends Immutable {
       id: ColumnId;
       position: number;
     },
+    policy?: ColumnPolicy,
   ) {
     super();
 
+    // Spec
     this.name = spec.name;
     this.type = spec.type;
     this.nullable = spec.nullable ?? true;
@@ -47,6 +57,19 @@ export class Column extends Immutable {
     }
     this.data = [];
 
+    // Policy
+    this.autoIncrementNullGenerates =
+      policy?.autoIncrementNullGenerates ?? false;
+    this.autoIncrementZeroGenerates =
+      policy?.autoIncrementZeroGenerates ?? false;
+    this.autoIncrementExplicitValueAdvances =
+      policy?.autoIncrementExplicitValueAdvances ?? true;
+
+    this.autoIncrementAllowsExplicitValue =
+      policy?.autoIncrementAllowsExplicitValue ?? true;
+    this.autoIncrementAllowsExplicitDefault =
+      policy?.autoIncrementAllowsExplicitDefault ?? true;
+
     this.validate();
     this.seal();
   }
@@ -56,10 +79,11 @@ export class Column extends Immutable {
       id: ColumnId;
       position: number;
     },
+    policy?: ColumnPolicy,
   ): Column {
     validateColumnSpec(spec);
 
-    return new this(spec);
+    return new this(spec, policy);
   }
 
   public backfill(numRows: number, value: ColumnValue): Column {
@@ -137,51 +161,6 @@ export class Column extends Immutable {
     }
   }
 
-  public normalizeDatum(
-    datum: ColumnValue,
-    mode: "insert" | "update",
-  ): ColumnValue {
-    let normalizedDatum = datum;
-
-    if (mode === "insert" && datum === null && this.isAutoIncrement()) {
-      normalizedDatum = this.autoIncrementNext;
-    }
-
-    // maybe handle string to number type coercion later...
-
-    this.assertDatumTypeMatchesColumnType(normalizedDatum);
-    this.assertNullabilityConstraint(normalizedDatum);
-    this.assertEnumValuesConstraint(normalizedDatum);
-
-    return normalizedDatum;
-  }
-
-  //TODO, confirm decision public vs private
-  public resolveDefaultOrThrow(mode: "insert" | "update"): ColumnValue {
-    if (this.defaultValue !== undefined) return this.defaultValue;
-    else if (this.isAutoIncrement() && mode === "insert") {
-      return this.autoIncrementNext;
-    } else if (this.nullable) return null;
-    else {
-      throw new Error(`Cannot resolve default the Column ${this.name}`);
-    }
-  }
-
-  public resolveInput(
-    input: ExplicitInput | undefined,
-    mode: "insert" | "update",
-  ): ColumnValue {
-    if (input === undefined) {
-      return this.resolveDefaultOrThrow(mode);
-    }
-
-    if (typeof input === "symbol") {
-      throw new Error("Keyword must be resolved at Table level");
-    }
-
-    return input;
-  }
-
   public assertDatum(datum: ColumnValue): void {
     this.assertDatumTypeMatchesColumnType(datum);
     this.assertNullabilityConstraint(datum);
@@ -198,34 +177,105 @@ export class Column extends Immutable {
     );
   }
 
-  public addDatum(datum: ColumnValue): Column {
-    this.assertDatum(datum);
-
+  private resolveDefault(): {
+    value: ColumnValue;
+    nextAutoIncrementNext: number | undefined;
+  } {
+    let value: ColumnValue;
     let nextAutoIncrementNext = this.autoIncrementNext;
-    if (
-      this.isAutoIncrement() &&
-      typeof datum === "number" &&
-      datum >= this.autoIncrementNext
-    ) {
-      nextAutoIncrementNext = datum + this.autoIncrementStep;
+
+    if (this.defaultValue !== undefined) {
+      value = this.defaultValue;
+    } else if (this.isAutoIncrement()) {
+      value = this.autoIncrementNext;
+      nextAutoIncrementNext = value + this.autoIncrementStep;
+    } else if (this.nullable) {
+      value = null;
+    } else {
+      throw new Error(`Cannot resolve default for Column ${this.name}`);
     }
 
+    return {
+      value,
+      nextAutoIncrementNext: nextAutoIncrementNext,
+    };
+  }
+
+  private resolveAutoIncrementNext(cellValue: ColumnValue): number | undefined {
+    if (
+      this.isAutoIncrement() &&
+      this.autoIncrementExplicitValueAdvances &&
+      typeof cellValue === "number" &&
+      cellValue > this.autoIncrementNext
+    ) {
+      return cellValue + this.autoIncrementStep;
+    }
+
+    return this.autoIncrementNext;
+  }
+
+  public addCell(input: ColumnInput | undefined): Column {
+    let cellValue = input;
+    let nextAutoIncrementNext: number | undefined = undefined;
+
+    if (cellValue === DEFAULT || cellValue === undefined) {
+      const resolved = this.resolveDefault();
+      cellValue = resolved.value;
+      nextAutoIncrementNext = resolved.nextAutoIncrementNext;
+    } else if (this.isAutoIncrement()) {
+      if (
+        (this.autoIncrementNullGenerates &&
+          cellValue === null &&
+          !this.nullable) ||
+        (this.autoIncrementZeroGenerates && cellValue === 0)
+      ) {
+        cellValue = this.autoIncrementNext;
+        nextAutoIncrementNext = cellValue + this.autoIncrementStep;
+      } else {
+        nextAutoIncrementNext = this.resolveAutoIncrementNext(cellValue);
+      }
+    }
+
+    this.assertDatum(cellValue);
+
     return this.with({
-      data: [...this.data, datum],
+      data: [...this.data, cellValue],
       autoIncrementNext: nextAutoIncrementNext,
     } as Partial<this>);
   }
 
-  public updateDatum(datum: ColumnValue, rowNum: number): Column {
+  public updateCell(input: ColumnInput, rowNum: number): Column {
     this.requireDatumAtRow(rowNum);
 
-    this.assertDatum(datum);
+    let cellValue = input;
+    let nextAutoIncrementNext: number | undefined = undefined;
+
+    if (cellValue === DEFAULT) {
+      const resolved = this.resolveDefault();
+      cellValue = resolved.value;
+      nextAutoIncrementNext = resolved.nextAutoIncrementNext;
+    } else if (this.isAutoIncrement()) {
+      if (
+        (this.autoIncrementNullGenerates &&
+          cellValue === null &&
+          !this.nullable) ||
+        (this.autoIncrementZeroGenerates && cellValue === 0)
+      ) {
+        cellValue = this.autoIncrementNext;
+        nextAutoIncrementNext = cellValue + this.autoIncrementStep;
+      } else {
+        nextAutoIncrementNext = this.resolveAutoIncrementNext(cellValue);
+      }
+    }
+
+    this.assertDatum(cellValue);
 
     const updatedData = [...this.data];
-    updatedData[rowNum] = datum;
+    updatedData[rowNum] = cellValue;
 
     return this.with({
       data: updatedData,
+      autoIncrementNext: nextAutoIncrementNext,
     } as Partial<this>);
   }
 
@@ -246,11 +296,23 @@ export type ColumnSpec = {
   autoIncrementStart?: number;
 };
 
+export type ColumnPolicy = {
+  autoIncrementNullGenerates?: boolean;
+  autoIncrementZeroGenerates?: boolean;
+  autoIncrementExplicitValueAdvances?: boolean;
+  autoIncrementAllowsExplicitDefault?: boolean;
+  autoIncrementAllowsExplicitValue?: boolean;
+};
+
 export function validateColumnSpec(spec: ColumnSpec): void {
   if (spec.autoIncrementStep !== undefined && spec.type !== Number) {
     throw new Error(
       `Column: "${spec.name}" can only autoIncrement as type Number.`,
     );
+  }
+
+  if (spec.autoIncrementStep !== undefined && spec.defaultValue !== undefined) {
+    throw new Error(`Column cannot have default value and autoIncrement.`);
   }
 }
 

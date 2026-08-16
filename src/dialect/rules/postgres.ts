@@ -36,12 +36,23 @@ export const POSTGRES_RULES: DialectRules = {
   },
 
   constraints: {
-    allowsMultipleAutoIncrement: false, // SERIAL / IDENTITY only once per table
     supportsNotValidatedConstraints: true,
     nullsDistinct: true,
     allowNullableForeignKeys: true,
     foreignKeyDefaultOnDelete: "restrict",
     foreignKeyDefaultOnUpdate: "restrict",
+  },
+
+  tablePolicy: {
+    allowMultipleAutoIncrementColumns: true,
+  },
+
+  autoIncrementColumnPolicy: {
+    autoIncrementNullGenerates: false,
+    autoIncrementZeroGenerates: false,
+    autoIncrementExplicitValueAdvances: false,
+    autoIncrementAllowsExplicitValue: true,
+    autoIncrementAllowsExplicitDefault: true,
   },
 
   insert: {

@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { CONSTRAINT_KIND } from '../../src/relational/ConstraintKind.js';
-import { createTestSql } from '../utils/engineHelpers.js';
+import { createTestPostgresSql } from '../utils/engineHelpers.js';
 import { col } from '../../src/ast/dsl.js';
 
 describe("Integration::delete", () => {
   it("deletes a single row", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -49,7 +49,7 @@ describe("Integration::delete", () => {
   });
 
   it("deletes all rows when no WHERE clause is specified", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -80,7 +80,7 @@ describe("Integration::delete", () => {
   });
 
   it("deletes multiple rows matching a predicate", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -119,7 +119,7 @@ describe("Integration::delete", () => {
   });
 
   it("prevents deleting a parent row referenced by a child", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -172,7 +172,7 @@ describe("Integration::delete", () => {
   });
 
   it("cascades deletes to child rows", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();

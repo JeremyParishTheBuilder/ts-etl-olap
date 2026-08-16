@@ -4,8 +4,7 @@ import {
   buildParentChildDatabase,
   buildTable,
   createColumnTestSpec,
-  createForeignKeyTestSpec_Database,
-  createInsert
+  createForeignKeyTestSpec_Database
 } from '../utils/buildSchema.js';
 
 describe('Database::createForeignKey', () => {
@@ -382,7 +381,7 @@ describe('Database::createForeignKey', () => {
         nullable: false,
       })
       .addRows(
-        [createInsert([1])]
+        [[1]]
       )
       .createIndex({
         name: "PK_Users",
@@ -402,7 +401,7 @@ describe('Database::createForeignKey', () => {
         unique: false,
       })
       .addRows(
-        [createInsert([999])]
+        [[999]]
       );
 
     const database = buildDatabase()
@@ -431,7 +430,7 @@ describe('Database::createForeignKey', () => {
         nullable: false,
       })
       .addRows(
-        [createInsert([1])]
+        [[1]]
       )
       .createIndex({
         name: "PK_Users",
@@ -451,7 +450,7 @@ describe('Database::createForeignKey', () => {
         unique: false,
       })
       .addRows(
-        [createInsert([1])]
+        [[1]]
       );
 
     const database = buildDatabase()
@@ -497,7 +496,7 @@ describe('Database::createForeignKey', () => {
         unique: false,
       })
       .addRows(
-        [createInsert([null])]
+        [[null]]
       );
 
     const database = buildDatabase()

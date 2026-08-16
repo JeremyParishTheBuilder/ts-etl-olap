@@ -40,16 +40,6 @@ export class DiscoveryContext implements CaptureContext {
     );
   }
 
-  // TODO this is unused, maybe remoove result from DiscoveryResult.
-  withResult(result: DiscoveryResult): DiscoveryContext {
-    return new DiscoveryContext(
-      this.current,
-      this.captures,
-      this.identity,
-      result,
-    );
-  }
-
   selectCaptures(names: readonly string[]): Map<string, CaptureValue> {
     const result = new Map<string, CaptureValue>();
 

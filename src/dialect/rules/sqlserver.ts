@@ -34,12 +34,23 @@ export const SQLSERVER_RULES: DialectRules = {
   },
 
   constraints: {
-    allowsMultipleAutoIncrement: false, // Only one IDENTITY column per table
     supportsNotValidatedConstraints: true,
     nullsDistinct: true,
     allowNullableForeignKeys: true,
     foreignKeyDefaultOnDelete: "restrict",
     foreignKeyDefaultOnUpdate: "restrict",
+  },
+
+  tablePolicy: {
+    allowMultipleAutoIncrementColumns: false,
+  },
+
+  autoIncrementColumnPolicy: {
+    autoIncrementNullGenerates: false,
+    autoIncrementZeroGenerates: false,
+    autoIncrementExplicitValueAdvances: true,
+    autoIncrementAllowsExplicitValue: false,
+    autoIncrementAllowsExplicitDefault: false,
   },
 
   insert: {

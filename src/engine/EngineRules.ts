@@ -64,6 +64,45 @@ export const ENGINE_RULES: Record<
     },
   },
 
+  tablePolicy: {
+    allowMultipleAutoIncrementColumns: {
+      dialectStrict: (d: Dialect) =>
+        DIALECT_RULES[d].tablePolicy?.allowMultipleAutoIncrementColumns,
+      engineDefault: true,
+    },
+  },
+
+  autoIncrementColumnPolicy: {
+    autoIncrementNullGenerates: {
+      dialectDefault: (d: Dialect) =>
+        DIALECT_RULES[d].autoIncrementColumnPolicy?.autoIncrementNullGenerates,
+      engineDefault: false,
+    },
+    autoIncrementZeroGenerates: {
+      dialectDefault: (d: Dialect) =>
+        DIALECT_RULES[d].autoIncrementColumnPolicy?.autoIncrementZeroGenerates,
+      engineDefault: false,
+    },
+    autoIncrementExplicitValueAdvances: {
+      dialectDefault: (d: Dialect) =>
+        DIALECT_RULES[d].autoIncrementColumnPolicy
+          ?.autoIncrementExplicitValueAdvances,
+      engineDefault: false,
+    },
+    autoIncrementAllowsExplicitValue: {
+      dialectDefault: (d: Dialect) =>
+        DIALECT_RULES[d].autoIncrementColumnPolicy
+          ?.autoIncrementAllowsExplicitValue,
+      engineDefault: true,
+    },
+    autoIncrementAllowsExplicitDefault: {
+      dialectDefault: (d: Dialect) =>
+        DIALECT_RULES[d].autoIncrementColumnPolicy
+          ?.autoIncrementAllowsExplicitDefault,
+      engineDefault: true,
+    },
+  },
+
   transaction: {
     isolationLevel: {
       dialectDefault: (d: Dialect) =>

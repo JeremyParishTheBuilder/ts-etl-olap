@@ -16,7 +16,7 @@ describe('Database::removeRow', () => {
         type: Number,
       }));
 
-    users = users.addRow([1]);
+    users = users.addRows([[1]]);
 
     const db = buildDatabase()
       .addTable(users);
@@ -45,7 +45,7 @@ describe('Database::removeRow', () => {
         unique: true,
       });
 
-    roles = roles.addRow([1]);
+    roles = roles.addRows([[1]]);
 
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
@@ -58,7 +58,7 @@ describe('Database::removeRow', () => {
         unique: false,
       });
 
-    users = users.addRow([1]);
+    users = users.addRows([[1]]);
 
     const db = buildDatabase()
       .addTable(roles)
@@ -93,7 +93,7 @@ describe('Database::removeRow', () => {
         unique: true,
       });
 
-    roles = roles.addRow([1]);
+    roles = roles.addRows([[1]]);
 
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
@@ -106,7 +106,7 @@ describe('Database::removeRow', () => {
         unique: false,
       });
 
-    users = users.addRow([1]);
+    users = users.addRows([[1]]);
 
     let db = buildDatabase()
       .addTable(roles)
@@ -150,7 +150,7 @@ describe('Database::removeRow', () => {
         unique: true,
       });
 
-    roles = roles.addRow([1]);
+    roles = roles.addRows([[1]]);
 
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
@@ -163,7 +163,7 @@ describe('Database::removeRow', () => {
         unique: false,
       });
 
-    users = users.addRow([1]);
+    users = users.addRows([[1]]);
 
     users = users.removeRows(
       [createDelete(users, 0)]
@@ -215,7 +215,7 @@ describe('Database::removeRow', () => {
         type: Number,
       }));
 
-    users = users.addRow([1]);
+    users = users.addRows([[1]]);
 
     let db = buildDatabase()
       .addTable(users);
@@ -242,7 +242,7 @@ describe('Database::removeRow', () => {
         type: Number,
       }));
 
-    users = users.addRow([1]);
+    users = users.addRows([[1]]);
 
     const db = buildDatabase()
       .addTable(users);
@@ -279,7 +279,7 @@ describe('Database::removeRow', () => {
         type: Number,
       }));
 
-    users = users.addRow([1]);
+    users = users.addRows([[1]]);
 
     let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
@@ -287,7 +287,7 @@ describe('Database::removeRow', () => {
         type: Number,
       }));
 
-    roles = roles.addRow([10]);
+    roles = roles.addRows([[10]]);
 
     const db = buildDatabase()
       .addTable(users)
@@ -316,9 +316,9 @@ describe('Database::removeRow', () => {
         type: String,
       }));
 
-    users = users.addRow([1, "Alice"]);
-    users = users.addRow([2, "Bob"]);
-    users = users.addRow([3, "Charlie"]);
+    users = users.addRows([[1, "Alice"]]);
+    users = users.addRows([[2, "Bob"]]);
+    users = users.addRows([[3, "Charlie"]]);
 
     const db = buildDatabase()
       .addTable(users);
@@ -353,8 +353,8 @@ describe('Database::removeRow', () => {
         unique: true,
       });
 
-    roles = roles.addRow([1]);
-    roles = roles.addRow([2]);
+    roles = roles.addRows([[1]]);
+    roles = roles.addRows([[2]]);
 
     let users = buildTable({ name: "Users" })
       .createColumn(createColumnTestSpec({
@@ -367,8 +367,8 @@ describe('Database::removeRow', () => {
         unique: false,
       });
 
-    users = users.addRow([1]);
-    users = users.addRow([2]);
+    users = users.addRows([[1]]);
+    users = users.addRows([[2]]);
 
     const db = buildDatabase()
       .addTable(roles)

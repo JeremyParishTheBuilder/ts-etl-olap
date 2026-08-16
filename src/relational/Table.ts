@@ -3,6 +3,7 @@ import {
   Column,
   assertTypeIndexable,
   type ColumnId,
+  type ColumnPolicy,
 } from "./Column.js";
 import { type ColumnType } from "../types/ColumnType.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
@@ -22,22 +23,25 @@ import { type RowView } from "./RowView.js";
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
 import { type CheckSpec } from "./Constraint.js";
 import { type ReferentialAction } from "./ReferentialAction.js";
-import { type ExplicitInput } from "../types/ExplicitInput.js";
+import { type ColumnInput } from "../types/ColumnInput.js";
 import { IdAllocator } from "../types/IdAllocator.js";
 import { NamedObjectStore } from "../infrastructure/NamedObjectStore.js";
 import { type ResolvedUpdate } from "../types/ResolvedUpdate.js";
 import { type ResolvedDelete } from "../types/ResolvedDelete.js";
-import { type Expression } from "../evaluation/expression/Expression.js";
 import { bindPredicate, resolvePredicate } from "../semantic/predicate.js";
-import type { ResolvedInsert } from "../types/ResolvedInsert.js";
 import {
   ConstraintViolationError,
   type ConstraintViolationParticipant,
 } from "./ConstraintViolationError.js";
 import { CONSTRAINT_KIND } from "./ConstraintKind.js";
 import { arraysEqual } from "../utils/arrayHelpers.js";
+import type { OrderedInputRow } from "../types/OrderedInputRow.js";
 
 export type TableId = number & { readonly __brand: "TableId" };
+
+export type TablePolicy = {
+  allowMultipleAutoIncrementColumns?: boolean;
+};
 
 export class Table extends Immutable {
   public id: TableId;
@@ -60,6 +64,8 @@ export class Table extends Immutable {
   public readonly foreignKeyIds;
   public readonly checkIds;
 
+  public readonly allowMultipleAutoIncrementColumns: boolean;
+
   public validate(): void {
     for (const column of this.columns.values()) {
       if (column.data.length !== this.numRows) {
@@ -70,7 +76,7 @@ export class Table extends Immutable {
     }
   }
 
-  constructor(spec: { id: TableId; name: string }) {
+  constructor(spec: { id: TableId; name: string }, policy?: TablePolicy) {
     super();
 
     this.id = spec.id;
@@ -93,12 +99,19 @@ export class Table extends Immutable {
     this.foreignKeyIds = new IdAllocator<ForeignKeyId>();
     this.checkIds = new IdAllocator<CheckId>();
 
+    // Policy
+    this.allowMultipleAutoIncrementColumns =
+      policy?.allowMultipleAutoIncrementColumns ?? true;
+
     this.validate();
     this.seal();
   }
 
-  public static create(spec: { id: TableId; name: string }): Table {
-    return new Table(spec);
+  public static create(
+    spec: { id: TableId; name: string },
+    policy?: TablePolicy,
+  ): Table {
+    return new Table(spec, policy);
   }
 
   public rename(newName: string): Table {
@@ -113,7 +126,11 @@ export class Table extends Immutable {
     );
   }
 
-  public createColumn(spec: ColumnSpec): Table {
+  public hasAutoIncrementColumn(): boolean {
+    return this.columns.some((c) => c.isAutoIncrement());
+  }
+
+  public createColumn(spec: ColumnSpec, policy?: ColumnPolicy): Table {
     this.columns.assertNameUnused(spec.name);
 
     if (
@@ -130,7 +147,15 @@ export class Table extends Immutable {
 
     const position = this.columns.size();
 
-    const emptyColumn = Column.create({ ...spec, id, position });
+    const emptyColumn = Column.create({ ...spec, id, position }, policy);
+
+    if (
+      !this.allowMultipleAutoIncrementColumns &&
+      emptyColumn.isAutoIncrement() &&
+      this.hasAutoIncrementColumn()
+    ) {
+      throw new Error(`Table is not allowed multiple autoIncrement columns`);
+    }
 
     const backfillValue = spec.defaultValue ?? null;
 
@@ -742,30 +767,6 @@ export class Table extends Immutable {
 
     index = index.build(this.iterateAliveRows());
 
-    // try {
-    //   index = index.build(this.iterateAliveRows());
-    // } catch (e: IndexUniquenessError) {
-    //   //find all rows with the same key or projection
-    //   const rows = index.getRowNumsFromProjection(e.projection);
-    //   const participants: ConstraintParticipant[] = [];
-    //   //for each row, create a constraint participant
-    //   for (const row of rows) {
-    //     participants.push({
-    //       table: this.id,
-    //       rowId: row.index,
-    //       columns: e.columns,
-    //       columnValues: e.projection,
-    //     });
-    //   }
-
-    //   throw new ConstraintViolationError({
-    //     constraint,//still not sure
-    //     participants, // now valid
-    //     message: `Cannot create Unique Index with duplicate values`
-    //     //still not necessarily a constraint--might want to convert it elsewhere
-    //   });
-    // }
-
     const updatedIndexes = this.indexes.add(index);
 
     return this.with({
@@ -942,109 +943,51 @@ export class Table extends Immutable {
     }
   }
 
-  public resolveInsertInputs(
-    inputs: Map<ColumnId, ExplicitInput>,
-  ): ColumnValue[] {
-    const resolvedRow = new Array<ColumnValue>(this.columns.size());
-
-    for (const column of this.columns.values()) {
-      const i = column.position;
-
-      resolvedRow[i] = column.resolveInput(
-        inputs.get(column.id) ?? undefined,
-        "insert",
-      );
-    }
-
-    return resolvedRow;
-  }
-
-  public resolveUpdateInputs(
-    inputs: Map<ColumnId, ExplicitInput>,
-    rowNum: number,
-  ): ColumnValue[] {
-    const existingRow = this.requireRow(rowNum);
-
-    const resolvedRow = new Array<ColumnValue>(this.columns.size());
-
-    for (const column of this.columns.values()) {
-      const i = column.position;
-
-      const input = inputs.get(column.id);
-      if (input === undefined) {
-        resolvedRow[i] = existingRow[i];
-        continue;
-      }
-
-      resolvedRow[i] = column.resolveInput(input, "update");
-    }
-
-    return resolvedRow;
-  }
-
-  public resolveUpdateExpressions(
-    expressions: Map<ColumnId, Expression<RowView>>,
-    rowNum: number,
-  ): ResolvedUpdate {
-    const rowView = this.requireRowView(rowNum);
-
-    const oldRow = this.requireRow(rowNum);
-
-    const newRow = [...oldRow];
-
-    for (const [columnId, expression] of expressions) {
-      const position = this.columns.require(columnId).position;
-
-      newRow[position] = expression.evaluate(rowView);
-    }
-
-    return {
-      rowNum,
-      oldRow,
-      newRow,
-    };
-  }
-
-  public addRow(row: ColumnValue[]): Table {
-    return this.addRows([
-      {
-        newRow: row,
-      },
-    ]);
-  }
-
-  public addRows(inserts: ResolvedInsert[]): Table {
+  public addRows(rows: readonly OrderedInputRow[]): Table {
     let updatedColumns = this.columns;
 
-    for (const insert of inserts) {
-      this.assertRowLength(insert.newRow);
-
-      this.assertRowAgainstChecks(insert.newRow);
+    for (const row of rows) {
+      this.assertRowLength(row);
 
       updatedColumns = updatedColumns.mapValues((column) =>
-        column.addDatum(insert.newRow[column.position]),
+        column.addCell(row[column.position]),
       );
     }
 
-    const updateNumRows = this.numRows + inserts.length;
+    const updateNumRows = this.numRows + rows.length;
 
     const tableWithUpdatedColumns = this.with({
       columns: updatedColumns,
       numRows: updateNumRows,
     } as Partial<this>);
 
+    for (let i = 0; i < rows.length; i++) {
+      const resolvedRow = tableWithUpdatedColumns.requireRow(this.numRows + i);
+
+      this.assertRowAgainstChecks(resolvedRow);
+    }
+
     const updatedIndexes = this.indexes.mapValues((index) =>
       index.build(tableWithUpdatedColumns.iterateAliveRows()),
     );
 
-    return this.with({
+    return tableWithUpdatedColumns.with({
       indexes: updatedIndexes,
-      columns: updatedColumns,
-      numRows: updateNumRows,
     } as Partial<this>);
   }
 
-  public updateRows(updates: ResolvedUpdate[]): Table {
+  public orderInputs(inputs: Map<ColumnId, ColumnInput>): OrderedInputRow {
+    const row = new Array<ColumnInput | undefined>(this.columns.size());
+
+    for (const [columnId, input] of inputs) {
+      const column = this.columns.require(columnId);
+      row[column.position] = input;
+    }
+
+    return row;
+  }
+
+  public applyResolvedUpdates(updates: ResolvedUpdate[]): Table {
     let updatedColumns = this.columns;
 
     for (const update of updates) {
@@ -1053,7 +996,7 @@ export class Table extends Immutable {
       this.assertRowAgainstChecks(update.newRow);
 
       updatedColumns = updatedColumns.mapValues((column) =>
-        column.updateDatum(update.newRow[column.position], update.rowNum),
+        column.updateCell(update.newRow[column.position], update.rowNum),
       );
     }
 
@@ -1068,6 +1011,83 @@ export class Table extends Immutable {
     return tableWithUpdatedColumns.with({
       indexes: updatedIndexes,
     } as Partial<this>);
+  }
+
+  public updateRows(
+    rowNums: readonly number[],
+    rows: readonly OrderedInputRow[],
+  ): {
+    table: Table;
+    updates: ResolvedUpdate[];
+  } {
+    if (rowNums.length !== rows.length) {
+      throw new Error(
+        "Number of row numbers must match number of update rows.",
+      );
+    }
+
+    if (rowNums.length === 0) {
+      return { table: this, updates: [] };
+    }
+
+    let updatedColumns = this.columns;
+
+    const seen = new Set<number>();
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const rowNum = rowNums[i];
+
+      if (rowNum < 0 || rowNum >= this.numRows) {
+        throw new Error(`Row Number: ${rowNum} does not exist.`);
+      }
+
+      if (seen.has(rowNum)) {
+        throw new Error(
+          `Row Number: ${rowNum} already updated in this operation.`,
+        );
+      }
+
+      seen.add(rowNum);
+
+      this.assertRowLength(row);
+
+      updatedColumns = updatedColumns.mapValues((column) =>
+        row[column.position] === undefined
+          ? column
+          : column.updateCell(row[column.position]!, rowNum),
+      );
+    }
+
+    const tableWithUpdatedColumns = this.with({
+      columns: updatedColumns,
+    } as Partial<this>);
+
+    const resolvedUpdates: ResolvedUpdate[] = [];
+
+    for (const rowNum of rowNums) {
+      const oldRow = this.requireRow(rowNum);
+      const newRow = tableWithUpdatedColumns.requireRow(rowNum);
+
+      this.assertRowAgainstChecks(newRow);
+
+      resolvedUpdates.push({
+        rowNum,
+        newRow: [...newRow],
+        oldRow: [...oldRow],
+      });
+    }
+
+    const updatedIndexes = this.indexes.mapValues((index) =>
+      index.build(tableWithUpdatedColumns.iterateAliveRows()),
+    );
+
+    return {
+      table: tableWithUpdatedColumns.with({
+        indexes: updatedIndexes,
+      } as Partial<this>),
+      updates: resolvedUpdates,
+    };
   }
 
   public removeRows(deletes: ResolvedDelete[]): Table {

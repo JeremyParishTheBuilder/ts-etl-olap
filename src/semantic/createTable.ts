@@ -31,12 +31,14 @@ export function bindCreateTable(
 
   // create table
   //validate
-  if (semantic.ctx.getTable(tableName)) {
+  if (ctx.getTable(tableName)) {
     throw new Error(`Table '${tableName}' already exists`);
   }
 
   //save action
-  stmtActions.push(new CreateTableAction(dbName, tableName));
+  stmtActions.push(
+    new CreateTableAction(dbName, tableName, ctx.rules.tablePolicy),
+  );
 
   // add columns and inline constraints
   const seen = new Set<string>();
@@ -50,10 +52,14 @@ export function bindCreateTable(
     const columnSpec: ColumnSpec = { name: colName, ...inlineColSpec };
 
     stmtActions.push(
-      new AddColumnAction(dbName, tableName, {
-        //id: ctx.ids.nextColumnId(),
-        ...columnSpec,
-      }),
+      new AddColumnAction(
+        dbName,
+        tableName,
+        {
+          ...columnSpec,
+        },
+        ctx.rules.autoIncrementColumnPolicy,
+      ),
     );
 
     //get any inline constraints
@@ -67,7 +73,9 @@ export function bindCreateTable(
       switch (spec.kind) {
         case CONSTRAINT_KIND.foreignKey: {
           // optionally skip FK if dialect disallows inline FKs
-          if (!semantic.ctx.rules.ddl.supportsInlineForeignKeys) break; // TODO, need error here?
+          if (!semantic.ctx.rules.ddl.supportsInlineForeignKeys) {
+            throw new Error(`Dialect does not allow inline Foreign Keys.`);
+          }
 
           const reverseIndexName = ForeignKey.defaultIndexName(spec.name);
 

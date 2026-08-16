@@ -32,12 +32,23 @@ export const MYSQL_RULES: DialectRules = {
   },
 
   constraints: {
-    allowsMultipleAutoIncrement: false, // only one AUTO_INCREMENT column per table
     supportsNotValidatedConstraints: true,
     nullsDistinct: true,
     allowNullableForeignKeys: true,
     foreignKeyDefaultOnDelete: "restrict",
     foreignKeyDefaultOnUpdate: "restrict",
+  },
+
+  tablePolicy: {
+    allowMultipleAutoIncrementColumns: false,
+  },
+
+  autoIncrementColumnPolicy: {
+    autoIncrementNullGenerates: true,
+    autoIncrementZeroGenerates: true,
+    autoIncrementExplicitValueAdvances: true,
+    autoIncrementAllowsExplicitValue: true,
+    autoIncrementAllowsExplicitDefault: true,
   },
 
   insert: {

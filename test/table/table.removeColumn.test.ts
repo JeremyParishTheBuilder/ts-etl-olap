@@ -33,7 +33,9 @@ describe('Table::removeColumn', () => {
       .createColumn({ name: "C1", type: Number })
       .createColumn({ name: "C2", type: Number });
 
-    const withRow = table.addRow([1, 2]);
+    const withRow = table.addRows([
+      [1, 2],
+    ]);
     const updated = withRow.removeColumn("C1");
 
     const row = updated.requireRow(0);

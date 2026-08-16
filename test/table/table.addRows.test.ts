@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { buildTable, createCheckTestSpec, createColumnTestSpec, createDelete, createInsert } from '../utils/buildSchema.js';
+import { buildTable, createCheckTestSpec, createColumnTestSpec, createDelete } from '../utils/buildSchema.js';
 import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionNode.js';
 import { LiteralExpressionNode } from '../../src/ast/expression/LiteralExpressionNode.js';
 import { ComparisonPredicateNode } from '../../src/ast/predicate/ComparisonPredicateNode.js';
+import { DEFAULT } from '../../src/dialect/keywords.js';
 
 describe('Table::addRows', () => {
   it('inserts a row into a table with defined columns', () => {
@@ -12,7 +13,9 @@ describe('Table::addRows', () => {
 
     const row = [1, 2];
 
-    const updated = table.addRow(row);
+    const updated = table.addRows(
+      [row]
+    );
 
     expect(updated.requireRow(0)).toEqual(row);
   });
@@ -23,9 +26,9 @@ describe('Table::addRows', () => {
       .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
 
     const updated = table.addRows([
-      createInsert([1, 2]),
-      createInsert([3, 4]),
-      createInsert([5, 6]),
+      [1, 2],
+      [3, 4],
+      [5, 6],
     ]);
 
     expect(updated.numRows).toBe(3);
@@ -38,30 +41,10 @@ describe('Table::addRows', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
-    const updated = table.addRow([1]);
+    const updated = table.addRows([[1]]);
 
     expect(() => table.requireRow(0)).toThrow();
     expect(updated.requireRow(0)).toEqual([1]);
-  });
-
-  it('throws when row length does not match schema (too few values)', () => {
-    const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
-      .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
-
-    expect(() => {
-      table.addRow([1]); // missing column
-    }).toThrow();
-  });
-
-  it('throws when row length does not match schema (too many values)', () => {
-    const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
-      .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
-
-    expect(() => {
-      table.addRow([1, 2, 3]);
-    }).toThrow();
   });
 
   it('throws when inserting NULL into non-nullable column', () => {
@@ -73,12 +56,12 @@ describe('Table::addRows', () => {
       }));
 
     expect(() => {
-      table.addRow([null]);
+      table.addRows([[null]]);
     }).toThrow();
   });
 
   it('throws when inserting duplicate unique values', () => {
-    const table = buildTable()
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Email",
         type: String,
@@ -87,11 +70,12 @@ describe('Table::addRows', () => {
         name: "UQ_Email",
         columns: ["Email"],
         unique: true,
-      })
-      .addRow(["a@test.com"]);
+      });
+    
+    table = table.addRows([["a@test.com"]]);
 
     expect(() => {
-      table.addRow(["a@test.com"]);
+      table.addRows([["a@test.com"]]);
     }).toThrow();
   });
 
@@ -107,15 +91,15 @@ describe('Table::addRows', () => {
         unique: true,
       });
 
-    table = table.addRow(["a@test.com"]);
+    table = table.addRows([["a@test.com"]]);
 
     expect(() => {
-      table.addRow(["b@test.com"]);
+      table.addRows([["b@test.com"]]);
     }).not.toThrow();
   });
 
   it('throws when inserting duplicate primary key values', () => {
-    const table = buildTable()
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
         type: Number,
@@ -129,16 +113,17 @@ describe('Table::addRows', () => {
       .createPrimaryKey({
         name: "PK_Users",
         columns: ["Id"],
-      })
-      .addRow([1]);
+      });
+
+    table = table.addRows([[1]]);
 
     expect(() => {
-      table.addRow([1]);
+      table.addRows([[1]]);
     }).toThrow();
   });
 
   it('throws when inserting duplicate composite unique values', () => {
-    const table = buildTable()
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "FirstName",
         type: String,
@@ -151,11 +136,12 @@ describe('Table::addRows', () => {
         name: "UQ_Name",
         columns: ["FirstName", "LastName"],
         unique: true,
-      })
-      .addRow(["John", "Smith"]);
+      });
+
+    table = table.addRows([["John", "Smith"]]);
 
     expect(() => {
-      table.addRow(["John", "Smith"]);
+      table.addRows([["John", "Smith"]]);
     }).toThrow();
   });
 
@@ -172,15 +158,15 @@ describe('Table::addRows', () => {
         nullsDistinct: true,
       });
 
-    table = table.addRow([null]);
+    table = table.addRows([[null]]);
 
     expect(() => {
-      table.addRow([null]);
+      table.addRows([[null]]);
     }).not.toThrow();
   });
 
   it('rejects multiple NULL rows when nullsDistinct is false', () => {
-    const table = buildTable()
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Email",
         type: String,
@@ -190,11 +176,12 @@ describe('Table::addRows', () => {
         columns: ["Email"],
         unique: true,
         nullsDistinct: false,
-      })
-      .addRow([null]);
+      });
+    
+    table = table.addRows([[null]]);
 
     expect(() => {
-      table.addRow([null]);
+      table.addRows([[null]]);
     }).toThrow();
   });
 
@@ -211,10 +198,10 @@ describe('Table::addRows', () => {
         nullsDistinct: true,
       });
 
-    table = table.addRow([null]);
+    table = table.addRows([[null]]);
 
     expect(() => {
-      table.addRow(["a@test.com"]);
+      table.addRows([["a@test.com"]]);
     }).not.toThrow();
   });
 
@@ -229,8 +216,7 @@ describe('Table::addRows', () => {
         nullsDistinct: true,
       });
 
-    table = table.addRow(["X", null]);
-    table = table.addRow(["X", "Y"]);
+    table = table.addRows([["X", null],["X", "Y"]]);
 
     const index = table.indexes.requireByName("UQ_Composite");
 
@@ -248,14 +234,14 @@ describe('Table::addRows', () => {
         unique: true,
       });
 
-    table = table.addRow(["X", null]);
+    table = table.addRows([["X", null]]);
 
     expect(() => {
-      table.addRow(["Y", "other"]); // OK (new value)
+      table.addRows([["Y", "other"]]); // OK (new value)
     }).not.toThrow();
 
     expect(() => {
-      table.addRow(["X", "other"]); // throws (duplicate A)
+      table.addRows([["X", "other"]]); // throws (duplicate A)
     }).toThrow();
   });
 
@@ -274,7 +260,7 @@ describe('Table::addRows', () => {
         unique: true,
       });
 
-    table = table.addRow([1, "a@test.com"]);
+    table = table.addRows([[1, "a@test.com"]]);
 
     const pk = table.indexes.requireByName("PK");
     const uq = table.indexes.requireByName("UQ_Email");
@@ -287,9 +273,7 @@ describe('Table::addRows', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({ name: "id", type: Number }));
 
-    table = table.addRow([1]);
-    table = table.addRow([2]);
-    table = table.addRow([3]);
+    table = table.addRows([[1],[2],[3]]);
 
     expect(table.requireRowView(0).index).toBe(0);
     expect(table.requireRowView(1).index).toBe(1);
@@ -303,12 +287,11 @@ describe('Table::addRows', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
-    table = table.addRow([2]);
+    table = table.addRows([[1],[2]]);
 
     table = table.removeRows([createDelete(table, 0)]);
 
-    const updated = table.addRow([3]);
+    const updated = table.addRows([[3]]);
 
     expect(
       updated.requireRowView(2)
@@ -325,10 +308,9 @@ describe('Table::addRows', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
-    table = table.addRow([2]);
+    table = table.addRows([[1],[2]]);
 
-    const updated = table.addRow([3]);
+    const updated = table.addRows([[3]]);
 
     expect(
       updated.requireRow(0)
@@ -355,9 +337,9 @@ describe('Table::addRows', () => {
         unique: true,
       });
 
-    table = table.addRow(["a@test.com"]);
+    table = table.addRows([["a@test.com"]]);
 
-    const updated = table.addRow(["b@test.com"]);
+    const updated = table.addRows([["b@test.com"]]);
 
     const index =
       updated.indexes.requireByName("UQ_Email");
@@ -380,11 +362,11 @@ describe('Table::addRows', () => {
 
     expect(table.numRows).toBe(0);
 
-    table = table.addRow([1]);
+    table = table.addRows([[1]]);
 
     expect(table.numRows).toBe(1);
 
-    table = table.addRow([2]);
+    table = table.addRows([[2]]);
 
     expect(table.numRows).toBe(2);
   });
@@ -408,7 +390,7 @@ describe('Table::addRows', () => {
         );
 
     expect(() => {
-      table.addRow([10]);
+      table.addRows([[10]]);
     }).toThrow();
   });
 
@@ -431,7 +413,7 @@ describe('Table::addRows', () => {
         );
 
     expect(() => {
-      table.addRow([20]);
+      table.addRows([[20]]);
     }).not.toThrow();
   });
 
@@ -451,8 +433,8 @@ describe('Table::addRows', () => {
 
     expect(() =>
       table.addRows([
-        createInsert(["a@test.com"]),
-        createInsert(["a@test.com"]),
+        ["a@test.com"],
+        ["a@test.com"],
       ]),
     ).toThrow();
   });
@@ -475,12 +457,202 @@ describe('Table::addRows', () => {
 
     expect(() =>
       table.addRows([
-        createInsert([1]),
-        createInsert([2]),
-        createInsert([1]),
+        [1],
+        [2],
+        [1],
       ]),
     ).toThrow();
 
     expect(original.numRows).toBe(0);
+  });
+
+  it("resolves auto-increment defaults independently for each inserted row", () => {
+    let table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+        nullable: false,
+        autoIncrementStep: 1,
+        autoIncrementStart: 1,
+      }));
+
+    table = table.addRows([
+      [undefined],
+      [undefined],
+      [undefined],
+    ]);
+
+    expect(table.requireRow(0)).toEqual([1]);
+    expect(table.requireRow(1)).toEqual([2]);
+    expect(table.requireRow(2)).toEqual([3]);
+  });
+
+  it("advances auto-increment when DEFAULT is explicitly inserted", () => {
+    let table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+        nullable: false,
+        autoIncrementStep: 1,
+        autoIncrementStart: 1,
+      }));
+
+    table = table.addRows([
+      [DEFAULT],
+      [DEFAULT],
+    ]);
+
+    expect(table.requireRow(0)).toEqual([1]);
+    expect(table.requireRow(1)).toEqual([2]);
+  });
+
+  it("advances auto-increment after an explicit value at or above the next value", () => {
+    let table = buildTable()
+      .createColumn({
+        name: "id",
+        type: Number,
+        nullable: false,
+        autoIncrementStep: 1,
+        autoIncrementStart: 1,
+      },
+      {
+        autoIncrementAllowsExplicitDefault: true,
+      });
+
+    table = table.addRows([
+      [10],
+      [undefined],
+    ]);
+
+    expect(table.requireRow(0)).toEqual([10]);
+    expect(table.requireRow(1)).toEqual([11]);
+  });
+
+  it("does not advance auto-increment after an explicit value when disabled", () => {
+    let table = buildTable()
+      .createColumn({
+        name: "id",
+        type: Number,
+        nullable: false,
+        autoIncrementStep: 1,
+        autoIncrementStart: 1,
+      },
+      {
+        autoIncrementExplicitValueAdvances: false,
+      });
+
+    table = table.addRows([
+      [10],
+      [undefined],
+    ]);
+
+    expect(table.requireRow(0)).toEqual([10]);
+    expect(table.requireRow(1)).toEqual([1]);
+  });
+
+  it("uses the next auto-increment value for explicit NULL when configured", () => {
+    let table = buildTable()
+      .createColumn({
+        name: "id",
+        type: Number,
+        nullable: false,
+        autoIncrementStep: 1,
+        autoIncrementStart: 1,
+      },
+      {
+        autoIncrementNullGenerates: true,
+      });
+
+    table = table.addRows([
+      [null],
+    ]);
+
+    expect(table.requireRow(0)).toEqual([1]);
+  });
+
+  it("does not treat explicit NULL as auto-increment when disabled", () => {
+    let table = buildTable()
+      .createColumn({
+        name: "id",
+        type: Number,
+        nullable: true,
+        autoIncrementStep: 1,
+        autoIncrementStart: 1,
+      },
+      {
+        autoIncrementNullGenerates: false,
+      });
+
+    table = table.addRows([
+      [null],
+    ]);
+
+    expect(table.requireRow(0)).toEqual([null]);
+  });
+
+  it("uses the next auto-increment value for explicit zero when configured", () => {
+    let table = buildTable()
+      .createColumn({
+        name: "id",
+        type: Number,
+        nullable: false,
+        autoIncrementStep: 1,
+        autoIncrementStart: 1,
+      },
+      {
+        autoIncrementZeroGenerates: true,
+      });
+
+    table = table.addRows([
+      [0],
+    ]);
+
+    expect(table.requireRow(0)).toEqual([1]);
+  });
+
+  it("uses the column default when an insert value is omitted", () => {
+    let table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+        nullable: false,
+        defaultValue: 42,
+      }));
+
+    table = table.addRows([
+      [undefined],
+    ]);
+
+    expect(table.requireRow(0)).toEqual([42]);
+  });
+
+  it("uses NULL when an omitted nullable column has no default", () => {
+    let table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+        nullable: true,
+      }));
+
+    table = table.addRows([
+      [undefined],
+    ]);
+
+    expect(table.requireRow(0)).toEqual([null]);
+  });
+
+  it("rejects an omitted non-nullable column without a default", () => {
+    const table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+        nullable: false,
+      }));
+
+    expect(() =>
+      table.addRows([
+        [undefined],
+      ]),
+    ).toThrow();
   });
 });

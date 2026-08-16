@@ -38,7 +38,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
         type: String,
         nullable: false,
       }))
-      .addRow([1, "Alice"]);
+      .addRows([[1, "Alice"]]);
 
     
     const database = buildDatabase()
@@ -78,7 +78,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
         type: String,
         nullable: false,
       }))
-      .addRow([1, "Alice"]);
+      .addRows([[1, "Alice"]]);
 
     const database = buildDatabase()
       .addTable(users);
@@ -112,9 +112,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([10])
-      .addRow([20])
-      .addRow([30]);
+      .addRows([[10],[20],[30]]);
 
     const database = buildDatabase()
       .addTable(users);
@@ -157,7 +155,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1]);
+      .addRows([[1]]);
 
     const database = buildDatabase()
       .addTable(users);
@@ -246,8 +244,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1])
-      .addRow([2]);
+      .addRows([[1],[2]]);
 
     const database = buildDatabase()
       .addTable(users);

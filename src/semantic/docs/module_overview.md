@@ -2,9 +2,8 @@
 
 ## Purpose
 
-The Semantic module transforms AST statements into validated, schema-aware representations that can be executed.
+The Semantic module transforms AST statements into schema-aware, executable representations.
 
-```text
 AST
  ↓
 Semantic Analysis
@@ -12,311 +11,301 @@ Semantic Analysis
 Actions / Query Plans
  ↓
 Execution
-```
 
 Semantic analysis resolves names, validates statement meaning, applies dialect rules, and binds AST nodes to executable runtime objects.
 
 It does not own AST definitions, relational storage, or execution.
 
----
-
 ## Responsibilities
 
 The Semantic module owns:
 
-* resolving database, table, and column references
-* validating AST constructs against relational schema
-* validating dialect-specific input
-* resolving input keywords and special expressions
-* converting AST nodes into resolved nodes
-* binding resolved nodes to executable expressions and predicates
-* converting statements into `Action`s or query plans
+Resolving database, table, and column references
+Validating AST constructs against relational schema
+Applying dialect-specific input rules
+Resolving keywords and special expressions
+Converting AST nodes into resolved nodes
+Binding resolved nodes to executable expressions and predicates
+Converting statements into Actions or query plans
 
----
+## Policy Resolution
+
+Semantic analysis resolves the active engine policy through the execution context.
+
+Policies may originate from:
+
+- engine configuration
+- dialect defaults
+- dialect-specific strict rules
+
+The resolved policy is supplied to relational construction actions when creating tables or columns.
+
+Column and table policies are therefore determined during semantic analysis rather than inferred independently by the Relational module.
+
+For example:
+
+- `ColumnPolicy` controls auto-increment behavior for a newly created column.
+- `TablePolicy` controls table-level creation rules such as whether multiple auto-increment columns are permitted.
+
+Once supplied to relational construction, the policy becomes part of the created relational object's behavior.
 
 ## AST Resolution
 
 AST nodes describe user intent and may contain unresolved names.
 
-Semantic resolution uses the current relational context to resolve those names and verify that referenced objects exist.
+Semantic resolution uses the current relational context to resolve schema references and verify that referenced objects exist.
 
-The general distinction is:
+The general progression is:
 
-```text
 AST node
-  ↓
+   ↓
 Resolved AST node
-  ↓
+   ↓
 Bound runtime object
-```
 
-For example, a column reference progresses conceptually from a column name to a `ColumnId`, and finally to the physical column information required by runtime evaluation.
+For example, a column reference progresses from a column name to a ColumnId, then to the runtime information required for evaluation.
 
 Resolution is schema-dependent; AST construction is not.
 
----
-
 ## Expression Resolution and Binding
 
-`resolveExpression()` converts an `ExpressionNode` into a `ResolvedExpressionNode`.
+resolveExpression() converts an ExpressionNode into a ResolvedExpressionNode.
 
-It resolves schema-dependent references and recursively resolves nested expressions such as:
+Resolution recursively processes nested expressions and resolves schema-dependent references.
 
-* binary expressions
-* `CASE`
-* concatenation
-* predicates used by expressions
+Expression forms include:
 
-Expressions that do not depend on schema resolution may remain otherwise unchanged.
+Column references
+Binary expressions
+CASE
+Concatenation
+Temporal expressions
+SQL functions
+Default values
 
-`bindExpression()` converts resolved nodes into executable `Expression` objects.
+bindExpression() converts resolved nodes into executable Expression objects.
 
 For example:
 
-```text
 ResolvedColumnExpressionNode
         ↓
 ColumnExpression
         ↓
-column position
-```
+Column position
 
 Binding incorporates runtime information needed for efficient evaluation.
 
----
+## Predicates
 
-## Input Keywords
+Predicates follow the same resolution and binding model as expressions.
+
+Column references are resolved against the relevant table, and nested expressions and predicates are processed recursively.
+
+Binding produces executable Predicate objects used by query and mutation execution.
+
+## Keywords and Special Expressions
 
 Input keywords are represented separately from ordinary expression values.
 
-Current categories are:
+Current categories include:
 
-* `Keyword`
-* `TemporalExpressionKeyword`
-* `SqlFunctionKeyword`
+Keyword
+TemporalExpressionKeyword
+SqlFunctionKeyword
 
 Examples include:
 
-```text
 DEFAULT
 CURRENT_TIMESTAMP
 CURRENT_DATE
 CURRENT_TIME
 NOW
 GETDATE
-```
 
-Dialect rules determine which values are permitted.
+Dialect rules determine which keywords and special expressions are permitted.
 
-Keyword representations are converted into AST nodes and subsequently into executable expressions where appropriate.
-
-```text
-keyword
-  ↓
-AST node
-  ↓
-resolved/bound representation
-  ↓
-runtime expression
-```
-
----
+Keyword values are converted into AST representations and subsequently resolved or bound according to their semantics.
 
 ## DEFAULT
 
-`DEFAULT` is represented by `DefaultValueNode` rather than as a general expression.
+DEFAULT is represented by DefaultValueNode rather than as an ordinary expression.
 
-Semantic analysis verifies that the dialect permits `DEFAULT` and resolves it against the target `Column`.
+Semantic analysis validates whether DEFAULT is legal in the relevant statement and column context.
 
-The column remains responsible for the actual default semantics through `resolveDefaultOrThrow()`.
+The Semantic module determines whether the operation is permitted; Column remains responsible for resolving the actual column default and auto-increment behavior.
 
-This supports both:
+This distinguishes:
 
-* explicit `DEFAULT` supplied by a statement
-* implicit default resolution caused by an omitted column
-
-These occur at different stages but ultimately use the same column-level default behavior.
-
----
+Explicit DEFAULT
+An omitted insert value
+Column-specific default resolution
 
 ## INSERT
 
-`INSERT ... VALUES` may contain expressions, but those expressions must not reference columns.
+INSERT ... VALUES may contain expressions, but insert expressions cannot reference existing row values.
 
-Insert expressions are therefore validated to ensure that they are independent of `RowView`.
-
-The semantic flow is:
-
-```text
-InsertInput
-    ↓
-AST expression
-    ↓
-assert no column references
-    ↓
-bind insert expression
-    ↓
-evaluate
-    ↓
-ColumnValue
-```
-
-The resulting values are stored in the insert action.
-
-`DEFAULT` is handled separately because it requires the target column's default-resolution behavior.
-
----
-
-## UPDATE
-
-`UPDATE` expressions may reference columns because they are evaluated against existing rows.
+Semantic analysis therefore validates that insert expressions do not require a RowView.
 
 The general flow is:
 
-```text
-UpdateInput
+Insert input
     ↓
-AST node
+AST expression
     ↓
-resolve
+Semantic validation
     ↓
-bind
+Resolve / bind
+    ↓
+Execution
+    ↓
+Column input
+
+DEFAULT is handled separately because its final value depends on the target column.
+
+Insert input is ultimately ordered by column before relational insertion.
+
+## UPDATE
+
+UPDATE expressions may reference existing columns because they are evaluated against affected RowViews.
+
+The general flow is:
+
+Update assignment
+    ↓
+AST expression
+    ↓
+Resolve
+    ↓
+Bind
     ↓
 Expression<RowView>
     ↓
-UpdateRowsAction
-```
+Execution
 
-`DEFAULT` is resolved against the target column.
+DEFAULT is represented separately and ultimately resolved by the target column.
 
-Temporal expressions and SQL functions are converted into executable expressions and evaluated when the update executes.
-
----
-
-## Predicates
-
-Predicates are resolved and bound using the same general pattern as expressions.
-
-Column references are resolved against the relevant table.
-
-Nested predicates and expressions are processed recursively.
-
-Predicate binding produces executable `Predicate` objects consumed by filtering and other execution operations.
-
----
+Temporal expressions and SQL functions become executable expressions and are evaluated when the update executes.
 
 ## Statement Binding
 
-`SemanticAnalyzer` dispatches statements to statement-specific binders.
+SemanticAnalyzer dispatches statements to statement-specific binders.
 
 Examples include:
 
-* `bindInsertInto()`
-* `bindUpdateSet()`
-* `bindSelect()`
-* delete and schema-related binders
+bindInsertInto()
+bindUpdateSet()
+bindSelect()
+Delete binders
+Schema-related binders
 
-Statement binders produce execution representations such as:
+The general flow is:
 
-```text
 Statement
    ↓
-semantic validation
+Semantic validation
    ↓
-resolution / binding
+Resolution / binding
    ↓
 Action or QueryPlan
-```
 
-Semantic analysis does not execute the resulting operation.
+Semantic analysis prepares an operation but does not execute it.
 
----
+Statement binders also resolve the applicable engine policy when producing schema-modification actions.
 
 ## Dialect Rules
 
-Dialect-sensitive input is controlled through the active dialect rules.
+Dialect-sensitive behavior is controlled through the active dialect rules.
 
-Input rules include:
+Input rules include categories such as:
 
-```ts
 input: {
   keywords?: ReadonlySet<Keyword>;
   temporalExpressions?: ReadonlySet<TemporalExpressionKeyword>;
   functions?: ReadonlySet<SqlFunctionKeyword>;
 }
-```
 
-Semantic analysis obtains these through the engine's rule-resolution system rather than hard-coding dialect-specific behavior.
+Other dialect rules may govern semantic legality, including statement and column-input behavior.
 
-This allows the same AST representation to be interpreted according to the active dialect.
+Semantic analysis obtains these rules through the engine's dialect configuration rather than hard-coding dialect-specific behavior.
 
----
+The same AST representation can therefore be interpreted according to the active dialect.
 
 ## Semantic vs Relational Validation
 
 Semantic validation determines whether a requested operation is meaningful and executable.
 
-Examples:
+Examples include:
 
-* referenced table does not exist
-* referenced column does not exist
-* unsupported dialect keyword
-* column reference in an `INSERT` value
-* invalid statement structure
+Referenced database, table, or column does not exist
+Unsupported dialect keyword
+Invalid statement structure
+Column reference used where a row context is unavailable
+Explicit input prohibited by a dialect rule
 
 The Relational module remains responsible for relational-state invariants such as:
 
-* primary keys
-* unique constraints
-* foreign keys
-* check constraints
-* row validity
+Primary keys
+Unique constraints
+Foreign keys
+Check constraints
+Row validity
+Index consistency
 
-Semantic analysis prepares an operation; relational execution enforces resulting relational correctness.
+Semantic analysis determines whether statement input is permitted by the active policy.
 
----
+The Relational module enforces the resulting object-level policy when constructing or mutating relational objects.
+
+Semantic analysis validates statement input against the target column's stored policy.
+
+For auto-increment columns, this includes whether explicit values and explicit `DEFAULT` are permitted.
 
 ## Semantic vs Execution
 
-The boundary is:
+The primary boundary is:
 
-```text
 Semantic
    ↓
 Action / QueryPlan
    ↓
 Execution
-```
 
-Semantic analysis may resolve a default value or bind a column position, but it does not perform the mutation or evaluate expressions over affected rows.
+Semantic analysis may resolve names, validate inputs, and bind executable expressions, but it does not mutate relational state or evaluate row-dependent expressions over affected rows.
 
 Execution consumes the representations produced by Semantic.
 
----
-
 ## Module Boundaries
 
-Semantic depends on and coordinates with:
+Semantic sits between statement representation and execution:
 
-```text
 AST
  ↓
 Semantic
  ↓
-Evaluation / Execution
+Actions / QueryPlans
+ ↓
+Execution
  ↓
 Relational
-```
 
-It also consumes dialect rules.
+Semantic consumes:
+
+AST nodes
+Relational schema information
+Dialect rules
+
+Semantic produces:
+
+Resolved AST nodes
+Executable expressions and predicates
+Actions
+Query plans
 
 Semantic does not own:
 
-* AST node definitions
-* relational tables or rows
-* persistent relational state
-* execution of actions
-* query-plan execution
-* mapping-specific expression contexts
+AST node definitions
+Relational tables or persistent rows
+Relational mutation algorithms
+Action or query-plan execution
+Mapping-specific expression contexts
 
 Its role is the translation boundary between statement structure and executable relational operations.

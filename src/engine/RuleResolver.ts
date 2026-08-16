@@ -35,13 +35,44 @@ export class RuleResolver {
     return value;
   }
 
-  updatePolicy(update: Partial<EnginePolicy>) {
-    // shallow merge the update into the current policy
+  set<
+    D extends keyof typeof ENGINE_RULES,
+    K extends keyof (typeof ENGINE_RULES)[D],
+  >(
+    domain: D,
+    rule: K,
+    value: (typeof ENGINE_RULES)[D][K]["engineDefault"],
+  ): void {
+    const domainPolicy = {
+      ...(this.policy[domain] as Record<string, unknown> | undefined),
+      [rule]: value,
+    };
+
     this.policy = {
       ...this.policy,
-      ...update,
-    };
-    this.invalidate(); // clear cache so get() recomputes
+      [domain]: domainPolicy,
+    } as Partial<EnginePolicy>;
+
+    this.invalidate();
+  }
+
+  updatePolicy(update: Partial<EnginePolicy>) {
+    console.log(update);
+    this.policy = {
+      ...this.policy,
+      ...Object.fromEntries(
+        Object.entries(update).map(([domain, values]) => [
+          domain,
+          {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ...(this.policy as Record<string, any>)[domain],
+            ...(values as Record<string, unknown>),
+          },
+        ]),
+      ),
+    } as Partial<EnginePolicy>;
+
+    this.invalidate();
   }
 
   invalidate() {

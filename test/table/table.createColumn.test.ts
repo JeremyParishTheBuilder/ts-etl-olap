@@ -73,9 +73,9 @@ describe('Table::createColumn', () => {
         type: Number,
       }));
 
-    const withRow = table.addRow([
+    const withRow = table.addRows([[
       1
-    ]);
+    ]]);
 
     expect(() => {
       withRow.createColumn(createColumnTestSpec({
@@ -107,9 +107,9 @@ describe('Table::createColumn', () => {
         type: Number,
       });
 
-    const withRow = table.addRow([
+    const withRow = table.addRows([[
       1
-    ]);
+    ]]);
 
     const updated = withRow.createColumn({
       name: "C2",
@@ -126,9 +126,9 @@ describe('Table::createColumn', () => {
   it('allows falsy default values when adding non-nullable columns', () => {
     const table = buildTable({columns: 1});
 
-    const withRow = table.addRow([
+    const withRow = table.addRows([[
       1
-    ]);
+    ]]);
 
     expect(() => {
       withRow.createColumn(createColumnTestSpec({
@@ -141,14 +141,17 @@ describe('Table::createColumn', () => {
   });
 
   it('backfills a nullable column with null values when added to a populated table', () => {
-    const table = buildTable()
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "C1",
         type: Number,
-      }))
-      .addRow([1])
-      .addRow([2])
-      .addRow([3]);
+      }));
+
+    table = table.addRows([
+      [1],
+      [2],
+      [3],
+    ]);
 
     const updated = table.createColumn(createColumnTestSpec({
       name: "C2",
@@ -166,14 +169,17 @@ describe('Table::createColumn', () => {
   });
 
   it('backfills a non-nullable column with its default value when added to a populated table', () => {
-    const table = buildTable()
+    let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "C1",
         type: Number,
-      }))
-      .addRow([1])
-      .addRow([2])
-      .addRow([3]);
+      }));
+    
+    table = table.addRows([
+      [1],
+      [2],
+      [3],
+    ]);
 
     const updated = table.createColumn(createColumnTestSpec({
       name: "C2",
@@ -210,8 +216,7 @@ describe('Table::createColumn', () => {
       name: "C1",
       type: Number,
     }))
-    .addRow([1])
-    .addRow([2]);
+    .addRows([[1],[2]]);
 
   const updated = table.createColumn(createColumnTestSpec({
     name: "C2",
@@ -224,13 +229,16 @@ describe('Table::createColumn', () => {
 });
 
 it('does not modify existing column data when backfilling a new column', () => {
-  const table = buildTable()
+  let table = buildTable()
     .createColumn(createColumnTestSpec({
       name: "C1",
       type: Number,
-    }))
-    .addRow([10])
-    .addRow([20]);
+    }));
+  
+  table = table.addRows([
+    [10],
+    [20],
+  ]);
 
   const updated = table.createColumn(createColumnTestSpec({
     name: "C2",
@@ -250,15 +258,18 @@ it('does not modify existing column data when backfilling a new column', () => {
 });
 
 it('backfills exactly one datum for every existing row', () => {
-  const table = buildTable()
+  let table = buildTable()
     .createColumn(createColumnTestSpec({
       name: "C1",
       type: Number,
-    }))
-    .addRow([1])
-    .addRow([2])
-    .addRow([3])
-    .addRow([4]);
+    }));
+
+  table = table.addRows([
+    [1],
+    [2],
+    [3],
+    [4],
+  ]);
 
   const updated = table.createColumn(createColumnTestSpec({
     name: "C2",

@@ -38,6 +38,8 @@ function evaluateRule(
 
   const database = engine.databases.requireByName(databaseName);
 
+  engine.setCurrentDatabase(databaseName);
+
   engine.beginTx();
   try {
     for (const statement of rule.statements) {

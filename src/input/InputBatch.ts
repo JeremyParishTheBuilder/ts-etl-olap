@@ -166,8 +166,11 @@ export abstract class InputBatch {
 
   protected returning(cols: string[], fragment: string = "RETURNING") {
     this.assertAllowed("returning", fragment);
-    if (!(this.currentBuilder instanceof InsertIntoBuilder)) {
-      throw new Error(`Cannot call '${fragment}' outside of InsertInto`); // TODO, also on update?
+    if (
+      !(this.currentBuilder instanceof InsertIntoBuilder) &&
+      !(this.currentBuilder instanceof UpdateSetBuilder)
+    ) {
+      throw new Error(`Cannot call '${fragment}' outside of InsertInto`);
     }
     this.currentBuilder.returning(cols);
     return this;

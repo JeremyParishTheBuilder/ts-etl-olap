@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { buildDatabase, createColumnTestSpec, createInsert } from '../utils/buildSchema.js';
+import { buildDatabase, createColumnTestSpec } from '../utils/buildSchema.js';
+import type { ColumnId } from '../../src/relational/Column.js';
+import type { ColumnInput } from '../../src/types/ColumnInput.js';
 
 describe('Database::addRows', () => {
   it("allows inserting a batch of rows with valid foreign key references", () => {
@@ -47,14 +49,16 @@ describe('Database::addRows', () => {
         parentColumns: ["Id"],
       });
 
+    const columnId = users.columns.requireByName("RoleId").id;
+
     database = database.addRows("Roles", [
-      createInsert([1]),
-      createInsert([2]),
+      new Map([[columnId, 1]]),
+      new Map([[columnId, 2]]),
     ]);
 
     const updated = database.addRows("Users", [
-      createInsert([1]),
-      createInsert([2]),
+      new Map([[columnId, 1]]),
+      new Map([[columnId, 2]]),
     ]);
 
     const usersTable = updated.tables.requireByName("Users");
@@ -107,10 +111,12 @@ describe('Database::addRows', () => {
       }
     );
 
+    const columnId = users.columns.requireIdByName("RoleId");
+
     expect(() => {
-      database.addRow(
+      database.addRows(
         "Users",
-        [999]
+        [new Map<ColumnId, ColumnInput>().set(columnId, 999)]
       );
     }).toThrow();
   });
@@ -158,10 +164,12 @@ describe('Database::addRows', () => {
       }
     );
 
+    const columnId = users.columns.requireByName("RoleId").id;
+
     expect(() => {
-      database.addRow(
+      database.addRows(
         "Users",
-        [null]
+        [new Map<ColumnId, ColumnInput>().set(columnId, null)]
       );
     }).not.toThrow();
   });
@@ -182,7 +190,7 @@ describe('Database::addRows', () => {
         unique: true,
       });
 
-    parent = parent.addRow([1]);
+    parent = parent.addRows([[1]]);
 
     const child = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
@@ -208,12 +216,14 @@ describe('Database::addRows', () => {
         onUpdate: "restrict",
       });
 
-    expect(() =>
-      database.addRow(
+    const columnId = child.columns.requireByName("RoleId").id;
+
+    expect(() => {
+      database.addRows(
         "Users",
-        [2]
-      )
-    ).toThrow();
+        [new Map<ColumnId, ColumnInput>().set(columnId, 2)]
+      );
+    }).toThrow();
   });
 
   it('allows insertion when foreign key contains NULL components', () => {
@@ -256,11 +266,13 @@ describe('Database::addRows', () => {
         onUpdate: "restrict",
       });
 
-    expect(() =>
-      database.addRow(
+    const columnId = child.columns.requireByName("RoleId").id;
+
+    expect(() => {
+      database.addRows(
         "Users",
-        [null]
-      )
-    ).not.toThrow();
+        [new Map<ColumnId, ColumnInput>().set(columnId, null)]
+      );
+    }).not.toThrow();
   });
 });
