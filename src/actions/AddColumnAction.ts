@@ -1,5 +1,5 @@
 import { type Action } from "./Action.js";
-import { type ColumnSpec } from "../relational/Column.js";
+import { type ColumnPolicy, type ColumnSpec } from "../relational/Column.js";
 import { type Databases } from "../relational/Databases.js";
 
 export class AddColumnAction implements Action {
@@ -7,6 +7,7 @@ export class AddColumnAction implements Action {
     private dbName: string,
     private tableName: string,
     private columnSpec: ColumnSpec,
+    private columnPolicy: ColumnPolicy,
   ) {}
 
   apply(databases: Databases) {
@@ -14,7 +15,7 @@ export class AddColumnAction implements Action {
 
     const updatedTable = db.tables
       .requireByName(this.tableName)
-      .createColumn(this.columnSpec);
+      .createColumn(this.columnSpec, this.columnPolicy);
 
     return databases.update(db.updateTable(updatedTable));
   }

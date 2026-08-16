@@ -1,61 +1,71 @@
 import { describe, it, expect } from 'vitest';
 import { buildDatabase, createColumnTestSpec } from '../utils/buildSchema.js';
+import type { ColumnId } from '../../src/relational/Column.js';
+import type { ColumnInput } from '../../src/types/ColumnInput.js';
 
-describe('Database::addRow', () => {
-  it('allows inserting row with valid foreign key reference', () => {
+describe('Database::addRows', () => {
+  it("allows inserting a batch of rows with valid foreign key references", () => {
     let database = buildDatabase()
-      .createTable({name: "Roles"})
-      .createTable({name: "Users"});
+      .createTable({ name: "Roles" })
+      .createTable({ name: "Users" });
 
-    const roles = database.tables.requireByName("Roles")
-      .createColumn(createColumnTestSpec({
-        name: "Id",
-        type: Number,
-        nullable: false,
-      }))
+    const roles = database.tables
+      .requireByName("Roles")
+      .createColumn(
+        createColumnTestSpec({
+          name: "Id",
+          type: Number,
+          nullable: false,
+        }),
+      )
       .createIndex({
         name: "PK_Roles",
         columns: ["Id"],
         unique: true,
       });
 
-    const users = database.tables.requireByName("Users")
-      .createColumn(createColumnTestSpec({
-        name: "RoleId",
-        type: Number,
-      }))
+    const users = database.tables
+      .requireByName("Users")
+      .createColumn(
+        createColumnTestSpec({
+          name: "RoleId",
+          type: Number,
+        }),
+      )
       .createIndex({
         name: "FKRI_Roles",
-        columns: ["roleId"],
+        columns: ["RoleId"],
         unique: false,
       });
 
     database = database
       .updateTable(roles)
-      .updateTable(users);
-
-    database = database.createForeignKey(
-      "Users",
-      {
+      .updateTable(users)
+      .createForeignKey("Users", {
         name: "FK_Users_Roles",
         columns: ["RoleId"],
         reverseIndex: "FKRI_Roles",
         parentTable: "Roles",
         parentColumns: ["Id"],
-      }
-    );
+      });
 
-    database = database.addRow(
-      "Roles",
-      [1]
-    );
+    const columnId = users.columns.requireByName("RoleId").id;
 
-    expect(() => {
-      database.addRow(
-        "Users",
-        [1]
-      );
-    }).not.toThrow();
+    database = database.addRows("Roles", [
+      new Map([[columnId, 1]]),
+      new Map([[columnId, 2]]),
+    ]);
+
+    const updated = database.addRows("Users", [
+      new Map([[columnId, 1]]),
+      new Map([[columnId, 2]]),
+    ]);
+
+    const usersTable = updated.tables.requireByName("Users");
+
+    expect(usersTable.numRows).toBe(2);
+    expect(usersTable.requireRow(0)).toEqual([1]);
+    expect(usersTable.requireRow(1)).toEqual([2]);
   });
 
   it('throws when foreign key reference does not exist', () => {
@@ -101,10 +111,12 @@ describe('Database::addRow', () => {
       }
     );
 
+    const columnId = users.columns.requireIdByName("RoleId");
+
     expect(() => {
-      database.addRow(
+      database.addRows(
         "Users",
-        [999]
+        [new Map<ColumnId, ColumnInput>().set(columnId, 999)]
       );
     }).toThrow();
   });
@@ -152,15 +164,17 @@ describe('Database::addRow', () => {
       }
     );
 
+    const columnId = users.columns.requireByName("RoleId").id;
+
     expect(() => {
-      database.addRow(
+      database.addRows(
         "Users",
-        [null]
+        [new Map<ColumnId, ColumnInput>().set(columnId, null)]
       );
     }).not.toThrow();
   });
 
-  it('enforces foreign key constraints during insertion', () => {
+  it('rejects insertion when foreign key reference does not exist', () => {
     let database = buildDatabase()
       .createTable({name: "Roles"})
       .createTable({name: "Users"});
@@ -176,7 +190,7 @@ describe('Database::addRow', () => {
         unique: true,
       });
 
-    parent = parent.addRow([1]);
+    parent = parent.addRows([[1]]);
 
     const child = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
@@ -202,62 +216,14 @@ describe('Database::addRow', () => {
         onUpdate: "restrict",
       });
 
-    expect(() =>
-      database.addRow(
+    const columnId = child.columns.requireByName("RoleId").id;
+
+    expect(() => {
+      database.addRows(
         "Users",
-        [2]
-      )
-    ).toThrow();
-  });
-
-  it('allows insertion when foreign key target exists', () => {
-    let database = buildDatabase()
-      .createTable({name: "Roles"})
-      .createTable({name: "Users"});
-
-    let parent = database.tables.requireByName("Roles")
-      .createColumn(createColumnTestSpec({
-        name: "id",
-        type: Number,
-      }))
-      .createIndex({
-        name: "PK_Roles",
-        columns: ["id"],
-        unique: true,
-      });
-
-    parent = parent.addRow([1]);
-
-    const child = database.tables.requireByName("Users")
-      .createColumn(createColumnTestSpec({
-        name: "roleId",
-        type: Number,
-      }))
-      .createIndex({
-        name: "FKRI_Roles",
-        columns: ["roleId"],
-        unique: false,
-      });
-
-    database = database
-      .updateTable(parent)
-      .updateTable(child)
-      .createForeignKey("users", {
-        name: "FK_Users_Roles",
-        columns: ["roleId"],
-        reverseIndex: "FKRI_Roles",
-        parentTable: "Roles",
-        parentColumns: ["id"],
-        onDelete: "restrict",
-        onUpdate: "restrict",
-      })
-      .addRow("Users", [1]);
-
-    expect(
-      database
-        .tables.requireByName("Users")
-        .requireRow(0)
-    ).toEqual([1]);
+        [new Map<ColumnId, ColumnInput>().set(columnId, 2)]
+      );
+    }).toThrow();
   });
 
   it('allows insertion when foreign key contains NULL components', () => {
@@ -300,11 +266,13 @@ describe('Database::addRow', () => {
         onUpdate: "restrict",
       });
 
-    expect(() =>
-      database.addRow(
+    const columnId = child.columns.requireByName("RoleId").id;
+
+    expect(() => {
+      database.addRows(
         "Users",
-        [null]
-      )
-    ).not.toThrow();
+        [new Map<ColumnId, ColumnInput>().set(columnId, null)]
+      );
+    }).not.toThrow();
   });
 });

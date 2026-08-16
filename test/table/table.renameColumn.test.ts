@@ -57,7 +57,10 @@ describe('Table::renameColumn', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
-    const withRow = table.addRow([123]);
+    const withRow = table.addRows([
+      [123]
+    ]);
+    
     const updated = withRow.renameColumn("C1", "C1_new");
 
     const row = updated.requireRow(0);

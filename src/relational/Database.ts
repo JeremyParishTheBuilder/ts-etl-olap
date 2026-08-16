@@ -1,4 +1,4 @@
-import { Table, type TableId } from "./Table.js";
+import { Table, type TableId, type TablePolicy } from "./Table.js";
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
 import { type Column, type ColumnId } from "./Column.js";
 import { isTypeCompatible, type ColumnType } from "../types/ColumnType.js";
@@ -12,9 +12,12 @@ import { NamedObjectStore } from "../infrastructure/NamedObjectStore.js";
 import { type ResolvedUpdate } from "../types/ResolvedUpdate.js";
 import { type ResolvedDelete } from "../types/ResolvedDelete.js";
 import { arraysEqual } from "../utils/arrayHelpers.js";
-import type { ResolvedInsert } from "../types/ResolvedInsert.js";
 import { ConstraintViolationError } from "./ConstraintViolationError.js";
 import { CONSTRAINT_KIND } from "./ConstraintKind.js";
+import type { UpdateAssignment } from "../types/UpdateAssignment.js";
+import type { OrderedInputRow } from "../types/OrderedInputRow.js";
+import type { ColumnInput } from "../types/ColumnInput.js";
+import { DEFAULT } from "../dialect/keywords.js";
 
 const _MAX_DEPTH = 25;
 
@@ -52,18 +55,18 @@ export class Database extends Immutable {
     } as Partial<this>);
   }
 
-  public updateTable(table: Table): this {
+  public updateTable(table: Table): Database {
     return this.with({
       tables: this.tables.update(table),
     } as Partial<this>);
   }
 
-  public createTable(spec: { name: string }): this {
+  public createTable(spec: { name: string }, policy?: TablePolicy): this {
     this.tables.assertNameUnused(spec.name);
 
     const [id, tableIds] = this.tableIds.allocate();
 
-    const table = Table.create({ ...spec, id });
+    const table = Table.create({ ...spec, id }, policy);
 
     const updatedTables = this.tables.add(table);
 
@@ -235,25 +238,6 @@ export class Database extends Immutable {
     }
   }
 
-  //Used in Database::removeIndex(), not yet written, but may be used by a foreignKey // TODO
-  public assertNoForeignKeyReferencesExact(
-    tableId: TableId,
-    columnNames: string[],
-  ): void {
-    for (const table of this.tables.values()) {
-      for (const fk of table.foreignKeys.values()) {
-        if (
-          fk.parentTable === tableId &&
-          arraysEqual(fk.parentColumns, columnNames)
-        ) {
-          throw new Error(
-            `Foreign key '${fk.name}' in table '${table.name}' references columns being modified'`,
-          );
-        }
-      }
-    }
-  }
-
   private findImpactedChildRowReferences(
     parentTableId: TableId,
     parentRow: RowView,
@@ -300,35 +284,21 @@ export class Database extends Immutable {
     return childRowReferences;
   }
 
-  public addRow(tableName: string, row: ColumnValue[]): Database {
-    const table: Table = this.tables.requireByName(tableName);
-
-    const updatedTable = table.addRow(row);
-
-    this.validateChildRowAgainstForeignKeys(row, updatedTable);
-
-    return this.updateTable(updatedTable);
-  }
-
-  private applyResolvedInserts(
-    tableId: TableId,
-    inserts: ResolvedInsert[],
+  public addRows(
+    tableName: string,
+    inserts: Map<ColumnId, ColumnInput>[],
   ): Database {
     if (inserts.length === 0) {
       return this;
     }
 
-    const table: Table = this.tables.require(tableId);
+    const table: Table = this.tables.requireByName(tableName);
 
-    const updatedTable = table.addRows(inserts);
+    const orderedRows = inserts.map((insert) => table.orderInputs(insert));
 
-    return this.updateTable(updatedTable);
-  }
+    const updatedTable = table.addRows(orderedRows);
 
-  public addRows(tableName: string, inserts: ResolvedInsert[]): Database {
-    const tableId = this.tables.requireIdByName(tableName);
-
-    const updatedDatabase = this.applyResolvedInserts(tableId, inserts);
+    const updatedDatabase = this.updateTable(updatedTable);
 
     updatedDatabase.assertAllForeignKeysValid();
 
@@ -340,7 +310,6 @@ export class Database extends Immutable {
 
     let updatedDatabase = this.applyResolvedDeletes(tableId, deletes);
 
-    //updatedDatabase = updatedDatabase.applyReferentialDeletes(tableId, deletes);
     updatedDatabase = updatedDatabase.applyReferentialWork({
       kind: "delete",
       tableId,
@@ -352,21 +321,72 @@ export class Database extends Immutable {
     return updatedDatabase;
   }
 
-  public updateRows(tableName: string, updates: ResolvedUpdate[]): Database {
-    const tableId = this.tables.requireIdByName(tableName);
+  public updateRows(
+    tableName: string,
+    rowNums: readonly number[],
+    rows: readonly OrderedInputRow[],
+  ): Database {
+    const table = this.tables.requireByName(tableName);
 
-    let updatedDatabase = this.applyResolvedUpdates(tableId, updates);
+    const resolved = table.updateRows(rowNums, rows);
 
-    //updatedDatabase = updatedDatabase.applyReferentialUpdates(tableId, updates);
+    let updatedDatabase = this.updateTable(resolved.table);
+
     updatedDatabase = updatedDatabase.applyReferentialWork({
       kind: "update",
-      tableId,
-      updates,
+      tableId: table.id,
+      updates: resolved.updates,
     });
 
     updatedDatabase.assertAllForeignKeysValid();
 
     return updatedDatabase;
+  }
+
+  public resolveAndUpdateRows(
+    tableName: string,
+    affectedRows: Iterable<RowView>,
+    assignments: Map<ColumnId, UpdateAssignment>,
+  ): Database {
+    const table = this.tables.requireByName(tableName);
+
+    const rowNums: number[] = [];
+    const orderedInputRows: OrderedInputRow[] = [];
+
+    // evaluates expressions
+    for (const row of affectedRows) {
+      const inputs = new Map<ColumnId, ColumnInput>();
+
+      for (const [columnId, assignment] of assignments) {
+        if (assignment === DEFAULT) {
+          inputs.set(columnId, DEFAULT);
+        } else {
+          inputs.set(columnId, assignment.evaluate(row));
+        }
+      }
+
+      const orderedInputs = table.orderInputs(inputs);
+
+      orderedInputRows.push(orderedInputs);
+      rowNums.push(row.index);
+    }
+
+    return this.updateRows(table.name, rowNums, orderedInputRows);
+  }
+
+  private applyResolvedUpdates(
+    tableId: TableId,
+    updates: ResolvedUpdate[],
+  ): Database {
+    if (updates.length === 0) {
+      return this;
+    }
+
+    const table: Table = this.tables.require(tableId);
+
+    const updatedTable = table.applyResolvedUpdates(updates);
+
+    return this.updateTable(updatedTable);
   }
 
   private applyResolvedDeletes(
@@ -380,21 +400,6 @@ export class Database extends Immutable {
     const table: Table = this.tables.require(tableId);
 
     const updatedTable = table.removeRows(deletes);
-
-    return this.updateTable(updatedTable);
-  }
-
-  private applyResolvedUpdates(
-    tableId: TableId,
-    updates: ResolvedUpdate[],
-  ): Database {
-    if (updates.length === 0) {
-      return this;
-    }
-
-    const table: Table = this.tables.require(tableId);
-
-    const updatedTable = table.updateRows(updates);
 
     return this.updateTable(updatedTable);
   }
@@ -628,32 +633,6 @@ export class Database extends Immutable {
     }
   }
 
-  private validateChildRowAgainstForeignKeys(
-    row: ColumnValue[],
-    childTable: Table,
-  ): void {
-    for (const fk of childTable.foreignKeys.values()) {
-      const childIndex = childTable.indexes.require(fk.reverseIndex);
-      const projected = childIndex.projectValues(row);
-
-      if (projected.includes(null)) return;
-
-      const latestParentTable =
-        fk.parentTable === childTable.id
-          ? childTable
-          : this.tables.require(fk.parentTable);
-
-      const parentIndex = latestParentTable.indexes.require(fk.parentIndex);
-
-      if (!parentIndex.hasProjectedValues(projected)) {
-        throw new Error(
-          `FK violation: (${fk.columns.join(",")}) ->
-          ${fk.parentTable}(${fk.parentColumns.join(",")})`,
-        );
-      }
-    }
-  }
-
   private assertAllForeignKeysValid(): void {
     for (const table of this.tables.values()) {
       for (const fk of table.foreignKeys.values()) {
@@ -681,10 +660,7 @@ export class Database extends Immutable {
 
     for (const childTable of this.tables.values()) {
       for (const fk of childTable.foreignKeys.values()) {
-        if (
-          fk.parentTable === table.id
-          //fk.parentTable === normalizeIdentifier(tableName)
-        ) {
+        if (fk.parentTable === table.id) {
           const fkParentIndex = table.indexes.require(fk.parentIndex);
           if (fkParentIndex === index) {
             throw new Error(

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { createTestSql } from '../utils/engineHelpers.ts';
+import { createTestPostgresSql } from '../utils/engineHelpers.ts';
 import { and, col, or } from '../../src/ast/dsl.ts';
 
 describe('Integration::select', () => {
   it("executes select * queries end-to-end", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -55,7 +55,7 @@ describe('Integration::select', () => {
   });
 
   it("executes projected select queries end-to-end", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -98,7 +98,7 @@ describe('Integration::select', () => {
   });
 
   it("executes where filtering end-to-end", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -141,7 +141,7 @@ describe('Integration::select', () => {
   });
 
   it("executes logical and predicates end-to-end", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -187,7 +187,7 @@ describe('Integration::select', () => {
   });
 
   it("executes logical and predicates end-to-end", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -233,7 +233,7 @@ describe('Integration::select', () => {
   });
 
   it("executes logical or predicates end-to-end", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -279,7 +279,7 @@ describe('Integration::select', () => {
   });
 
   it("resolves identifiers case-insensitively end-to-end", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -313,7 +313,7 @@ describe('Integration::select', () => {
   });
 
   it("produces deterministic execution results", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -348,7 +348,7 @@ describe('Integration::select', () => {
   });
 
   it("does not mutate committed state during select execution", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 

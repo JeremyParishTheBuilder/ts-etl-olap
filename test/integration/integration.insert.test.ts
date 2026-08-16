@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { createTestSql } from '../utils/engineHelpers.ts';
+import { createTestPostgresSql } from '../utils/engineHelpers.ts';
 import { col } from '../../src/ast/dsl.ts';
 
 describe("Integration::insert", () => {
   it("rejects duplicate primary keys", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -48,7 +48,7 @@ describe("Integration::insert", () => {
   });
 
   it("rejects inserts with missing foreign key parents", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -96,7 +96,7 @@ describe("Integration::insert", () => {
 
   it('rejects inserts violating checks', () => {
 
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -128,7 +128,7 @@ describe("Integration::insert", () => {
 
   it('allows inserts satisfying checks', () => {
 
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -159,7 +159,7 @@ describe("Integration::insert", () => {
   });
 
   it("allows mutually-referencing rows to be inserted in a single statement", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -213,7 +213,7 @@ describe("Integration::insert", () => {
   });
 
   it("uses the column default when an INSERT omits the column", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -250,7 +250,7 @@ describe("Integration::insert", () => {
   });
 
   it("uses DEFAULT explicitly in an insert", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -289,7 +289,7 @@ describe("Integration::insert", () => {
   });
 
   it("uses CURRENT_TIMESTAMP in an insert", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -327,7 +327,7 @@ describe("Integration::insert", () => {
   });
 
   it("uses NOW() in an insert", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -365,7 +365,7 @@ describe("Integration::insert", () => {
   });
 
   it("rejects SQL functions not supported by the dialect", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -393,7 +393,7 @@ describe("Integration::insert", () => {
   });
 
   it("uses DEFAULT to generate an auto-incrementing value", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();

@@ -120,21 +120,6 @@ export class Engine {
     }
 
     return this.bindAndExecute(tx, stmt);
-
-    // const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
-    // const analyzer = new SemanticAnalyzer(ctx);
-
-    // tx.addStatement(stmt);
-
-    // const result = analyzer.bindStatement(stmt);
-
-    // if (result.kind === "actions") {
-    //   tx.addActions(result.actions);
-    // }
-
-    // if (result.kind === "query") {
-    //   return [...result.plan.root.execute()];
-    // }
   }
 
   tryExecuteAutoCommit(stmt: Statement): RowView[] | void {
@@ -149,24 +134,9 @@ export class Engine {
 
       const result = this.bindAndExecute(tx, stmt);
 
-      // const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
-      // const analyzer = new SemanticAnalyzer(ctx);
-
-      // tx.addStatement(stmt);
-
-      // const result = analyzer.bindStatement(stmt);
-
-      // if (result.kind === "actions") {
-      //   tx.addActions(result.actions);
-      // }
-
       this.commitTx();
 
       return result;
-
-      // if (result.kind === "query") {
-      //   return [...result.plan.root.execute()];
-      // }
     } catch (err) {
       this._currentTransaction = undefined;
       throw err;

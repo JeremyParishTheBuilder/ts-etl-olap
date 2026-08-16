@@ -1,5 +1,5 @@
 import { ValidationRule } from "../../src/validation/ValidationRule.ts";
-import { createTestSql, freshEngine } from "../utils/engineHelpers.ts";
+import { createTestPostgresSql, freshEngine } from "../utils/engineHelpers.ts";
 
 export function createTestRule(name = "Test Rule") {
   return new ValidationRule({
@@ -10,7 +10,7 @@ export function createTestRule(name = "Test Rule") {
 
 export function createTestConstraintStatement() {
   const engine = freshEngine();
-  const sql = createTestSql(engine);
+  const sql = createTestPostgresSql(engine);
 
   return sql
     .alterTable("Test")

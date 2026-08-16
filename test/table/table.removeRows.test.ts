@@ -10,7 +10,9 @@ describe('Table::removeRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1],
+    ]);
 
     const updated = table.removeRows(
       [createDelete(table, 0)]
@@ -31,7 +33,9 @@ describe('Table::removeRow', () => {
         unique: true,
       });
 
-    table = table.addRow(["a@test.com"]);
+    table = table.addRows([
+      ["a@test.com"],
+    ]);
 
     const updated = table.removeRows(
       [createDelete(table, 0)]
@@ -57,9 +61,11 @@ describe('Table::removeRow', () => {
         unique: true,
       });
 
-    table = table.addRow(["a@test.com"]);
-    table = table.addRow(["b@test.com"]);
-    table = table.addRow(["c@test.com"]);
+    table = table.addRows([
+      ["a@test.com"],
+      ["b@test.com"],
+      ["c@test.com"],
+    ]);
 
     const updated = table.removeRows(
       [createDelete(table, 1)]
@@ -88,9 +94,11 @@ describe('Table::removeRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
-    table = table.addRow([2]);
-    table = table.addRow([3]);
+    table = table.addRows([
+      [1],
+      [2],
+      [3],
+    ]);
 
     const updated = table.removeRows(
       [createDelete(table, 1)]
@@ -112,7 +120,9 @@ describe('Table::removeRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1],
+    ]);
 
     table = table.removeRows(
       [createDelete(table, 0)]
@@ -146,7 +156,9 @@ describe('Table::removeRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1],
+    ]);
 
     const updated = table.removeRows(
       [createDelete(table, 0)]
@@ -176,9 +188,11 @@ describe('Table::removeRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
-    table = table.addRow([2]);
-    table = table.addRow([3]);
+    table = table.addRows([
+      [1],
+      [2],
+      [3],
+    ]);
 
     const updated = table.removeRows(
       [createDelete(table, 1)]
@@ -207,7 +221,9 @@ describe('Table::removeRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1],
+    ]);
 
     const updated = table.removeRows(
       [createDelete(table, 0)]
@@ -233,7 +249,9 @@ describe('Table::removeRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1],
+    ]);
 
     expect(table.numRows).toBe(1);
 
@@ -251,14 +269,18 @@ describe('Table::removeRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
-    table = table.addRow([2]);
+    table = table.addRows([
+      [1],
+      [2],
+    ]);
 
     table = table.removeRows(
       [createDelete(table, 0)]
     );
 
-    const updated = table.addRow([3]);
+    const updated = table.addRows([
+      [3],
+    ]);
 
     expect(
       updated.requireRowView(2)
@@ -279,9 +301,11 @@ describe('Table::removeRow', () => {
         type: String,
       }));
       
-     table = table.addRow([1, "Alice"]);
-     table = table.addRow([2, "Bob"]);
-     table = table.addRow([3, "Charlie"]);
+    table = table.addRows([
+      [1, "Alice"],
+      [2, "Bob"],
+      [3, "Charlie"],
+    ]);
 
     const updated = table.removeRows([
       {

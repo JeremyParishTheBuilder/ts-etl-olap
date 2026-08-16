@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { buildTable, createColumnTestSpec, createDelete, createUpdate } from '../utils/buildSchema.js';
+import { buildTable, createColumnTestSpec, createDelete } from '../utils/buildSchema.js';
+import { DEFAULT } from '../../src/dialect/keywords.js';
 
 describe('Table::updateRow', () => {
 
@@ -10,29 +11,31 @@ describe('Table::updateRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([[1]]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 0, [2])]
+      [0],
+      [[2]],
     );
 
-    expect(
-      updated.requireRow(0)
-    ).toEqual([2]);
+    expect(updated.table.requireRow(0)).toEqual([2]);
+    expect(updated.updates).toHaveLength(1);
+    expect(updated.updates[0].oldRow).toEqual([1]);
+    expect(updated.updates[0].newRow).toEqual([2]);
   });
 
   it('does not mutate original table state', () => {
-    let table = buildTable()
+    const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
         type: Number,
-      }));
-
-    table = table.addRow([1]);
+      })).addRows([
+        [1]
+      ]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 0, [2])]
-    );
+      [0], [[2]]
+    ).table;
 
     expect(
       table.requireRow(0)
@@ -52,12 +55,14 @@ describe('Table::updateRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1]
+    ]);
 
     expect(() =>
       table.updateRows(
-      [createUpdate(table, 99, [2])]
-    )
+        [99], [[2]]
+      )
     ).toThrow();
   });
 
@@ -72,11 +77,13 @@ describe('Table::updateRow', () => {
         type: String,
       }));
 
-    table = table.addRow([1, "Alice"]);
+    table = table.addRows([
+      [1, "Alice"]
+    ]);
 
     expect(() =>
       table.updateRows(
-        [createUpdate(table, 0, [1])]
+        [0], [[1]]
       )
     ).toThrow();
   });
@@ -88,11 +95,13 @@ describe('Table::updateRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1]
+    ]);
 
     expect(() =>
       table.updateRows(
-        [createUpdate(table, 0, [1, 2])]
+        [0], [[1, 2]]
       )
     ).toThrow();
   });
@@ -105,11 +114,13 @@ describe('Table::updateRow', () => {
         nullable: false,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1]
+    ]);
 
     expect(() =>
       table.updateRows(
-        [createUpdate(table, 0, [null])]
+        [0], [[null]]
       )
     ).toThrow();
   });
@@ -126,11 +137,13 @@ describe('Table::updateRow', () => {
         unique: true,
       });
 
-    table = table.addRow(["a@test.com"]);
+    table = table.addRows([
+      ["a@test.com"]
+    ]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 0, ["b@test.com"])]
-    );
+      [0], [["b@test.com"]]
+    ).table;
 
     const index =
       updated.indexes.requireByName("UQ_Email");
@@ -156,11 +169,13 @@ describe('Table::updateRow', () => {
         unique: true,
       });
 
-    table = table.addRow(["a@test.com"]);
+    table = table.addRows([
+      ["a@test.com"]
+    ]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 0, ["a@test.com"])]
-    );
+      [0], [["a@test.com"]]
+    ).table;
 
     const index =
       updated.indexes.requireByName("UQ_Email");
@@ -182,12 +197,14 @@ describe('Table::updateRow', () => {
         unique: true,
       });
 
-    table = table.addRow(["a@test.com"]);
-    table = table.addRow(["b@test.com"]);
+    table = table.addRows([
+      ["a@test.com"],
+      ["b@test.com"],
+    ]);
 
     expect(() =>
       table.updateRows(
-        [createUpdate(table, 1, ["a@test.com"])]
+        [1], [["a@test.com"]]
       )
     ).toThrow();
   });
@@ -199,12 +216,13 @@ describe('Table::updateRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
-    table = table.addRow([2]);
+    table = table.addRows([
+      [1], [2]
+    ]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 0, [10])]
-    );
+      [0], [[10]]
+    ).table;
 
     expect(
       updated.requireRow(1)
@@ -218,11 +236,13 @@ describe('Table::updateRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1]
+    ]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 0, [2])]
-    );
+      [0], [[2]]
+    ).table;
 
     expect(
       updated.requireRowView(0)
@@ -239,11 +259,13 @@ describe('Table::updateRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1]
+    ]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 0, [2])]
-    );
+      [0], [[2]]
+    ).table;
 
     expect(updated.numRows).toBe(1);
   });
@@ -269,12 +291,14 @@ describe('Table::updateRow', () => {
         unique: true,
       });
 
-    table = table.addRow([1, "a@test.com"]);
-    table = table.addRow([2, "b@test.com"]);
+    table = table.addRows([
+      [1, "a@test.com"],
+      [2, "b@test.com"]
+    ]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 1, [2, "c@test.com"])]
-    );
+      [1], [[2, "c@test.com"]]
+    ).table;
 
     const originalIndex =
       table.indexes.requireByName("UQ_Users_Email");
@@ -327,15 +351,13 @@ describe('Table::updateRow', () => {
         unique: true,
       });
 
-    table = table.addRow([
-      1,
-      "a@test.com",
-      "Alice",
+    table = table.addRows([
+      [1, "a@test.com", "Alice"]
     ]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 0, [1, "a@test.com", "Alicia"])]
-    );
+      [0], [[1, "a@test.com", "Alicia"]]
+    ).table;
 
     const originalIndex =
       table.indexes.requireByName("UQ_Users_Email");
@@ -384,12 +406,14 @@ describe('Table::updateRow', () => {
         unique: true,
       });
 
-    table = table.addRow([1, "a@test.com"]);
-    table = table.addRow([2, "b@test.com"]);
+    table = table.addRows([
+      [1, "a@test.com"],
+      [2, "b@test.com"],
+    ]);
 
     expect(() =>
       table.updateRows(
-        [createUpdate(table, 1, [2, "a@test.com"])]
+        [1], [[2, "a@test.com"]]
       )
     ).toThrow();
   });
@@ -414,15 +438,13 @@ describe('Table::updateRow', () => {
         unique: true,
       });
 
-    table = table.addRow([
-      1,
-      "a@test.com",
-      "Alice",
+    table = table.addRows([
+      [1, "a@test.com", "Alice"]
     ]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 0, [1, "a@test.com", "Alicia"])]
-    );
+      [0], [[1, "a@test.com", "Alicia"]]
+    ).table;
 
     const index =
       updated.indexes.requireByName("UQ_Users_Email");
@@ -450,13 +472,15 @@ describe('Table::updateRow', () => {
         unique: true,
       });
 
-    table = table.addRow([1, "a@test.com"]);
-    table = table.addRow([2, "b@test.com"]);
-    table = table.addRow([3, "c@test.com"]);
+    table = table.addRows([
+      [1, "a@test.com"],
+      [2, "b@test.com"],
+      [3, "c@test.com"]
+    ]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 1, [2, "updated@test.com"])]
-    );
+      [1], [[2, "updated@test.com"]]
+    ).table;
 
     const index =
       updated.indexes.requireByName("UQ_Users_Email");
@@ -485,13 +509,15 @@ describe('Table::updateRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1]
+    ]);
 
     table = table.removeRows([createDelete(table, 0)]);
 
     expect(() =>
       table.updateRows(
-        [createUpdate(table, 0, [2])]
+        [0], [[2]]
       )
     ).toThrow();
   });
@@ -503,11 +529,13 @@ describe('Table::updateRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
+    table = table.addRows([
+      [1]
+    ]);
 
     const updated = table.updateRows(
-      [createUpdate(table, 0, [2])]
-    );
+      [0], [[2]]
+    ).table;
 
     expect(
       table.requireRow(0)
@@ -528,17 +556,128 @@ describe('Table::updateRow', () => {
         type: Number,
       }));
 
-    table = table.addRow([1]);
-    table = table.addRow([2]);
-    table = table.addRow([3]);
-
-    const updated = table.updateRows([
-      createUpdate(table, 0, [10]),
-      createUpdate(table, 2, [30]),
+    table = table.addRows([
+      [1],[2],[3]
     ]);
+
+    const updated = table.updateRows(
+      [0, 2], [[10], [30]],
+    ).table;
 
     expect(updated.requireRow(0)).toEqual([10]);
     expect(updated.requireRow(1)).toEqual([2]);
     expect(updated.requireRow(2)).toEqual([30]);
+  });
+
+  it("uses the column default for explicit DEFAULT during UPDATE", () => {
+    const table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+        nullable: false,
+        defaultValue: 99,
+      }))
+      .addRows([
+        [1],
+      ]);
+
+    const result = table.updateRows(
+      [0],
+      [[DEFAULT]],
+    );
+
+    expect(result.table.requireRow(0)).toEqual([99]);
+  });
+
+  it("uses the current auto-increment value for DEFAULT during UPDATE", () => {
+    const table = buildTable()
+      .createColumn({
+        name: "id",
+        type: Number,
+        nullable: false,
+        autoIncrementStep: 1,
+        autoIncrementStart: 10,
+      },
+      {
+        autoIncrementAllowsExplicitDefault: true,
+      })
+      .addRows([
+        [1],
+      ]);
+
+    let updatedTable = table.updateRows(
+      [0],
+      [[DEFAULT]],
+    ).table;
+
+    expect(updatedTable.requireRow(0)).toEqual([10]);
+
+    updatedTable = updatedTable.addRows([
+      [undefined],
+    ]);
+
+    expect(updatedTable.requireRow(1)).toEqual([11]);
+  });
+
+  it("leaves unspecified columns unchanged during UPDATE", () => {
+    const table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+      }))
+      .createColumn(createColumnTestSpec({
+        name: "name",
+        type: String,
+      }))
+      .addRows([
+        [1, "old"],
+      ]);
+
+    const result = table.updateRows(
+      [0],
+      [[2, undefined]],
+    );
+
+    expect(result.table.requireRow(0)).toEqual([
+      2,
+      "old",
+    ]);
+  });
+
+  it("rejects updating the same row more than once in one operation", () => {
+    const table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+      }))
+      .addRows([
+        [1],
+      ]);
+
+    expect(() =>
+      table.updateRows(
+        [0, 0],
+        [[2], [3]],
+      ),
+    ).toThrow("already updated");
+  });
+
+  it("rejects a different number of row numbers and input rows", () => {
+    const table = buildTable()
+      .createColumn(createColumnTestSpec({
+        name: "id",
+        type: Number,
+      }))
+      .addRows([
+        [1],
+        [2],
+      ]);
+
+    expect(() =>
+      table.updateRows(
+        [0, 1],
+        [[3]],
+      ),
+    ).toThrow();
   });
 });

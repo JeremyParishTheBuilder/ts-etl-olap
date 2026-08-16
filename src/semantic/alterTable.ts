@@ -149,10 +149,15 @@ export function bindAlterTable(
     stmtActions.push(new DropPrimaryKeyAction(dbName, tableName));
   } else if (stmt.op === "add_column") {
     stmtActions.push(
-      new AddColumnAction(dbName, tableName, {
-        name: stmt.columnName,
-        ...stmt.inlineColumnSpec,
-      }),
+      new AddColumnAction(
+        dbName,
+        tableName,
+        {
+          name: stmt.columnName,
+          ...stmt.inlineColumnSpec,
+        },
+        ctx.rules.autoIncrementColumnPolicy,
+      ),
     );
   }
 

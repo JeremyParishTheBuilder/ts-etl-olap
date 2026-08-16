@@ -2,14 +2,14 @@ import { ValidationRule } from "../../src/validation/ValidationRule.js";
 import { ValidationRuleset } from "../../src/validation/ValidationRuleset.js";
 import { ValidationEngine } from "../../src/validation/ValidationEngine.js";
 import { describe, expect, it } from "vitest";
-import { createTestSql, freshEngine } from "../utils/engineHelpers.js";
+import { createTestPostgresSql, freshEngine } from "../utils/engineHelpers.js";
 import { col } from "../../src/ast/dsl.js";
 
 
 describe("ValidationEngine::validate", () => {
   it("passes when a UNIQUE validation rule is satisfied", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -68,7 +68,7 @@ describe("ValidationEngine::validate", () => {
 
   it("reports a UNIQUE violation", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -138,7 +138,7 @@ describe("ValidationEngine::validate", () => {
 
   it("reports a CHECK violation", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -206,7 +206,7 @@ describe("ValidationEngine::validate", () => {
 
   it("reports a FOREIGN KEY violation", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -286,7 +286,7 @@ describe("ValidationEngine::validate", () => {
 
   it("evaluates all rules in a ruleset", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -364,7 +364,7 @@ describe("ValidationEngine::validate", () => {
 
   it("evaluates multiple statements in a rule until one fails", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -431,7 +431,7 @@ describe("ValidationEngine::validate", () => {
 
   it("stops evaluating statements after the first violation", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -500,7 +500,7 @@ describe("ValidationEngine::validate", () => {
 
   it("rolls back validation changes", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -559,7 +559,7 @@ describe("ValidationEngine::validate", () => {
 
   it("propagates unexpected errors", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -604,7 +604,7 @@ describe("ValidationEngine::validate", () => {
 describe("ValidationEngine::validate participants", () => {
   it("resolves CHECK violation participants", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -662,7 +662,7 @@ describe("ValidationEngine::validate participants", () => {
 
   it("resolves UNIQUE violation participants", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -731,7 +731,7 @@ describe("ValidationEngine::validate participants", () => {
 
   it("resolves FOREIGN KEY violation participants", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -812,7 +812,7 @@ describe("ValidationEngine::validate participants", () => {
 describe("ValidationEngine::validate rule evaluation", () => {
   it("stops evaluating a rule after its first failing statement", () => {
     const engine = freshEngine();
-    const sql = createTestSql(engine);
+    const sql = createTestPostgresSql(engine);
 
     sql.createDatabase("DB1").execute();
 
@@ -869,7 +869,7 @@ describe("ValidationEngine::validate rule evaluation", () => {
 
 it("does not modify committed database state", () => {
   const engine = freshEngine();
-  const sql = createTestSql(engine);
+  const sql = createTestPostgresSql(engine);
 
   sql.createDatabase("DB1").execute();
 
@@ -929,7 +929,7 @@ it("does not modify committed database state", () => {
 
 it("propagates unexpected errors", () => {
   const engine = freshEngine();
-  const sql = createTestSql(engine);
+  const sql = createTestPostgresSql(engine);
 
   sql.createDatabase("DB1").execute();
 

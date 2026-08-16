@@ -91,6 +91,8 @@ Primary runtime components include:
 
 Semantic analysis resolves schema references and compiles expressions, predicates, mutations, and queries before execution.
 
+Semantic analysis also resolves engine and dialect policy used by schema-modification actions.
+
 Mutations produce immutable `Action`s.
 
 Queries produce immutable `QueryPlan`s evaluated against relational snapshots and `RowView`s.

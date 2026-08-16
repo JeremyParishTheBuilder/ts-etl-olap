@@ -1,17 +1,14 @@
 import { Table, type TableId } from "../../src/relational/Table.js";
 import { Database, type DatabaseId } from "../../src/relational/Database.js";
 import { type ColumnSpec, type ColumnId } from "../../src/relational/Column.js";
-import { type ColumnValue } from "../../src/types/ColumnValue.js";
 import { type ForeignKeyId } from "../../src/relational/ForeignKey.js";
 import { type IndexSpec, type IndexId } from "../../src/relational/Index.js";
 import { type IdService } from "../../src/types/IdAllocator.js";
 import { type CheckSpec, type ForeignKeySpec } from "../../src/relational/Constraint.js";
 import { type UniqueId } from "../../src/relational/Unique.js";
-import { type ResolvedUpdate } from "../../src/types/ResolvedUpdate.js";
 import { type ResolvedDelete } from "../../src/types/ResolvedDelete.js";
 import { LiteralExpressionNode } from "../../src/ast/expression/LiteralExpressionNode.js";
 import { ComparisonPredicateNode } from "../../src/ast/predicate/ComparisonPredicateNode.js";
-import type { ResolvedInsert } from "../../src/types/ResolvedInsert.js";
 
 let nextId = 1;
 
@@ -24,26 +21,6 @@ export function createTestIdService(): IdService {
     nextIndexId: () => nextId++ as IndexId,
     nextUniqueId: () => nextId++ as UniqueId,
     nextForeignKeyId: () => nextId++ as ForeignKeyId,
-  };
-}
-
-export function createInsert(
-  newRow: ColumnValue[],
-): ResolvedInsert {
-  return {
-    newRow,
-  };
-}
-
-export function createUpdate(
-  table: Table,
-  rowNum: number,
-  newRow: ColumnValue[],
-): ResolvedUpdate {
-  return {
-    rowNum,
-    oldRow: table.requireRow(rowNum),
-    newRow,
   };
 }
 

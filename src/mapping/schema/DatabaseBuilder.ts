@@ -4,6 +4,8 @@ import { type Databases } from "../../relational/Databases.js";
 import { ImportResult } from "../import/ImportResult.js";
 import { ImportRowIdentity } from "../import/ImportRowIdentity.js";
 import { type DatabaseSchema } from "./DatabaseSchema.js";
+import type { ColumnInput } from "../../types/ColumnInput.js";
+import type { ColumnId } from "../../relational/Column.js";
 
 export class DatabaseBuilder {
   constructor(
@@ -34,13 +36,12 @@ export class DatabaseBuilder {
       database = database.updateTable(table);
     }
 
-    //TODO
     const groupedImports = groupImports(this.imports);
     const assembledLogicalRows = assembleLogicalRows(groupedImports);
     const resolvedInserts = bindLogicalRows(assembledLogicalRows, database);
 
     for (const insert of resolvedInserts) {
-      database = database.addRow(insert.tableName, insert.values);
+      database = database.addRows(insert.tableName, insert.insertRows);
     }
 
     return updatedDatabases.update(database);
@@ -56,15 +57,9 @@ function groupImports(imports: ImportResult[]): Map<string, ImportResult[]> {
   const groupedImports = new Map<string, ImportResult[]>();
 
   for (const importResult of imports) {
-    // if (!groupedImports.get(importResult.mapping.tableName)) {
-    //   groupedImports.set(importResult.mapping.tableName, [])
-    // }
-
     if (!groupedImports.get(importResult.tableName)) {
       groupedImports.set(importResult.tableName, []);
     }
-
-    //groupedImports.get(importResult.mapping.tableName)!.push(importResult);
 
     groupedImports.get(importResult.tableName)!.push(importResult);
   }
@@ -74,7 +69,7 @@ function groupImports(imports: ImportResult[]): Map<string, ImportResult[]> {
 
 interface ResolvedInsert {
   tableName: string;
-  values: ColumnValue[];
+  insertRows: Map<ColumnId, ColumnInput>[];
 }
 
 interface LogicalRow {
@@ -96,11 +91,6 @@ function assembleLogicalRows(
 
     for (const importResult of imports) {
       const rowIdentity = importResult.rowIdentity;
-
-      // const rowIdentity = importResult.mapping.resolveImportRowIdentity(
-      //   importResult.values
-      // ); // error, this function was replaced
-      //const rowIdentity = importResult.mapping.resolveRowKey(importResult); // error, this function was replaced
 
       const key = rowIdentity.toString();
 
@@ -131,31 +121,35 @@ function bindLogicalRows(
   database: Database,
 ): ResolvedInsert[] {
   const resolvedInserts: ResolvedInsert[] = [];
+
   //for each table,
   for (const [tableName, logicalRows] of mergedGroupedImports) {
     // find the table from db
     const table = database.tables.requireByName(tableName);
+
+    const insertRows: Map<ColumnId, ColumnInput>[] = [];
+
     // for each LogicalRow
     for (const logicalRow of logicalRows.values()) {
-      // create a ResolvedInsert--later
-      const values: ColumnValue[] = new Array(table.columns.size()).fill(null);
+      const insertRow = new Map<ColumnId, ColumnInput>();
       // for each property in values
       for (const [propertyName, value] of Object.entries(logicalRow.values)) {
-        // find the column position
-        const columnPosition =
-          table.columns.requireByName(propertyName).position;
-        // add value to resolved insert's values array
-        values[columnPosition] = value;
+        const column = table.columns.requireByName(propertyName);
+
+        insertRow.set(column.id, value);
       }
+
+      insertRows.push(insertRow);
+
       // add resolved insert to array
-      const resolvedInsert = {
+      const resolvedInsert: ResolvedInsert = {
         tableName,
-        values,
+        insertRows,
       };
 
       resolvedInserts.push(resolvedInsert);
     }
   }
-  //return array or resolved inserts
+
   return resolvedInserts;
 }

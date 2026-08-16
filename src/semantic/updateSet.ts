@@ -4,11 +4,10 @@ import { type UpdateSetStatement } from "../statements/index.js";
 import { type ColumnId } from "../relational/Column.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { bindExpression, resolveExpression } from "./expression.js";
-import { type Expression } from "../evaluation/expression/Expression.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
-import { type RowView } from "../relational/RowView.js";
-import { resolveDefaultValue } from "./defaultValue.js";
 import { validateInputNode } from "./toExpressionNode.js";
+import { DEFAULT } from "../dialect/keywords.js";
+import type { UpdateAssignment } from "../types/UpdateAssignment.js";
 
 export function bindUpdateSet(
   semantic: SemanticAnalyzer,
@@ -24,7 +23,7 @@ export function bindUpdateSet(
   const tableName: string = stmt.table;
   const table = database.tables.requireByName(tableName);
 
-  const updateMap = new Map<ColumnId, Expression<RowView>>();
+  const updateMap = new Map<ColumnId, UpdateAssignment>();
 
   for (const columnName in stmt.values) {
     const value = stmt.values[columnName];
@@ -34,9 +33,24 @@ export function bindUpdateSet(
     validateInputNode(value, ctx);
 
     if (value.kind === "default") {
-      updateMap.set(column.id, resolveDefaultValue(value, column, "update"));
+      if (
+        column.isAutoIncrement() &&
+        !column.autoIncrementAllowsExplicitDefault
+      ) {
+        throw new Error(
+          `AutoIncrement Column ${column.name} does not accept explicit value.`,
+        );
+      }
+
+      updateMap.set(column.id, DEFAULT);
 
       continue;
+    }
+
+    if (column.isAutoIncrement() && !column.autoIncrementAllowsExplicitValue) {
+      throw new Error(
+        `AutoIncrement Column ${column.name} does not accept explicit value.`,
+      );
     }
 
     updateMap.set(

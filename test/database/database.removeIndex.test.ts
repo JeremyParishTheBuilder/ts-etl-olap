@@ -270,7 +270,7 @@ describe('Database::removeIndex', () => {
         columns: ["email"],
       }));
 
-    table = table.addRow(["a@test.com"]);
+    table = table.addRows([["a@test.com"]]);
 
     const db = buildDatabase()
       .addTable(table);

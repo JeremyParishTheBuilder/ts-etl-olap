@@ -1,11 +1,3 @@
-//import ChainRegistry from '../types/ChainRegistry.js';
-// import RegistryObject from '../mapping/oldTypes/RegistryObject.js';
-// import RegistryRoot from '../mapping/oldTypes/RegistryRoot.js';
-// import Pointer from '../mapping/oldTypes/Pointer.js';
-// import { CosmosChainRegistry } from '../registries/CosmosChainRegistry.js';
-// import MultiRegistryRoot from '../mapping/oldTypes/MultiRegistryRoot.js';
-//import { Database } from '../types/Database';
-
 import { EngineRegistry } from "../engine/EngineRegistry.js";
 import { type PostgresInputBatch } from "../input/PostgresInputBatch.js";
 
@@ -340,4 +332,50 @@ export const getChainRegContents = () => {
   // console.log(denom_units);
 
   console.log("created chain reg");
+
+  createTestDatabase();
 };
+
+function createTestDatabase() {
+  console.log("1");
+  sql.createDatabase("Test").execute();
+  console.log("2");
+  sql.useDatabase("Test").execute();
+  console.log("3");
+  sql
+    .createTable("T1", {
+      C1: {
+        type: Number,
+        unique: false,
+        autoIncrementStart: 0,
+        autoIncrementStep: 1,
+      },
+    })
+    .execute();
+  console.log("4");
+  sql
+    .insertInto("T1")
+    .values([[2]])
+    .execute();
+  sql
+    .insertInto("T1")
+    .values([[4]])
+    .execute();
+  sql
+    .insertInto("T1")
+    .values([[sql.DEFAULT]])
+    .execute();
+  console.log("5");
+  const rows1 = sql.select("*").from("T1").execute();
+  console.log(rows1[0][0]);
+  sql
+    .insertInto("T1")
+    .values([[1], [sql.DEFAULT]])
+    .execute();
+  console.log("6");
+  const rows2 = sql.select("*").from("T1").execute();
+  console.log(rows2[0]);
+  console.log("7");
+
+  engine.rules.autoIncrementColumnPolicy.autoIncrementAllowsExplicitDefault = false;
+}

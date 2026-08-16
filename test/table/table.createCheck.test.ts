@@ -130,7 +130,7 @@ describe('Table::createCheck', () => {
           name: "Age",
           type: Number,
         })
-        .addRow([10]);
+        .addRows([[10]]);
 
     expect(() => {
       table.createCheck(
@@ -153,7 +153,7 @@ describe('Table::createCheck', () => {
           name: "Age",
           type: Number,
         })
-        .addRow([20]);
+        .addRows([[20]]);
 
     expect(() => {
       table.createCheck(

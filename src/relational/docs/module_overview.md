@@ -4,24 +4,21 @@
 
 The Relational module owns the immutable relational representation used throughout the engine.
 
-It defines the relational model, maintains structural correctness, and provides the immutable operations used to construct and modify relational databases.
+It is responsible for:
 
-The module is responsible for:
+- Relational objects and schema
+- Column-oriented row storage
+- Structural constraint enforcement
+- Relational metadata
+- Stable object identity allocation
+- Immutable relational mutations
 
-* Immutable relational objects
-* Relational schema definition
-* Column-oriented row storage
-* Structural constraint enforcement
-* Relational metadata
-* Stable object identity allocation
-
-The Relational module does not perform discovery, import, business validation, or SQL parsing. It provides the relational foundation upon which those layers operate.
+It does not perform discovery, import, SQL parsing, or business validation.
 
 ---
 
-## High-level Architecture
+## Architecture
 
-```text
 Databases
     │
     ▼
@@ -29,283 +26,264 @@ Database
     │
     ▼
 Table
-    │
-    ├─────────────┐
-    ▼             ▼
-Columns      Constraints
-                  │
-      ┌───────────┼─────────────┬────────────┐
-      ▼           ▼             ▼            ▼
- PrimaryKey   Unique      ForeignKey      Check
-                  │
-                  ▼
-               Indexes
-```
+    ├── Columns
+    ├── Indexes
+    └── Constraints
+         ├── PrimaryKey
+         ├── Unique
+         ├── ForeignKey
+         └── Check
 
 Ownership follows the relational hierarchy:
 
-* `Databases` owns databases.
-* `Database` owns tables.
-* `Table` owns columns, indexes, and constraints.
+Databases owns Database objects.
+Database owns Table objects.
+Table owns columns, indexes, constraints, and row storage.
 
-Every structural modification produces new immutable objects.
-
----
+All relational objects are immutable.
 
 ## Databases
 
-`Databases` represents the collection of relational databases managed by the engine.
+Databases is the root collection of relational state.
 
 It owns:
 
-* Databases
-* Database identifier allocation
+Databases
+Database identifier allocation
 
-It provides immutable operations for:
-
-* Creating databases
-* Updating databases
-* Removing databases
-* Locating databases by identifier or name
-
-`Databases` forms the root of the immutable relational state maintained by the engine.
-
----
+It provides immutable operations for creating, updating, removing, and locating databases.
 
 ## Database
 
-`Database` represents a single relational database.
+Database represents one relational database and owns:
 
-A database owns:
+Tables
+Table identifier allocation
 
-* Tables
-* Table identifier allocation
+Database-level operations handle concerns requiring knowledge of multiple tables, including:
 
-The database is responsible for operations requiring knowledge of multiple tables.
+Table creation and removal
+Inter-table relationships
+Foreign-key validation
+Referential actions
+Cross-table mutation coordination
 
-Examples include:
-
-* Creating, removing, and renaming tables
-* Creating inter-table relationships
-* Validating foreign-key compatibility
-* Coordinating referential actions
-* Validating foreign-key integrity after structural mutations
-
-Mutations affecting multiple tables are coordinated at the database level before producing a new immutable database instance.
-
----
+Referential work is processed deterministically as immutable work until no additional dependent operations remain.
 
 ## Table
 
-`Table` is the central relational object.
+Table is the central relational object.
 
-A table owns:
+It owns:
 
-* Columns
-* Indexes
-* Primary key
-* Unique constraints
-* Foreign keys
-* Check constraints
+Columns
+Indexes
+Primary key
+Unique constraints
+Foreign keys
+Check constraints
+Row metadata and storage
 
-It also owns the metadata required to manage relational data, including:
+Table mutations are immutable batch operations. Structural indexes are rebuilt after row mutations and constraints are checked before the resulting table is returned.
 
-* Row liveness
-* Row count
-* Column ordering
-* Identifier allocation for relational objects
+Rows are stored column-oriented rather than as persistent row objects.
 
-Tables provide immutable operations for creating, updating, renaming, altering, and removing the relational objects they own.
+TablePolicy is distinct from user-facing table creation data.
 
-Row mutations are applied as immutable batch operations. After structural or row mutations are complete, indexes are rebuilt and structural constraints are revalidated before the updated table is returned.
-
-Although relational data is viewed as rows during execution, storage is column-oriented.
-
----
+Table retains table-level policy such as allowMultipleAutoIncrementColumns.
 
 ## Columns
 
-A column defines one attribute of a table.
+A Column defines one table attribute.
 
-Columns describe:
+It contains:
 
-* Name
-* Type
-* Nullability
-* Default value
-* Enumerated values
-* Auto-increment behaviour
+Name
+Type
+Nullability
+Default value
+Enumerated values
+Auto-increment configuration
+Column data
 
-Column data is stored within the column itself rather than within row objects.
+Column data is the physical row storage. A live row has exactly one stored datum for every column.
 
-When a column is added to an existing table, its storage is backfilled so that every live row contains exactly one stored datum for every column. This preserves a simple storage invariant while avoiding runtime reconstruction of missing values.
+Adding a column therefore backfills its storage rather than requiring missing values to be reconstructed at read time.
 
-This organization allows structural operations such as altering or removing columns without changing the underlying storage model.
+Column mutation also handles column-specific input semantics such as defaults and auto-increment behaviour.
 
----
+ColumnPolicy is distinct from user-facing ColumnSpec.
+
+Column retains policies that affect its runtime behavior.
 
 ## Row Views
 
-Rows are represented during execution by `RowView`.
+RowView is the temporary row representation used during execution.
 
-A `RowView` is a lightweight, temporary projection of a single logical row assembled from the underlying column storage.
+It contains:
 
-It consists of:
+Row index
+Ordered values
 
-* Row index
-* Ordered column values
+A row view is assembled from column storage and is not itself persistent storage.
 
-Row views are used by query execution, predicates, expressions, validation, indexing, and referential processing.
-
-They are transient execution objects rather than the physical storage format of relational data.
-
----
+It is used by queries, expressions, predicates, validation, indexes, and referential processing.
 
 ## Constraints
 
-Constraints define structural rules for relational correctness.
+The module supports four structural constraint kinds:
 
-The module supports four constraint kinds:
+PrimaryKey
+Unique
+ForeignKey
+Check
 
-* Primary Key
-* Unique
-* Foreign Key
-* Check
+Constraint specifications describe constraints before construction. Constructed constraints are immutable members of the relational model.
 
-Constraint specifications describe constraints declaratively before they are created.
-
-Once constructed, constraint objects become immutable members of the relational model.
-
-Structural correctness is enforced entirely within the Relational module.
-
----
+Structural constraint enforcement belongs entirely to this module.
 
 ## Primary Keys
 
-A primary key uniquely identifies each row within a table.
+A primary key uniquely identifies rows within a table.
 
-A primary key references a unique index that enforces row identity.
+Each table has at most one primary key.
 
-Each table owns at most one primary key.
-
----
+Primary keys rely on unique indexing to enforce uniqueness.
 
 ## Unique Constraints
 
-Unique constraints require one or more columns to contain unique values.
+A Unique constraint requires one or more columns to contain unique keys.
 
-A unique constraint references a supporting unique index.
+Unique constraints use supporting unique indexes.
 
-Indexes may exist independently of unique constraints, allowing indexing and uniqueness to remain separate concepts.
+Indexes remain first-class objects and may exist independently of constraints.
 
-Unique indexes also support configurable NULL semantics, allowing multiple NULL-containing keys when appropriate.
-
----
+NULL uniqueness behaviour is configurable through the relational/dialect rules.
 
 ## Foreign Keys
 
-Foreign keys define relationships between tables.
+A foreign key relates child columns to parent columns.
 
-A foreign key records:
+It records:
 
-* Child columns
-* Parent table
-* Parent columns
-* Supporting indexes
-* Referential actions
+Child columns
+Parent table
+Parent columns
+Supporting indexes
+Referential actions
 
-The database coordinates foreign-key validation and referential actions across related tables, while tables store the foreign-key definitions themselves.
-
-Referential actions are propagated as deterministic batches of immutable work until no additional actions remain.
-
----
+Table owns the foreign-key definition. Database coordinates validation and propagation because those operations may span multiple tables.
 
 ## Check Constraints
 
-Check constraints enforce predicates over individual rows.
+A Check constraint validates rows against a predicate.
 
-A check stores:
+It stores the information required to evaluate that predicate and participates in structural validation during row mutations.
 
-* Resolved predicate
-* Executable predicate
-* Referenced columns
-
-Checks participate in structural validation during row mutations and ensure existing data continues to satisfy the constraint.
-
----
+Checks protect relational integrity; business validation belongs to the separate Validation module.
 
 ## Indexes
 
 Indexes are first-class relational objects.
 
-They may exist independently of constraints.
+They may be created independently of constraints and are used to support:
 
-Primary keys, unique constraints, and foreign keys reference indexes to implement relational behaviour.
+Primary keys
+Unique constraints
+Foreign keys
+Other relational lookups
 
-Indexes are rebuilt following structural row mutations, ensuring that the relational representation remains consistent with the underlying column data.
-
----
+Indexes are rebuilt from the resulting table state after relevant mutations, ensuring synchronization with column storage.
 
 ## Referential Actions
 
-Referential actions describe how modifications propagate across foreign-key relationships.
+Foreign keys may specify:
 
-Supported actions include:
+RESTRICT
+CASCADE
+SET NULL
+NO ACTION
 
-* RESTRICT
-* CASCADE
-* SET NULL
-* NO ACTION
+Referential actions are coordinated by Database.
 
-Referential actions are coordinated by the database during update and delete operations before final foreign-key validation.
+Update and delete operations produce referential work that is processed iteratively rather than through recursive mutation calls.
 
-Propagation executes deterministically over immutable database snapshots until all dependent work has been processed.
+Final foreign-key validation occurs after the complete operation has been processed.
 
----
+## Row Mutation
+
+Insert and update operations distinguish between input resolution and relational mutation.
+
+Insert inputs may omit columns. Ordered input rows represent column-positioned inputs including values, DEFAULT, or undefined.
+
+Update operations identify affected rows separately from their ordered inputs. Expressions are evaluated against the original RowView before relational mutation.
+
+Resolved updates retain:
+
+Row number
+Original row
+Resulting row
+
+These resolved updates are used by referential-action processing.
 
 ## Structural Enforcement
 
-The Relational module owns the algorithms responsible for maintaining relational correctness.
+The Relational module maintains invariants including:
 
-Structural operations enforce rules including:
+Valid object references
+Unique names within ownership scopes
+Valid column definitions
+Primary-key uniqueness
+Unique-constraint enforcement
+Foreign-key integrity
+Check-constraint satisfaction
+Index synchronization
+Valid row storage
 
-* Unique object names
-* Valid object references
-* Primary key rules
-* Unique constraints
-* Foreign-key relationships
-* Check constraints
-* Referential actions
-
-Higher layers operate on relational objects with the expectation that these invariants have already been preserved.
-
----
+Operations that span multiple tables are coordinated by Database.
 
 ## Immutability
 
-Every relational object is immutable.
+Relational objects are persistent immutable values.
 
-Creating, updating, renaming, altering, or removing relational objects produces new immutable instances while preserving previous snapshots.
+Mutations produce new objects while preserving previous snapshots.
 
-Identifier allocation is also immutable, ensuring stable object identities independent of user-visible names.
+This applies to:
 
----
+Databases
+Tables
+Columns
+Constraints
+Indexes
+Relational metadata
 
-## Design Principles
+Stable identifiers are allocated immutably and remain independent of user-facing names.
 
-The Relational module follows several core principles.
+## Design Boundaries
 
-* Relational objects are immutable.
-* Structural correctness is enforced by the Relational module.
-* Business correctness belongs outside the Relational module.
-* Databases own tables.
-* Tables own columns, indexes, constraints, and row storage.
-* Cross-table operations belong to `Database`.
-* Indexes are first-class relational objects.
-* Constraints define relational correctness rather than business rules.
-* Data is stored by column and viewed through transient row projections.
-* Every live row contains one stored datum for every column.
-* Structural mutations execute as immutable batch operations.
-* Referential actions execute deterministically over immutable work queues.
-* Stable identifiers are independent of user-facing names.
-* Object ownership follows the relational hierarchy.
+The Relational module owns structural relational correctness, not domain correctness.
+
+It therefore:
+
+Enforces relational constraints.
+Maintains indexes.
+Resolves column-level storage semantics.
+Coordinates cross-table relational effects.
+Preserves immutable relational state.
+
+It does not:
+
+Discover external data.
+Map external data into tables.
+Parse SQL.
+Perform semantic SQL binding.
+Define business validation rules.
+Export relational data.
+
+Higher layers can therefore treat relational objects as structurally valid immutable state.
+
+## Policy
+
+Some Policy rules are captured by the relational object at creation time.
+
+Therefore, later engine-policy changes affect future objects, not existing columns/tables.

@@ -21,13 +21,24 @@ export interface DialectRules {
   };
 
   constraints: {
-    allowsMultipleAutoIncrement: boolean;
     supportsNotValidatedConstraints: boolean;
     requireExplicitNames?: boolean;
     nullsDistinct: boolean;
     allowNullableForeignKeys: boolean;
     foreignKeyDefaultOnDelete: ReferentialAction;
     foreignKeyDefaultOnUpdate: ReferentialAction;
+  };
+
+  tablePolicy: {
+    allowMultipleAutoIncrementColumns: boolean;
+  };
+
+  autoIncrementColumnPolicy: {
+    autoIncrementNullGenerates: boolean;
+    autoIncrementZeroGenerates: boolean;
+    autoIncrementExplicitValueAdvances: boolean;
+    autoIncrementAllowsExplicitValue: boolean;
+    autoIncrementAllowsExplicitDefault: boolean;
   };
 
   insert: {

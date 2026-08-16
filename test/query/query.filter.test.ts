@@ -14,9 +14,7 @@ describe('Query::filterNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([10])
-      .addRow([20])
-      .addRow([30]);
+      .addRows([[10],[20],[30]]);
 
     const scan = new TableScanNode(table);
 
@@ -49,8 +47,7 @@ describe('Query::filterNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([10])
-      .addRow([20]);
+      .addRows([[10],[20]]);
 
     const scan = new TableScanNode(table);
 
@@ -72,8 +69,7 @@ describe('Query::filterNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([10])
-      .addRow([20]);
+      .addRows([[10],[20]]);
 
     const scan = new TableScanNode(table);
 
@@ -97,9 +93,7 @@ describe('Query::filterNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([5])
-      .addRow([10])
-      .addRow([15]);
+      .addRows([[5],[10],[15]]);
 
     const scan = new TableScanNode(table);
 
@@ -126,10 +120,7 @@ describe('Query::filterNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([5])
-      .addRow([10])
-      .addRow([15])
-      .addRow([20]);
+      .addRows([[5],[10],[15],[20]]);
 
     const scan = new TableScanNode(table);
 
@@ -167,7 +158,7 @@ describe('Query::filterNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1]);
+      .addRows([[1]]);
 
     const scan = new TableScanNode(table);
 
@@ -196,8 +187,7 @@ describe('Query::filterNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1])
-      .addRow([2]);
+      .addRows([[1],[2]]);
 
     const scan = new TableScanNode(table);
 

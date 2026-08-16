@@ -100,15 +100,16 @@ describe('Table::createIndex', () => {
   });
 
   it('throws when existing rows violate uniqueness', () => {
-    const table = buildTable()
+    let table = buildTable()
       .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
 
-    const tableWithRows = table
-      .addRow([1])
-      .addRow([1]);
+    table = table.addRows([
+      [1],
+      [1],
+    ]);
 
     expect(() => {
-      tableWithRows.createIndex(createIndexTestSpec({
+      table.createIndex(createIndexTestSpec({
         name: "UserLookup",
         columns: ["C1"],
         unique: true,

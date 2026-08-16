@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   buildDatabase,
   buildTable,
-  createColumnTestSpec,
-  createUpdate
+  createColumnTestSpec
 } from '../utils/buildSchema.js';
 
 describe('Composite Foreign Keys', () => {
@@ -72,7 +71,7 @@ describe('Composite Foreign Keys', () => {
         unique: true,
       });
 
-    parent = parent.addRow([1, 2]);
+    parent = parent.addRows([[1, 2]]);
 
     let db = buildDatabase()
       .addTable(parent)
@@ -104,9 +103,16 @@ describe('Composite Foreign Keys', () => {
       }
     );
 
-    db = db.addRow(
+    const columnId_FA = db.tables.requireByName("Child").columns.requireByName("FA").id;
+    const columnId_FB = db.tables.requireByName("Child").columns.requireByName("FB").id;
+    
+    db = db.addRows(
       "Child",
-      [1, 2],
+      [
+        new Map()
+          .set(columnId_FA, 1)
+          .set(columnId_FB, 2)
+      ]
     );
 
     expect(
@@ -132,7 +138,7 @@ describe('Composite Foreign Keys', () => {
         unique: true,
       });
 
-    parent = parent.addRow([1, 2]);
+    parent = parent.addRows([[1, 2]]);
 
     let db = buildDatabase()
       .addTable(parent)
@@ -164,10 +170,17 @@ describe('Composite Foreign Keys', () => {
       }
     );
 
+    const columnId_FA = db.tables.requireByName("Child").columns.requireByName("FA").id;
+    const columnId_FB = db.tables.requireByName("Child").columns.requireByName("FB").id;
+
     expect(() =>
-      db.addRow(
+      db.addRows(
         "Child",
-        [1, 999],
+        [
+          new Map()
+            .set(columnId_FA, 1)
+            .set(columnId_FB, 999)
+        ]
       )
     ).toThrow();
   });
@@ -188,8 +201,8 @@ describe('Composite Foreign Keys', () => {
         unique: true,
       });
 
-    parent = parent.addRow([1, 2]);
-    parent = parent.addRow([3, 4]);
+    parent = parent.addRows([[1, 2]]);
+    parent = parent.addRows([[3, 4]]);
 
     let db = buildDatabase()
       .addTable(parent)
@@ -221,10 +234,17 @@ describe('Composite Foreign Keys', () => {
       }
     );
 
+    const columnId_FA = db.tables.requireByName("Child").columns.requireByName("FA").id;
+    const columnId_FB = db.tables.requireByName("Child").columns.requireByName("FB").id;
+
     expect(() =>
-      db.addRow(
+      db.addRows(
         "Child",
-        [1, 4],
+        [
+          new Map()
+            .set(columnId_FA, 1)
+            .set(columnId_FB, 4)
+        ]
       )
     ).toThrow();
   });
@@ -245,8 +265,8 @@ describe('Composite Foreign Keys', () => {
         unique: true,
       });
 
-    parent = parent.addRow([1, 2]);
-    parent = parent.addRow([3, 4]);
+    parent = parent.addRows([[1, 2]]);
+    parent = parent.addRows([[3, 4]]);
 
     let child = buildTable({name: "Child"})
       .createColumn(createColumnTestSpec({
@@ -263,7 +283,7 @@ describe('Composite Foreign Keys', () => {
         unique: false,
       });
 
-    child = child.addRow([1, 2]);
+    child = child.addRows([[1, 2]]);
 
     let db = buildDatabase()
       .addTable(parent)
@@ -283,8 +303,7 @@ describe('Composite Foreign Keys', () => {
     const updates = [3, 4];
 
     const updated = db.updateRows(
-      "Child",
-      [createUpdate(child, 0, updates)]
+      "Child", [0], [updates]
     );
 
     expect(
@@ -310,7 +329,7 @@ describe('Composite Foreign Keys', () => {
         unique: true,
       });
 
-    parent = parent.addRow([1, 2]);
+    parent = parent.addRows([[1, 2]]);
 
     let child = buildTable({name: "Child"})
       .createColumn(createColumnTestSpec({
@@ -327,7 +346,7 @@ describe('Composite Foreign Keys', () => {
         unique: false,
       });
 
-    child = child.addRow([1, 2]);
+    child = child.addRows([[1, 2]]);
 
     let db = buildDatabase()
       .addTable(parent)
@@ -348,8 +367,7 @@ describe('Composite Foreign Keys', () => {
 
     expect(() =>
       db.updateRows(
-        "Child",
-        [createUpdate(child, 0, updates)]
+        "Child", [0], [updates]
       )
     ).toThrow();
   });
@@ -370,7 +388,7 @@ describe('Composite Foreign Keys', () => {
         unique: true,
       });
 
-    parent = parent.addRow([1, 2]);
+    parent = parent.addRows([[1, 2]]);
 
     let child = buildTable({name: "Child"})
       .createColumn(createColumnTestSpec({
@@ -387,7 +405,7 @@ describe('Composite Foreign Keys', () => {
         unique: false,
       });
 
-    child = child.addRow([1, 2]);
+    child = child.addRows([[1, 2]]);
 
     let db = buildDatabase()
       .addTable(parent)
@@ -408,8 +426,7 @@ describe('Composite Foreign Keys', () => {
 
     expect(() =>
       db.updateRows(
-        "Parent",
-        [createUpdate(parent, 0, updates)]
+        "Parent", [0], [updates]
       )
     ).toThrow();
   });
@@ -430,7 +447,7 @@ describe('Composite Foreign Keys', () => {
         unique: true,
       });
 
-    parent = parent.addRow([1, 2]);
+    parent = parent.addRows([[1, 2]]);
 
     let db = buildDatabase()
       .addTable(parent)
@@ -462,10 +479,17 @@ describe('Composite Foreign Keys', () => {
       }
     );
 
+    const columnId_FA = db.tables.requireByName("Child").columns.requireByName("FA").id;
+    const columnId_FB = db.tables.requireByName("Child").columns.requireByName("FB").id;
+
     expect(() =>
-      db.addRow(
+      db.addRows(
         "Child",
-        [1, null],
+        [
+          new Map()
+            .set(columnId_FA, 1)
+            .set(columnId_FB, null)
+        ]
       )
     ).not.toThrow();
   });

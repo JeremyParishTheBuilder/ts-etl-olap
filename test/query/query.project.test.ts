@@ -25,7 +25,7 @@ describe('Query::projectNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1, "Alice", 30]);
+      .addRows([[1, "Alice", 30]]);
 
     const scan = new TableScanNode(table);
 
@@ -51,8 +51,7 @@ describe('Query::projectNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([10])
-      .addRow([20]);
+      .addRows([[10],[20]]);
 
     const scan = new TableScanNode(table);
 
@@ -81,9 +80,7 @@ describe('Query::projectNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1, 100])
-      .addRow([2, 200])
-      .addRow([3, 300]);
+      .addRows([[1, 100],[2, 200],[3, 300]]);
 
     const scan = new TableScanNode(table);
 
@@ -113,9 +110,7 @@ describe('Query::projectNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1, 10])
-      .addRow([2, 20])
-      .addRow([3, 30]);
+      .addRows([[1, 10],[2, 20],[3, 30]]);
 
     const scan = new TableScanNode(table);
 
@@ -150,7 +145,7 @@ describe('Query::projectNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1]);
+      .addRows([[1]]);
 
     const scan = new TableScanNode(table);
 
@@ -199,7 +194,7 @@ describe('Query::projectNode', () => {
         type: String,
         nullable: false,
       }))
-      .addRow([1, "Alice"]);
+      .addRows([[1, "Alice"]]);
 
     const scan = new TableScanNode(table);
 
@@ -225,8 +220,7 @@ describe('Query::projectNode', () => {
         type: Number,
         nullable: false,
       }))
-      .addRow([1])
-      .addRow([2]);
+      .addRows([[1],[2]]);
 
     const scan = new TableScanNode(table);
 

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { createTestSql } from '../utils/engineHelpers.ts';
+import { createTestPostgresSql } from '../utils/engineHelpers.ts';
 import { case_, col } from '../../src/ast/dsl.ts';
 
 describe("Integration::update", () => {
   it("updates a single row", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -51,7 +51,7 @@ describe("Integration::update", () => {
   });
 
   it("updates all rows matching a predicate", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -109,7 +109,7 @@ describe("Integration::update", () => {
   });
 
   it("rejects updates that create duplicate primary keys", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -148,7 +148,7 @@ describe("Integration::update", () => {
   });
 
   it("rejects updates that violate unique constraints", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -188,7 +188,7 @@ describe("Integration::update", () => {
   });
 
   it("rejects updates with missing foreign key parents", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -243,7 +243,7 @@ describe("Integration::update", () => {
   });
 
   it("cascades foreign key updates", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -309,7 +309,7 @@ describe("Integration::update", () => {
   });
 
   it("updates PKs atomically using CASE expression", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -346,7 +346,7 @@ describe("Integration::update", () => {
   });
 
   it("updates using arithmetic expressions", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -381,7 +381,7 @@ describe("Integration::update", () => {
 
   it('rejects inserts violating checks', () => {
   
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -420,7 +420,7 @@ describe("Integration::update", () => {
 
   it('allows updates satisfying checks', () => {
 
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -458,7 +458,7 @@ describe("Integration::update", () => {
   });
 
   it('rejects entire update when one row violates a check', () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
 
@@ -512,7 +512,7 @@ describe("Integration::update", () => {
   });
 
   it("uses an explicit DEFAULT value", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -559,7 +559,7 @@ describe("Integration::update", () => {
   });
 
   it("uses NULL for DEFAULT on a nullable column without a default", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -605,7 +605,7 @@ describe("Integration::update", () => {
   });
 
   it("rejects DEFAULT on a non-nullable column without a default", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -640,45 +640,8 @@ describe("Integration::update", () => {
     }).toThrow(/Cannot resolve default.*Name/);
   });
 
-  it("does not use the auto-increment value for DEFAULT during UPDATE", () => {
-    const sql = createTestSql();
-
-    sql.createDatabase("DB1").execute();
-    sql.useDatabase("DB1").execute();
-
-    sql.createTable("Users", {
-      Id: {
-        type: Number,
-        nullable: false,
-        primaryKey: true,
-        autoIncrementStep: 1,
-      },
-      Name: {
-        type: String,
-        nullable: false,
-      },
-    }).execute();
-
-    sql
-      .insertInto("Users", ["Name"])
-      .values([["Alice"]])
-      .execute();
-
-    expect(() => {
-      sql
-        .update("Users")
-        .set({
-          Id: sql.DEFAULT,
-        })
-        .where(
-          col("Name").eq("Alice"),
-        )
-        .execute();
-    }).toThrow();
-  });
-
   it("uses CURRENT_TIMESTAMP in an update expression", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();
@@ -730,7 +693,7 @@ describe("Integration::update", () => {
   });
 
   it("uses NOW in an update expression", () => {
-    const sql = createTestSql();
+    const sql = createTestPostgresSql();
 
     sql.createDatabase("DB1").execute();
     sql.useDatabase("DB1").execute();

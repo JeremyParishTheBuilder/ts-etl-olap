@@ -24,6 +24,7 @@ export function bindSelect(semantic: SemanticAnalyzer, stmt: SelectStatement) {
       resolvePredicate(whereClause, table),
       table,
     );
+
     node = new FilterNode(predicate, node);
   }
 

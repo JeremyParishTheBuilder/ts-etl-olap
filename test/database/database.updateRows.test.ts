@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildDatabase, buildTable, createColumnTestSpec, createForeignKeyTestSpec_Database, createUpdate } from '../utils/buildSchema.js';
+import { buildDatabase, buildTable, createColumnTestSpec, createForeignKeyTestSpec_Database } from '../utils/buildSchema.js';
 
 describe('Database::updateRow', () => {
 
@@ -15,8 +15,7 @@ describe('Database::updateRow', () => {
         unique: true,
       });
 
-    roles = roles.addRow([1]);
-    roles = roles.addRow([2]);
+    roles = roles.addRows([[1],[2]]);
 
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
@@ -29,7 +28,7 @@ describe('Database::updateRow', () => {
         unique: false,
       });;
 
-    users = users.addRow([1]);
+    users = users.addRows([[1]]);
 
     const db = buildDatabase()
       .addTable(roles)
@@ -48,7 +47,8 @@ describe('Database::updateRow', () => {
 
     const updated = db.updateRows(
       "Users",
-      [createUpdate(users, 0, updates)]
+      [0],
+      [updates]
     );
 
     expect(
@@ -70,7 +70,7 @@ describe('Database::updateRow', () => {
         unique: true,
       });
 
-    roles = roles.addRow([1]);
+    roles = roles.addRows([[1]]);
 
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
@@ -83,7 +83,7 @@ describe('Database::updateRow', () => {
         unique: false,
       });;
 
-    users = users.addRow([1]);
+    users = users.addRows([[1]]);
 
     const db = buildDatabase()
       .addTable(roles)
@@ -102,8 +102,7 @@ describe('Database::updateRow', () => {
 
     expect(() =>
       db.updateRows(
-        "Users",
-        [createUpdate(users, 0, updates)]
+        "Users", [0], [updates]
       )
     ).toThrow();
   });
@@ -120,7 +119,7 @@ describe('Database::updateRow', () => {
         unique: true,
       });
 
-    roles = roles.addRow([1]);
+    roles = roles.addRows([[1]]);
 
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
@@ -133,7 +132,7 @@ describe('Database::updateRow', () => {
         unique: false,
       });;
 
-    users = users.addRow([1]);
+    users = users.addRows([[1]]);
 
     const db = buildDatabase()
       .addTable(roles)
@@ -152,8 +151,7 @@ describe('Database::updateRow', () => {
 
     expect(() =>
       db.updateRows(
-        "Roles",
-        [createUpdate(roles, 0, updates)]
+        "Roles", [0], [updates]
       )
     ).toThrow();
   });
@@ -170,7 +168,7 @@ describe('Database::updateRow', () => {
         unique: true,
       });
 
-    roles = roles.addRow([1]);
+    roles = roles.addRows([[1]]);
 
     const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
@@ -199,8 +197,7 @@ describe('Database::updateRow', () => {
     const updates = [2];
 
     const updated = db.updateRows(
-      "Roles",
-      [createUpdate(roles, 0, updates)]
+      "Roles", [0], [updates]
     );
 
     expect(
@@ -231,8 +228,7 @@ describe('Database::updateRow', () => {
         unique: false,
       });;
 
-    employees = employees.addRow([1, null]);
-    employees = employees.addRow([2, 1]);
+    employees = employees.addRows([[1, null],[2, 1]]);
 
     const db = buildDatabase()
       .addTable(employees)
@@ -249,8 +245,7 @@ describe('Database::updateRow', () => {
     const updates = [2, 2];
 
     const updated = db.updateRows(
-      "Employees",
-      [createUpdate(employees, 1, updates)]
+      "Employees", [1], [updates]
     );
 
     expect(
@@ -281,7 +276,7 @@ describe('Database::updateRow', () => {
         unique: false,
       });
 
-    employees = employees.addRow([1, null]);
+    employees = employees.addRows([[1, null]]);
 
     const db = buildDatabase()
       .addTable(employees)
@@ -299,8 +294,7 @@ describe('Database::updateRow', () => {
 
     expect(() =>
       db.updateRows(
-        "Employees",
-        [createUpdate(employees, 0, updates)]
+        "Employees", [0], [updates]
       )
     ).toThrow();
   });
@@ -317,19 +311,13 @@ describe('Database::updateRow', () => {
         unique: true,
       });
 
-    users = users.addRow([1]);
-    users = users.addRow([2]);
-    users = users.addRow([3]);
+    users = users.addRows([[1],[2],[3]]);
 
     const db = buildDatabase()
       .addTable(users);
 
     const updated = db.updateRows(
-      "Users",
-      [
-        createUpdate(users, 0, [10]),
-        createUpdate(users, 2, [30]),
-      ],
+      "Users", [0, 2], [[10], [30]]
     );
 
     const updatedUsers =
@@ -352,8 +340,7 @@ describe('Database::updateRow', () => {
         unique: true,
       });
 
-    roles = roles.addRow([1]);
-    roles = roles.addRow([2]);
+    roles = roles.addRows([[1],[2]]);
 
     let users = buildTable({ name: "Users" })
       .createColumn(createColumnTestSpec({
@@ -366,8 +353,7 @@ describe('Database::updateRow', () => {
         unique: false,
       });
 
-    users = users.addRow([1]);
-    users = users.addRow([2]);
+    users = users.addRows([[1],[2]]);
 
     const db = buildDatabase()
       .addTable(roles)
@@ -386,11 +372,7 @@ describe('Database::updateRow', () => {
       );
 
     const updated = db.updateRows(
-      "Roles",
-      [
-        createUpdate(roles, 0, [10]),
-        createUpdate(roles, 1, [20]),
-      ],
+      "Roles", [0, 1], [[10], [20]]
     );
 
     const updatedRoles =
