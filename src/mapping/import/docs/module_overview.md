@@ -2,20 +2,18 @@
 
 ## Purpose
 
-The Import module transforms discovered data into an immutable relational representation.
+The Import module transforms immutable `DiscoveryResult`s into relational data.
 
-It consumes the immutable results produced by Discovery and determines how those results become relational rows, tables, columns, and identities.
+It is responsible for:
 
-The Import module is responsible for:
-
-* selecting logical objects from Discovery results
+* selecting discovered data for import
 * transforming discovered values
-* preserving and combining import identities
-* inferring relational structure where appropriate
+* preserving import identities
+* assembling logical rows
+* inferring relational structure
 * applying explicit import configuration
-* constructing the relational representation from imported data
 
-Import does not perform physical discovery or business validation.
+Import does not perform physical discovery, relational constraint enforcement, or business validation.
 
 ---
 
@@ -29,240 +27,115 @@ DiscoveryResults
     │
     ▼
 Import
-    │
-    ├── Explicit import definitions
-    ├── Automatic inference
-    └── Schema inference
+    ├── Explicit configuration
+    └── Automatic inference
     │
     ▼
-Relational Representation
+Relational Data
 ```
 
 Import is the boundary between external structured data and the relational model.
 
 ---
 
-# Import Inputs
+# Import and Discovery
 
-Import consumes immutable `DiscoveryResult`s.
+Import consumes Discovery results rather than performing discovery itself.
 
-Discovery results may contain:
+Discovery answers:
 
-* discovered values
-* captures
-* discovery identities
-* parent/child relationships
-* source metadata
+> Where is the data, and what was discovered?
 
-Import interprets these results without performing discovery itself.
+Import answers:
 
-The Import layer may expose discovered data through an intermediate staging representation suitable for relational expressions and SQL-based transformation.
+> How should discovered data become relational data?
 
----
+The boundary is:
 
-# Import Roots
-
-An `ImportRoot` connects discovered results to an import operation.
-
-Historically, an import root connects:
-
-* a `DiscoveryRoot`
-* an import definition
-
-The purpose of this relationship is to identify which discovered results participate in an import.
-
-Import does not execute discovery as part of its own traversal.
-
----
-
-# Relational Transformation
-
-Import determines how discovered data becomes relational data.
-
-A transformation may:
-
-* select values
-* derive values
-* cast values
-* flatten objects
-* create child rows
-* combine contributions from multiple discovered sources
-* preserve import identity
-* explicitly override inferred behaviour
-
-The long-term direction is for these transformations to use the system's standard SQL expression and statement infrastructure rather than a separate Import-specific expression language.
-
-This allows Import to share semantic analysis and execution capabilities with ordinary SQL.
+```text
+Discovery
+    │
+    │ DiscoveryResults
+    ▼
+Import
+```
 
 ---
 
 # Import Identity
 
-Import identities connect discovered contributions that belong to the same logical relational row.
+Import identities associate discovered contributions with logical relational rows.
 
-Import identity is independent of the eventual business key.
+Import identity is independent of business keys.
 
-For example:
+Multiple discovered sources may therefore contribute to the same logical row:
 
 ```text
-chain.json
-     │
-     ├── identity A ──┐
-     │                │
-assetlist.json       ├── logical Chain row
-     │                │
-     └── identity A ──┘
+chain.json ───────┐
+                  ├── logical row
+assetlist.json ──┘
 ```
 
-Multiple discovered sources may therefore contribute values to one logical row.
+Child entities may establish independent identities for child tables.
 
-Crossing into a distinct logical child entity may establish a different identity for the child relation.
-
-This mechanism allows relational row assembly without requiring business keys to exist during import.
+This allows row assembly without requiring business keys to exist during import.
 
 ---
 
 # Explicit Import
 
-Maintainers may explicitly define how discovered data maps to relational structures.
+Import supports explicit configuration for cases where the maintainer needs to control relational representation.
 
-Explicit configuration may specify:
+Explicit configuration may determine:
 
-* target table
-* source discovery
-* selected fields
-* derived expressions
+* target tables
+* selected or derived fields
 * child relationships
-* namespace or column naming
+* naming or namespaces
 * other mapping behaviour
 
-Explicit configuration takes precedence over automatic inference.
-
-The long-term goal is for explicit transformations to be expressed through the common SQL AST and DSL where practical.
+Explicit configuration overrides automatic inference.
 
 ---
 
 # Automatic Inference
 
-Import retains automatic inference for common structured-data scenarios.
+Import retains inference for common structured-data scenarios.
 
-Inference allows maintainers to import substantial portions of a discovered document without specifying every column individually.
+Inference may:
 
-Typical inference includes:
+* turn object properties into columns
+* flatten nested objects
+* turn repeated arrays into child relations
+* infer table and column names
+* infer appropriate row identities
 
-* object properties becoming columns
-* nested objects becoming flattened columns
-* object arrays becoming child relational structures
-* inferred table names
-* inferred column names or prefixes
-* inferred row identities
+An entire discovered document can therefore be imported without requiring every column to be specified manually.
 
-Explicit mappings override inferred behaviour.
-
-For example, a document may be imported broadly while explicitly assigning a property such as `images` to a separate table.
-
-An inferred array that has not been explicitly claimed may likewise become a child relation.
-
-This allows Import to support both:
-
-```text
-Explicit projection
-```
-
-and:
-
-```text
-Broad import + selective overrides
-```
-
-without requiring either extreme as the only import style.
+Explicit mappings can selectively override inferred behaviour or assign structures to separate tables.
 
 ---
 
-# Flattening
+# Schema Inference
 
-Objects may be flattened into relational columns.
+Schema inference belongs to Import because it determines how structured imported data becomes relational schema.
 
-For example:
+It may infer:
 
-```text
-Codebase.Version
-Consensus.Type
-```
+* tables
+* columns
+* types
+* flattened object structure
+* array relations
+* related relational structure
 
-represent nested object properties within a relational row.
-
-Arrays are treated differently.
-
-An array represents a repeated structure and may become a child relation rather than a group of repeated columns.
-
-Explicit configuration can override inferred handling where required.
+The resulting schema and data are materialized through the Relational layer.
 
 ---
 
-# Multiple Sources
+# SQL-Based Direction
 
-Multiple discovered sources may contribute to one relational row when their import identities establish the same logical entity.
-
-Conceptually:
-
-```text
-chain.json
-     │
-     ├──────────────┐
-     │              │
-assetlist.json      │
-     │              │
-     └──── same ────┘
-          identity
-             │
-             ▼
-         Chain row
-```
-
-The relational implementation may express these relationships through joins or other relational operations over a staging representation.
-
-This is important for imports in which related documents contribute different fields to the same business entity.
-
----
-
-# Staging Representation
-
-The long-term Import architecture may expose Discovery results through a relational staging representation.
-
-Conceptually:
-
-```text
-Discovery Results
-       │
-       ▼
-Staging Relations
-       │
-       ▼
-SQL expressions / statements
-       │
-       ▼
-Relational data
-```
-
-The staging representation should expose the information required for Import without making Discovery itself dependent on the relational model.
-
-It may include information such as:
-
-* discovered value or document
-* discovery identity
-* import identity
-* source metadata
-* captures
-* parent/child relationships
-
-The exact staging schema is an implementation concern and should remain separate from the physical Discovery model.
-
----
-
-# SQL-Based Import Direction
-
-Import is moving toward using the common SQL language rather than maintaining a parallel transformation language.
+Import is moving toward using the common SQL AST, DSL, semantic analysis, and execution infrastructure rather than maintaining a parallel transformation language.
 
 The intended model is conceptually:
 
@@ -273,132 +146,50 @@ FROM discovery_results
 WHERE ...;
 ```
 
-rather than requiring an Import-specific expression such as:
+This allows Import to reuse common SQL capabilities such as:
 
-```text
-capture(...)
-    .path(...)
-    .scalar()
-```
-
-The SQL-based approach allows Import to reuse capabilities such as:
-
-* expressions
-* predicates
+* expressions and predicates
 * `CASE`
 * `CAST`
 * JSON extraction
 * `UNION ALL`
 * joins
 * `INSERT ... SELECT`
-* other relational operations
 
-As this transition progresses, Import-specific AST and expression concepts should be removed when equivalent standard SQL concepts are sufficient.
-
----
-
-# Schema Inference
-
-Schema inference belongs to Import because it determines how imported structured data becomes relational schema.
-
-Inference may determine:
-
-* tables
-* columns
-* column names
-* column types
-* nested-object flattening
-* array relations
-* inferred relationships
-
-Explicit configuration overrides inferred structure.
-
-The implementation may eventually generate or use SQL-oriented schema operations such as `CREATE TABLE AS SELECT`, but schema inference remains a domain-specific concern rather than being assumed to be identical to ordinary SQL query execution.
+Import-specific AST or expression concepts should be removed when equivalent SQL concepts are sufficient.
 
 ---
 
-# Database Construction
+# Staging
 
-Import ultimately produces the relational representation consumed by the Relational and Engine layers.
+The long-term architecture may expose Discovery results through relational staging structures.
 
-Database construction is responsible for materializing the inferred or explicitly defined relational structure into immutable relational objects.
-
-The resulting database is independent of the Discovery objects that produced it.
-
----
-
-# Relationship to Discovery
-
-Discovery and Import have deliberately different responsibilities.
+Conceptually:
 
 ```text
-Discovery
-    │
-    │ locate, navigate, decode, identify
-    ▼
 DiscoveryResults
-    │
-    │ select, transform, infer, assemble
-    ▼
-Import
-    │
-    ▼
-Relational Database
+      │
+      ▼
+Staging
+      │
+      ▼
+SQL Import
+      │
+      ▼
+Relational Data
 ```
 
-Discovery describes what exists in the external source.
-
-Import determines how that information is represented relationally.
+Staging must preserve the information Import requires, including discovered values, identities, captures, and relevant source relationships, without making Discovery itself dependent on the relational model.
 
 ---
 
-# Relationship to Relational
+# Architectural Boundaries
 
-Import produces data for the Relational layer but does not own relational correctness.
-
-The Relational layer owns:
-
-* immutable relational objects
-* structural constraints
-* indexes
-* relational invariants
-* relational state
-
-Import determines what relational structure and data should be constructed.
-
----
-
-# Relationship to Validation
-
-Import does not perform business validation.
-
-Validation operates after relational data exists and evaluates business rules against relational state.
-
-The boundary is:
-
-```text
-Discovery
-    ↓
-Import
-    ↓
-Relational Database
-    ↓
-Validation
-```
-
----
-
-# Design Principles
-
-* Import is independent of physical discovery.
-* Import consumes immutable Discovery results.
+* Discovery owns physical traversal and discovery.
+* Import owns relational transformation and inference.
+* Relational owns immutable relational state and structural correctness.
+* Validation owns business correctness.
+* Import identity remains independent of business keys.
 * Explicit configuration overrides inference.
-* Automatic inference minimizes unnecessary configuration.
-* Import identity is independent of business keys.
-* Multiple discovered sources may contribute to one logical row.
-* Relational transformations should use standard SQL concepts where practical.
-* Import-specific expression and AST concepts should not be retained when equivalent SQL concepts are sufficient.
-* Schema inference remains responsible for domain-specific structured-data inference.
-* Relational structural correctness belongs to the Relational/Engine layer.
-* Business validation belongs to the Validation layer.
-* The resulting relational representation is independent of the source representation.
+* Automatic inference remains available; Import is not restricted to column-by-column mappings.
+* SQL is the long-term common transformation language for Import where practical.
