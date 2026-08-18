@@ -37,7 +37,7 @@ export class ImportPipeline {
       );
 
       const discoveryRoot = discoveryResults.find(
-        (dr) => dr.resultType === nodeType,
+        (dr) => dr.nodeType === nodeType,
       );
 
       if (!discoveryRoot) {

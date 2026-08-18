@@ -242,3 +242,25 @@ Those decisions belong to Import.
 * Stable discovery identities are independent of business keys.
 * Discovery locates and describes data rather than interpreting its business meaning.
 * Derived relational transformations belong to Import.
+
+---
+
+## Discovery Results
+
+Discovery produces immutable `DiscoveryResult`s.
+
+Each result records:
+
+- `nodeType`
+- physical `identity`
+- discovered `value`
+- optional `resultId`
+- optional `parentResultId`
+- captures
+- discovered children
+
+`DiscoveryResults` will provide the collection-level representation of a discovery execution, including result identity and relationship lookup.
+
+Result IDs provide stable references within a discovery result set. Parent relationships allow the discovery tree to be represented without requiring cyclic object references.
+
+The current recursive `children` representation remains an implementation detail used during discovery and may eventually be replaced by collection-level relationships.
