@@ -1,0 +1,21 @@
+Discovery Staging Contract
+
+Each discovered result has:
+
+- a unique result ID
+- a Discovery node type
+- a physical Discovery identity
+- a discovered value
+- an optional parent result ID
+
+The collection of results forms a tree through parentResultId.
+
+The tree may be represented in memory using children, parent IDs, or both, but result IDs—not physical identities—define result relationships.
+
+The staging representation exposes the result graph relationally to Import.
+
+Import may navigate ancestors and descendants through result relationships rather than relying on captured contextual values.
+
+Import Identity remains independent of DiscoveryResult identity.
+
+Structured values remain accessible through the expression system rather than requiring Import to depend directly on a dialect-specific JSON function.
