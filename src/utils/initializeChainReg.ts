@@ -13,6 +13,7 @@ import {
   current,
   value,
   literal,
+  propertyName,
 } from "../mapping/dsl/expression/functions.js";
 import {
   every,
@@ -32,6 +33,8 @@ import { discovery, path } from "../mapping/import/dsl.js";
 import { DiscoveryRoot } from "../mapping/discovery/DiscoveryRoot.js";
 import { FsDiscoverySource } from "../mapping/discovery/DiscoverySource.js";
 import { StructuredArrayNavigator } from "../mapping/discovery/navigation/StructuredArrayNavigator.js";
+import { StructuredObjectNavigator } from "../mapping/discovery/navigation/StructuredObjectNavigator.js";
+import { FileNavigator } from "../mapping/discovery/navigation/FileNavigator.js";
 
 const _CCR1_PATH: string = "../chain-registry";
 
@@ -52,7 +55,6 @@ export const getChainRegContents = () => {
   const assetNode = new DiscoveryNode({
     navigator: new StructuredArrayNavigator(),
     matcher: isNull(literal(null)),
-    decoder: new JsonDecoder(),
     nodeType: "asset",
     captures: {
       base: value("base"),
@@ -66,12 +68,19 @@ export const getChainRegContents = () => {
     children: [],
   });
 
+  const assetsArrayNode = new DiscoveryNode({
+    navigator: new StructuredObjectNavigator(),
+    matcher: propertyName().eq("assets"),
+    nodeType: "assetsArrayNode",
+    children: [assetNode],
+  });
+
   const assetlistFileNode = new DiscoveryNode({
     navigator: new DirectoryNavigator(),
     matcher: every(isFile(), basename().eq("assetlist.json")),
     decoder: new JsonDecoder(),
     nodeType: "assetlistFile",
-    children: [assetNode],
+    children: [assetsArrayNode],
   });
 
   const chainFileNode = new DiscoveryNode({

@@ -34,6 +34,8 @@ export class ImportContext implements CaptureContext {
   }
 
   withDiscovery(discovery: DiscoveryResult): ImportContext {
+    //TODO, remove
+    console.log(discovery);
     return new ImportContext(
       discovery,
       this.identity,
