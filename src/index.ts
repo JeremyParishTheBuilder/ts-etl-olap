@@ -5,4 +5,4 @@ console.log("This is the main file");
 
 getChainRegContents();
 
-runExampleValidation();
+//runExampleValidation();

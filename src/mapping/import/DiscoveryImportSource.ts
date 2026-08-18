@@ -7,7 +7,7 @@ export class DiscoveryImportSource implements ImportSource {
 
   navigate(context: ImportContext): ImportContext[] {
     return context.discovery.children
-      .filter((child) => child.resultType === this.nodeType)
+      .filter((child) => child.nodeType === this.nodeType)
       .map((child) => context.withDiscovery(child));
   }
 
