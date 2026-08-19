@@ -7,12 +7,13 @@ import {
 } from "../utils/buildSchema.js";
 import type { ColumnId } from "../../src/relational/Column.js";
 import type { ColumnInput } from "../../src/types/ColumnInput.js";
+import { SQL_DECIMAL } from "../../src/types/SqlType.js";
 
 describe("Database Referential Actions", () => {
 
   it("rejects deleting parent row under RESTRICT", () => {
     let parent = buildTable({name: "Parent"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "PK_PARENT",
         columns: ["ID"],
@@ -24,7 +25,7 @@ describe("Database Referential Actions", () => {
     ]);
 
     let child = buildTable({name: "Child"})
-      .createColumn(createColumnTestSpec({ name: "ParentID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ParentID", type: SQL_DECIMAL }))
       .createIndex({
         name: "FKRI_Id",
         columns: ["ParentID"],
@@ -58,7 +59,7 @@ describe("Database Referential Actions", () => {
 
   it("cascades delete to child rows", () => {
     let parent = buildTable({name: "Parent"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "PK_PARENT",
         columns: ["ID"],
@@ -70,7 +71,7 @@ describe("Database Referential Actions", () => {
     ]);
 
     let child = buildTable({name: "Child"})
-      .createColumn(createColumnTestSpec({ name: "ParentID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ParentID", type: SQL_DECIMAL }))
       .createIndex({
         name: "FKRI_Id",
         columns: ["ParentID"],
@@ -106,7 +107,7 @@ describe("Database Referential Actions", () => {
 
   it("sets child foreign key values to null during SET NULL delete", () => {
     let parent = buildTable({name: "Parent"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "PK_Roles",
         columns: ["id"],
@@ -120,7 +121,7 @@ describe("Database Referential Actions", () => {
     let child = buildTable({name: "Child"})
       .createColumn(createColumnTestSpec({
         name: "ParentID",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: true,
       }))
       .createIndex({
@@ -158,7 +159,7 @@ describe("Database Referential Actions", () => {
 
   it("cascades updates to child rows", () => {
     let parent = buildTable({name: "Parent"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "PK_PARENT",
         columns: ["ID"],
@@ -170,7 +171,7 @@ describe("Database Referential Actions", () => {
     ]);
 
     let child = buildTable({name: "Child"})
-      .createColumn(createColumnTestSpec({ name: "ParentID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ParentID", type: SQL_DECIMAL }))
       .createIndex({
         name: "FKRI_Id",
         columns: ["ParentID"],
@@ -210,10 +211,10 @@ describe("Database Referential Actions", () => {
 
   it("supports self-referencing cascade deletes", () => {
     let table = buildTable({name: "Node"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL }))
       .createColumn(createColumnTestSpec({
         name: "ParentID",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: true,
       }))
       .createIndex({
@@ -260,10 +261,10 @@ describe("Database Referential Actions", () => {
 
   it("supports cyclic cascading updates", () => {
     let table = buildTable({name: "Node"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL }))
       .createColumn(createColumnTestSpec({
         name: "RefID",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: true,
       }))
       .createIndex({
@@ -310,8 +311,8 @@ describe("Database Referential Actions", () => {
 
   it("supports composite foreign key cascading updates", () => {
     let parent = buildTable({name: "Parent"})
-      .createColumn(createColumnTestSpec({ name: "A", type: Number }))
-      .createColumn(createColumnTestSpec({ name: "B", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "A", type: SQL_DECIMAL }))
+      .createColumn(createColumnTestSpec({ name: "B", type: SQL_DECIMAL }))
       .createIndex({
         name: "PK_PARENT",
         columns: ["A", "B"],
@@ -323,8 +324,8 @@ describe("Database Referential Actions", () => {
     ]);
 
     let child = buildTable({name: "Child"})
-      .createColumn(createColumnTestSpec({ name: "FA", type: Number }))
-      .createColumn(createColumnTestSpec({ name: "FB", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "FA", type: SQL_DECIMAL }))
+      .createColumn(createColumnTestSpec({ name: "FB", type: SQL_DECIMAL }))
       .createIndex({
         name: "FKRI_CHILD",
         columns: ["FA", "FB"],
@@ -364,8 +365,8 @@ describe("Database Referential Actions", () => {
 
   it("sets all composite foreign key columns to null during SET NULL", () => {
     let parent = buildTable({name: "Parent"})
-      .createColumn(createColumnTestSpec({ name: "A", type: Number }))
-      .createColumn(createColumnTestSpec({ name: "B", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "A", type: SQL_DECIMAL }))
+      .createColumn(createColumnTestSpec({ name: "B", type: SQL_DECIMAL }))
       .createIndex({
         name: "PK_PARENT",
         columns: ["A", "B"],
@@ -379,12 +380,12 @@ describe("Database Referential Actions", () => {
     let child = buildTable({name: "Child"})
       .createColumn(createColumnTestSpec({
         name: "FA",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: true,
       }))
       .createColumn(createColumnTestSpec({
         name: "FB",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: true,
       }))
       .createIndex({
@@ -422,7 +423,7 @@ describe("Database Referential Actions", () => {
 
   it("supports multi-level cascade chains", () => {
     let a = buildTable({name: "A"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "PK_A",
         columns: ["ID"],
@@ -434,7 +435,7 @@ describe("Database Referential Actions", () => {
     ]);
 
     let b = buildTable({name: "B"})
-      .createColumn(createColumnTestSpec({ name: "AID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "AID", type: SQL_DECIMAL }))
       .createIndex({
         name: "PK_B",
         columns: ["AID"],
@@ -451,7 +452,7 @@ describe("Database Referential Actions", () => {
     ]);
 
     let c = buildTable({name: "C"})
-      .createColumn(createColumnTestSpec({ name: "BID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "BID", type: SQL_DECIMAL }))
       .createIndex({
         name: "FKRI_CHILD",
         columns: ["BID"],
@@ -504,7 +505,7 @@ describe("Database Referential Actions", () => {
 
   it("preserves immutable database state during cascading operations", () => {
     let parent = buildTable({name: "Parent"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL, nullable: false }))
       .createIndex({name: "pk_parent", columns: ["id"], unique: true});
 
     parent = parent.addRows([
@@ -512,7 +513,7 @@ describe("Database Referential Actions", () => {
     ]);
 
     let child = buildTable({name: "Child"})
-      .createColumn(createColumnTestSpec({ name: "ParentID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ParentID", type: SQL_DECIMAL }))
       .createIndex({
         name: "FKRI_CHILD",
         columns: ["ParentID"],
@@ -572,7 +573,7 @@ describe("Database Referential Actions", () => {
     let a = buildTable({name: "A"})
       .createColumn(createColumnTestSpec({
         name: "ID",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false
       }))
       .createIndex({
@@ -588,10 +589,10 @@ describe("Database Referential Actions", () => {
     let b = buildTable({name: "B"})
       .createColumn(createColumnTestSpec({
         name: "ID",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false
       }))
-      .createColumn(createColumnTestSpec({ name: "A_ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "A_ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "pk_b",
         columns: ["id"],
@@ -610,9 +611,9 @@ describe("Database Referential Actions", () => {
     let c = buildTable({name: "C"})
       .createColumn(createColumnTestSpec({
         name: "ID",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false }))
-      .createColumn(createColumnTestSpec({ name: "A_ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "A_ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "pk_c",
         columns: ["id"],
@@ -629,8 +630,8 @@ describe("Database Referential Actions", () => {
     ]);
 
     let d = buildTable({name: "D"})
-      .createColumn(createColumnTestSpec({ name: "B_ID", type: Number }))
-      .createColumn(createColumnTestSpec({ name: "C_ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "B_ID", type: SQL_DECIMAL }))
+      .createColumn(createColumnTestSpec({ name: "C_ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "FKRI_CHILD",
         columns: ["b_id"],
@@ -721,7 +722,7 @@ describe("Database Referential Actions", () => {
     */
 
     let a = buildTable({name: "A"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL, nullable: false }))
       .createIndex({
         name: "pk_a",
         columns: ["id"],
@@ -733,8 +734,8 @@ describe("Database Referential Actions", () => {
     ]);
 
     let b = buildTable({name: "B"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
-      .createColumn(createColumnTestSpec({ name: "A_ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL, nullable: false }))
+      .createColumn(createColumnTestSpec({ name: "A_ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "pk_b",
         columns: ["id"],
@@ -751,7 +752,7 @@ describe("Database Referential Actions", () => {
     ]);
 
     let c = buildTable({name: "C"})
-      .createColumn(createColumnTestSpec({ name: "B_ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "B_ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "FKRI_CHILD",
         columns: ["b_id"],
@@ -811,8 +812,8 @@ describe("Database Referential Actions", () => {
     */
 
     const a = buildTable({name: "A"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
-      .createColumn(createColumnTestSpec({ name: "B_ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL, nullable: false }))
+      .createColumn(createColumnTestSpec({ name: "B_ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "pk_a",
         columns: ["id"],
@@ -825,8 +826,8 @@ describe("Database Referential Actions", () => {
       });
 
     const b = buildTable({name: "B"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
-      .createColumn(createColumnTestSpec({ name: "A_ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL, nullable: false }))
+      .createColumn(createColumnTestSpec({ name: "A_ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "pk_b",
         columns: ["id"],
@@ -894,7 +895,7 @@ describe("Database Referential Actions", () => {
 
   it("keeps reverse indexes synchronized during cascading deletes", () => {
     let parent = buildTable({name: "Parent"})
-      .createColumn(createColumnTestSpec({ name: "ID", type: Number, nullable: false }))
+      .createColumn(createColumnTestSpec({ name: "ID", type: SQL_DECIMAL, nullable: false }))
       .createIndex({
         name: "pk_parent",
         columns: ["id"],
@@ -906,7 +907,7 @@ describe("Database Referential Actions", () => {
     ]);
 
     let child = buildTable({name: "Child"})
-      .createColumn(createColumnTestSpec({ name: "PARENT_ID", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "PARENT_ID", type: SQL_DECIMAL }))
       .createIndex({
         name: "FKRI_CHILD",
         columns: ["Parent_ID"],

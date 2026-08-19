@@ -1,7 +1,6 @@
 import { Table, type TableId, type TablePolicy } from "./Table.js";
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
 import { type Column, type ColumnId } from "./Column.js";
-import { isTypeCompatible, type ColumnType } from "../types/ColumnType.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { CompiledForeignKey, type ForeignKey } from "./ForeignKey.js";
 import { Immutable } from "../infrastructure/Immutable.js";
@@ -18,6 +17,7 @@ import type { UpdateAssignment } from "../types/UpdateAssignment.js";
 import type { OrderedInputRow } from "../types/OrderedInputRow.js";
 import type { ColumnInput } from "../types/ColumnInput.js";
 import { DEFAULT } from "../dialect/keywords.js";
+import { isAssignable, isSameType, type SqlType } from "../types/SqlType.js";
 
 const _MAX_DEPTH = 25;
 
@@ -679,7 +679,7 @@ export class Database extends Immutable {
   public alterColumn(
     tableName: string,
     columnName: string,
-    newType: ColumnType,
+    newType: SqlType,
   ): Database {
     const table = this.tables.requireByName(tableName);
 
@@ -693,7 +693,7 @@ export class Database extends Immutable {
   private assertColumnCanBeAltered(
     alteredTable: Table,
     columnId: ColumnId,
-    newType: ColumnType,
+    newType: SqlType,
   ): void {
     for (const table of this.tables.values()) {
       for (const fk of table.foreignKeys.values()) {
@@ -704,7 +704,7 @@ export class Database extends Immutable {
           const counterpartColumnId = fk.parentColumns[fkColumnPositionIndex];
           const parentTable = this.tables.require(fk.parentTable);
 
-          assertTypeIsCompatible(
+          assertTypeAlters(
             parentTable.columns.require(counterpartColumnId).type,
             newType,
           );
@@ -719,7 +719,7 @@ export class Database extends Immutable {
           );
           const counterpartColumnId = fk.columns[fkColumnPositionIndex];
 
-          assertTypeIsCompatible(
+          assertTypeAlters(
             table.columns.require(counterpartColumnId).type,
             newType,
           );
@@ -729,12 +729,12 @@ export class Database extends Immutable {
   }
 }
 
-function assertTypeIsCompatible(
-  oldType: ColumnType,
-  newType: ColumnType,
+function assertTypeAlters(
+  oldType: SqlType,
+  newType: SqlType,
 ): void {
-  if (!isTypeCompatible(oldType, newType)) {
-    throw new Error(`Column type mismatch: ` + `${oldType}` + `!= ${newType}`);
+  if (!isAssignable(oldType, newType)) {
+    throw new Error(`Old column type ${oldType} not assignable to ${newType}`);
   }
 }
 
@@ -751,7 +751,7 @@ function assertForeignKeyColumnCompatibility(
     const child = childColumns[i];
     const parent = parentColumns[i];
 
-    if (!isTypeCompatible(child.type, parent.type)) {
+    if (!isSameType(child.type, parent.type)) {
       throw new Error(
         `Column type mismatch: ` +
           `'${child.name}' (${child.type}) ` +

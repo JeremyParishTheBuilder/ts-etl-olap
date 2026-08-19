@@ -3,6 +3,7 @@ import { buildTable, createCheckTestSpec, createColumnTestSpec } from '../utils/
 import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionNode.js';
 import { LiteralExpressionNode } from '../../src/ast/expression/LiteralExpressionNode.js';
 import { ComparisonPredicateNode } from '../../src/ast/predicate/ComparisonPredicateNode.js';
+import { SQL_DECIMAL } from '../../src/types/SqlType.js';
 
 describe('Table::createCheck', () => {
 
@@ -10,7 +11,7 @@ describe('Table::createCheck', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Age",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
 
@@ -28,7 +29,7 @@ describe('Table::createCheck', () => {
     const table = buildTable()
       .createColumn({
         name: "Age",
-        type: Number,
+        type: SQL_DECIMAL,
       });
 
     const updated = table.createCheck(
@@ -50,7 +51,7 @@ describe('Table::createCheck', () => {
     const table = buildTable()
       .createColumn({
         name: "Age",
-        type: Number,
+        type: SQL_DECIMAL,
       });
 
     expect(() => {
@@ -88,7 +89,7 @@ describe('Table::createCheck', () => {
     const table = buildTable()
       .createColumn({
         name: "Age",
-        type: Number,
+        type: SQL_DECIMAL,
       })
       .createCheck(
         createCheckTestSpec({
@@ -109,7 +110,7 @@ describe('Table::createCheck', () => {
     const table = buildTable()
       .createColumn({
         name: "Age",
-        type: Number,
+        type: SQL_DECIMAL,
       });
 
     const updated = table.createCheck(
@@ -128,7 +129,7 @@ describe('Table::createCheck', () => {
       buildTable()
         .createColumn({
           name: "Age",
-          type: Number,
+          type: SQL_DECIMAL,
         })
         .addRows([[10]]);
 
@@ -151,7 +152,7 @@ describe('Table::createCheck', () => {
       buildTable()
         .createColumn({
           name: "Age",
-          type: Number,
+          type: SQL_DECIMAL,
         })
         .addRows([[20]]);
 

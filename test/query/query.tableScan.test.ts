@@ -1,13 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { TableScanNode } from '../../src/evaluation/plan/TableScanNode.js';
 import { buildTable, createColumnTestSpec, createDelete } from '../utils/buildSchema.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe('Query::tableScanNode', () => {
   it("returns alive rows from the table", () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1],[2]]);
@@ -32,7 +33,7 @@ describe('Query::tableScanNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[10],[20],[30]]);
@@ -54,7 +55,7 @@ describe('Query::tableScanNode', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1],[2],[3]]);
@@ -81,12 +82,12 @@ describe('Query::tableScanNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .createColumn(createColumnTestSpec({
         name: "Name",
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       }))
       .addRows([[1, "Alice"]]);
@@ -107,7 +108,7 @@ describe('Query::tableScanNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1]]);
@@ -130,7 +131,7 @@ describe('Query::tableScanNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1],[2]]);
@@ -147,7 +148,7 @@ describe('Query::tableScanNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }));
 

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { createTestMySqlSql, createTestPostgresSql, createTestSqlServerSql, freshEngine } from '../utils/engineHelpers.ts';
 import { DEFAULT } from '../../src/dialect/keywords.ts';
 import { Dialect } from '../../src/dialect/Dialect.ts';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.ts';
 
 describe("Integration::schema", () => {
   describe("ColumnPolicy", () => {
@@ -20,13 +21,13 @@ describe("Integration::schema", () => {
 
       sql.createTable("Users", {
         Id: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
           autoIncrementStart: 1,
           autoIncrementStep: 1,
         },
         Name: {
-          type: String,
+          type: SQL_VARCHAR,
           nullable: false,
         },
       }).execute();
@@ -54,13 +55,13 @@ describe("Integration::schema", () => {
 
       sql.createTable("Users", {
         Id: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
           autoIncrementStart: 1,
           autoIncrementStep: 1,
         },
         Name: {
-          type: String,
+          type: SQL_VARCHAR,
           nullable: false,
         },
       }).execute();
@@ -88,13 +89,13 @@ describe("Integration::schema", () => {
 
       sql.createTable("Users", {
         Id: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
           autoIncrementStart: 1,
           autoIncrementStep: 1,
         },
         Name: {
-          type: String,
+          type: SQL_VARCHAR,
           nullable: false,
         },
       }).execute();
@@ -129,11 +130,11 @@ describe("Integration::schema", () => {
 
       sql.createTable("Users", {
         Id: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
         },
         Name: {
-          type: String,
+          type: SQL_VARCHAR,
           nullable: false,
         },
       }).execute();
@@ -147,7 +148,7 @@ describe("Integration::schema", () => {
       sql
         .alterTable("Users")
         .add("Sequence", {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
           autoIncrementStart: 1,
           autoIncrementStep: 1,
@@ -177,13 +178,13 @@ describe("Integration::schema", () => {
 
       sql.createTable("Users", {
         Id: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
           autoIncrementStart: 1,
           autoIncrementStep: 1,
         },
         Name: {
-          type: String,
+          type: SQL_VARCHAR,
           nullable: false,
         },
       }).execute();
@@ -211,13 +212,13 @@ describe("Integration::schema", () => {
 
       sql.createTable("Users", {
         Id: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
           autoIncrementStart: 1,
           autoIncrementStep: 1,
         },
         Name: {
-          type: String,
+          type: SQL_VARCHAR,
           nullable: false,
         },
       }).execute();
@@ -245,13 +246,13 @@ describe("Integration::schema", () => {
 
       sql.createTable("Users", {
         Id: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
           autoIncrementStart: 1,
           autoIncrementStep: 1,
         },
         Name: {
-          type: String,
+          type: SQL_VARCHAR,
           nullable: false,
         },
       }).execute();
@@ -285,11 +286,11 @@ describe("Integration::schema", () => {
 
       sql.createTable("Users", {
         Id: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
         },
         Name: {
-          type: String,
+          type: SQL_VARCHAR,
           nullable: false,
         },
       }).execute();
@@ -303,7 +304,7 @@ describe("Integration::schema", () => {
       sql
         .alterTable("Users")
         .add("Sequence", {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
           autoIncrementStart: 1,
           autoIncrementStep: 1,
@@ -337,13 +338,13 @@ describe("Integration::schema", () => {
       expect(() => {
         sql.createTable("Users", {
           Id: {
-            type: Number,
+            type: SQL_DECIMAL,
             nullable: false,
             autoIncrementStart: 1,
             autoIncrementStep: 1,
           },
           Sequence: {
-            type: Number,
+            type: SQL_DECIMAL,
             nullable: false,
             autoIncrementStart: 100,
             autoIncrementStep: 1,
@@ -368,13 +369,13 @@ describe("Integration::schema", () => {
       expect(() => {
         sql.createTable("Users", {
           Id: {
-            type: Number,
+            type: SQL_DECIMAL,
             nullable: false,
             autoIncrementStart: 1,
             autoIncrementStep: 1,
           },
           Sequence: {
-            type: Number,
+            type: SQL_DECIMAL,
             nullable: false,
             autoIncrementStart: 100,
             autoIncrementStep: 1,
@@ -399,13 +400,13 @@ describe("Integration::schema", () => {
       expect(() => {
         sql.createTable("Users", {
           Id: {
-            type: Number,
+            type: SQL_DECIMAL,
             nullable: false,
             autoIncrementStart: 1,
             autoIncrementStep: 1,
           },
           Name: {
-            type: String,
+            type: SQL_VARCHAR,
             nullable: false,
           },
         }).execute();
@@ -427,13 +428,13 @@ describe("Integration::schema", () => {
 
       sql.createTable("Users", {
         Id: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
           autoIncrementStart: 1,
           autoIncrementStep: 1,
         },
         Name: {
-          type: String,
+          type: SQL_VARCHAR,
           nullable: false,
         },
       }).execute();
@@ -442,7 +443,7 @@ describe("Integration::schema", () => {
         sql
           .alterTable("Users")
           .add("Sequence", {
-            type: Number,
+            type: SQL_DECIMAL,
             nullable: false,
             autoIncrementStart: 100,
             autoIncrementStep: 1,
@@ -466,13 +467,13 @@ describe("Integration::schema", () => {
 
       sql.createTable("Users", {
         Id: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
           autoIncrementStart: 1,
           autoIncrementStep: 1,
         },
         Name: {
-          type: String,
+          type: SQL_VARCHAR,
           nullable: false,
         },
       }).execute();
@@ -481,7 +482,7 @@ describe("Integration::schema", () => {
         sql
           .alterTable("Users")
           .add("Sequence", {
-            type: Number,
+            type: SQL_DECIMAL,
             nullable: false,
             autoIncrementStart: 100,
             autoIncrementStep: 1,

@@ -35,6 +35,8 @@ import { FsDiscoverySource } from "../mapping/discovery/DiscoverySource.js";
 import { StructuredArrayNavigator } from "../mapping/discovery/navigation/StructuredArrayNavigator.js";
 import { StructuredObjectNavigator } from "../mapping/discovery/navigation/StructuredObjectNavigator.js";
 import { FileNavigator } from "../mapping/discovery/navigation/FileNavigator.js";
+import { SQL_DECIMAL } from "../types/SqlType.js";
+import type { Engine } from "../engine/Engine.js";
 
 const _CCR1_PATH: string = "../chain-registry";
 
@@ -42,139 +44,142 @@ EngineRegistry.getInstance().newEngine();
 const engine = EngineRegistry.getInstance().engine();
 const sql: PostgresInputBatch = engine.input() as PostgresInputBatch;
 
-export const getChainRegContents = () => {
-  console.log("starting chain reg");
+// export const getChainRegContents = () => {
+//   console.log("starting chain reg");
 
-  // const logoUrisNode = new DiscoveryNode({
-  //   navigator: new StructuredObjectNavigator(),
-  //   matcher: propertyName().eq("logo_URIs"),
-  //   nodeType: "LogoUris",
-  //   children: [],
-  // });
+//   // const logoUrisNode = new DiscoveryNode({
+//   //   navigator: new StructuredObjectNavigator(),
+//   //   matcher: propertyName().eq("logo_URIs"),
+//   //   nodeType: "LogoUris",
+//   //   children: [],
+//   // });
 
-  const assetNode = new DiscoveryNode({
-    navigator: new StructuredArrayNavigator(),
-    matcher: isNull(literal(null)),
-    nodeType: "asset",
-    captures: {
-      base: value("base"),
-      owner: concat(
-        literal("Asset:"),
-        captureScalar("chainDirectoryName"),
-        literal(":"),
-        current().path("base").scalar(),
-      ),
-    },
-    children: [],
-  });
+//   const assetNode = new DiscoveryNode({
+//     navigator: new StructuredArrayNavigator(),
+//     matcher: isNull(literal(null)),
+//     nodeType: "asset",
+//     captures: {
+//       base: value("base"),
+//       owner: concat(
+//         literal("Asset:"),
+//         captureScalar("chainDirectoryName"),
+//         literal(":"),
+//         current().path("base").scalar(),
+//       ),
+//     },
+//     children: [],
+//   });
 
-  const assetsArrayNode = new DiscoveryNode({
-    navigator: new StructuredObjectNavigator(),
-    matcher: propertyName().eq("assets"),
-    nodeType: "assetsArrayNode",
-    children: [assetNode],
-  });
+//   const assetsArrayNode = new DiscoveryNode({
+//     navigator: new StructuredObjectNavigator(),
+//     matcher: propertyName().eq("assets"),
+//     nodeType: "assetsArrayNode",
+//     children: [assetNode],
+//   });
 
-  const assetlistFileNode = new DiscoveryNode({
-    navigator: new DirectoryNavigator(),
-    matcher: every(isFile(), basename().eq("assetlist.json")),
-    decoder: new JsonDecoder(),
-    nodeType: "assetlistFile",
-    children: [assetsArrayNode],
-  });
+//   const assetlistFileNode = new DiscoveryNode({
+//     navigator: new DirectoryNavigator(),
+//     matcher: every(isFile(), basename().eq("assetlist.json")),
+//     decoder: new JsonDecoder(),
+//     nodeType: "assetlistFile",
+//     children: [assetsArrayNode],
+//   });
 
-  const chainFileNode = new DiscoveryNode({
-    navigator: new DirectoryNavigator(),
-    matcher: every(isFile(), basename().eq("chain.json")),
-    decoder: new JsonDecoder(),
-    nodeType: "chainFile",
-    captures: {
-      chain: current(),
-      owner: concat(
-        literal("Chain:"),
-        capture("chain").path("chain_name").scalar(),
-      ),
-    },
-    children: [],
-  });
+//   const chainFileNode = new DiscoveryNode({
+//     navigator: new DirectoryNavigator(),
+//     matcher: every(isFile(), basename().eq("chain.json")),
+//     decoder: new JsonDecoder(),
+//     nodeType: "chainFile",
+//     captures: {
+//       chain: current(),
+//       owner: concat(
+//         literal("Chain:"),
+//         capture("chain").path("chain_name").scalar(),
+//       ),
+//     },
+//     children: [],
+//   });
 
-  const chainCollection = new DiscoveryNode({
-    navigator: new DirectoryNavigator(),
-    matcher: contains(
-      some(
-        every(isFile(), basename().eq("chain.json")),
-        every(isFile(), basename().eq("assetlist.json")),
-      ),
-    ),
-    children: [chainFileNode, assetlistFileNode],
-    nodeType: "chainDirectory",
-    captures: {
-      chainDirectoryName: current().path("_basename"),
-    },
-  });
+//   const chainCollection = new DiscoveryNode({
+//     navigator: new DirectoryNavigator(),
+//     matcher: contains(
+//       some(
+//         every(isFile(), basename().eq("chain.json")),
+//         every(isFile(), basename().eq("assetlist.json")),
+//       ),
+//     ),
+//     children: [chainFileNode, assetlistFileNode],
+//     nodeType: "chainDirectory",
+//     captures: {
+//       chainDirectoryName: current().path("_basename"),
+//     },
+//   });
 
-  const cosmosScope = new DiscoveryNode({
-    matcher: isDirectory(),
-    navigator: new SelfNavigator(Directory),
-    children: [chainCollection],
-    nodeType: "networkType",
-    captures: {
-      networkType: literal("Cosmos"),
-    },
-  });
+//   const cosmosScope = new DiscoveryNode({
+//     matcher: isDirectory(),
+//     navigator: new SelfNavigator(Directory),
+//     children: [chainCollection],
+//     nodeType: "networkType",
+//     captures: {
+//       networkType: literal("Cosmos"),
+//     },
+//   });
 
-  const nonCosmosScope = new DiscoveryNode({
-    navigator: new DirectoryNavigator(),
-    matcher: every(isDirectory(), basename().eq("_non-cosmos")),
-    children: [chainCollection],
-    nodeType: "networkType",
-    captures: {
-      networkType: literal("Non-cosmos"),
-    },
-  });
+//   const nonCosmosScope = new DiscoveryNode({
+//     navigator: new DirectoryNavigator(),
+//     matcher: every(isDirectory(), basename().eq("_non-cosmos")),
+//     children: [chainCollection],
+//     nodeType: "networkType",
+//     captures: {
+//       networkType: literal("Non-cosmos"),
+//     },
+//   });
 
-  const mainnetScope = new DiscoveryNode({
-    navigator: new SelfNavigator(Directory),
-    matcher: isDirectory(),
-    children: [cosmosScope, nonCosmosScope],
-    nodeType: "networkKind",
-    captures: {
-      networkKind: literal("Mainnet"),
-    },
-  });
+//   const mainnetScope = new DiscoveryNode({
+//     navigator: new SelfNavigator(Directory),
+//     matcher: isDirectory(),
+//     children: [cosmosScope, nonCosmosScope],
+//     nodeType: "networkKind",
+//     captures: {
+//       networkKind: literal("Mainnet"),
+//     },
+//   });
 
-  const testnetScope = new DiscoveryNode({
-    navigator: new DirectoryNavigator(),
-    matcher: every(isDirectory(), basename().eq("testnets")),
-    children: [cosmosScope, nonCosmosScope],
-    nodeType: "networkKind",
-    captures: {
-      networkKind: literal("Testnet"),
-    },
-  });
+//   const testnetScope = new DiscoveryNode({
+//     navigator: new DirectoryNavigator(),
+//     matcher: every(isDirectory(), basename().eq("testnets")),
+//     children: [cosmosScope, nonCosmosScope],
+//     nodeType: "networkKind",
+//     captures: {
+//       networkKind: literal("Testnet"),
+//     },
+//   });
 
-  const testRegistryDiscoveryNode = new DiscoveryNode({
-    navigator: new SelfNavigator(Directory),
-    matcher: isDirectory(),
-    captures: {
-      registryName: literal("Test Cosmos Chain Registry"),
-    },
-    children: [mainnetScope, testnetScope],
-    nodeType: "registry",
-  });
+//   const testRegistryDiscoveryNode = new DiscoveryNode({
+//     navigator: new SelfNavigator(Directory),
+//     matcher: isDirectory(),
+//     captures: {
+//       registryName: literal("Test Cosmos Chain Registry"),
+//     },
+//     children: [mainnetScope, testnetScope],
+//     nodeType: "registry",
+//   });
 
-  const registryRootDirectory = new Directory("./temp");
+//   const registryRootDirectory = new Directory("./temp");
 
-  const testRegistryRootDirectory = new FsDiscoverySource(
-    registryRootDirectory,
-  );
+//   const testRegistryRootDirectory = new FsDiscoverySource(
+//     registryRootDirectory,
+//   );
 
-  const testRegistryDiscoveryRoot = new DiscoveryRoot({
-    source: testRegistryRootDirectory,
-    discovery: testRegistryDiscoveryNode,
-  });
+//   const testRegistryDiscoveryRoot = new DiscoveryRoot({
+//     source: testRegistryRootDirectory,
+//     discovery: testRegistryDiscoveryNode,
+//   });
 
-  // -----------------------
+//   // -----------------------
+// };
+
+export const exampleChainRegistry_ImportDefinition = () => {
 
   const imagesImportMapping = new ImportMapping({
     tableName: "Images",
@@ -280,6 +285,17 @@ export const getChainRegContents = () => {
     children: [networkKindImportMapping],
   });
 
+  return testRegistryImportMapping;
+
+};
+
+export function exampleChainRegistry_buildDatabase(
+  testRegistryDiscoveryRoot: DiscoveryRoot,
+  testRegistryImportMapping: ImportMapping,
+) {
+
+  console.log("Building Example Database");
+
   const testRegistryImportRoot = new ImportRoot({
     discovery: testRegistryDiscoveryRoot,
     mapping: testRegistryImportMapping,
@@ -354,7 +370,7 @@ function createTestDatabase() {
   sql
     .createTable("T1", {
       C1: {
-        type: Number,
+        type: SQL_DECIMAL,
         unique: false,
         autoIncrementStart: 0,
         autoIncrementStep: 1,

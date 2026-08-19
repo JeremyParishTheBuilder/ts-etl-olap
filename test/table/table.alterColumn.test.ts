@@ -3,6 +3,7 @@ import { buildTable, createCheckTestSpec, createColumnTestSpec } from '../utils/
 import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionNode.js';
 import { LiteralExpressionNode } from '../../src/ast/expression/LiteralExpressionNode.js';
 import { ComparisonPredicateNode } from '../../src/ast/predicate/ComparisonPredicateNode.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe('Table::alterColumn', () => {
   it('rejects altering a column rows fail existing checks', () => {
@@ -11,7 +12,7 @@ describe('Table::alterColumn', () => {
       buildTable()
         .createColumn(createColumnTestSpec({
           name: "Age",
-          type: Number,
+          type: SQL_DECIMAL,
         }))
         .createCheck(
           createCheckTestSpec({
@@ -28,7 +29,7 @@ describe('Table::alterColumn', () => {
     expect(() => {
       table.alterColumn(
         "Age",
-        String
+        SQL_VARCHAR
       );
     }).toThrow();
   });
@@ -38,7 +39,7 @@ describe('Table::alterColumn', () => {
       buildTable()
         .createColumn(createColumnTestSpec({
           name: "Age",
-          type: Number,
+          type: SQL_DECIMAL,
         }))
         .createCheck(
           createCheckTestSpec({
@@ -53,7 +54,7 @@ describe('Table::alterColumn', () => {
         .addRows([[20]]);
 
     expect(() => {
-      table.alterColumn("Age", Number);
+      table.alterColumn("Age", SQL_DECIMAL);
     }).not.toThrow();
   });
 });

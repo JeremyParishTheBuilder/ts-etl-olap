@@ -1,9 +1,9 @@
 import { type Predicate } from "../evaluation/predicate/Predicate.js";
 import { type ColumnId } from "./Column.js";
-import { type ColumnType } from "../types/ColumnType.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { ColumnBoundImmutable } from "./ColumnBoundImmutable.js";
 import { type RowView } from "./RowView.js";
+import type { SqlType } from "../types/SqlType.js";
 
 export type IndexSpec = {
   name: string;
@@ -179,8 +179,8 @@ export class Index extends ColumnBoundImmutable {
 }
 
 export function requiresIndexRebuild(
-  oldType: ColumnType,
-  newType: ColumnType,
+  oldType: SqlType,
+  newType: SqlType,
 ): boolean {
   if (oldType !== newType) {
     return true; // for now, alway rebuild on type change

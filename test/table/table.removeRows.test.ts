@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createColumnTestSpec, createDelete } from '../utils/buildSchema.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe('Table::removeRow', () => {
 
@@ -7,7 +8,7 @@ describe('Table::removeRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -25,7 +26,7 @@ describe('Table::removeRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex({
         name: "UQ_Email",
@@ -53,7 +54,7 @@ describe('Table::removeRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex({
         name: "UQ_Email",
@@ -91,7 +92,7 @@ describe('Table::removeRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -117,7 +118,7 @@ describe('Table::removeRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -139,7 +140,7 @@ describe('Table::removeRow', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     expect(() =>
@@ -153,7 +154,7 @@ describe('Table::removeRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -185,7 +186,7 @@ describe('Table::removeRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -218,7 +219,7 @@ describe('Table::removeRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -246,7 +247,7 @@ describe('Table::removeRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -266,7 +267,7 @@ describe('Table::removeRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -294,11 +295,11 @@ describe('Table::removeRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "name",
-        type: String,
+        type: SQL_VARCHAR,
       }));
       
     table = table.addRows([

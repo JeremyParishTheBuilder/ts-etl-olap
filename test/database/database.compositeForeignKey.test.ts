@@ -4,6 +4,7 @@ import {
   buildTable,
   createColumnTestSpec
 } from '../utils/buildSchema.js';
+import { SQL_DECIMAL } from '../../src/types/SqlType.js';
 
 describe('Composite Foreign Keys', () => {
 
@@ -11,11 +12,11 @@ describe('Composite Foreign Keys', () => {
     const parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "B",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "IDX_Parent",
@@ -30,11 +31,11 @@ describe('Composite Foreign Keys', () => {
           buildTable({name: "Child"})
             .createColumn(createColumnTestSpec({
               name: "FA",
-              type: Number,
+              type: SQL_DECIMAL,
             }))
             .createColumn(createColumnTestSpec({
               name: "FB",
-              type: Number,
+              type: SQL_DECIMAL,
             }))
             .createIndex({
             name: "FKRI_CHILD",
@@ -59,11 +60,11 @@ describe('Composite Foreign Keys', () => {
     let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "B",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Parent",
@@ -79,11 +80,11 @@ describe('Composite Foreign Keys', () => {
         buildTable({name: "Child"})
           .createColumn(createColumnTestSpec({
             name: "FA",
-            type: Number,
+            type: SQL_DECIMAL,
           }))
           .createColumn(createColumnTestSpec({
             name: "FB",
-            type: Number,
+            type: SQL_DECIMAL,
           }))
           .createIndex({
             name: "FKRI_CHILD",
@@ -126,11 +127,11 @@ describe('Composite Foreign Keys', () => {
     let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "B",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Parent",
@@ -146,11 +147,11 @@ describe('Composite Foreign Keys', () => {
         buildTable({name: "Child"})
           .createColumn(createColumnTestSpec({
             name: "FA",
-            type: Number,
+            type: SQL_DECIMAL,
           }))
           .createColumn(createColumnTestSpec({
             name: "FB",
-            type: Number,
+            type: SQL_DECIMAL,
           }))
           .createIndex({
             name: "FKRI_CHILD",
@@ -189,11 +190,11 @@ describe('Composite Foreign Keys', () => {
     let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "B",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Parent",
@@ -210,11 +211,11 @@ describe('Composite Foreign Keys', () => {
         buildTable({name: "Child"})
           .createColumn(createColumnTestSpec({
             name: "FA",
-            type: Number,
+            type: SQL_DECIMAL,
           }))
           .createColumn(createColumnTestSpec({
             name: "FB",
-            type: Number,
+            type: SQL_DECIMAL,
           }))
           .createIndex({
             name: "FKRI_CHILD",
@@ -253,11 +254,11 @@ describe('Composite Foreign Keys', () => {
     let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "B",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Parent",
@@ -271,11 +272,11 @@ describe('Composite Foreign Keys', () => {
     let child = buildTable({name: "Child"})
       .createColumn(createColumnTestSpec({
         name: "FA",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "FB",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_CHILD",
@@ -317,11 +318,11 @@ describe('Composite Foreign Keys', () => {
     let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "B",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Parent",
@@ -334,11 +335,11 @@ describe('Composite Foreign Keys', () => {
     let child = buildTable({name: "Child"})
       .createColumn(createColumnTestSpec({
         name: "FA",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "FB",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_CHILD",
@@ -376,11 +377,11 @@ describe('Composite Foreign Keys', () => {
     let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "B",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Parent",
@@ -393,11 +394,11 @@ describe('Composite Foreign Keys', () => {
     let child = buildTable({name: "Child"})
       .createColumn(createColumnTestSpec({
         name: "FA",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "FB",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_CHILD",
@@ -435,11 +436,11 @@ describe('Composite Foreign Keys', () => {
     let parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "B",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Parent",
@@ -455,11 +456,11 @@ describe('Composite Foreign Keys', () => {
         buildTable({name: "Child"})
           .createColumn(createColumnTestSpec({
             name: "FA",
-            type: Number,
+            type: SQL_DECIMAL,
           }))
           .createColumn(createColumnTestSpec({
             name: "FB",
-            type: Number,
+            type: SQL_DECIMAL,
           }))
           .createIndex({
             name: "FKRI_CHILD",
@@ -498,11 +499,11 @@ describe('Composite Foreign Keys', () => {
     const parent = buildTable({name: "Parent"})
       .createColumn(createColumnTestSpec({
         name: "A",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "B",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "IDX_Parent",
@@ -517,11 +518,11 @@ describe('Composite Foreign Keys', () => {
           buildTable({name: "Child"})
             .createColumn(createColumnTestSpec({
               name: "FA",
-              type: Number,
+              type: SQL_DECIMAL,
             }))
             .createColumn(createColumnTestSpec({
               name: "FB",
-              type: Number,
+              type: SQL_DECIMAL,
             }))
             .createIndex({
               name: "FKRI_CHILD",

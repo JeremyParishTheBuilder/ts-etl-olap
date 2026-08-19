@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createColumnTestSpec, createIndexTestSpec } from '../utils/buildSchema.js';
+import { SQL_DECIMAL } from '../../src/types/SqlType.js';
 
 describe('Table::createIndex', () => {
   it('adds an index to the table', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_DECIMAL }));
 
     const updated = table.createIndex(createIndexTestSpec({
       name: "I1",
@@ -19,7 +20,7 @@ describe('Table::createIndex', () => {
 
   it('does not mutate original table (immutability)', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_DECIMAL }));
 
     const updated = table.createIndex(createIndexTestSpec({
       name: "I1",
@@ -38,7 +39,7 @@ describe('Table::createIndex', () => {
 
   it('throws when index name already exists', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_DECIMAL }))
       .createIndex(createIndexTestSpec({
         name: "I1",
         columns: ["C1"],
@@ -68,7 +69,7 @@ describe('Table::createIndex', () => {
 
   it('preserves original index name casing', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_DECIMAL }));
 
     const updated = table.createIndex(createIndexTestSpec({
       name: "UserLookup",
@@ -83,7 +84,7 @@ describe('Table::createIndex', () => {
 
   it('throws when adding duplicate unique column set', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_DECIMAL }))
       .createIndex(createIndexTestSpec({
         name: "I1",
         columns: ["C1"],
@@ -101,7 +102,7 @@ describe('Table::createIndex', () => {
 
   it('throws when existing rows violate uniqueness', () => {
     let table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_DECIMAL }));
 
     table = table.addRows([
       [1],

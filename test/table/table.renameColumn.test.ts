@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import { SQL_DECIMAL } from '../../src/types/SqlType.js';
 
 describe('Table::renameColumn', () => {
   it('renames an existing column', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_DECIMAL }));
 
     const updated = table.renameColumn("C1", "C1_new");
 
@@ -14,8 +15,8 @@ describe('Table::renameColumn', () => {
 
   it('preserves column position after rename', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
-      .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_DECIMAL }))
+      .createColumn(createColumnTestSpec({ name: "C2", type: SQL_DECIMAL }));
 
     const updated = table.renameColumn("C1", "C1_new");
 
@@ -25,7 +26,7 @@ describe('Table::renameColumn', () => {
 
   it('does not mutate original table (immutability)', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_DECIMAL }));
 
     const updated = table.renameColumn("C1", "C1_new");
 
@@ -45,8 +46,8 @@ describe('Table::renameColumn', () => {
 
   it('throws when new name already exists', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }))
-      .createColumn(createColumnTestSpec({ name: "C2", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_DECIMAL }))
+      .createColumn(createColumnTestSpec({ name: "C2", type: SQL_DECIMAL }));
 
     expect(() => {
       table.renameColumn("C1", "C2");
@@ -55,7 +56,7 @@ describe('Table::renameColumn', () => {
 
   it('preserves row data after rename', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_DECIMAL }));
 
     const withRow = table.addRows([
       [123]

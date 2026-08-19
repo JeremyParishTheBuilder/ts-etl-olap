@@ -1,13 +1,13 @@
 import { type Action } from "./Action.js";
-import { type ColumnType } from "../types/ColumnType.js";
 import { type Databases } from "../relational/Databases.js";
+import type { SqlType } from "../types/SqlType.js";
 
 export class AlterColumnAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
     private columnName: string,
-    private newType: ColumnType,
+    private newType: SqlType,
   ) {}
 
   apply(databases: Databases): Databases {

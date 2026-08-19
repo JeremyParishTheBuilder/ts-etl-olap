@@ -6,6 +6,7 @@ import {
   createForeignKeyTestSpec_Database,
   createIndexTestSpec
 } from '../utils/buildSchema.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe('Database::removeIndex', () => {
 
@@ -68,7 +69,7 @@ describe('Database::removeIndex', () => {
     const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex(createIndexTestSpec({
         name: "IDX_Email",
@@ -78,7 +79,7 @@ describe('Database::removeIndex', () => {
     const roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     const db = buildDatabase()
@@ -102,7 +103,7 @@ describe('Database::removeIndex', () => {
     const table = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }));
 
     const db = buildDatabase()
@@ -120,7 +121,7 @@ describe('Database::removeIndex', () => {
     const parent = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex(createIndexTestSpec({
         name: "PK_Roles",
@@ -131,7 +132,7 @@ describe('Database::removeIndex', () => {
     const child = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex(createIndexTestSpec({
         name: "FKR_Id",
@@ -164,7 +165,7 @@ describe('Database::removeIndex', () => {
     const parent = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex(createIndexTestSpec({
         name: "PK_Roles",
@@ -179,7 +180,7 @@ describe('Database::removeIndex', () => {
     const child = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex(createIndexTestSpec({
         name: "FKR_Id",
@@ -222,11 +223,11 @@ describe('Database::removeIndex', () => {
     const employees = buildTable({name: "Employees"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "managerId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex(createIndexTestSpec({
         name: "PK_Employees",
@@ -263,7 +264,7 @@ describe('Database::removeIndex', () => {
     let table = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex(createIndexTestSpec({
         name: "IDX_Email",
@@ -291,7 +292,7 @@ describe('Database::removeIndex', () => {
     const table = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex(createIndexTestSpec({
         name: "IDX_Email",

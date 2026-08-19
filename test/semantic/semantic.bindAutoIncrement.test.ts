@@ -13,6 +13,7 @@ import { DEFAULT } from '../../src/dialect/keywords.js';
 import { bindUpdateSet } from '../../src/semantic/updateSet.js';
 import type { Table } from '../../src/relational/Table.js';
 import type { ColumnPolicy } from '../../src/relational/Column.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 let engine: Engine;
 
@@ -47,7 +48,7 @@ function createUsers(
     .createColumn(
       {
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         autoIncrementStep: 1,
         autoIncrementStart: 10,
@@ -61,7 +62,7 @@ function createUsers(
     )
     .createColumn({
       name: "Name",
-      type: String,
+      type: SQL_VARCHAR,
       nullable: false,
     });
 

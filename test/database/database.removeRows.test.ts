@@ -6,6 +6,7 @@ import {
   createDelete,
   createForeignKeyTestSpec_Database
 } from '../utils/buildSchema.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe('Database::removeRow', () => {
 
@@ -13,7 +14,7 @@ describe('Database::removeRow', () => {
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     users = users.addRows([[1]]);
@@ -37,7 +38,7 @@ describe('Database::removeRow', () => {
     let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Roles",
@@ -50,7 +51,7 @@ describe('Database::removeRow', () => {
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Roles",
@@ -85,7 +86,7 @@ describe('Database::removeRow', () => {
     let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Roles",
@@ -98,7 +99,7 @@ describe('Database::removeRow', () => {
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Roles",
@@ -142,7 +143,7 @@ describe('Database::removeRow', () => {
     let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Roles",
@@ -155,7 +156,7 @@ describe('Database::removeRow', () => {
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Roles",
@@ -194,7 +195,7 @@ describe('Database::removeRow', () => {
     const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     const db = buildDatabase()
@@ -212,7 +213,7 @@ describe('Database::removeRow', () => {
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     users = users.addRows([[1]]);
@@ -239,7 +240,7 @@ describe('Database::removeRow', () => {
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     users = users.addRows([[1]]);
@@ -276,7 +277,7 @@ describe('Database::removeRow', () => {
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     users = users.addRows([[1]]);
@@ -284,7 +285,7 @@ describe('Database::removeRow', () => {
     let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     roles = roles.addRows([[10]]);
@@ -309,11 +310,11 @@ describe('Database::removeRow', () => {
     let users = buildTable({ name: "Users" })
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "name",
-        type: String,
+        type: SQL_VARCHAR,
       }));
 
     users = users.addRows([[1, "Alice"]]);
@@ -345,7 +346,7 @@ describe('Database::removeRow', () => {
     let roles = buildTable({ name: "Roles" })
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Roles",
@@ -359,7 +360,7 @@ describe('Database::removeRow', () => {
     let users = buildTable({ name: "Users" })
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Users",

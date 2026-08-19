@@ -4,6 +4,7 @@ import { ValidationEngine } from "../../src/validation/ValidationEngine.js";
 import { describe, expect, it } from "vitest";
 import { createTestPostgresSql, freshEngine } from "../utils/engineHelpers.js";
 import { col } from "../../src/ast/dsl.js";
+import { SQL_DECIMAL, SQL_VARCHAR } from "../../src/types/SqlType.js";
 
 
 describe("ValidationEngine::validate", () => {
@@ -19,11 +20,11 @@ describe("ValidationEngine::validate", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -78,11 +79,11 @@ describe("ValidationEngine::validate", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -148,7 +149,7 @@ describe("ValidationEngine::validate", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -216,7 +217,7 @@ describe("ValidationEngine::validate", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
@@ -224,7 +225,7 @@ describe("ValidationEngine::validate", () => {
 
     sql.createTable("Orders", {
       UserId: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -296,11 +297,11 @@ describe("ValidationEngine::validate", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -374,11 +375,11 @@ describe("ValidationEngine::validate", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -441,11 +442,11 @@ describe("ValidationEngine::validate", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -510,7 +511,7 @@ describe("ValidationEngine::validate", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -569,7 +570,7 @@ describe("ValidationEngine::validate", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -614,7 +615,7 @@ describe("ValidationEngine::validate participants", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -672,7 +673,7 @@ describe("ValidationEngine::validate participants", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -741,7 +742,7 @@ describe("ValidationEngine::validate participants", () => {
 
     sql.createTable("Parents", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
@@ -749,7 +750,7 @@ describe("ValidationEngine::validate participants", () => {
 
     sql.createTable("Children", {
       ParentId: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -822,7 +823,7 @@ describe("ValidationEngine::validate rule evaluation", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -879,7 +880,7 @@ it("does not modify committed database state", () => {
 
   sql.createTable("Users", {
     Id: {
-      type: Number,
+      type: SQL_DECIMAL,
       nullable: false,
     },
   }).execute();
@@ -939,7 +940,7 @@ it("propagates unexpected errors", () => {
 
   sql.createTable("Users", {
     Id: {
-      type: Number,
+      type: SQL_DECIMAL,
       nullable: false,
     },
   }).execute();

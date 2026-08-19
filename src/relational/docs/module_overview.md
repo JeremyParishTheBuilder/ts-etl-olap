@@ -287,3 +287,8 @@ Higher layers can therefore treat relational objects as structurally valid immut
 Some Policy rules are captured by the relational object at creation time.
 
 Therefore, later engine-policy changes affect future objects, not existing columns/tables.
+
+
+## TODO
+
+TODO: Define ALTER COLUMN conversion semantics. Determine whether column alteration permits only assignment-compatible type changes or also performs explicit cast conversions of existing values. If conversions are supported, alteration must validate and convert existing stored values rather than relying solely on isCastable().

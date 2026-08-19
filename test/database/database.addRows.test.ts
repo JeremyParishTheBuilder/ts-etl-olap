@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { buildDatabase, createColumnTestSpec } from '../utils/buildSchema.js';
 import type { ColumnId } from '../../src/relational/Column.js';
 import type { ColumnInput } from '../../src/types/ColumnInput.js';
+import { SQL_DECIMAL } from '../../src/types/SqlType.js';
 
 describe('Database::addRows', () => {
   it("allows inserting a batch of rows with valid foreign key references", () => {
@@ -14,7 +15,7 @@ describe('Database::addRows', () => {
       .createColumn(
         createColumnTestSpec({
           name: "Id",
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
         }),
       )
@@ -29,7 +30,7 @@ describe('Database::addRows', () => {
       .createColumn(
         createColumnTestSpec({
           name: "RoleId",
-          type: Number,
+          type: SQL_DECIMAL,
         }),
       )
       .createIndex({
@@ -76,7 +77,7 @@ describe('Database::addRows', () => {
     const roles = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .createIndex({
@@ -88,7 +89,7 @@ describe('Database::addRows', () => {
     const users = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "RoleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Roles",
@@ -129,7 +130,7 @@ describe('Database::addRows', () => {
     const roles = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .createIndex({
@@ -141,7 +142,7 @@ describe('Database::addRows', () => {
     const users = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "RoleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Roles",
@@ -182,7 +183,7 @@ describe('Database::addRows', () => {
     let parent = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Roles",
@@ -195,7 +196,7 @@ describe('Database::addRows', () => {
     const child = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Roles",
@@ -234,7 +235,7 @@ describe('Database::addRows', () => {
     const parent = database.tables.requireByName("Roles")
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Roles",
@@ -245,7 +246,7 @@ describe('Database::addRows', () => {
     const child = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Roles",

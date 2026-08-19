@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createTestPostgresSql } from '../utils/engineHelpers.ts';
 import { col } from '../../src/ast/dsl.ts';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.ts';
 
 describe("Integration::insert", () => {
   it("rejects duplicate primary keys", () => {
@@ -14,12 +15,12 @@ describe("Integration::insert", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -58,7 +59,7 @@ describe("Integration::insert", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
@@ -66,12 +67,12 @@ describe("Integration::insert", () => {
 
     sql.createTable("Posts", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       UserId: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -104,7 +105,7 @@ describe("Integration::insert", () => {
 
     sql.createTable("Users", {
       Age: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -136,7 +137,7 @@ describe("Integration::insert", () => {
 
     sql.createTable("Users", {
       Age: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -168,12 +169,12 @@ describe("Integration::insert", () => {
 
     sql.createTable("Employees", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       ManagerId: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -220,12 +221,12 @@ describe("Integration::insert", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
         defaultValue: "Anonymous",
       },
@@ -257,12 +258,12 @@ describe("Integration::insert", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
         defaultValue: "Anonymous",
       },
@@ -296,12 +297,12 @@ describe("Integration::insert", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       UpdatedAt: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -334,12 +335,12 @@ describe("Integration::insert", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       UpdatedAt: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -372,12 +373,12 @@ describe("Integration::insert", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       UpdatedAt: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -400,14 +401,14 @@ describe("Integration::insert", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
         autoIncrementStart: 1,
         autoIncrementStep: 1,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
