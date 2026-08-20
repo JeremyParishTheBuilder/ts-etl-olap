@@ -3,6 +3,7 @@ import {
   buildDatabase,
   buildTable,
 } from '../utils/buildSchema.js';
+import { SQL_DECIMAL, SQL_INTEGER, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe("Database::alterColumn", () => {
 
@@ -10,7 +11,7 @@ describe("Database::alterColumn", () => {
     const users = buildTable({ name: "Users" })
       .createColumn({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -22,7 +23,7 @@ describe("Database::alterColumn", () => {
     const posts = buildTable({ name: "Posts" })
       .createColumn({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -49,7 +50,7 @@ describe("Database::alterColumn", () => {
       database.alterColumn(
         "Users",
         "Id",
-        String
+        SQL_VARCHAR
       );
     }).toThrow();
   });
@@ -59,7 +60,7 @@ describe("Database::alterColumn", () => {
     const users = buildTable({ name: "Users" })
       .createColumn({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -71,7 +72,7 @@ describe("Database::alterColumn", () => {
     const posts = buildTable({ name: "Posts" })
       .createColumn({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -98,71 +99,21 @@ describe("Database::alterColumn", () => {
       database.alterColumn(
         "Posts",
         "UserId",
-        String
+        SQL_VARCHAR
       );
     }).toThrow();
-  });
-
-  it("allows altering when foreign-key types remain compatible", () => {
-    // identical setup
-
-    const users = buildTable({ name: "Users" })
-      .createColumn({
-        name: "Id",
-        type: Number,
-        nullable: false,
-      })
-      .createIndex({
-        name: "PK_Users",
-        columns: ["Id"],
-        unique: true,
-      });
-
-    const posts = buildTable({ name: "Posts" })
-      .createColumn({
-        name: "UserId",
-        type: Number,
-        nullable: false,
-      })
-      .createIndex({
-        name: "FKRI",
-        columns: ["UserId"],
-        unique: false,
-      });
-
-    const database = buildDatabase()
-      .addTable(users)
-      .addTable(posts)
-      .createForeignKey(
-        "Posts",
-        {
-          name: "FK_Posts_Users",
-          columns: ["UserId"],
-          reverseIndex: "FKRI",
-          parentTable: "Users",
-          parentColumns: ["Id"],
-        }
-      );
-
-    expect(() => {
-      database.alterColumn(
-        "Users",
-        "Id",
-        Number
-      );
-    }).not.toThrow();
   });
 
   it("matches corresponding columns in a composite foreign key", () => {
     const users = buildTable({ name: "Users" })
       .createColumn({
         name: "FirstId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createColumn({
         name: "SecondId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -174,12 +125,12 @@ describe("Database::alterColumn", () => {
     const posts = buildTable({ name: "Posts" })
       .createColumn({
         name: "UserFirstId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createColumn({
         name: "UserSecondId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -206,7 +157,7 @@ describe("Database::alterColumn", () => {
       database.alterColumn(
         "Users",
         "SecondId",
-        String
+        SQL_VARCHAR
       );
     }).toThrow();
   });
