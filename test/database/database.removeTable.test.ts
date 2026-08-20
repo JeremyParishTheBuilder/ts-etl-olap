@@ -4,6 +4,7 @@ import {
   createColumnTestSpec,
   createForeignKeyTestSpec_Database
 } from '../utils/buildSchema.js';
+import { SQL_DECIMAL } from '../../src/types/SqlType.js';
 
 describe('Database::removeTable', () => {
   it('removes a table from the database', () => {
@@ -38,7 +39,7 @@ describe('Database::removeTable', () => {
     const users = database.tables.requireByName("Users")
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .createIndex({
@@ -50,7 +51,7 @@ describe('Database::removeTable', () => {
     const posts = database.tables.requireByName("Posts")
       .createColumn(createColumnTestSpec({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .createIndex({

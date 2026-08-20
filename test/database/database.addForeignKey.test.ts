@@ -6,13 +6,14 @@ import {
   createColumnTestSpec,
   createForeignKeyTestSpec_Database
 } from '../utils/buildSchema.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe('Database::createForeignKey', () => {
   it('adds a foreign key to the child table', () => {
     const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -24,7 +25,7 @@ describe('Database::createForeignKey', () => {
     const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -59,7 +60,7 @@ describe('Database::createForeignKey', () => {
     const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -71,7 +72,7 @@ describe('Database::createForeignKey', () => {
     const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -112,7 +113,7 @@ describe('Database::createForeignKey', () => {
     const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -124,7 +125,7 @@ describe('Database::createForeignKey', () => {
     const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -228,7 +229,7 @@ describe('Database::createForeignKey', () => {
     const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -240,7 +241,7 @@ describe('Database::createForeignKey', () => {
     const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -280,7 +281,7 @@ describe('Database::createForeignKey', () => {
     const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -311,7 +312,7 @@ describe('Database::createForeignKey', () => {
     const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       })
       .createIndex({
@@ -323,7 +324,7 @@ describe('Database::createForeignKey', () => {
     const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       });
 
@@ -377,7 +378,7 @@ describe('Database::createForeignKey', () => {
     const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .addRows(
@@ -392,7 +393,7 @@ describe('Database::createForeignKey', () => {
     const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -426,7 +427,7 @@ describe('Database::createForeignKey', () => {
     const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .addRows(
@@ -441,7 +442,7 @@ describe('Database::createForeignKey', () => {
     const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -475,7 +476,7 @@ describe('Database::createForeignKey', () => {
     const users = buildTable({name: "Users"})
       .createColumn({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       })
       .createIndex({
@@ -487,7 +488,7 @@ describe('Database::createForeignKey', () => {
     const posts = buildTable({name: "Posts"})
       .createColumn({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: true,
       })
       .createIndex({

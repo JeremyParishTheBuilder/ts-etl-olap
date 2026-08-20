@@ -116,6 +116,37 @@ ColumnPolicy is distinct from user-facing ColumnSpec.
 
 Column retains policies that affect its runtime behavior.
 
+## SQL Types
+
+Relational columns use `SqlType` to describe the semantic SQL type of stored values.
+
+Current types include:
+
+- `INTEGER`
+- `DECIMAL`
+- `VARCHAR`
+- `BOOLEAN`
+- `DATE`
+- `TIMESTAMP`
+
+SQL types are distinct from their physical JavaScript representations. For example, `DATE` and `TIMESTAMP` are currently represented by strings in `ColumnValue`; their SQL type determines their semantic interpretation.
+
+Parameterized types may carry additional metadata such as `VARCHAR` length, `DECIMAL` precision and scale, and `TIMESTAMP` precision.
+
+Type relationships are defined separately for:
+
+- exact type identity
+- assignment compatibility
+- castability
+
+Value casting is implemented independently from type identity.
+
+Foreign-key columns currently require matching SQL types.
+
+### Deferred Decisions
+
+- Determine whether `ALTER COLUMN` should permit explicit casts of existing values, or only assignment-compatible changes.
+
 ## Row Views
 
 RowView is the temporary row representation used during execution.
@@ -287,3 +318,8 @@ Higher layers can therefore treat relational objects as structurally valid immut
 Some Policy rules are captured by the relational object at creation time.
 
 Therefore, later engine-policy changes affect future objects, not existing columns/tables.
+
+
+## TODO
+
+TODO: Define ALTER COLUMN conversion semantics. Determine whether column alteration permits only assignment-compatible type changes or also performs explicit cast conversions of existing values. If conversions are supported, alteration must validate and convert existing stored values rather than relying solely on isCastable().

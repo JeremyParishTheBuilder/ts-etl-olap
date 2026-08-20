@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { CONSTRAINT_KIND } from '../../src/relational/ConstraintKind.js';
 import { createTestPostgresSql } from '../utils/engineHelpers.js';
 import { col } from '../../src/ast/dsl.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe("Integration::delete", () => {
   it("deletes a single row", () => {
@@ -13,12 +14,12 @@ describe("Integration::delete", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -56,7 +57,7 @@ describe("Integration::delete", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
@@ -87,7 +88,7 @@ describe("Integration::delete", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
@@ -126,7 +127,7 @@ describe("Integration::delete", () => {
 
     sql.createTable("Roles", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
@@ -135,7 +136,7 @@ describe("Integration::delete", () => {
     sql.createTable("Users",
       {
         RoleId: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
         }
       },
@@ -179,7 +180,7 @@ describe("Integration::delete", () => {
 
     sql.createTable("Roles", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
@@ -188,7 +189,7 @@ describe("Integration::delete", () => {
     sql.createTable("Users",
       {
         RoleId: {
-          type: Number,
+          type: SQL_DECIMAL,
           nullable: false,
         }
       },

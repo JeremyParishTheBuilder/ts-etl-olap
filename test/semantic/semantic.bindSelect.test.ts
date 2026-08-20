@@ -8,6 +8,7 @@ import { Engine } from '../../src/engine/Engine.js';
 import { buildDatabase, buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionNode.js';
 import { freshEngine } from '../utils/engineHelpers.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe('SemanticAnalyzer::bindSelect', () => {
   let engine: Engine;
@@ -30,12 +31,12 @@ describe('SemanticAnalyzer::bindSelect', () => {
     const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .createColumn(createColumnTestSpec({
         name: "Name",
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       }))
       .addRows([[1, "Alice"]]);
@@ -70,12 +71,12 @@ describe('SemanticAnalyzer::bindSelect', () => {
     const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .createColumn(createColumnTestSpec({
         name: "Name",
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       }))
       .addRows([[1, "Alice"]]);
@@ -109,7 +110,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
     const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "Age",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[10],[20],[30]]);
@@ -152,7 +153,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
     const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "UserId",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1]]);
@@ -186,7 +187,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
     const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }));
 
@@ -212,7 +213,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
     const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }));
 
@@ -241,7 +242,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
     const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1],[2]]);

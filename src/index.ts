@@ -1,8 +1,19 @@
-import { getChainRegContents } from "./utils/initializeChainReg.js";
+import { exampleChainRegistry_DiscoveryDefinition } from "./mapping/discovery/example.js";
+import { exampleChainRegistry_buildDatabase, exampleChainRegistry_ImportDefinition } from "./utils/initializeChainReg.js";
 import { runExampleValidation } from "./validation/example.js";
 
 console.log("This is the main file");
 
-getChainRegContents();
+const discoveryRoot = exampleChainRegistry_DiscoveryDefinition();
+const importMapping = exampleChainRegistry_ImportDefinition();
+
+exampleChainRegistry_buildDatabase(
+  discoveryRoot,
+  importMapping
+);
 
 //runExampleValidation();
+
+//getChainRegContents();
+
+

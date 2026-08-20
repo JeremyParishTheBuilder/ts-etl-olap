@@ -3,12 +3,13 @@ import { buildTable, createCheckTestSpec } from '../utils/buildSchema.js';
 import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionNode.js';
 import { LiteralExpressionNode } from '../../src/ast/expression/LiteralExpressionNode.js';
 import { ComparisonPredicateNode } from '../../src/ast/predicate/ComparisonPredicateNode.js';
+import { SQL_DECIMAL } from '../../src/types/SqlType.js';
 
 describe('Table::removeColumn', () => {
   it('removes a column from the table', () => {
     const table = buildTable()
-      .createColumn({ name: "C1", type: Number })
-      .createColumn({ name: "C2", type: Number });
+      .createColumn({ name: "C1", type: SQL_DECIMAL })
+      .createColumn({ name: "C2", type: SQL_DECIMAL });
 
     const updated = table.removeColumn("C1");
 
@@ -18,9 +19,9 @@ describe('Table::removeColumn', () => {
 
   it('reindexes remaining columns', () => {
     const table = buildTable()
-      .createColumn({ name: "C1", type: Number })
-      .createColumn({ name: "C2", type: Number })
-      .createColumn({ name: "C3", type: Number });
+      .createColumn({ name: "C1", type: SQL_DECIMAL })
+      .createColumn({ name: "C2", type: SQL_DECIMAL })
+      .createColumn({ name: "C3", type: SQL_DECIMAL });
 
     const updatedTable = table.removeColumn("C2");
 
@@ -30,8 +31,8 @@ describe('Table::removeColumn', () => {
 
   it('preserves row values for remaining columns', () => {
     const table = buildTable()
-      .createColumn({ name: "C1", type: Number })
-      .createColumn({ name: "C2", type: Number });
+      .createColumn({ name: "C1", type: SQL_DECIMAL })
+      .createColumn({ name: "C2", type: SQL_DECIMAL });
 
     const withRow = table.addRows([
       [1, 2],
@@ -45,7 +46,7 @@ describe('Table::removeColumn', () => {
 
   it('does not mutate original table (immutability)', () => {
     const table = buildTable()
-      .createColumn({ name: "C1", type: Number });
+      .createColumn({ name: "C1", type: SQL_DECIMAL });
 
     const updatedTable = table.removeColumn("C1");
 
@@ -63,7 +64,7 @@ describe('Table::removeColumn', () => {
 
   it('throws if column is not droppable (constraint/index referenced)', () => {
     const table = buildTable()
-      .createColumn({ name: "C1", type: Number })
+      .createColumn({ name: "C1", type: SQL_DECIMAL })
       .createIndex({
         name: "I1",
         columns: ["C1"],
@@ -77,9 +78,9 @@ describe('Table::removeColumn', () => {
 
   it('updates projected index bindings after column removal', () => {
     const table = buildTable()
-      .createColumn({ name: "C1", type: Number })
-      .createColumn({ name: "C2", type: Number })
-      .createColumn({ name: "C3", type: Number })
+      .createColumn({ name: "C1", type: SQL_DECIMAL })
+      .createColumn({ name: "C2", type: SQL_DECIMAL })
+      .createColumn({ name: "C3", type: SQL_DECIMAL })
       .createIndex({
         name: "IDX1",
         columns: ["C1", "C3"],
@@ -97,9 +98,9 @@ describe('Table::removeColumn', () => {
 
   it('updates indexes` column position indexes', () => {
     const table = buildTable()
-      .createColumn({ name: "C1", type: Number })
-      .createColumn({ name: "C2", type: Number })
-      .createColumn({ name: "C3", type: Number })
+      .createColumn({ name: "C1", type: SQL_DECIMAL })
+      .createColumn({ name: "C2", type: SQL_DECIMAL })
+      .createColumn({ name: "C3", type: SQL_DECIMAL })
       .createIndex({
         name: "I1",
         columns: ["C1", "C3"],
@@ -125,15 +126,15 @@ describe('Table::removeColumn', () => {
     const table = buildTable()
       .createColumn({
         name: "C1",
-        type: Number,
+        type: SQL_DECIMAL,
       })
       .createColumn({
         name: "C2",
-        type: Number,
+        type: SQL_DECIMAL,
       })
       .createColumn({
         name: "C3",
-        type: Number,
+        type: SQL_DECIMAL,
       })
       .createIndex({
         name: "IDX1",
@@ -159,7 +160,7 @@ describe('Table::removeColumn', () => {
     const table = buildTable()
       .createColumn({
         name: "C1",
-        type: Number,
+        type: SQL_DECIMAL,
       })
       .createCheck(createCheckTestSpec({
         name: "CHK_Adult",

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createTestPostgresSql } from '../utils/engineHelpers.ts';
 import { case_, col } from '../../src/ast/dsl.ts';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.ts';
 
 describe("Integration::update", () => {
   it("updates a single row", () => {
@@ -12,12 +13,12 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -58,12 +59,12 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -116,12 +117,12 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -155,12 +156,12 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       Email: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
         unique: true,
       },
@@ -195,7 +196,7 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
@@ -203,12 +204,12 @@ describe("Integration::update", () => {
 
     sql.createTable("Posts", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       UserId: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -250,7 +251,7 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
@@ -258,12 +259,12 @@ describe("Integration::update", () => {
 
     sql.createTable("Posts", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       UserId: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -315,8 +316,8 @@ describe("Integration::update", () => {
     sql.useDatabase("DB1").execute();
 
     sql.createTable("Users", {
-      Id: { type: Number, nullable: false, primaryKey: true },
-      Name: { type: String },
+      Id: { type: SQL_DECIMAL, nullable: false, primaryKey: true },
+      Name: { type: SQL_VARCHAR },
     }).execute();
 
     sql
@@ -352,8 +353,8 @@ describe("Integration::update", () => {
     sql.useDatabase("DB1").execute();
 
     sql.createTable("Users", {
-      Id: { type: Number, nullable: false, primaryKey: true },
-      Name: { type: String },
+      Id: { type: SQL_DECIMAL, nullable: false, primaryKey: true },
+      Name: { type: SQL_VARCHAR },
     }).execute();
 
     sql
@@ -389,7 +390,7 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Age: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -428,7 +429,7 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Age: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -466,7 +467,7 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Age: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -519,12 +520,12 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
         defaultValue: "Anonymous",
       },
@@ -566,12 +567,12 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: true,
       },
     }).execute();
@@ -612,12 +613,12 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -648,12 +649,12 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       UpdatedAt: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: true,
       },
     }).execute();
@@ -700,12 +701,12 @@ describe("Integration::update", () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         primaryKey: true,
       },
       UpdatedAt: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();

@@ -5,13 +5,14 @@ import { FilterNode } from '../../src/evaluation/plan/FilterNode.js';
 import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 import { ColumnExpression } from '../../src/evaluation/expression/ColumnExpression.js';
 import { LiteralExpression } from '../../src/evaluation/expression/LiteralExpression.js';
+import { SQL_DECIMAL } from '../../src/types/SqlType.js';
 
 describe('Query::filterNode', () => {
   it("returns rows matching the predicate", () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Age",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[10],[20],[30]]);
@@ -44,7 +45,7 @@ describe('Query::filterNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Age",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[10],[20]]);
@@ -66,7 +67,7 @@ describe('Query::filterNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Age",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[10],[20]]);
@@ -90,7 +91,7 @@ describe('Query::filterNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Value",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[5],[10],[15]]);
@@ -117,7 +118,7 @@ describe('Query::filterNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Value",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[5],[10],[15],[20]]);
@@ -155,7 +156,7 @@ describe('Query::filterNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Value",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1]]);
@@ -184,7 +185,7 @@ describe('Query::filterNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Value",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1],[2]]);

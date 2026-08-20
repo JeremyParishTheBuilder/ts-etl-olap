@@ -5,7 +5,6 @@ import {
   type ColumnId,
   type ColumnPolicy,
 } from "./Column.js";
-import { type ColumnType } from "../types/ColumnType.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { PrimaryKey } from "./PrimaryKey.js";
 import { ForeignKey, type ForeignKeyId } from "./ForeignKey.js";
@@ -36,6 +35,7 @@ import {
 import { CONSTRAINT_KIND } from "./ConstraintKind.js";
 import { arraysEqual } from "../utils/arrayHelpers.js";
 import type { OrderedInputRow } from "../types/OrderedInputRow.js";
+import type { SqlType } from "../types/SqlType.js";
 
 export type TableId = number & { readonly __brand: "TableId" };
 
@@ -232,11 +232,11 @@ export class Table extends Immutable {
     } as Partial<this>);
   }
 
-  public alterColumn(name: string, newType: ColumnType): Table {
+  public alterColumn(name: string, newType: SqlType): Table {
     return this.alterColumnById(this.columns.requireIdByName(name), newType);
   }
 
-  public alterColumnById(id: ColumnId, newType: ColumnType): Table {
+  public alterColumnById(id: ColumnId, newType: SqlType): Table {
     const column = this.columns.require(id);
 
     if (column.type === newType) return this;

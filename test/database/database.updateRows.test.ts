@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildDatabase, buildTable, createColumnTestSpec, createForeignKeyTestSpec_Database } from '../utils/buildSchema.js';
+import { SQL_DECIMAL } from '../../src/types/SqlType.js';
 
 describe('Database::updateRow', () => {
 
@@ -7,7 +8,7 @@ describe('Database::updateRow', () => {
     let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Roles",
@@ -20,7 +21,7 @@ describe('Database::updateRow', () => {
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Users",
@@ -62,7 +63,7 @@ describe('Database::updateRow', () => {
     let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Roles",
@@ -75,7 +76,7 @@ describe('Database::updateRow', () => {
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Users",
@@ -111,7 +112,7 @@ describe('Database::updateRow', () => {
     let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Roles",
@@ -124,7 +125,7 @@ describe('Database::updateRow', () => {
     let users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Users",
@@ -160,7 +161,7 @@ describe('Database::updateRow', () => {
     let roles = buildTable({name: "Roles"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Roles",
@@ -173,7 +174,7 @@ describe('Database::updateRow', () => {
     const users = buildTable({name: "Users"})
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Users",
@@ -211,11 +212,11 @@ describe('Database::updateRow', () => {
     let employees = buildTable({name: "Employees"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "managerId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Employees",
@@ -259,11 +260,11 @@ describe('Database::updateRow', () => {
     let employees = buildTable({name: "Employees"})
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "managerId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Employees",
@@ -303,7 +304,7 @@ describe('Database::updateRow', () => {
     let users = buildTable({ name: "Users" })
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Users",
@@ -332,7 +333,7 @@ describe('Database::updateRow', () => {
     let roles = buildTable({ name: "Roles" })
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "PK_Roles",
@@ -345,7 +346,7 @@ describe('Database::updateRow', () => {
     let users = buildTable({ name: "Users" })
       .createColumn(createColumnTestSpec({
         name: "roleId",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createIndex({
         name: "FKRI_Users",

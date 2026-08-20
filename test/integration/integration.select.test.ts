@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createTestPostgresSql } from '../utils/engineHelpers.ts';
 import { and, col, or } from '../../src/ast/dsl.ts';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.ts';
 
 describe('Integration::select', () => {
   it("executes select * queries end-to-end", () => {
@@ -14,11 +15,11 @@ describe('Integration::select', () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -63,11 +64,11 @@ describe('Integration::select', () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
       Name: {
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       },
     }).execute();
@@ -106,7 +107,7 @@ describe('Integration::select', () => {
 
     sql.createTable("Users", {
       Age: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -149,11 +150,11 @@ describe('Integration::select', () => {
 
     sql.createTable("Users", {
       Age: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
       Score: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -195,11 +196,11 @@ describe('Integration::select', () => {
 
     sql.createTable("Users", {
       Age: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
       Score: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -241,7 +242,7 @@ describe('Integration::select', () => {
 
     sql.createTable("Users", {
       Age: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -287,7 +288,7 @@ describe('Integration::select', () => {
 
     sql.createTable("Users", {
       UserId: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -321,7 +322,7 @@ describe('Integration::select', () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();
@@ -356,7 +357,7 @@ describe('Integration::select', () => {
 
     sql.createTable("Users", {
       Id: {
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       },
     }).execute();

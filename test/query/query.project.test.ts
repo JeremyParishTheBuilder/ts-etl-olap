@@ -6,23 +6,24 @@ import { ComparisonPredicate } from '../../src/evaluation/predicate/ComparisonPr
 import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 import { ColumnExpression } from '../../src/evaluation/expression/ColumnExpression.js';
 import { LiteralExpression } from '../../src/evaluation/expression/LiteralExpression.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe('Query::projectNode', () => {
   it("projects selected columns", () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .createColumn(createColumnTestSpec({
         name: "Name",
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       }))
       .createColumn(createColumnTestSpec({
         name: "Age",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1, "Alice", 30]]);
@@ -48,7 +49,7 @@ describe('Query::projectNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Value",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[10],[20]]);
@@ -72,12 +73,12 @@ describe('Query::projectNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "A",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .createColumn(createColumnTestSpec({
         name: "B",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1, 100],[2, 200],[3, 300]]);
@@ -102,12 +103,12 @@ describe('Query::projectNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .createColumn(createColumnTestSpec({
         name: "Age",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1, 10],[2, 20],[3, 30]]);
@@ -142,7 +143,7 @@ describe('Query::projectNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1]]);
@@ -168,7 +169,7 @@ describe('Query::projectNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }));
 
@@ -186,12 +187,12 @@ describe('Query::projectNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .createColumn(createColumnTestSpec({
         name: "Name",
-        type: String,
+        type: SQL_VARCHAR,
         nullable: false,
       }))
       .addRows([[1, "Alice"]]);
@@ -217,7 +218,7 @@ describe('Query::projectNode', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Value",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }))
       .addRows([[1],[2]]);

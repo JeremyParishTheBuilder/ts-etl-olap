@@ -56,13 +56,6 @@ export function bindInsertInto(
         continue;
       }
 
-      console.log("Somehow this is allowed:");
-      console.log(column.isAutoIncrement());
-      console.log(column.autoIncrementAllowsExplicitValue);
-      console.log(
-        ctx.rules.autoIncrementColumnPolicy.autoIncrementAllowsExplicitValue,
-      );
-
       if (
         column.isAutoIncrement() &&
         !column.autoIncrementAllowsExplicitValue

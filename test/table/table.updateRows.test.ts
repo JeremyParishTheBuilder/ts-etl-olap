@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createColumnTestSpec, createDelete } from '../utils/buildSchema.js';
 import { DEFAULT } from '../../src/dialect/keywords.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe('Table::updateRow', () => {
 
@@ -8,7 +9,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([[1]]);
@@ -28,7 +29,7 @@ describe('Table::updateRow', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       })).addRows([
         [1]
       ]);
@@ -52,7 +53,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -70,11 +71,11 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "name",
-        type: String,
+        type: SQL_VARCHAR,
       }));
 
     table = table.addRows([
@@ -92,7 +93,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -110,7 +111,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
       }));
 
@@ -129,7 +130,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex({
         name: "UQ_Email",
@@ -161,7 +162,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex({
         name: "UQ_Email",
@@ -189,7 +190,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex({
         name: "UQ_Email",
@@ -213,7 +214,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -233,7 +234,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -256,7 +257,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -274,11 +275,11 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex({
         name: "PK_Users",
@@ -330,15 +331,15 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createColumn(createColumnTestSpec({
         name: "name",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex({
         name: "PK_Users",
@@ -389,11 +390,11 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex({
         name: "PK_Users",
@@ -422,15 +423,15 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createColumn(createColumnTestSpec({
         name: "name",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex({
         name: "UQ_Users_Email",
@@ -460,11 +461,11 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "email",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .createIndex({
         name: "UQ_Users_Email",
@@ -506,7 +507,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -526,7 +527,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -553,7 +554,7 @@ describe('Table::updateRow', () => {
     let table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }));
 
     table = table.addRows([
@@ -573,7 +574,7 @@ describe('Table::updateRow', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         defaultValue: 99,
       }))
@@ -593,7 +594,7 @@ describe('Table::updateRow', () => {
     const table = buildTable()
       .createColumn({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
         nullable: false,
         autoIncrementStep: 1,
         autoIncrementStart: 10,
@@ -623,11 +624,11 @@ describe('Table::updateRow', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .createColumn(createColumnTestSpec({
         name: "name",
-        type: String,
+        type: SQL_VARCHAR,
       }))
       .addRows([
         [1, "old"],
@@ -648,7 +649,7 @@ describe('Table::updateRow', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .addRows([
         [1],
@@ -666,7 +667,7 @@ describe('Table::updateRow', () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "id",
-        type: Number,
+        type: SQL_DECIMAL,
       }))
       .addRows([
         [1],

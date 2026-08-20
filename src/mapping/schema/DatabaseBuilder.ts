@@ -29,7 +29,7 @@ export class DatabaseBuilder {
       for (const columnSchema of tableSchema.columns.values()) {
         table = table.createColumn({
           name: columnSchema.name,
-          type: columnSchema.type,
+          type: columnSchema.requireType(),
         });
       }
 

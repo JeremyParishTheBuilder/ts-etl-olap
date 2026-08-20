@@ -3,14 +3,14 @@ import { type ReferentialAction } from "./ReferentialAction.js";
 import { type ColumnInput } from "../types/ColumnInput.js";
 import { type PredicateNode } from "../ast/predicate/PredicateNode.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
-import { type ColumnType, matchesColumnType } from "../types/ColumnType.js";
 import { DEFAULT } from "../dialect/keywords.js";
+import { canBeIndexed, castValue, isAssignable, matchesSqlType, SQL_DECIMAL, SQL_INTEGER, type SqlType } from "../types/SqlType.js";
 
 export type ColumnId = number & { readonly __brand: "ColumnId" };
 
 export class Column extends Immutable {
   public readonly name: string;
-  public readonly type: ColumnType;
+  public readonly type: SqlType;
   public readonly nullable: boolean;
   public readonly defaultValue?: ColumnValue;
   public readonly enumValues?: readonly ColumnValue[];
@@ -92,14 +92,14 @@ export class Column extends Immutable {
     } as Partial<this>);
   }
 
-  public alter(newType: ColumnType): Column {
+  public alter(newType: SqlType): Column {
     const oldType = this.type;
 
     if (oldType === newType) {
       throw new Error(`Column types already identical`);
     }
 
-    if (!widens(oldType, newType)) {
+    if (!isAssignable(oldType, newType)) {
       throw new Error(
         `Cannot alter column ${this.name}:
         ${oldType} cannot convert to ${newType}`,
@@ -110,7 +110,7 @@ export class Column extends Immutable {
     validateColumnSpec(newSpec);
 
     const widenedData: ColumnValue[] = this.data.map((value) =>
-      widenValue(newType, value),
+      castValue(value, newType),
     );
 
     return this.with({
@@ -144,7 +144,7 @@ export class Column extends Immutable {
   }
 
   private assertDatumTypeMatchesColumnType(datum: ColumnValue): void {
-    if (!matchesColumnType(datum, this.type)) {
+    if (!matchesSqlType(datum, this.type)) {
       throw new Error(`Value type does not match Column Type.`);
     }
   }
@@ -288,7 +288,7 @@ export class Column extends Immutable {
 
 export type ColumnSpec = {
   name: string;
-  type: ColumnType;
+  type: SqlType;
   nullable?: boolean;
   defaultValue?: ColumnValue;
   enumValues?: readonly ColumnValue[];
@@ -305,9 +305,13 @@ export type ColumnPolicy = {
 };
 
 export function validateColumnSpec(spec: ColumnSpec): void {
-  if (spec.autoIncrementStep !== undefined && spec.type !== Number) {
+  if (
+    spec.autoIncrementStep !== undefined &&
+    spec.type !== SQL_INTEGER &&
+    spec.type !== SQL_DECIMAL
+  ) {
     throw new Error(
-      `Column: "${spec.name}" can only autoIncrement as type Number.`,
+      `Column: "${spec.name}" can only autoIncrement as a number type.`,
     );
   }
 
@@ -335,36 +339,8 @@ export type ColumnShape = Omit<ColumnSpec, "name"> & {
   };
 };
 
-//Column Utils
-export function widens(oldType: ColumnType, newType: ColumnType): boolean {
-  if (oldType === newType) return true;
-
-  // primitive widening
-  if (oldType === Number && newType === String) return true;
-  if (oldType === Boolean && newType === String) return true;
-
-  return false;
-}
-
-export function widenValue(
-  newType: ColumnType,
-  value: ColumnValue,
-): ColumnValue {
-  if (value === null) return null;
-
-  if (newType === String) return String(value);
-  if (newType === Number) return Number(value);
-  if (newType === Boolean) return Boolean(value);
-
-  return value; // default, or throw
-}
-
-export function canBeIndexed(type: ColumnType): boolean {
-  return type === Number || type === String || type === Boolean;
-}
-
-export function assertTypeIndexable(type: ColumnType): void {
+export function assertTypeIndexable(type: SqlType): void {
   if (!canBeIndexed(type)) {
-    throw new Error(`Type ${type} cannot is not Indexable`);
+    throw new Error(`Type ${type.kind} is not Indexable`);
   }
 }

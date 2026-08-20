@@ -9,6 +9,7 @@ import { type UniqueId } from "../../src/relational/Unique.js";
 import { type ResolvedDelete } from "../../src/types/ResolvedDelete.js";
 import { LiteralExpressionNode } from "../../src/ast/expression/LiteralExpressionNode.js";
 import { ComparisonPredicateNode } from "../../src/ast/predicate/ComparisonPredicateNode.js";
+import { SQL_DECIMAL } from "../../src/types/SqlType.js";
 
 let nextId = 1;
 
@@ -39,7 +40,7 @@ export function createColumnTestSpec(
 ): ColumnSpec {
   return {
     name: "c1",
-    type: Number,
+    type: SQL_DECIMAL,
     nullable: true,
     ...overrides,
   };
@@ -193,7 +194,7 @@ export function buildTable(
   for (const columnName of columnNames) {
     table = table.createColumn({
       name: columnName,
-      type: Number,
+      type: SQL_DECIMAL,
     });
   }
 

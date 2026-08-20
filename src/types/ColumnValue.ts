@@ -1,4 +1,8 @@
-export type PrimitiveColumnValue = string | number | boolean | null;
+export type PrimitiveColumnValue =
+  | string
+  | number
+  | boolean
+  | null;
 export type ColumnValue = PrimitiveColumnValue;
 
 export function isColumnValue(value: unknown): value is ColumnValue {

@@ -1,13 +1,10 @@
-import {
-  type ColumnType,
-  columnTypeFromValue,
-} from "../../types/ColumnType.js";
 import { isColumnValue } from "../../types/ColumnValue.js";
+import { isSameType, sqlTypeFromValue, type SqlType } from "../../types/SqlType.js";
 
 export class ColumnSchema {
   constructor(
     readonly name: string,
-    public type: ColumnType = "unknown",
+    public type?: SqlType,
   ) {}
 
   observe(value: unknown): void {
@@ -15,15 +12,29 @@ export class ColumnSchema {
       return;
     }
 
-    const observed = columnTypeFromValue(value);
+    if (value === null) {
+      return;
+    }
 
-    if (this.type === "unknown") {
+    const observed = sqlTypeFromValue(value);
+
+    if (this.type === undefined) {
       this.type = observed;
       return;
     }
 
-    if (this.type !== observed) {
-      throw new Error(`Column '${this.name}' has inconsistent observed types.`);
+    if (!isSameType(this.type, observed)) {
+      throw new Error(
+        `Column '${this.name}' has inconsistent observed types.`,
+      );
     }
+  }
+
+  requireType(): SqlType {
+    if (!this.type) {
+      throw new Error(`Column '${this.name}' has no inferred type.`);
+    }
+
+    return this.type;
   }
 }
