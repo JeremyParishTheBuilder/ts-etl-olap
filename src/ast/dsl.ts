@@ -1,5 +1,6 @@
 import type { ColumnValue } from "../types/ColumnValue.js";
 import { CaseBuilder } from "./expression/CaseBuilder.js";
+import { CastBuilder } from "./expression/CastBuilder.js";
 import { ColumnExpressionNode } from "./expression/ColumnExpressionNode.js";
 import { ConcatExpressionNode } from "./expression/ConcatExpressionNode.js";
 import type { ExpressionNode } from "./expression/ExpressionNode.js";
@@ -26,6 +27,10 @@ export function concat(expressions: (ExpressionNode | ColumnValue)[]) {
 
 export function val(value: ColumnValue) {
   return new LiteralExpressionNode(value);
+}
+
+export function cast(expression: (ExpressionNode | ColumnValue)) {
+  return new CastBuilder(expression);
 }
 
 // Predicates
