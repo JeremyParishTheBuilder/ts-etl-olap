@@ -17,11 +17,13 @@ import {
 } from "./ConcatExpressionNode.js";
 import type { TemporalExpressionNode } from "./TemporalExpressionNode.js";
 import type { SqlFunctionExpressionNode } from "./SqlFunctionExpressionNode.js";
+import type { CastExpressionNode, ResolvedCastExpressionNode } from "./CastExpressionNode.js";
 
 export type ResolvedExpressionNode =
   | ResolvedColumnExpressionNode
   | LiteralExpressionNode
   | ResolvedCaseExpressionNode
+  | ResolvedCastExpressionNode
   | ResolvedBinaryExpressionNode
   | ResolvedConcatExpressionNode
   | TemporalExpressionNode
@@ -31,6 +33,7 @@ export type ExpressionNode =
   | ColumnExpressionNode
   | LiteralExpressionNode
   | CaseExpressionNode
+  | CastExpressionNode
   | BinaryExpressionNode
   | ConcatExpressionNode
   | TemporalExpressionNode

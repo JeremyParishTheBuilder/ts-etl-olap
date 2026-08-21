@@ -23,6 +23,9 @@ import { ResolvedConcatExpressionNode } from "../ast/expression/ConcatExpression
 import { ConcatExpression } from "../evaluation/expression/ConcatExpression.js";
 import { SqlFunctionExpression } from "../evaluation/expression/SqlFunctionExpression.js";
 import type { ColumnValue } from "../types/ColumnValue.js";
+import { isCastable, type SqlType } from "../types/SqlType.js";
+import { ResolvedCastExpressionNode } from "../ast/expression/CastExpressionNode.js";
+import { CastExpression } from "../evaluation/expression/CastExpression.js";
 
 export function bindExpression(
   expr: ResolvedExpressionNode,
@@ -51,6 +54,22 @@ export function bindExpression(
         })),
         expr.elseExpr ? bindExpression(expr.elseExpr, table) : undefined,
       );
+
+    case "cast": {
+      const sourceType = getKnownSqlType(expr, table);
+
+      if (
+        sourceType !== undefined &&
+        !isCastable(sourceType, expr.type)
+      ) {
+        throw new Error(`Cannot CAST from ${sourceType} to ${expr.type}`);
+      }
+
+      return new CastExpression(
+        bindExpression(expr.expr, table),
+        expr.type,
+      );
+    }
 
     case "binary": {
       return new BinaryExpression(
@@ -100,6 +119,13 @@ export function resolveExpression(
         expr.elseExpr ? resolveExpression(expr.elseExpr, table) : undefined,
       );
 
+    case "cast": {
+      return new ResolvedCastExpressionNode(
+        resolveExpression(expr.expr, table),
+        expr.type,
+      );
+    }
+
     case "binary": {
       return new ResolvedBinaryExpressionNode(
         resolveExpression(expr.left, table),
@@ -142,6 +168,10 @@ export function assertInsertExpression(expr: ExpressionNode): void {
       }
       return;
 
+    case "cast":
+      assertInsertExpression(expr.expr);
+      return;
+
     case "case":
       for (const branch of expr.branches) {
         assertInsertPredicate(branch.when);
@@ -182,6 +212,12 @@ export function bindInsertExpression(
         expr.expressions.map((e) => bindInsertExpression(e, table)),
       );
 
+    case "cast":
+      return new CastExpression(
+        bindInsertExpression(expr.expr, table),
+        expr.type
+      );
+
     case "case":
       return new CaseExpression(
         expr.branches.map((branch) => ({
@@ -194,4 +230,12 @@ export function bindInsertExpression(
     case "column":
       throw new Error("INSERT VALUES expressions cannot reference columns.");
   }
+}
+
+function getKnownSqlType(expr: ResolvedExpressionNode, table: Table): SqlType | undefined {
+  if (expr.kind !== "column") {
+    return undefined;
+  }
+
+  return table.columns.require(expr.columnId).type;
 }
