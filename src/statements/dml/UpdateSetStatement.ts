@@ -1,9 +1,9 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 import { type PredicateNode } from "../../ast/predicate/PredicateNode.js";
-import type { ExpressionNode } from "../../ast/expression/ExpressionNode.js";
 import type { UpdateInput } from "../../types/UpdateInput.js";
 import { DefaultValueNode } from "../../ast/DefaultValueNode.js";
 import { toExpressionNode } from "../../semantic/toExpressionNode.js";
+import type { ExpressionNode } from "../../ast/expression/ExpressionNode.js";
 
 export interface UpdateSetStatement extends BaseStatement {
   kind: "update_set";

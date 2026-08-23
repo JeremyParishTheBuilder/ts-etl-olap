@@ -1,6 +1,10 @@
+import type { ColumnValue } from "../../types/ColumnValue.js";
 import type { SqlType } from "../../types/SqlType.js";
-import type { ExpressionNode, ResolvedExpressionNode } from "./ExpressionNode.js";
-import { ExpressionNodeBase } from "./ExpressionNodeBase.js";
+import { BinaryExpressionMixin } from "./BinaryExpressionMixin.js";
+import {
+  ExpressionNode,
+  type ResolvedExpressionNode,
+} from "./ExpressionNode.js";
 
 export class ResolvedCastExpressionNode {
   readonly kind = "cast" as const;
@@ -11,11 +15,11 @@ export class ResolvedCastExpressionNode {
   ) {}
 }
 
-export class CastExpressionNode extends ExpressionNodeBase {
+export class CastExpressionNode extends BinaryExpressionMixin(ExpressionNode) {
   readonly kind = "cast" as const;
 
   constructor(
-    public readonly expr: ExpressionNode,
+    public readonly expr: ExpressionNode | ColumnValue,
     public readonly type: SqlType,
   ) {
     super();

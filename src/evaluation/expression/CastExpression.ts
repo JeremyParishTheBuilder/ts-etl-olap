@@ -1,5 +1,8 @@
 import { type ColumnValue } from "../../types/ColumnValue.js";
-import { castValue, isCastable, sqlTypeFromValue, type SqlType } from "../../types/SqlType.js";
+import {
+  castValue,
+  type SqlType,
+} from "../../types/SqlType.js";
 import { type Expression } from "./Expression.js";
 
 export class CastExpression<TContext> implements Expression<TContext> {

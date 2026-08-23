@@ -1,5 +1,9 @@
 import { isColumnValue } from "../../types/ColumnValue.js";
-import { isSameType, sqlTypeFromValue, type SqlType } from "../../types/SqlType.js";
+import {
+  isSameType,
+  sqlTypeFromValue,
+  type SqlType,
+} from "../../types/SqlType.js";
 
 export class ColumnSchema {
   constructor(
@@ -24,9 +28,7 @@ export class ColumnSchema {
     }
 
     if (!isSameType(this.type, observed)) {
-      throw new Error(
-        `Column '${this.name}' has inconsistent observed types.`,
-      );
+      throw new Error(`Column '${this.name}' has inconsistent observed types.`);
     }
   }
 

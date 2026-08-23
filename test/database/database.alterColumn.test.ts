@@ -3,7 +3,7 @@ import {
   buildDatabase,
   buildTable,
 } from '../utils/buildSchema.js';
-import { SQL_DECIMAL, SQL_INTEGER, SQL_VARCHAR } from '../../src/types/SqlType.js';
+import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe("Database::alterColumn", () => {
 

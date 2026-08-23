@@ -57,7 +57,6 @@ export class RuleResolver {
   }
 
   updatePolicy(update: Partial<EnginePolicy>) {
-    console.log(update);
     this.policy = {
       ...this.policy,
       ...Object.fromEntries(

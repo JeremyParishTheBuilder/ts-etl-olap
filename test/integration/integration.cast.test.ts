@@ -90,58 +90,58 @@ describe("Integration::cast", () => {
     ]]);
   });
 
-  // it("evaluates CAST inside a WHERE predicate", () => {
-  //   const sql = createTestPostgresSql();
+  it("evaluates CAST inside a WHERE predicate", () => {
+    const sql = createTestPostgresSql();
 
-  //   sql.createDatabase("DB1").execute();
-  //   sql.useDatabase("DB1").execute();
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
 
-  //   sql.createTable("Users", {
-  //     Id: {
-  //       type: SQL_INTEGER,
-  //       nullable: false,
-  //       primaryKey: true,
-  //     },
-  //     Name: {
-  //       type: SQL_VARCHAR,
-  //       nullable: false,
-  //     },
-  //   }).execute();
+    sql.createTable("Users", {
+      Id: {
+        type: SQL_INTEGER,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    }).execute();
 
-  //   sql
-  //     .insertInto("Users", ["Id", "Name"])
-  //     .values([
-  //       [123, "123"],
-  //       [456, "456"],
-  //     ])
-  //     .execute();
+    sql
+      .insertInto("Users", ["Id", "Name"])
+      .values([
+        [123, "123"],
+        [456, "456"],
+      ])
+      .execute();
 
-  //   sql
-  //     .update("Users")
-  //     .set({
-  //       Name: "matched",
-  //     })
-  //     .where(
-  //       cast(col("Id")).as(SQL_VARCHAR).eq("123"),
-  //     )
-  //     .execute();
+    sql
+      .update("Users")
+      .set({
+        Name: "matched",
+      })
+      .where(
+        cast(col("Id")).as(SQL_VARCHAR).eq("123"),
+      )
+      .execute();
 
-  //   const rows = sql
-  //     .select("*")
-  //     .from("Users")
-  //     .execute();
+    const rows = sql
+      .select("*")
+      .from("Users")
+      .execute();
 
-  //   expect(rows).toEqual([[
-  //     {
-  //       index: 0,
-  //       values: [123, "matched"],
-  //     },
-  //     {
-  //       index: 1,
-  //       values: [456, "456"],
-  //     },
-  //   ]]);
-  // });
+    expect(rows).toEqual([[
+      {
+        index: 0,
+        values: [123, "matched"],
+      },
+      {
+        index: 1,
+        values: [456, "456"],
+      },
+    ]]);
+  });
 
   it("rejects a CAST that is incompatible with a known column type", () => {
     const sql = createTestPostgresSql();

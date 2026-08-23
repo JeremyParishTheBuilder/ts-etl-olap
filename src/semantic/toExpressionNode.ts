@@ -12,9 +12,10 @@ import type { ExpressionInput } from "../types/ExpressionInput.js";
 import type { UpdateInput } from "../types/UpdateInput.js";
 import { DefaultValueNode } from "../ast/DefaultValueNode.js";
 import { asExpressionNode } from "../ast/expression/asExpressionNode.js";
-import type { ExpressionNode } from "../ast/expression/ExpressionNode.js";
 import { SqlFunctionExpressionNode } from "../ast/expression/SqlFunctionExpressionNode.js";
 import { TemporalExpressionNode } from "../ast/expression/TemporalExpressionNode.js";
+import { isExpressionNodeUnion } from "../ast/expression/isExpressionNodeUnion.js";
+import type { ExpressionNode } from "../ast/expression/ExpressionNode.js";
 
 export function toExpressionNode(
   value: UpdateInput,
@@ -76,6 +77,10 @@ export function validateInputNode(
     }
 
     return;
+  }
+
+  if (!isExpressionNodeUnion(value)) {
+    throw new Error(`Unsupported expression node: ${value.kind}`);
   }
 
   if (value.kind === "temporal") {

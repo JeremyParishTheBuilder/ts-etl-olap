@@ -1,12 +1,19 @@
 import type { ColumnValue } from "../../types/ColumnValue.js";
 import { LiteralExpressionNode } from "./LiteralExpressionNode.js";
 import type { ExpressionNode } from "./ExpressionNode.js";
-import { ExpressionNodeBase } from "./ExpressionNodeBase.js";
+
+function isExpressionNode(value: unknown): value is ExpressionNode {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return "kind" in value;
+}
 
 export function asExpressionNode(
   value: ColumnValue | ExpressionNode,
 ): ExpressionNode {
-  if (value instanceof ExpressionNodeBase) {
+  if (isExpressionNode(value)) {
     return value as ExpressionNode;
   }
 

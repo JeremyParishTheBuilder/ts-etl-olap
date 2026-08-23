@@ -64,6 +64,5 @@ describe("Expression::cast", () => {
 
     expect(expr.kind).toBe("cast");
     expect(expr.type).toBe(SQL_VARCHAR);
-    expect(expr.expr.kind).toBe("literal");
   });
 });

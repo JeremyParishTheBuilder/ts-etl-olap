@@ -22,10 +22,12 @@ import { TemporalExpression } from "../evaluation/expression/TemporalExpression.
 import { ResolvedConcatExpressionNode } from "../ast/expression/ConcatExpressionNode.js";
 import { ConcatExpression } from "../evaluation/expression/ConcatExpression.js";
 import { SqlFunctionExpression } from "../evaluation/expression/SqlFunctionExpression.js";
-import type { ColumnValue } from "../types/ColumnValue.js";
+import { isColumnValue, type ColumnValue } from "../types/ColumnValue.js";
 import { isCastable, type SqlType } from "../types/SqlType.js";
 import { ResolvedCastExpressionNode } from "../ast/expression/CastExpressionNode.js";
 import { CastExpression } from "../evaluation/expression/CastExpression.js";
+import { LiteralExpressionNode } from "../ast/expression/LiteralExpressionNode.js";
+import { isExpressionNodeUnion } from "../ast/expression/isExpressionNodeUnion.js";
 
 export function bindExpression(
   expr: ResolvedExpressionNode,
@@ -58,17 +60,11 @@ export function bindExpression(
     case "cast": {
       const sourceType = getKnownSqlType(expr, table);
 
-      if (
-        sourceType !== undefined &&
-        !isCastable(sourceType, expr.type)
-      ) {
+      if (sourceType !== undefined && !isCastable(sourceType, expr.type)) {
         throw new Error(`Cannot CAST from ${sourceType} to ${expr.type}`);
       }
 
-      return new CastExpression(
-        bindExpression(expr.expr, table),
-        expr.type,
-      );
+      return new CastExpression(bindExpression(expr.expr, table), expr.type);
     }
 
     case "binary": {
@@ -92,9 +88,17 @@ export function bindExpression(
 }
 
 export function resolveExpression(
-  expr: ExpressionNode,
+  expr: ExpressionNode | ColumnValue,
   table: Table,
 ): ResolvedExpressionNode {
+  if (isColumnValue(expr)) {
+    return new LiteralExpressionNode(expr);
+  }
+
+  if (!isExpressionNodeUnion(expr)) {
+    throw new Error(`Unsupported expression node: ${expr.kind}`);
+  }
+
   switch (expr.kind) {
     case "literal":
       return expr;
@@ -147,7 +151,17 @@ export function resolveExpression(
   }
 }
 
-export function assertInsertExpression(expr: ExpressionNode): void {
+export function assertInsertExpression(
+  expr: ExpressionNode | ColumnValue,
+): void {
+  if (isColumnValue(expr)) {
+    return;
+  }
+
+  if (!isExpressionNodeUnion(expr)) {
+    throw new Error(`Unsupported expression node: ${expr.kind}`);
+  }
+
   switch (expr.kind) {
     case "literal":
     case "temporal":
@@ -187,9 +201,17 @@ export function assertInsertExpression(expr: ExpressionNode): void {
 }
 
 export function bindInsertExpression(
-  expr: ExpressionNode,
+  expr: ExpressionNode | ColumnValue,
   table: Table,
 ): Expression<undefined, ColumnValue> {
+  if (isColumnValue(expr)) {
+    return new LiteralExpression(expr);
+  }
+
+  if (!isExpressionNodeUnion(expr)) {
+    throw new Error(`Unsupported expression node: ${expr.kind}`);
+  }
+
   switch (expr.kind) {
     case "literal":
       return new LiteralExpression(expr.value);
@@ -215,7 +237,7 @@ export function bindInsertExpression(
     case "cast":
       return new CastExpression(
         bindInsertExpression(expr.expr, table),
-        expr.type
+        expr.type,
       );
 
     case "case":
@@ -232,7 +254,10 @@ export function bindInsertExpression(
   }
 }
 
-function getKnownSqlType(expr: ResolvedExpressionNode, table: Table): SqlType | undefined {
+function getKnownSqlType(
+  expr: ResolvedExpressionNode,
+  table: Table,
+): SqlType | undefined {
   if (expr.kind !== "column") {
     return undefined;
   }

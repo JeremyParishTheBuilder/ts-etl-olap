@@ -1,5 +1,21 @@
-import { basename, capture, captureScalar, concat, current, literal, propertyName, value } from "../dsl/expression/functions.js";
-import { contains, every, isDirectory, isFile, isNull, some } from "../dsl/predicate/functions.js";
+import {
+  basename,
+  capture,
+  captureScalar,
+  concat,
+  current,
+  literal,
+  propertyName,
+  value,
+} from "../dsl/expression/functions.js";
+import {
+  contains,
+  every,
+  isDirectory,
+  isFile,
+  isNull,
+  some,
+} from "../dsl/predicate/functions.js";
 import { JsonDecoder } from "./decoding/JsonDecoder.js";
 import { Directory } from "./Directory.js";
 import { DiscoveryNode } from "./DiscoveryNode.js";
@@ -9,7 +25,6 @@ import { DirectoryNavigator } from "./navigation/DirectoryNavigator.js";
 import { SelfNavigator } from "./navigation/SelfNavigator.js";
 import { StructuredArrayNavigator } from "./navigation/StructuredArrayNavigator.js";
 import { StructuredObjectNavigator } from "./navigation/StructuredObjectNavigator.js";
-
 
 export const exampleChainRegistry_DiscoveryDefinition = () => {
   console.log("starting chain reg");
@@ -144,4 +159,4 @@ export const exampleChainRegistry_DiscoveryDefinition = () => {
   });
 
   return testRegistryDiscoveryRoot;
-}
+};

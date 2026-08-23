@@ -113,6 +113,8 @@ The DSL provides fluent builders for:
 
 Runtime builders evaluate directly against typed contexts, while SQL builders construct ASTs for semantic analysis.
 
+Expression nodes provide reusable fluent operations for composing expressions and predicates. Expression-producing arithmetic operations and predicate-producing comparisons are available across applicable expression nodes rather than being limited to column references.
+
 ---
 
 # Validation
