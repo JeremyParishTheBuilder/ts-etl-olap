@@ -1,8 +1,6 @@
-const DATE_PATTERN =
-  /^(\d{4})-(\d{2})-(\d{2})$/;
+const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-const COMPACT_DATE_PATTERN =
-  /^(\d{4})(\d{2})(\d{2})$/;
+const COMPACT_DATE_PATTERN = /^(\d{4})(\d{2})(\d{2})$/;
 
 const TIMESTAMP_PATTERN =
   /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(?:\s*(Z|[+-]\d{2}:?\d{2}))?$/;
@@ -35,8 +33,7 @@ function isValidCalendarDate(
 }
 
 function isLeapYear(year: number): boolean {
-  return year % 4 === 0 &&
-    (year % 100 !== 0 || year % 400 === 0);
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
 }
 
 export function isValidDateValue(value: string): boolean {
@@ -103,10 +100,7 @@ export function isValidTimestampValue(value: string): boolean {
     const timezoneHour = Number(timezoneMatch[2]);
     const timezoneMinute = Number(timezoneMatch[3]);
 
-    if (
-      timezoneHour > 23 ||
-      timezoneMinute > 59
-    ) {
+    if (timezoneHour > 23 || timezoneMinute > 59) {
       return false;
     }
   }
@@ -148,8 +142,7 @@ export function normalizeTimestamp(value: string): string {
   const fraction = match[7];
   const timezone = match[8];
 
-  let result =
-    `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+  let result = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 
   if (fraction !== undefined) {
     result += `.${fraction}`;
@@ -159,11 +152,10 @@ export function normalizeTimestamp(value: string): string {
     if (timezone === "Z") {
       result += "Z";
     } else {
-      const normalizedTimezone =
-        timezone.replace(
-          /^([+-]\d{2})(\d{2})$/,
-          "$1:$2",
-        );
+      const normalizedTimezone = timezone.replace(
+        /^([+-]\d{2})(\d{2})$/,
+        "$1:$2",
+      );
 
       result += normalizedTimezone;
     }

@@ -29,7 +29,7 @@ export function val(value: ColumnValue) {
   return new LiteralExpressionNode(value);
 }
 
-export function cast(expression: (ExpressionNode | ColumnValue)) {
+export function cast(expression: ExpressionNode | ColumnValue) {
   return new CastBuilder(expression);
 }
 

@@ -1,10 +1,7 @@
 import type { DiscoveryResult, DiscoveryResultId } from "./DiscoveryResult.js";
 
 export class DiscoveryResults {
-  private readonly results = new Map<
-    DiscoveryResultId,
-    DiscoveryResult
-  >();
+  private readonly results = new Map<DiscoveryResultId, DiscoveryResult>();
   private nextResultId = 1;
 
   public getNextResultId(): DiscoveryResultId {

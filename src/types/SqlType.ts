@@ -1,5 +1,10 @@
 import type { ColumnValue } from "./ColumnValue.js";
-import { isValidDateValue, isValidTimestampValue, normalizeDate, normalizeTimestamp } from "./SqlDateTime.js";
+import {
+  isValidDateValue,
+  isValidTimestampValue,
+  normalizeDate,
+  normalizeTimestamp,
+} from "./SqlDateTime.js";
 
 export type SqlType =
   | IntegerType
@@ -7,8 +12,7 @@ export type SqlType =
   | VarcharType
   | BooleanType
   | DateType
-  | TimestampType
-  ;
+  | TimestampType;
 
 export interface IntegerType {
   readonly kind: "integer";
@@ -66,23 +70,15 @@ export function varchar(length?: number): VarcharType {
   return { kind: "varchar", length };
 }
 
-export function decimal(
-  precision?: number,
-  scale?: number,
-): DecimalType {
+export function decimal(precision?: number, scale?: number): DecimalType {
   return { kind: "decimal", precision, scale };
 }
 
-export function timestamp(
-  precision?: number,
-): TimestampType {
+export function timestamp(precision?: number): TimestampType {
   return { kind: "timestamp", precision };
 }
 
-export function isSameType(
-  type1: SqlType,
-  type2: SqlType,
-): boolean {
+export function isSameType(type1: SqlType, type2: SqlType): boolean {
   if (type1.kind !== type2.kind) {
     return false;
   }
@@ -101,35 +97,24 @@ export function isSameType(
       );
 
     case "varchar":
-      return (
-        type2.kind === "varchar" &&
-        type1.length === type2.length
-      );
+      return type2.kind === "varchar" && type1.length === type2.length;
 
     case "timestamp":
-      return (
-        type2.kind === "timestamp" &&
-        type1.precision === type2.precision
-      );
+      return type2.kind === "timestamp" && type1.precision === type2.precision;
   }
 }
 
-export function matchesSqlType(
-  value: unknown,
-  type: SqlType,
-): boolean {
+export function matchesSqlType(value: unknown, type: SqlType): boolean {
   if (value === null) {
     return true;
   }
 
   switch (type.kind) {
     case "integer":
-      return typeof value === "number"
-        && Number.isInteger(value);
+      return typeof value === "number" && Number.isInteger(value);
 
     case "decimal":
-      return typeof value === "number"
-        && Number.isFinite(value);
+      return typeof value === "number" && Number.isFinite(value);
 
     case "varchar":
       return typeof value === "string";
@@ -155,9 +140,7 @@ export function sqlTypeFromValue(value: ColumnValue): SqlType {
   }
 
   if (typeof value === "number") {
-    return Number.isInteger(value)
-      ? SQL_INTEGER
-      : SQL_DECIMAL;
+    return Number.isInteger(value) ? SQL_INTEGER : SQL_DECIMAL;
   }
 
   if (typeof value === "boolean") {
@@ -167,11 +150,7 @@ export function sqlTypeFromValue(value: ColumnValue): SqlType {
   throw new Error("Unexpected column value.");
 }
 
-
-export function isAssignable(
-  from: SqlType,
-  to: SqlType,
-): boolean {
+export function isAssignable(from: SqlType, to: SqlType): boolean {
   if (isSameType(from, to)) {
     return true;
   }
@@ -183,26 +162,17 @@ export function isAssignable(
   return false;
 }
 
-export function isCastable(
-  from: SqlType,
-  to: SqlType,
-): boolean {
+export function isCastable(from: SqlType, to: SqlType): boolean {
   if (isSameType(from, to)) {
     return true;
   }
 
   switch (from.kind) {
     case "integer":
-      return (
-        to.kind === "decimal" ||
-        to.kind === "varchar"
-      );
+      return to.kind === "decimal" || to.kind === "varchar";
 
     case "decimal":
-      return (
-        to.kind === "integer" ||
-        to.kind === "varchar"
-      );
+      return to.kind === "integer" || to.kind === "varchar";
 
     case "boolean":
       return to.kind === "varchar";
@@ -217,16 +187,10 @@ export function isCastable(
       );
 
     case "date":
-      return (
-        to.kind === "varchar" ||
-        to.kind === "timestamp"
-      );
+      return to.kind === "varchar" || to.kind === "timestamp";
 
     case "timestamp":
-      return (
-        to.kind === "varchar" ||
-        to.kind === "date"
-      );
+      return to.kind === "varchar" || to.kind === "date";
   }
 }
 
@@ -243,9 +207,7 @@ export function castValue(
       const result = Number(value);
 
       if (!Number.isInteger(result)) {
-        throw new Error(
-          `Cannot cast value to INTEGER: ${String(value)}`,
-        );
+        throw new Error(`Cannot cast value to INTEGER: ${String(value)}`);
       }
 
       return result;
@@ -255,9 +217,7 @@ export function castValue(
       const result = Number(value);
 
       if (!Number.isFinite(result)) {
-        throw new Error(
-          `Cannot cast value to DECIMAL: ${String(value)}`,
-        );
+        throw new Error(`Cannot cast value to DECIMAL: ${String(value)}`);
       }
 
       return result;
@@ -276,15 +236,11 @@ export function castValue(
         if (value === "false") return false;
       }
 
-      throw new Error(
-        `Cannot cast value to BOOLEAN: ${String(value)}`,
-      );
+      throw new Error(`Cannot cast value to BOOLEAN: ${String(value)}`);
 
     case "date": {
       if (typeof value !== "string") {
-        throw new Error(
-          `Cannot cast value to DATE: ${String(value)}`,
-        );
+        throw new Error(`Cannot cast value to DATE: ${String(value)}`);
       }
 
       return normalizeDate(value);
@@ -292,9 +248,7 @@ export function castValue(
 
     case "timestamp": {
       if (typeof value !== "string") {
-        throw new Error(
-          `Cannot cast value to TIMESTAMP: ${String(value)}`,
-        );
+        throw new Error(`Cannot cast value to TIMESTAMP: ${String(value)}`);
       }
 
       return normalizeTimestamp(value);

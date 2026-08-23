@@ -1,18 +1,17 @@
 import {
-  type ExpressionNode,
+  ExpressionNode,
   type ResolvedExpressionNode,
 } from "./ExpressionNode.js";
 import {
   type PredicateNode,
   type ResolvedPredicateNode,
 } from "../predicate/PredicateNode.js";
-import { ExpressionNodeBase } from "./ExpressionNodeBase.js";
-import { asExpressionNode } from "./asExpressionNode.js";
 import type { ColumnValue } from "../../types/ColumnValue.js";
+import { BinaryExpressionMixin } from "./BinaryExpressionMixin.js";
 
-export class CaseExpressionNode extends ExpressionNodeBase {
+export class CaseExpressionNode extends BinaryExpressionMixin(ExpressionNode) {
   readonly kind = "case" as const;
-  public readonly elseExpr?: ExpressionNode;
+  public readonly elseExpr?: ExpressionNode | ColumnValue;
 
   constructor(
     public readonly branches: Array<{
@@ -22,7 +21,7 @@ export class CaseExpressionNode extends ExpressionNodeBase {
     elseExpr?: ExpressionNode | ColumnValue,
   ) {
     super();
-    this.elseExpr = elseExpr ? asExpressionNode(elseExpr) : undefined;
+    this.elseExpr = elseExpr;
   }
 }
 

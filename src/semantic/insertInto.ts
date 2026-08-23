@@ -6,10 +6,10 @@ import { resolveTargetColumns } from "./resolveColumnList.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { assertInsertExpression, bindInsertExpression } from "./expression.js";
 import { validateInputNode } from "./toExpressionNode.js";
-import type { ExpressionNode } from "../ast/expression/ExpressionNode.js";
 import type { DefaultValueNode } from "../ast/DefaultValueNode.js";
 import type { ColumnInput } from "../types/ColumnInput.js";
 import { DEFAULT } from "../dialect/keywords.js";
+import type { ExpressionNode } from "../ast/expression/ExpressionNode.js";
 
 export function bindInsertInto(
   semantic: SemanticAnalyzer,

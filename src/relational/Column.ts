@@ -4,7 +4,15 @@ import { type ColumnInput } from "../types/ColumnInput.js";
 import { type PredicateNode } from "../ast/predicate/PredicateNode.js";
 import { type ColumnValue } from "../types/ColumnValue.js";
 import { DEFAULT } from "../dialect/keywords.js";
-import { canBeIndexed, castValue, isAssignable, matchesSqlType, SQL_DECIMAL, SQL_INTEGER, type SqlType } from "../types/SqlType.js";
+import {
+  canBeIndexed,
+  castValue,
+  isAssignable,
+  matchesSqlType,
+  SQL_DECIMAL,
+  SQL_INTEGER,
+  type SqlType,
+} from "../types/SqlType.js";
 
 export type ColumnId = number & { readonly __brand: "ColumnId" };
 

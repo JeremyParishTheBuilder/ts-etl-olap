@@ -1,5 +1,4 @@
 import type { ColumnValue } from "../../types/ColumnValue.js";
-import { asExpressionNode } from "../expression/asExpressionNode.js";
 import type {
   ExpressionNode,
   ResolvedExpressionNode,
@@ -8,10 +7,10 @@ import type {
 export class IsNotNullPredicateNode {
   readonly kind = "is_not_null" as const;
 
-  public readonly inner: ExpressionNode;
+  public readonly inner: ExpressionNode | ColumnValue;
 
   constructor(inner: ExpressionNode | ColumnValue) {
-    this.inner = asExpressionNode(inner);
+    this.inner = inner;
   }
 }
 

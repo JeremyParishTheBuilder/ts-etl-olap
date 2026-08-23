@@ -1,8 +1,8 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 import type { InsertInput } from "../../types/InsertInput.js";
-import type { ExpressionNode } from "../../ast/expression/ExpressionNode.js";
 import type { DefaultValueNode } from "../../ast/DefaultValueNode.js";
 import { toExpressionNode } from "../../semantic/toExpressionNode.js";
+import type { ExpressionNode } from "../../ast/expression/ExpressionNode.js";
 
 export interface InsertIntoStatement extends BaseStatement {
   kind: "insert_into";

@@ -39,7 +39,7 @@ Export
 * Immediate relational constraint enforcement (PRIMARY KEY, UNIQUE, FOREIGN KEY, CHECK)
 * Deferred business validation independent of import
 * Referential actions (RESTRICT, CASCADE, SET NULL, NO ACTION)
-* Reusable expression and predicate DSL
+* Reusable fluent expression and predicate DSL
 * Immutable transactional execution
 
 ## Design Principles

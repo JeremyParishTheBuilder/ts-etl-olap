@@ -729,10 +729,7 @@ export class Database extends Immutable {
   }
 }
 
-function assertTypeAlters(
-  oldType: SqlType,
-  newType: SqlType,
-): void {
+function assertTypeAlters(oldType: SqlType, newType: SqlType): void {
   if (!isAssignable(oldType, newType)) {
     throw new Error(`Old column type ${oldType} not assignable to ${newType}`);
   }
