@@ -12,6 +12,8 @@ export function isExpressionNodeUnion(
     case "concat":
     case "temporal":
     case "sql_function":
+    case "json_value":
+    case "source":
       return true;
 
     default:

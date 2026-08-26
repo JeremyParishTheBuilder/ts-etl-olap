@@ -183,6 +183,18 @@ Staging must preserve the information Import requires, including discovered valu
 
 ---
 
+## Expressions
+
+Expressions provide a common language across discovery and import.
+
+Import expressions can evaluate against `ImportContext` and its captured source values. `source()` retrieves the current import source, while `JSON_VALUE(source, path)` extracts a scalar value from a structured JSON value.
+
+`JSON_VALUE` always produces a scalar `ColumnValue`; object and array results are rejected. JSON paths currently support the implemented `JsonValuePath` syntax only.
+
+Expressions are evaluated within strongly typed execution contexts and are reusable throughout the Mapping module.
+
+---
+
 # Architectural Boundaries
 
 * Discovery owns physical traversal and discovery.
