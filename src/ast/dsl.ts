@@ -1,10 +1,14 @@
+import { JsonValuePath } from "../mapping/import/JsonValuePath.js";
+import type { CaptureValue } from "../mapping/value/CaptureValue.js";
 import type { ColumnValue } from "../types/ColumnValue.js";
 import { CaseBuilder } from "./expression/CaseBuilder.js";
 import { CastBuilder } from "./expression/CastBuilder.js";
 import { ColumnExpressionNode } from "./expression/ColumnExpressionNode.js";
 import { ConcatExpressionNode } from "./expression/ConcatExpressionNode.js";
 import type { ExpressionNode } from "./expression/ExpressionNode.js";
+import { JsonValueExpressionNode } from "./expression/JsonValueExpressionNode.js";
 import { LiteralExpressionNode } from "./expression/LiteralExpressionNode.js";
+import { SourceExpressionNode } from "./expression/SourceExpressionNode.js";
 import { AndPredicateNode } from "./predicate/AndPredicateNode.js";
 import { NotPredicateNode } from "./predicate/NotPredicateNode.js";
 import { OrPredicateNode } from "./predicate/OrPredicateNode.js";
@@ -31,6 +35,17 @@ export function val(value: ColumnValue) {
 
 export function cast(expression: ExpressionNode | ColumnValue) {
   return new CastBuilder(expression);
+}
+
+export function json_value(
+  source: ExpressionNode | CaptureValue,
+  path: string,
+) {
+  return new JsonValueExpressionNode(source, JsonValuePath.parse(path));
+}
+
+export function source() {
+  return new SourceExpressionNode();
 }
 
 // Predicates

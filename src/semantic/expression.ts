@@ -197,12 +197,15 @@ export function assertInsertExpression(
       }
 
       return;
+
+    default:
+      throw new Error();
   }
 }
 
+//TODO, why does this need table?
 export function bindInsertExpression(
   expr: ExpressionNode | ColumnValue,
-  table: Table,
 ): Expression<undefined, ColumnValue> {
   if (isColumnValue(expr)) {
     return new LiteralExpression(expr);
@@ -224,33 +227,36 @@ export function bindInsertExpression(
 
     case "binary":
       return new BinaryExpression(
-        bindInsertExpression(expr.left, table),
+        bindInsertExpression(expr.left),
         expr.operator,
-        bindInsertExpression(expr.right, table),
+        bindInsertExpression(expr.right),
       );
 
     case "concat":
       return new ConcatExpression(
-        expr.expressions.map((e) => bindInsertExpression(e, table)),
+        expr.expressions.map((e) => bindInsertExpression(e)),
       );
 
     case "cast":
       return new CastExpression(
-        bindInsertExpression(expr.expr, table),
+        bindInsertExpression(expr.expr),
         expr.type,
       );
 
     case "case":
       return new CaseExpression(
         expr.branches.map((branch) => ({
-          when: bindInsertPredicate(branch.when, table),
-          then: bindInsertExpression(branch.then, table),
+          when: bindInsertPredicate(branch.when),
+          then: bindInsertExpression(branch.then),
         })),
-        expr.elseExpr ? bindInsertExpression(expr.elseExpr, table) : undefined,
+        expr.elseExpr ? bindInsertExpression(expr.elseExpr) : undefined,
       );
 
     case "column":
       throw new Error("INSERT VALUES expressions cannot reference columns.");
+
+    default:
+      throw new Error(`Invalid Expression Node`);
   }
 }
 

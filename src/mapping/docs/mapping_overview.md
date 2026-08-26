@@ -1,4 +1,4 @@
-# Mapping Module Overview
+# Mapping Overview
 
 ## Purpose
 

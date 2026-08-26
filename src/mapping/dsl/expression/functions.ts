@@ -64,14 +64,3 @@ export function capture<TContext extends CaptureContext>(
 ): ValueExpressionBuilder<TContext, CaptureValue> {
   return new ValueExpressionBuilder(new CaptureExpression<TContext>(name));
 }
-
-// export function path(
-//   path: string
-// ) {
-//   return new DiscoveryExpressionBuilder(
-//     new PathExpression(
-//       new SourceExpression(),
-//       PropertyPath.parse(path)
-//     )
-//   );
-// }

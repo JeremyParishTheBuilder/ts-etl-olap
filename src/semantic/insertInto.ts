@@ -67,7 +67,7 @@ export function bindInsertInto(
 
       assertInsertExpression(valueNode);
 
-      const value = bindInsertExpression(valueNode, table).evaluate(undefined);
+      const value = bindInsertExpression(valueNode).evaluate(undefined);
 
       columnIdToColumnInputMap.set(column.id, value);
     }

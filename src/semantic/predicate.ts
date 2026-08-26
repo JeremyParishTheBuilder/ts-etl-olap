@@ -158,46 +158,45 @@ export function assertInsertPredicate(predicate: PredicateNode): void {
 
 export function bindInsertPredicate(
   pred: PredicateNode,
-  table: Table,
 ): Predicate<undefined> {
   switch (pred.kind) {
     case "comparison": {
       return new ComparisonPredicate(
-        bindInsertExpression(pred.left, table),
+        bindInsertExpression(pred.left),
         pred.operator,
-        bindInsertExpression(pred.right, table),
+        bindInsertExpression(pred.right),
       );
     }
 
     case "and": {
       return new AndPredicate(
-        pred.predicates.map((p) => bindInsertPredicate(p, table)),
+        pred.predicates.map((p) => bindInsertPredicate(p)),
       );
     }
 
     case "or": {
       return new OrPredicate(
-        pred.predicates.map((p) => bindInsertPredicate(p, table)),
+        pred.predicates.map((p) => bindInsertPredicate(p)),
       );
     }
 
     case "xor": {
       return new XorPredicate(
-        bindInsertPredicate(pred.left, table),
-        bindInsertPredicate(pred.right, table),
+        bindInsertPredicate(pred.left),
+        bindInsertPredicate(pred.right),
       );
     }
 
     case "not": {
-      return new NotPredicate(bindInsertPredicate(pred.inner, table));
+      return new NotPredicate(bindInsertPredicate(pred.inner));
     }
 
     case "is_null": {
-      return new IsNullPredicate(bindInsertExpression(pred.inner, table));
+      return new IsNullPredicate(bindInsertExpression(pred.inner));
     }
 
     case "is_not_null": {
-      return new IsNotNullPredicate(bindInsertExpression(pred.inner, table));
+      return new IsNotNullPredicate(bindInsertExpression(pred.inner));
     }
 
     //TODO: BETWEEN, LIKE, IN

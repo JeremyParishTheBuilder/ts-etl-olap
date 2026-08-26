@@ -23,7 +23,13 @@ export function isStructuredValue(value: unknown): value is StructuredValue {
     return value.every(isStructuredValue);
   }
 
-  if (typeof value === "object" && value !== null) {
+  if (typeof value === "object") {
+    const prototype = Object.getPrototypeOf(value);
+
+    if (prototype !== Object.prototype && prototype !== null) {
+      return false;
+    }
+
     return Object.values(value).every(isStructuredValue);
   }
 
@@ -38,4 +44,35 @@ export interface StructuredProperty {
 export interface StructuredElement {
   index: number;
   value: StructuredValue;
+}
+
+export function isStructuredProperty(
+  value: unknown,
+): value is StructuredProperty {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.key === "string" && isStructuredValue(candidate.value)
+  );
+}
+
+export function isStructuredElement(
+  value: unknown,
+): value is StructuredElement {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.index === "number" &&
+    Number.isInteger(candidate.index) &&
+    candidate.index >= 0 &&
+    isStructuredValue(candidate.value)
+  );
 }

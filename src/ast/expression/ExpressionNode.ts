@@ -25,6 +25,9 @@ import type { ColumnValue } from "../../types/ColumnValue.js";
 import { ComparisonPredicateNode } from "../predicate/ComparisonPredicateNode.js";
 import { IsNullPredicateNode } from "../predicate/IsNullPredicateNode.js";
 import { IsNotNullPredicateNode } from "../predicate/IsNotNullPredicateNode.js";
+import type { JsonValueExpressionNode } from "./JsonValueExpressionNode.js";
+import type { CurrentValueExpressionNode } from "./CurrentValueExpressionNode.js";
+import type { SourceExpressionNode } from "./SourceExpressionNode.js";
 
 export type ResolvedExpressionNode =
   | ResolvedColumnExpressionNode
@@ -44,7 +47,10 @@ export type ExpressionNodeUnion =
   | BinaryExpressionNode
   | ConcatExpressionNode
   | TemporalExpressionNode
-  | SqlFunctionExpressionNode;
+  | SqlFunctionExpressionNode
+  | JsonValueExpressionNode
+  | CurrentValueExpressionNode
+  | SourceExpressionNode;
 
 export type ExpressionKind =
   | "column"
@@ -54,7 +60,10 @@ export type ExpressionKind =
   | "binary"
   | "concat"
   | "temporal"
-  | "sql_function";
+  | "sql_function"
+  | "json_value"
+  | "current"
+  | "source";
 
 export abstract class ExpressionNode {
   abstract readonly kind: ExpressionKind;
