@@ -3,17 +3,20 @@ import type { InsertInput } from "../../types/InsertInput.js";
 import type { DefaultValueNode } from "../../ast/DefaultValueNode.js";
 import { toExpressionNode } from "../../semantic/toExpressionNode.js";
 import type { ExpressionNode } from "../../ast/expression/ExpressionNode.js";
+import type { SelectStatement } from "../dql/SelectStatement.js";
 
 export interface InsertIntoStatement extends BaseStatement {
   kind: "insert_into";
   table: string;
   columns: string[];
-  values: (ExpressionNode | DefaultValueNode)[][];
+  values?: (ExpressionNode | DefaultValueNode)[][];
+  select?: SelectStatement;
   returning?: string[];
 }
 
 export class InsertIntoBuilder implements StatementBuilder {
   private valuesData?: (ExpressionNode | DefaultValueNode)[][];
+  private selectStatement?: SelectStatement;
   private returningCols?: string[];
 
   constructor(
@@ -37,17 +40,21 @@ export class InsertIntoBuilder implements StatementBuilder {
     this.valuesData = normalized;
   }
 
+  select(query: SelectStatement) {
+    this.selectStatement = query;
+  }
+
   returning(cols: string[]) {
-    if (!this.valuesData) {
-      throw new Error(`Cannot call returning() before values()`);
+    if (!this.valuesData && !this.selectStatement) {
+      throw new Error(`Cannot call returning() before values() or select()`);
     }
     this.returningCols = cols;
   }
 
   getNextCalls() {
-    if (!this.valuesData)
+    if (!this.valuesData && !this.selectStatement)
       return {
-        required: ["values"],
+        required: ["values", "select"],
         optional: [],
       };
     return {
@@ -57,8 +64,11 @@ export class InsertIntoBuilder implements StatementBuilder {
   }
 
   createStatement(): InsertIntoStatement {
-    if (!this.valuesData) {
-      throw new Error("Missing required call: values()");
+    const hasValues = this.valuesData !== undefined;
+    const hasSelect = this.selectStatement !== undefined;
+
+    if (hasValues === hasSelect) {
+      throw new Error("INSERT requires exactly one of values() or select()");
     }
 
     return {
@@ -66,6 +76,7 @@ export class InsertIntoBuilder implements StatementBuilder {
       table: this.table,
       columns: this.columns,
       values: this.valuesData,
+      select: this.selectStatement,
       returning: this.returningCols,
     };
   }

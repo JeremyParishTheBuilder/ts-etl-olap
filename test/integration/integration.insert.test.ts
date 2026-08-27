@@ -444,3 +444,294 @@ describe("Integration::insert", () => {
     ]]);
   });
 });
+
+describe("Integration::insertSelect", () => {
+  it("inserts rows selected from another table", () => {
+    const sql = createTestPostgresSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Source", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      OldName: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    }).execute();
+
+    sql.createTable("Destination", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Source", ["Id", "OldName"])
+      .values([
+        [1, "Alice"],
+        [2, "Bob"],
+      ])
+      .execute();
+
+    sql
+      .insertInto("Destination", ["Id", "Name"])
+      .select(
+        sql
+          .select(["Id", "OldName"])
+          .from("Source")
+          .asQueryStatement(),
+      )
+      .execute();
+
+    const rows = sql
+      .select("*")
+      .from("Destination")
+      .execute();
+
+    expect(rows).toEqual([[
+      {
+        index: 0,
+        values: [1, "Alice"],
+      },
+      {
+        index: 1,
+        values: [2, "Bob"],
+      },
+    ]]);
+  });
+
+  it("accepts a separately constructed query statement", () => {
+    const sql = createTestPostgresSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Source", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      OldName: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    }).execute();
+
+    sql.createTable("Destination", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Source", ["Id", "OldName"])
+      .values([
+        [1, "Alice"],
+        [2, "Bob"],
+      ])
+      .execute();
+
+    const queryStmt = sql
+      .select(["Id", "OldName"])
+      .from("Source")
+      .asQueryStatement();
+
+    sql
+      .insertInto("Destination", ["Id", "Name"])
+      .select(queryStmt)
+      .execute();
+
+    const rows = sql
+      .select("*")
+      .from("Destination")
+      .execute();
+
+    expect(rows).toEqual([[
+      {
+        index: 0,
+        values: [1, "Alice"],
+      },
+      {
+        index: 1,
+        values: [2, "Bob"],
+      },
+    ]]);
+  });
+
+  it("inserts only rows selected by the query", () => {
+    const sql = createTestPostgresSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Source", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      OldName: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    }).execute();
+
+    sql.createTable("Destination", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    }).execute();
+
+    sql
+      .insertInto("Source", ["Id", "OldName"])
+      .values([
+        [1, "Alice"],
+        [2, "Bob"],
+        [3, "Carol"],
+      ])
+      .execute();
+
+    sql
+      .insertInto("Destination", ["Id", "Name"])
+      .select(
+        sql
+          .select(["Id", "OldName"])
+          .from("Source")
+          .where(
+            col("id").gte(2)
+          )
+          .asQueryStatement(),
+      )
+      .execute();
+
+    const rows = sql
+      .select("*")
+      .from("Destination")
+      .execute();
+
+    expect(rows).toEqual([[
+      {
+        index: 0,
+        values: [2, "Bob"],
+      },
+      {
+        index: 1,
+        values: [3, "Carol"],
+      },
+    ]]);
+  });
+
+  it("rejects a query whose column count does not match the target", () => {
+    const sql = createTestPostgresSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Source", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      OldName: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    }).execute();
+
+    sql.createTable("Destination", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    }).execute();
+
+    expect(() => {
+      sql
+        .insertInto("Destination", ["Id", "Name"])
+        .select(
+          sql
+            .select(["Id"])
+            .from("Source")
+            .asQueryStatement(),
+        )
+        .execute();
+    }).toThrow(
+      "Column length mismatch between query statement and target columns",
+    );
+  });
+
+  it("rejects a query whose column types do not match the target", () => {
+    const sql = createTestPostgresSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable("Source", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      OldValue: {
+        type: SQL_DECIMAL,
+        nullable: false,
+      },
+    }).execute();
+
+    sql.createTable("Destination", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    }).execute();
+
+    expect(() => {
+      sql
+        .insertInto("Destination", ["Id", "Name"])
+        .select(
+          sql
+            .select(["Id", "OldValue"])
+            .from("Source")
+            .asQueryStatement(),
+        )
+        .execute();
+    }).toThrow(
+      "Query column type does not match target column type",
+    );
+  });
+});

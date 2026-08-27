@@ -1,6 +1,9 @@
 import { type Action } from "../actions/Action.js";
 import { InsertRowsAction } from "../actions/InsertRowsAction.js";
-import { type InsertIntoStatement } from "../statements/index.js";
+import {
+  type InsertIntoStatement,
+  type QueryStatement,
+} from "../statements/index.js";
 import { type ColumnId, type Column } from "../relational/Column.js";
 import { resolveTargetColumns } from "./resolveColumnList.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
@@ -10,33 +13,198 @@ import type { DefaultValueNode } from "../ast/DefaultValueNode.js";
 import type { ColumnInput } from "../types/ColumnInput.js";
 import { DEFAULT } from "../dialect/keywords.js";
 import type { ExpressionNode } from "../ast/expression/ExpressionNode.js";
+import { InsertSelectAction } from "../actions/InsertSelectAction.js";
+import { bindSelect } from "./select.js";
+import { isSameType } from "../types/SqlType.js";
+import type { Table } from "../relational/Table.js";
 
 export function bindInsertInto(
   semantic: SemanticAnalyzer,
   stmt: InsertIntoStatement,
 ) {
-  const ctx = semantic.ctx;
-  const stmtActions: Action[] = [];
-
   const database = semantic.ctx.requireDatabase();
-  const dbName: string = database.name;
+  const table = semantic.ctx.requireTable(stmt.table);
+  const effectiveColumns = resolveTargetColumns(table, stmt.columns);
 
-  const tableName: string = stmt.table;
-  const table = semantic.ctx.requireTable(tableName);
+  if (stmt.values !== undefined) {
+    return bindInsertValues(
+      semantic,
+      database.name,
+      table,
+      effectiveColumns,
+      stmt.values,
+    );
+  }
 
-  const effectiveColumns: Column[] = resolveTargetColumns(table, stmt.columns);
+  if (stmt.select !== undefined) {
+    return bindInsertSelect(
+      semantic,
+      database.name,
+      table,
+      effectiveColumns,
+      stmt.select,
+    );
+  }
 
-  assertAtLeastOneRowOfValues(stmt.values);
+  throw new Error("INSERT requires either VALUES or SELECT.");
+}
+
+// export function bindInsertInto(
+//   semantic: SemanticAnalyzer,
+//   stmt: InsertIntoStatement,
+// ) {
+//   const ctx = semantic.ctx;
+//   const stmtActions: Action[] = [];
+
+//   const database = semantic.ctx.requireDatabase();
+//   const dbName: string = database.name;
+
+//   const tableName: string = stmt.table;
+//   const table = semantic.ctx.requireTable(tableName);
+
+//   const effectiveColumns: Column[] = resolveTargetColumns(table, stmt.columns);
+
+//   const values = stmt.values;
+//   if (values !== undefined) {
+//     assertAtLeastOneRowOfValues(values);
+
+//     const inputRows: Map<ColumnId, ColumnInput>[] = [];
+
+//     for (const row of values) {
+//       assertRowLengthMatchesColumnLength(row, effectiveColumns);
+
+//       const columnIdToColumnInputMap = new Map<ColumnId, ColumnInput>();
+
+//       for (let i = 0; i < effectiveColumns.length; i++) {
+//         const column = effectiveColumns[i];
+//         const valueNode = row[i];
+
+//         validateInputNode(valueNode, ctx);
+
+//         if (valueNode.kind === "default") {
+//           if (
+//             column.isAutoIncrement() &&
+//             !column.autoIncrementAllowsExplicitDefault
+//           ) {
+//             throw new Error(
+//               `AutoIncrement Column ${column.name} does not accept explicit value.`,
+//             );
+//           }
+
+//           columnIdToColumnInputMap.set(column.id, DEFAULT);
+
+//           continue;
+//         }
+
+//         if (
+//           column.isAutoIncrement() &&
+//           !column.autoIncrementAllowsExplicitValue
+//         ) {
+//           throw new Error(
+//             `AutoIncrement Column ${column.name} does not accept explicit value.`,
+//           );
+//         }
+
+//         assertInsertExpression(valueNode);
+
+//         const value = bindInsertExpression(valueNode).evaluate(undefined);
+
+//         columnIdToColumnInputMap.set(column.id, value);
+//       }
+
+//       inputRows.push(columnIdToColumnInputMap);
+//     }
+
+//     stmtActions.push(new InsertRowsAction(dbName, tableName, inputRows));
+//   }
+
+//   // const select = stmt.select;
+//   // if (select !== undefined) {
+//   //   const queryPlan = bindSelect(semantic, select);
+
+//   //   const selectColumns = queryPlan.columns;
+
+//   //   const targetColumns = effectiveColumns.map(c => c.id);
+
+//   //   if (selectColumns.length !== effectiveColumns.length) { // or write a helper assert...()
+//   //     throw new Error(
+//   //       `Column length mismatch between query statement and target columns`
+//   //     );
+//   //   }
+//   //   for (let i = 0; i < effectiveColumns.length; i++) {
+//   //     const targetColumn = effectiveColumns[i];
+
+//   //     if (!isSameType(targetColumn.type, selectColumns[i].type)) { // or write a helper assert...()
+//   //       throw new Error(
+//   //         `Query Column type does not match target column type`
+//   //       );
+//   //     }
+//   //   }
+
+//   //   stmtActions.push(new InsertSelectAction(
+//   //     dbName,
+//   //     tableName,
+//   //     targetColumns,
+//   //     queryPlan
+//   //   ));
+//   // }
+
+//   return stmtActions;
+// }
+
+function bindInsertSelect(
+  semantic: SemanticAnalyzer,
+  dbName: string,
+  targetTable: Table,
+  targetColumns: Column[],
+  select: QueryStatement,
+): Action[] {
+  const queryPlan = bindSelect(semantic, select);
+
+  const selectColumns = queryPlan.columns;
+
+  if (selectColumns.length !== targetColumns.length) {
+    throw new Error(
+      "Column length mismatch between query statement and target columns.",
+    );
+  }
+
+  for (let i = 0; i < targetColumns.length; i++) {
+    if (!isSameType(targetColumns[i].type, selectColumns[i].type)) {
+      throw new Error(`Query column type does not match target column type.`);
+    }
+  }
+
+  return [
+    new InsertSelectAction(
+      dbName,
+      targetTable.name,
+      targetColumns.map((c) => c.id),
+      queryPlan,
+    ),
+  ];
+}
+
+function bindInsertValues(
+  semantic: SemanticAnalyzer,
+  dbName: string,
+  targetTable: Table,
+  targetColumns: Column[],
+  values: (ExpressionNode | DefaultValueNode)[][],
+): Action[] {
+  const ctx = semantic.ctx;
+
+  assertAtLeastOneRowOfValues(values);
 
   const inputRows: Map<ColumnId, ColumnInput>[] = [];
 
-  for (const row of stmt.values) {
-    assertRowLengthMatchesColumnLength(row, effectiveColumns);
+  for (const row of values) {
+    assertRowLengthMatchesColumnLength(row, targetColumns);
 
     const columnIdToColumnInputMap = new Map<ColumnId, ColumnInput>();
 
-    for (let i = 0; i < effectiveColumns.length; i++) {
-      const column = effectiveColumns[i];
+    for (let i = 0; i < targetColumns.length; i++) {
+      const column = targetColumns[i];
       const valueNode = row[i];
 
       validateInputNode(valueNode, ctx);
@@ -75,9 +243,7 @@ export function bindInsertInto(
     inputRows.push(columnIdToColumnInputMap);
   }
 
-  stmtActions.push(new InsertRowsAction(dbName, tableName, inputRows));
-
-  return stmtActions;
+  return [new InsertRowsAction(dbName, targetTable.name, inputRows)];
 }
 
 function assertAtLeastOneRowOfValues(

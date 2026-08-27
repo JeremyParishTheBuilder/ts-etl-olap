@@ -1,7 +1,10 @@
 import { InputBatch } from "./InputBatch.js";
 import { type InlineColumnSpec } from "../relational/Column.js";
 import { type ConstraintSpec } from "../relational/Constraint.js";
-import { type Statement } from "../statements/Statement.js";
+import {
+  type QueryStatement,
+  type Statement,
+} from "../statements/Statement.js";
 import { type ReferentialAction } from "../relational/ReferentialAction.js";
 import { type PredicateNode } from "../ast/predicate/PredicateNode.js";
 import type { UpdateInput } from "../types/UpdateInput.js";
@@ -96,8 +99,8 @@ export class PostgresInputBatch extends InputBatch {
     return super.returning(cols);
   }
 
-  select(columns: string[] | "*") {
-    return super.select(columns);
+  select(columnsOrQuery: string[] | "*" | QueryStatement) {
+    return super.select(columnsOrQuery);
   }
 
   from(name: string) {

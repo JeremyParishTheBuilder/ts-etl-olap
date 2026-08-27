@@ -97,6 +97,8 @@ Mutations produce immutable `Action`s.
 
 Queries produce immutable `QueryPlan`s evaluated against relational snapshots and `RowView`s.
 
+`INSERT ... SELECT` combines these execution models: semantic analysis binds the source query into a `QueryPlan`, and an `InsertSelectAction` evaluates that plan and inserts the resulting rows through the relational insertion path.
+
 Relational constraints enforce structural integrity during execution.
 
 ---
