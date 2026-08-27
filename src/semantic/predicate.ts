@@ -156,9 +156,7 @@ export function assertInsertPredicate(predicate: PredicateNode): void {
   }
 }
 
-export function bindInsertPredicate(
-  pred: PredicateNode,
-): Predicate<undefined> {
+export function bindInsertPredicate(pred: PredicateNode): Predicate<undefined> {
   switch (pred.kind) {
     case "comparison": {
       return new ComparisonPredicate(

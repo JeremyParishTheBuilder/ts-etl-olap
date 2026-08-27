@@ -142,6 +142,10 @@ Column-specific default resolution
 
 ## INSERT
 
+INSERT supports both VALUES and query-based input.
+
+INSERT ... VALUES
+
 INSERT ... VALUES may contain expressions, but insert expressions cannot reference existing row values.
 
 Semantic analysis therefore validates that insert expressions do not require a RowView.
@@ -149,20 +153,66 @@ Semantic analysis therefore validates that insert expressions do not require a R
 The general flow is:
 
 Insert input
-    ↓
+
+↓
+
 AST expression
-    ↓
+
+↓
+
 Semantic validation
-    ↓
+
+↓
+
 Resolve / bind
-    ↓
-Execution
-    ↓
+
+↓
+
 Column input
+
+↓
+
+Execution
 
 DEFAULT is handled separately because its final value depends on the target column.
 
 Insert input is ultimately ordered by column before relational insertion.
+
+INSERT ... SELECT
+
+INSERT ... SELECT uses a bound QueryPlan as its row source.
+
+The SELECT is semantically bound but is not executed during semantic analysis.
+
+The general flow is:
+
+INSERT ... SELECT
+
+↓
+
+Bind source SELECT
+
+↓
+
+QueryPlan + target column metadata
+
+↓
+
+InsertSelectAction
+
+↓
+
+Query execution
+
+↓
+
+Relational insertion
+
+Semantic analysis validates that the query produces the required number of output columns and that their types are compatible with the target columns.
+
+The query result is mapped positionally to the resolved target ColumnIds. The resulting rows are then passed through the normal relational addRows() path.
+
+This keeps query execution and relational insertion separate from semantic analysis while allowing INSERT ... SELECT to reuse the existing query-plan execution path.
 
 ## UPDATE
 
@@ -193,6 +243,8 @@ SemanticAnalyzer dispatches statements to statement-specific binders.
 Examples include:
 
 bindInsertInto()
+bindInsertValues()
+bindInsertSelect()
 bindUpdateSet()
 bindSelect()
 Delete binders
@@ -207,6 +259,8 @@ Semantic validation
 Resolution / binding
    ↓
 Action or QueryPlan
+
+For INSERT ... SELECT, statement binding composes the two execution models: bindSelect() produces the source QueryPlan, while the INSERT binder validates its output against the target columns and produces an InsertSelectAction containing that plan.
 
 Semantic analysis prepares an operation but does not execute it.
 
@@ -269,7 +323,7 @@ Action / QueryPlan
    ↓
 Execution
 
-Semantic analysis may resolve names, validate inputs, and bind executable expressions, but it does not mutate relational state or evaluate row-dependent expressions over affected rows.
+Semantic analysis may resolve names, validate inputs, bind executable expressions, and construct query plans, but it does not mutate relational state or execute query plans over relational rows.
 
 Execution consumes the representations produced by Semantic.
 

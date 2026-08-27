@@ -13,6 +13,7 @@ import {
   type Builder,
   isStatementBuilder,
   type ConstraintStatement,
+  type QueryStatement,
 } from "../statements/index.js";
 import { type InlineColumnSpec } from "../relational/Column.js";
 import { type ConstraintSpec } from "../relational/Constraint.js";
@@ -54,6 +55,32 @@ export abstract class InputBatch {
 
   private addStatement(stmt: Statement) {
     this.statements.push(stmt);
+  }
+
+  private builderStack: Builder[] = [];
+
+  private pauseCurrentBuilder(): void {
+    if (!this.currentBuilder) {
+      throw new Error(`No current builder to pause`);
+    }
+    this.builderStack.push(this.currentBuilder);
+    this.currentBuilder = null;
+  }
+
+  private resumeBuilder(): Builder {
+    if (this.currentBuilder !== null) {
+      throw new Error(
+        "Cannot resume a suspended builder while another builder is active.",
+      );
+    }
+
+    const builder = this.builderStack.pop();
+
+    if (!builder) {
+      throw new Error("No suspended builder to resume");
+    }
+
+    return builder;
   }
 
   private finalizePreviousStatement() {
@@ -152,14 +179,21 @@ export abstract class InputBatch {
     this.assertAllowed("insertInto", fragment);
     this.finalizePreviousStatement();
     this.currentBuilder = new InsertIntoBuilder(table, columns);
+
+    this.pauseCurrentBuilder();
+
     return this;
   }
 
   protected values(data: InsertInput[][], fragment: string = "VALUES") {
+    this.currentBuilder = this.resumeBuilder();
+
     this.assertAllowed("values", fragment);
+
     if (!(this.currentBuilder instanceof InsertIntoBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of InsertInto`);
     }
+
     this.currentBuilder.values(data);
     return this;
   }
@@ -292,10 +326,76 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected select(columns: string[] | "*", fragment: string = "SELECT") {
+  // protected select(query: QueryStatement, fragment: string = "SELECT") {
+  //   this.assertAllowed("select", fragment);
+  //   if (!(this.currentBuilder instanceof InsertIntoBuilder)) {
+  //     throw new Error(`Cannot call '${fragment}' outside of InsertInto`);
+  //   }
+  //   this.currentBuilder.select(query);
+  //   return this;
+  // }
+
+  // protected select(columns: string[] | "*", fragment: string = "SELECT") {
+  //   this.assertAllowed("select", fragment);
+  //   this.finalizePreviousStatement();
+  //   this.currentBuilder = new SelectBuilder(columns);
+  //   return this;
+  // }
+
+  // protected select(
+  //   columnsOrQuery: string[] | "*" | QueryStatement,
+  //   fragment: string = "SELECT",
+  // ) {
+  //   this.assertAllowed("select", fragment);
+
+  //   if (this.currentBuilder instanceof InsertIntoBuilder) {
+  //     if (!isQueryStatement(columnsOrQuery)) {
+  //       throw new Error(
+  //         `Cannot use '${fragment}' after insertInto() without a query statement`,
+  //       );
+  //     }
+
+  //     this.currentBuilder.select(columnsOrQuery);
+  //     return this;
+  //   }
+
+  //   this.finalizePreviousStatement();
+
+  //   if (isQueryStatement(columnsOrQuery)) {
+  //     throw new Error(
+  //       `Columns or "*" expected after SELECT.`,
+  //     );
+  //   }
+
+  //   this.currentBuilder = new SelectBuilder(columnsOrQuery);
+  //   return this;
+  // }
+
+  protected select(
+    columnsOrQuery: string[] | "*" | QueryStatement,
+    fragment: string = "SELECT",
+  ) {
+    if (isQueryStatement(columnsOrQuery)) {
+      this.currentBuilder = this.resumeBuilder();
+      this.assertAllowed("select", fragment);
+
+      if (
+        !(this.currentBuilder instanceof InsertIntoBuilder) // &&
+        //!(this.currentBuilder instanceof CreateTableBuilder)
+      ) {
+        throw new Error(
+          `Cannot use '${fragment}' with a constructed query outside INSERT`,
+        );
+      }
+
+      this.currentBuilder.select(columnsOrQuery);
+      return this;
+    }
+
     this.assertAllowed("select", fragment);
     this.finalizePreviousStatement();
-    this.currentBuilder = new SelectBuilder(columns);
+
+    this.currentBuilder = new SelectBuilder(columnsOrQuery);
     return this;
   }
 
@@ -355,6 +455,16 @@ export abstract class InputBatch {
     return statement;
   }
 
+  asQueryStatement(): QueryStatement {
+    const statement = this.asStatement();
+
+    if (!isQueryStatement(statement)) {
+      throw new Error("Statement is not a query statement.");
+    }
+
+    return statement;
+  }
+
   execute(): RowView[][] {
     this.finalizePreviousStatement();
 
@@ -382,5 +492,14 @@ function isConstraintStatement(
     statement?.kind === "alter_table" &&
     statement.op === "add_constraint" &&
     statement.constraint.kind !== CONSTRAINT_KIND.primaryKey
+  );
+}
+
+function isQueryStatement(value: unknown): value is QueryStatement {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "kind" in value &&
+    value.kind === "select"
   );
 }

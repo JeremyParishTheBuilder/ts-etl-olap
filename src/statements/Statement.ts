@@ -43,6 +43,8 @@ export type Statement =
 
 export type ConstraintStatement = AlterAddConstraint;
 
+export type QueryStatement = SelectStatement;
+
 export interface StatementBuilder extends Builder {
   createStatement(): Statement;
 }

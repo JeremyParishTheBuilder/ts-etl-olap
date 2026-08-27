@@ -28,17 +28,17 @@ export function bindSelect(semantic: SemanticAnalyzer, stmt: SelectStatement) {
     node = new FilterNode(predicate, node);
   }
 
+  const outputColumns: Column[] = resolveSelectColumns(table, specifiedColumns);
+
   // 4. Projection
   if (specifiedColumns !== "*") {
-    const effectiveColumns: Column[] = resolveSelectColumns(
-      table,
-      specifiedColumns,
-    );
-
-    const columnIndexes: number[] = effectiveColumns.map((c) => c.position);
+    const columnIndexes: number[] = outputColumns.map((c) => c.position);
 
     node = new ProjectNode(columnIndexes, node);
   }
 
-  return { root: node };
+  return {
+    root: node,
+    columns: outputColumns,
+  };
 }

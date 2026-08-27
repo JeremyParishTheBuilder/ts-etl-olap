@@ -203,7 +203,6 @@ export function assertInsertExpression(
   }
 }
 
-//TODO, why does this need table?
 export function bindInsertExpression(
   expr: ExpressionNode | ColumnValue,
 ): Expression<undefined, ColumnValue> {
@@ -238,10 +237,7 @@ export function bindInsertExpression(
       );
 
     case "cast":
-      return new CastExpression(
-        bindInsertExpression(expr.expr),
-        expr.type,
-      );
+      return new CastExpression(bindInsertExpression(expr.expr), expr.type);
 
     case "case":
       return new CaseExpression(
