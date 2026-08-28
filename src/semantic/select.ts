@@ -8,8 +8,12 @@ import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { type Column } from "../relational/Column.js";
 import { resolveSelectColumns } from "./resolveColumnList.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
+import type { QueryColumn, QueryPlan } from "../evaluation/plan/QueryPlan.js";
 
-export function bindSelect(semantic: SemanticAnalyzer, stmt: SelectStatement) {
+export function bindSelect(
+  semantic: SemanticAnalyzer,
+  stmt: SelectStatement,
+): QueryPlan {
   //Get table
   const table = semantic.ctx.requireTable(stmt.tableName);
   const specifiedColumns = stmt.columnNames;
@@ -37,8 +41,14 @@ export function bindSelect(semantic: SemanticAnalyzer, stmt: SelectStatement) {
     node = new ProjectNode(columnIndexes, node);
   }
 
+  const queryColumns: QueryColumn[] = outputColumns.map((column) => ({
+    name: column.name,
+    type: column.type,
+    nullable: column.nullable,
+  }));
+
   return {
     root: node,
-    columns: outputColumns,
+    columns: queryColumns,
   };
 }

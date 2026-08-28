@@ -8,7 +8,7 @@ import { Engine } from '../../src/engine/Engine.js';
 import { buildDatabase, buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionNode.js';
 import { freshEngine } from '../utils/engineHelpers.js';
-import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
+import { SQL_DECIMAL, SQL_INTEGER, SQL_VARCHAR } from '../../src/types/SqlType.js';
 
 describe('SemanticAnalyzer::bindSelect', () => {
   let engine: Engine;
@@ -266,5 +266,207 @@ describe('SemanticAnalyzer::bindSelect', () => {
     const second = [...result.root.execute()];
 
     expect(first).toEqual(second);
+  });
+
+  describe('metadata', () => {
+    it("returns metadata for selected columns", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(
+          createColumnTestSpec({
+            name: "Id",
+            type: SQL_INTEGER,
+            nullable: false,
+          })
+        )
+        .createColumn(
+          createColumnTestSpec({
+            name: "Name",
+            type: SQL_VARCHAR,
+            nullable: true,
+          })
+        )
+        .addRows([[1, "Alice"]]);
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const builder = new SelectBuilder(["Name", "Id"]);
+      builder.from("Users");
+
+      const stmt = builder.createStatement();
+
+      const result = bindSelect(semantic, stmt);
+
+      expect(result.columns).toEqual([
+        {
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: true,
+        },
+        {
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+      ]);
+    });
+
+    it("returns metadata for SELECT *", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(
+          createColumnTestSpec({
+            name: "Id",
+            type: SQL_INTEGER,
+            nullable: false,
+          })
+        )
+        .createColumn(
+          createColumnTestSpec({
+            name: "Name",
+            type: SQL_VARCHAR,
+            nullable: true,
+          })
+        )
+        .addRows([[1, "Alice"]]);
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const builder = new SelectBuilder("*");
+      builder.from("Users");
+
+      const stmt = builder.createStatement();
+
+      const result = bindSelect(semantic, stmt);
+
+      expect(result.columns).toEqual([
+        {
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        {
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: true,
+        },
+      ]);
+    });
+
+    it("returns metadata in projection order", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(
+          createColumnTestSpec({
+            name: "Id",
+            type: SQL_INTEGER,
+            nullable: false,
+          })
+        )
+        .createColumn(
+          createColumnTestSpec({
+            name: "Name",
+            type: SQL_VARCHAR,
+            nullable: false,
+          })
+        )
+        .createColumn(
+          createColumnTestSpec({
+            name: "Age",
+            type: SQL_INTEGER,
+            nullable: false,
+          })
+        )
+        .addRows([[1, "Alice", 30]]);
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const builder = new SelectBuilder(["Age", "Name"]);
+      builder.from("Users");
+
+      const stmt = builder.createStatement();
+
+      const result = bindSelect(semantic, stmt);
+
+      expect(result.columns).toEqual([
+        {
+          name: "Age",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        {
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: false,
+        },
+      ]);
+    });
+
+    it("provides metadata even when the query returns no rows", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(
+          createColumnTestSpec({
+            name: "Id",
+            type: SQL_INTEGER,
+            nullable: false,
+          })
+        )
+        .createColumn(
+          createColumnTestSpec({
+            name: "Name",
+            type: SQL_VARCHAR,
+            nullable: true,
+          })
+        )
+        .addRows([[1, "Alice"]]);
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+      
+      const builder = new SelectBuilder(["Id", "Name"]);
+      builder.from("Users");
+      builder.where(new ColumnExpressionNode("Id").gt(100));
+
+      const result = bindSelect(semantic, builder.createStatement());
+
+      expect(result.columns).toEqual([
+        {
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        {
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: true,
+        },
+      ]);
+
+      expect([...result.root.execute()]).toEqual([]);
+    });
   });
 });
