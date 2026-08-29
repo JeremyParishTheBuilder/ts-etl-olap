@@ -32,25 +32,10 @@ export function resolveTargetColumns(
   return result;
 }
 
-export function resolveSelectColumns(
-  table: Table,
-  columns: "*" | string[],
-): Column[] {
-  if (columns === "*") {
-    return table.getColumnsInOrder();
-  }
-
-  return columns.map((name) => table.columns.requireByName(name));
-}
-
-export function getAllColumnsAsSelectItems(
-  table: Table
-): SelectItem[] {
-  return table.getColumnsInOrder().map(col =>
-    {
-      return {
-        expression: new ColumnExpressionNode(col.name)
-      } as SelectItem
-    }
-  );
+export function getAllColumnsAsSelectItems(table: Table): SelectItem[] {
+  return table.getColumnsInOrder().map((col) => {
+    return {
+      expression: new ColumnExpressionNode(col.name),
+    } as SelectItem;
+  });
 }

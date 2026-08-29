@@ -6,12 +6,18 @@ import { type SelectStatement } from "../statements/index.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
 import type { QueryColumn, QueryPlan } from "../evaluation/plan/QueryPlan.js";
-import { ExpressionNode, type ResolvedExpressionNode } from "../ast/expression/ExpressionNode.js";
-import { bindExpression, getExpressionNullability, getNameFromExpression, resolveExpression, sqlTypeFromExpression } from "./expression.js";
-import type { Expression } from "../evaluation/expression/Expression.js";
-import type { RowView } from "../relational/RowView.js";
+import {
+  ExpressionNode,
+  type ResolvedExpressionNode,
+} from "../ast/expression/ExpressionNode.js";
+import {
+  bindExpression,
+  getExpressionNullability,
+  getNameFromExpression,
+  resolveExpression,
+  sqlTypeFromExpression,
+} from "./expression.js";
 import { EvaluateNode } from "../evaluation/plan/EvaluateNode.js";
-import type { SqlType } from "../types/SqlType.js";
 import type { ColumnValue } from "../types/ColumnValue.js";
 import type { SelectItem } from "../ast/query/SelectItem.js";
 import { asExpressionNode } from "../ast/expression/asExpressionNode.js";
@@ -23,13 +29,10 @@ export function bindSelect(
   semantic: SemanticAnalyzer,
   stmt: SelectStatement,
 ): QueryPlan {
-  //Get table
   const table = semantic.ctx.requireTable(stmt.tableName);
 
   const defaultColumnName: string = semantic.ctx.rules.default.resultColumnName;
   const defaultColumnCounter = new IdAllocator<number>();
-
-  const usedColumnNames = new Set<string>();
 
   // 2. Base node
   let node: PlanNode = new TableScanNode(table);
@@ -44,8 +47,6 @@ export function bindSelect(
 
     node = new FilterNode(predicate, node);
   }
-
-  //TODO, check that resolveSelectColumns is still used, otherwise, remove
 
   const selectItems =
     stmt.expressions === "*"
@@ -63,12 +64,16 @@ export function bindSelect(
     };
   });
 
-  node = new EvaluateNode(boundItems.map((x) => x.bound), node);
+  node = new EvaluateNode(
+    boundItems.map((x) => x.bound),
+    node,
+  );
 
-  const allocateColumnName = (
-    name: string | undefined,
-  ): string => {
-    const result = name ?? `${defaultColumnName}${defaultColumnCounter.allocate()}`;
+  const usedColumnNames = new Set<string>();
+
+  const allocateColumnName = (name: string | undefined): string => {
+    const result =
+      name ?? `${defaultColumnName}${defaultColumnCounter.allocate()}`;
 
     if (result.startsWith(defaultColumnName) && name !== undefined) {
       throw new Error(
@@ -86,21 +91,9 @@ export function bindSelect(
 
   // 5. Result Metadata
   const columns: QueryColumn[] = boundItems.map((x) => ({
-    name: allocateColumnName(
-      getSelectColumnName(
-        x.item,
-        x.resolved,
-        table,
-      )
-    ),
-    type: sqlTypeFromExpression(
-      x.resolved,
-      table,
-    ),
-    nullable: getExpressionNullability(
-      x.resolved,
-      table,
-    ),
+    name: allocateColumnName(getSelectColumnName(x.item, x.resolved, table)),
+    type: sqlTypeFromExpression(x.resolved, table),
+    nullable: getExpressionNullability(x.resolved, table),
   }));
 
   return {
@@ -110,11 +103,7 @@ export function bindSelect(
 }
 
 function isSelectItem(value: unknown): value is SelectItem {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "expression" in value
-  );
+  return typeof value === "object" && value !== null && "expression" in value;
 }
 
 function normalizeSelectInputs(
@@ -141,11 +130,7 @@ function getSelectColumnName(
     return alias;
   }
 
-  const nameFromExpression = getNameFromExpression(
-    resolvedExpression,
-    table,
-  );
-
+  const nameFromExpression = getNameFromExpression(resolvedExpression, table);
   if (nameFromExpression) {
     return nameFromExpression;
   }

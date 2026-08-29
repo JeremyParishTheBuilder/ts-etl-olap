@@ -87,7 +87,9 @@ export class SqlServerInputBatch extends InputBatch {
     return super.returning(cols, "OUTPUT");
   }
 
-  select(expressionsOrQuery: (ExpressionNode | ColumnValue)[] | "*" | QueryStatement) {
+  select(
+    expressionsOrQuery: (ExpressionNode | ColumnValue)[] | "*" | QueryStatement,
+  ) {
     return super.select(expressionsOrQuery);
   }
 

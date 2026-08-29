@@ -1,15 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { TableScanNode } from '../../src/evaluation/plan/TableScanNode.js';
-import { ProjectNode } from '../../src/evaluation/plan/ProjectNode.js';
+import { EvaluateNode } from '../../src/evaluation/plan/EvaluateNode.js';
 import { FilterNode } from '../../src/evaluation/plan/FilterNode.js';
 import { ComparisonPredicate } from '../../src/evaluation/predicate/ComparisonPredicate.js';
 import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 import { ColumnExpression } from '../../src/evaluation/expression/ColumnExpression.js';
 import { LiteralExpression } from '../../src/evaluation/expression/LiteralExpression.js';
 import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
+import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionNode.js';
+import { bindExpression, resolveExpression } from '../../src/semantic/expression.js';
 
-describe('Query::projectNode', () => {
-  it("projects selected columns", () => {
+describe('Query::evaluateNode', () => {
+  it("evaluates expressions", () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
@@ -30,12 +32,15 @@ describe('Query::projectNode', () => {
 
     const scan = new TableScanNode(table);
 
-    const project = new ProjectNode(
-      [0, 2],
+    const evaluate = new EvaluateNode(
+      [
+        bindExpression(resolveExpression(new ColumnExpressionNode("id"), table), table),
+        bindExpression(resolveExpression(new ColumnExpressionNode("age"), table), table)
+      ],
       scan
     );
 
-    const rows = [...project.execute()];
+    const rows = [...evaluate.execute()];
 
     expect(rows).toEqual([
       {
@@ -56,12 +61,12 @@ describe('Query::projectNode', () => {
 
     const scan = new TableScanNode(table);
 
-    const project = new ProjectNode(
-      [0],
+    const evaluate = new EvaluateNode(
+      [bindExpression(resolveExpression(new ColumnExpressionNode("Value"), table), table),],
       scan
     );
 
-    const rows = [...project.execute()];
+    const rows = [...evaluate.execute()];
 
     expect(rows.map(r => r.index)).toEqual([
       0,
@@ -85,12 +90,12 @@ describe('Query::projectNode', () => {
 
     const scan = new TableScanNode(table);
 
-    const project = new ProjectNode(
-      [1],
+    const evaluate = new EvaluateNode(
+      [bindExpression(resolveExpression(new ColumnExpressionNode("B"), table), table),],
       scan
     );
 
-    const rows = [...project.execute()];
+    const rows = [...evaluate.execute()];
 
     expect(rows.map(r => r.values)).toEqual([
       [100],
@@ -120,12 +125,12 @@ describe('Query::projectNode', () => {
       scan
     );
 
-    const project = new ProjectNode(
-      [0],
+    const evaluate = new EvaluateNode(
+      [bindExpression(resolveExpression(new ColumnExpressionNode("Id"), table), table),],
       filter
     );
 
-    const rows = [...project.execute()];
+    const rows = [...evaluate.execute()];
 
     expect(rows).toEqual([
       {
@@ -139,7 +144,7 @@ describe('Query::projectNode', () => {
     ]);
   });
 
-  it("supports projecting no columns", () => {
+  it("evaluate zero expressions", () => {
     const table = buildTable()
       .createColumn(createColumnTestSpec({
         name: "Id",
@@ -150,12 +155,12 @@ describe('Query::projectNode', () => {
 
     const scan = new TableScanNode(table);
 
-    const project = new ProjectNode(
+    const evaluate = new EvaluateNode(
       [],
       scan
     );
 
-    const rows = [...project.execute()];
+    const rows = [...evaluate.execute()];
 
     expect(rows).toEqual([
       {
@@ -175,12 +180,12 @@ describe('Query::projectNode', () => {
 
     const scan = new TableScanNode(table);
 
-    const project = new ProjectNode(
-      [0],
+    const evaluate = new EvaluateNode(
+      [bindExpression(resolveExpression(new ColumnExpressionNode("Id"), table), table),],
       scan
     );
 
-    expect([...project.execute()]).toEqual([]);
+    expect([...evaluate.execute()]).toEqual([]);
   });
 
   it("does not mutate source rows", () => {
@@ -199,12 +204,15 @@ describe('Query::projectNode', () => {
 
     const scan = new TableScanNode(table);
 
-    const project = new ProjectNode(
-      [0, 1],
+    const evaluate = new EvaluateNode(
+      [
+        bindExpression(resolveExpression(new ColumnExpressionNode("Id"), table), table),
+        bindExpression(resolveExpression(new ColumnExpressionNode("Name"), table), table),
+      ],
       scan
     );
 
-    project.execute();
+    evaluate.execute();
 
     expect([...table.iterateAliveRows()]).toEqual([
       {
@@ -225,13 +233,13 @@ describe('Query::projectNode', () => {
 
     const scan = new TableScanNode(table);
 
-    const project = new ProjectNode(
-      [0],
+    const evaluate = new EvaluateNode(
+      [bindExpression(resolveExpression(new ColumnExpressionNode("Value"), table), table),],
       scan
     );
 
-    const first = [...project.execute()];
-    const second = [...project.execute()];
+    const first = [...evaluate.execute()];
+    const second = [...evaluate.execute()];
 
     expect(first).toEqual(second);
   });

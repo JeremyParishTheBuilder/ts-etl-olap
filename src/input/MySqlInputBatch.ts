@@ -87,7 +87,9 @@ export class MySqlInputBatch extends InputBatch {
     return super.returning(cols);
   }
 
-  select(expressionsOrQuery: (ExpressionNode | ColumnValue)[] | "*" | QueryStatement) {
+  select(
+    expressionsOrQuery: (ExpressionNode | ColumnValue)[] | "*" | QueryStatement,
+  ) {
     return super.select(expressionsOrQuery);
   }
 

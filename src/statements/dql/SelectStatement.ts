@@ -5,7 +5,7 @@ import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 export interface SelectStatement extends BaseStatement {
   kind: "select";
   tableName: string;
-  expressions: SelectInput[] | "*"
+  expressions: SelectInput[] | "*";
   where?: PredicateNode;
 }
 
@@ -13,10 +13,7 @@ export class SelectBuilder implements StatementBuilder {
   private tableName?: string;
   private whereClause?: PredicateNode;
 
-  constructor(
-    private expressions: SelectInput[] | "*"
-  ) {
-  }
+  constructor(private expressions: SelectInput[] | "*") {}
 
   from(tableName: string) {
     this.tableName = tableName;

@@ -12,8 +12,7 @@ export class EvaluateNode implements PlanNode {
     for (const row of this.source.execute()) {
       yield {
         index: row.index,
-        values: this.expressions.map((expression) =>
-          expression.evaluate(row)),
+        values: this.expressions.map((expression) => expression.evaluate(row)),
       };
     }
   }

@@ -23,7 +23,18 @@ import { ResolvedConcatExpressionNode } from "../ast/expression/ConcatExpression
 import { ConcatExpression } from "../evaluation/expression/ConcatExpression.js";
 import { SqlFunctionExpression } from "../evaluation/expression/SqlFunctionExpression.js";
 import { isColumnValue, type ColumnValue } from "../types/ColumnValue.js";
-import { decimal, isCastable, isSameType, SQL_DATE, SQL_INTEGER, SQL_TIMESTAMP, SQL_VARCHAR, sqlTypeFromValue, type DecimalType, type SqlType } from "../types/SqlType.js";
+import {
+  decimal,
+  isCastable,
+  isSameType,
+  SQL_DATE,
+  SQL_INTEGER,
+  SQL_TIMESTAMP,
+  SQL_VARCHAR,
+  sqlTypeFromValue,
+  type DecimalType,
+  type SqlType,
+} from "../types/SqlType.js";
 import { ResolvedCastExpressionNode } from "../ast/expression/CastExpressionNode.js";
 import { CastExpression } from "../evaluation/expression/CastExpression.js";
 import { LiteralExpressionNode } from "../ast/expression/LiteralExpressionNode.js";
@@ -282,27 +293,19 @@ export function getNameFromExpression(
   }
 }
 
-function mergeDecimalTypes(
-  types: readonly DecimalType[],
-): DecimalType {
-  const precision = types.every(
-    (type) => type.precision === types[0].precision,
-  )
+function mergeDecimalTypes(types: readonly DecimalType[]): DecimalType {
+  const precision = types.every((type) => type.precision === types[0].precision)
     ? types[0].precision
     : undefined;
 
-  const scale = types.every(
-    (type) => type.scale === types[0].scale,
-  )
+  const scale = types.every((type) => type.scale === types[0].scale)
     ? types[0].scale
     : undefined;
 
   return decimal(precision, scale);
 }
 
-export function commonSqlType(
-  types: readonly SqlType[]
-): SqlType {
+export function commonSqlType(types: readonly SqlType[]): SqlType {
   if (types.length === 0) {
     throw new Error("Cannot determine common SQL type from no types.");
   }
@@ -315,11 +318,7 @@ export function commonSqlType(
 
   // Prefer DECIMAL for INTEGER + DECIMAL.
   if (
-    types.every(
-      (type) =>
-        type.kind === "integer" ||
-        type.kind === "decimal",
-    )
+    types.every((type) => type.kind === "integer" || type.kind === "decimal")
   ) {
     const decimals = types.filter(
       (type): type is DecimalType => type.kind === "decimal",
@@ -334,9 +333,7 @@ export function commonSqlType(
 
   // VARCHAR can represent all currently supported scalar
   // values that are explicitly castable to VARCHAR.
-  if (
-    types.every((type) => isCastable(type, SQL_VARCHAR))
-  ) {
+  if (types.every((type) => isCastable(type, SQL_VARCHAR))) {
     return SQL_VARCHAR;
   }
 
@@ -347,9 +344,7 @@ export function commonSqlType(
   );
 }
 
-function sqlTypeFromTemporalExpression(
-  expr: TemporalExpressionNode,
-): SqlType {
+function sqlTypeFromTemporalExpression(expr: TemporalExpressionNode): SqlType {
   switch (expr.expression) {
     case "current_timestamp":
       return SQL_TIMESTAMP;
@@ -362,9 +357,7 @@ function sqlTypeFromTemporalExpression(
   }
 }
 
-function sqlTypeFromSqlFunction(
-  expr: SqlFunctionExpressionNode,
-): SqlType {
+function sqlTypeFromSqlFunction(expr: SqlFunctionExpressionNode): SqlType {
   switch (expr.function_) {
     case "now":
     case "getdate":
@@ -396,9 +389,7 @@ export function sqlTypeFromExpression(
       );
 
       if (expr.elseExpr) {
-        types.push(
-          sqlTypeFromExpression(expr.elseExpr, table),
-        );
+        types.push(sqlTypeFromExpression(expr.elseExpr, table));
       }
 
       if (types.length === 0) {
@@ -424,9 +415,7 @@ export function sqlTypeFromExpression(
       return sqlTypeFromSqlFunction(expr);
 
     default:
-      throw new Error(
-        `Unsupported expression: ${expr}`,
-      );
+      throw new Error(`Unsupported expression: ${expr}`);
   }
 }
 
@@ -449,9 +438,7 @@ export function getExpressionNullability(
         return true;
       }
 
-      if (
-        getExpressionNullability(expr.elseExpr, table)
-      ) {
+      if (getExpressionNullability(expr.elseExpr, table)) {
         return true;
       }
 

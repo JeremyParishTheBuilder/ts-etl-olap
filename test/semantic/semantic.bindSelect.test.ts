@@ -51,7 +51,9 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
     const semantic = createSemantic(database);
 
-    const builder = new SelectBuilder(["Name"]);
+    const builder = new SelectBuilder([
+      new ColumnExpressionNode("Name")
+    ]);
     builder.from("Users");
     const stmt = builder.createStatement();
 
@@ -167,7 +169,9 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
     const semantic = createSemantic(database);
 
-    const builder = new SelectBuilder(["userid"]);
+    const builder = new SelectBuilder([
+      new ColumnExpressionNode("userid")
+    ]);
     builder.from("users");
     const stmt = builder.createStatement();
 
@@ -200,7 +204,9 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
     const semantic = createSemantic(database);
 
-    const builder = new SelectBuilder(["MissingColumn"]);
+    const builder = new SelectBuilder([
+      new ColumnExpressionNode("MissingColumn")
+    ]);
     builder.from("users");
     const stmt = builder.createStatement();
 
@@ -296,7 +302,10 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
       const semantic = createSemantic(database);
 
-      const builder = new SelectBuilder(["Name", "Id"]);
+      const builder = new SelectBuilder([
+        new ColumnExpressionNode("Name"),
+        new ColumnExpressionNode("Id"),
+      ]);
       builder.from("Users");
 
       const stmt = builder.createStatement();
@@ -399,7 +408,10 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
       const semantic = createSemantic(database);
 
-      const builder = new SelectBuilder(["Age", "Name"]);
+      const builder = new SelectBuilder([
+        new ColumnExpressionNode("Age"),
+        new ColumnExpressionNode("Name"),
+      ]);
       builder.from("Users");
 
       const stmt = builder.createStatement();
@@ -447,7 +459,10 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
       const semantic = createSemantic(database);
       
-      const builder = new SelectBuilder(["Id", "Name"]);
+      const builder = new SelectBuilder([
+        new ColumnExpressionNode("Id"),
+        new ColumnExpressionNode("Name"),
+      ]);
       builder.from("Users");
       builder.where(new ColumnExpressionNode("Id").gt(100));
 

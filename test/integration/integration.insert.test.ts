@@ -488,7 +488,10 @@ describe("Integration::insertSelect", () => {
       .insertInto("Destination", ["Id", "Name"])
       .select(
         sql
-          .select(["Id", "OldName"])
+          .select([
+            col("Id"),
+            col("OldName"),
+          ])
           .from("Source")
           .asQueryStatement(),
       )
@@ -550,7 +553,10 @@ describe("Integration::insertSelect", () => {
       .execute();
 
     const queryStmt = sql
-      .select(["Id", "OldName"])
+      .select([
+        col("Id"),
+        col("OldName"),
+      ])
       .from("Source")
       .asQueryStatement();
 
@@ -619,7 +625,10 @@ describe("Integration::insertSelect", () => {
       .insertInto("Destination", ["Id", "Name"])
       .select(
         sql
-          .select(["Id", "OldName"])
+          .select([
+            col("Id"),
+            col("OldName"),
+          ])
           .from("Source")
           .where(
             col("id").gte(2)
@@ -680,7 +689,7 @@ describe("Integration::insertSelect", () => {
         .insertInto("Destination", ["Id", "Name"])
         .select(
           sql
-            .select(["Id"])
+            .select([col("Id")])
             .from("Source")
             .asQueryStatement(),
         )
@@ -725,7 +734,7 @@ describe("Integration::insertSelect", () => {
         .insertInto("Destination", ["Id", "Name"])
         .select(
           sql
-            .select(["Id", "OldValue"])
+            .select([col("Id"), col("OldValue")])
             .from("Source")
             .asQueryStatement(),
         )
