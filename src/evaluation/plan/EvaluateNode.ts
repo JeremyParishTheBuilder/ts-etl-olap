@@ -1,10 +1,10 @@
 import { type RowView } from "../../relational/RowView.js";
+import type { Expression } from "../expression/Expression.js";
 import { type PlanNode } from "./PlanNode.js";
 
-//TODO, remove if unused
-export class ProjectNode implements PlanNode {
+export class EvaluateNode implements PlanNode {
   constructor(
-    public columnIndexes: number[],
+    public expressions: Expression<RowView>[],
     public source: PlanNode,
   ) {}
 
@@ -12,7 +12,8 @@ export class ProjectNode implements PlanNode {
     for (const row of this.source.execute()) {
       yield {
         index: row.index,
-        values: this.columnIndexes.map((i) => row.values[i]),
+        values: this.expressions.map((expression) =>
+          expression.evaluate(row)),
       };
     }
   }

@@ -137,4 +137,10 @@ export const ENGINE_RULES: Record<
       engineDefault: new Set<SqlFunctionKeyword>([NOW]),
     },
   },
+
+  default: {
+    resultColumnName: {
+      engineDefault: "__DEFAULT_COLUMN:",
+    },
+  },
 };
