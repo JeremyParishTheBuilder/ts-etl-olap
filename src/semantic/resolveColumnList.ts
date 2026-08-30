@@ -1,3 +1,5 @@
+import { ColumnExpressionNode } from "../ast/expression/ColumnExpressionNode.js";
+import type { SelectItem } from "../ast/query/SelectItem.js";
 import { type Column } from "../relational/Column.js";
 import { type Table } from "../relational/Table.js";
 
@@ -30,13 +32,10 @@ export function resolveTargetColumns(
   return result;
 }
 
-export function resolveSelectColumns(
-  table: Table,
-  columns: "*" | string[],
-): Column[] {
-  if (columns === "*") {
-    return table.getColumnsInOrder();
-  }
-
-  return columns.map((name) => table.columns.requireByName(name));
+export function getAllColumnsAsSelectItems(table: Table): SelectItem[] {
+  return table.getColumnsInOrder().map((col) => {
+    return {
+      expression: new ColumnExpressionNode(col.name),
+    } as SelectItem;
+  });
 }

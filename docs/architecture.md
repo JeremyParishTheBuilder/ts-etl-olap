@@ -97,9 +97,32 @@ Mutations produce immutable `Action`s.
 
 Queries produce immutable `QueryPlan`s evaluated against relational snapshots and `RowView`s.
 
-`INSERT ... SELECT` combines these execution models: semantic analysis binds the source query into a `QueryPlan`, and an `InsertSelectAction` evaluates that plan and inserts the resulting rows through the relational insertion path.
-
 Relational constraints enforce structural integrity during execution.
+
+---
+
+### Query Plans
+
+SELECT statements are semantically bound into immutable `QueryPlan`s.
+
+A query plan contains:
+
+- a plan root responsible for producing result rows
+- `QueryColumn` metadata describing the result columns
+
+SELECT expressions are resolved and bound into executable expressions and
+evaluated by `EvaluateNode`. Result metadata is derived from the resolved
+expressions rather than being limited to physical source-table columns.
+
+This allows query results to represent source columns, literals, computed
+expressions, CAST expressions, and other expression forms.
+
+Query-plan metadata forms the schema contract for consumers such as
+`INSERT ... SELECT` and `CREATE TABLE AS SELECT`.
+
+---
+
+`INSERT ... SELECT` combines these execution models: semantic analysis binds the source query into a `QueryPlan`, and an `InsertSelectAction` evaluates that plan and inserts the resulting rows through the relational insertion path.
 
 ---
 

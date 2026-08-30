@@ -31,6 +31,8 @@ import {
 import type { UpdateInput } from "../types/UpdateInput.js";
 import type { RowView } from "../relational/RowView.js";
 import type { InsertInput } from "../types/InsertInput.js";
+import type { ExpressionNode } from "../ast/expression/ExpressionNode.js";
+import type { ColumnValue } from "../types/ColumnValue.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -372,10 +374,10 @@ export abstract class InputBatch {
   // }
 
   protected select(
-    columnsOrQuery: string[] | "*" | QueryStatement,
+    expressionsOrQuery: (ExpressionNode | ColumnValue)[] | "*" | QueryStatement,
     fragment: string = "SELECT",
   ) {
-    if (isQueryStatement(columnsOrQuery)) {
+    if (isQueryStatement(expressionsOrQuery)) {
       this.currentBuilder = this.resumeBuilder();
       this.assertAllowed("select", fragment);
 
@@ -388,14 +390,14 @@ export abstract class InputBatch {
         );
       }
 
-      this.currentBuilder.select(columnsOrQuery);
+      this.currentBuilder.select(expressionsOrQuery);
       return this;
     }
 
     this.assertAllowed("select", fragment);
     this.finalizePreviousStatement();
 
-    this.currentBuilder = new SelectBuilder(columnsOrQuery);
+    this.currentBuilder = new SelectBuilder(expressionsOrQuery);
     return this;
   }
 

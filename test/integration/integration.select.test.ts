@@ -82,7 +82,7 @@ describe('Integration::select', () => {
       .execute();
 
     const rows = sql
-      .select(["Name"])
+      .select([col("Name")])
       .from("Users")
       .execute();
 
@@ -301,7 +301,7 @@ describe('Integration::select', () => {
       .execute();
 
     const rows = sql
-      .select(["userid"])
+      .select([col("userid")])
       .from("users")
       .execute();
 

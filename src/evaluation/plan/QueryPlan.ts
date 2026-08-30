@@ -9,5 +9,5 @@ export interface QueryPlan {
 export type QueryColumn = {
   name: string;
   type: SqlType;
-  nullable?: boolean;
+  nullable: boolean;
 };
