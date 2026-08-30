@@ -103,6 +103,46 @@ Column references are resolved against the relevant table, and nested expression
 
 Binding produces executable Predicate objects used by query and mutation execution.
 
+## SELECT Binding
+
+`bindSelect()` converts a `SelectStatement` into a `QueryPlan`.
+
+SELECT items contain expressions rather than being limited to physical column
+references. Each expression is resolved against the source table and then
+bound to an executable `Expression<RowView>`.
+
+The general flow is:
+
+SELECT expressions
+    ↓
+Resolve expressions
+    ↓
+Bind expressions
+    ↓
+EvaluateNode
+    ↓
+QueryPlan
+
+`*` is expanded into SELECT items representing all source-table columns.
+
+The resulting `QueryPlan` also contains `QueryColumn` metadata for each result
+column. Metadata includes:
+
+- result name
+- SQL type
+- nullability
+
+Result metadata is derived from the resolved expressions. A direct column
+expression can inherit metadata from its source column, while expressions such
+as literals, CAST, CASE, and computed expressions derive metadata from their
+expression semantics.
+
+SELECT aliases take precedence over names derived from expressions. Expressions
+without a suitable name receive a generated result-column name.
+
+Semantic binding does not execute the query. The resulting `QueryPlan` is
+evaluated later against the relational state.
+
 ## Keywords and Special Expressions
 
 Input keywords are represented separately from ordinary expression values.

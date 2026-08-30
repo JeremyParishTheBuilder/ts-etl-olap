@@ -14,6 +14,7 @@ import { NotPredicateNode } from "./predicate/NotPredicateNode.js";
 import { OrPredicateNode } from "./predicate/OrPredicateNode.js";
 import type { PredicateNode } from "./predicate/PredicateNode.js";
 import { XorPredicateNode } from "./predicate/XorPredicateNode.js";
+import type { SelectItem } from "./query/SelectItem.js";
 
 // Expressions
 
@@ -64,4 +65,16 @@ export function xor(left: PredicateNode, right: PredicateNode) {
 
 export function not(inner: PredicateNode) {
   return new NotPredicateNode(inner);
+}
+
+// Wrappers
+
+export function selectAs(
+  expression: ExpressionNode,
+  alias: string,
+): SelectItem {
+  return {
+    expression,
+    alias,
+  };
 }

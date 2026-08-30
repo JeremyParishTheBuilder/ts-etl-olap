@@ -24,6 +24,7 @@ import { asExpressionNode } from "../ast/expression/asExpressionNode.js";
 import { getAllColumnsAsSelectItems } from "./resolveColumnList.js";
 import type { Table } from "../relational/Table.js";
 import { IdAllocator } from "../types/IdAllocator.js";
+import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
 
 export function bindSelect(
   semantic: SemanticAnalyzer,
@@ -32,7 +33,8 @@ export function bindSelect(
   const table = semantic.ctx.requireTable(stmt.tableName);
 
   const defaultColumnName: string = semantic.ctx.rules.default.resultColumnName;
-  const defaultColumnCounter = new IdAllocator<number>();
+  const normalizedDefaultColumnName = normalizeIdentifier(defaultColumnName);
+  let defaultColumnCounter = new IdAllocator<number>();
 
   // 2. Base node
   let node: PlanNode = new TableScanNode(table);
@@ -72,20 +74,31 @@ export function bindSelect(
   const usedColumnNames = new Set<string>();
 
   const allocateColumnName = (name: string | undefined): string => {
-    const result =
-      name ?? `${defaultColumnName}${defaultColumnCounter.allocate()}`;
+    let result = name;
 
-    if (result.startsWith(defaultColumnName) && name !== undefined) {
+    if (!result) {
+      let id;
+      [id, defaultColumnCounter] = defaultColumnCounter.allocate();
+
+      result = `${defaultColumnName}${id}`;
+    }
+
+    const normalizedName = normalizeIdentifier(result);
+
+    if (
+      normalizedName.startsWith(normalizedDefaultColumnName) &&
+      name !== undefined
+    ) {
       throw new Error(
         `Column name "${result}" uses the reserved default column name prefix`,
       );
     }
 
-    if (usedColumnNames.has(result)) {
+    if (usedColumnNames.has(normalizedName)) {
       throw new Error(`Duplicate result column name: ${result}`);
     }
 
-    usedColumnNames.add(result);
+    usedColumnNames.add(normalizedName);
     return result;
   };
 
