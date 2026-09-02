@@ -156,20 +156,60 @@ export abstract class InputBatch {
     return this;
   }
 
+  // protected createTable(
+  //   name: string,
+  //   columnSchema: Record<string, InlineColumnSpec>,
+  //   constraintSchema: Record<string, ConstraintSpec>,
+  //   fragment: string = "CREATE TABLE",
+  // ) {
+  //   this.assertAllowed("createTable", fragment);
+  //   this.finalizePreviousStatement();
+  //   this.currentBuilder = new CreateTableBuilder(
+  //     name,
+  //     columnSchema,
+  //     constraintSchema,
+  //   );
+  //   this.finalizePreviousStatement();
+  //   return this;
+  // }
+
   protected createTable(
     name: string,
-    columnSchema: Record<string, InlineColumnSpec>,
-    constraintSchema: Record<string, ConstraintSpec>,
+    //columns: InlineColumnSpec[], // TODO
+    columnSchema?: Record<string, InlineColumnSpec>,
+    constraintSchema?: Record<string, ConstraintSpec>,
     fragment: string = "CREATE TABLE",
   ) {
     this.assertAllowed("createTable", fragment);
     this.finalizePreviousStatement();
+
     this.currentBuilder = new CreateTableBuilder(
       name,
       columnSchema,
       constraintSchema,
     );
-    this.finalizePreviousStatement();
+
+    this.pauseCurrentBuilder();
+
+    return this;
+  }
+
+  protected as(
+    query: QueryStatement,
+    fragment: string = "AS",
+  ) {
+    this.currentBuilder = this.resumeBuilder();
+    this.assertAllowed("as", fragment);
+
+    if (
+      !(this.currentBuilder instanceof CreateTableBuilder)
+    ) {
+      throw new Error(
+        `Cannot use '${fragment}' with a constructed query outside CREATE TABLE`,
+      );
+    }
+
+    this.currentBuilder.as(query);
     return this;
   }
 
@@ -468,6 +508,10 @@ export abstract class InputBatch {
   }
 
   execute(): RowView[][] {
+    if (!this.currentBuilder && this.builderStack.length > 0) {
+      this.currentBuilder = this.resumeBuilder();
+    }
+
     this.finalizePreviousStatement();
 
     const resultIterators: RowView[][] = [];

@@ -34,10 +34,17 @@ export class MySqlInputBatch extends InputBatch {
 
   createTable(
     table: string,
-    columnSchema: Record<string, InlineColumnSpec>,
-    constraintSchema: Record<string, ConstraintSpec> = {},
+    columnSchema?: Record<string, InlineColumnSpec>,
+    constraintSchema?: Record<string, ConstraintSpec>,
   ) {
     return super.createTable(table, columnSchema, constraintSchema);
+  }
+
+  as(
+    query: QueryStatement,
+    fragment: string = "AS",
+  ) {
+    return super.as(query);
   }
 
   alterTable(table: string) {

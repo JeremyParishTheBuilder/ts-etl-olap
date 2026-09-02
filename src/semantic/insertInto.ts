@@ -76,8 +76,8 @@ function bindInsertSelect(
     new InsertSelectAction(
       dbName,
       targetTable.name,
-      targetColumns.map((c) => c.id),
       queryPlan,
+      targetColumns.map((c) => c.id),
     ),
   ];
 }

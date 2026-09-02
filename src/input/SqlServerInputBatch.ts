@@ -34,8 +34,8 @@ export class SqlServerInputBatch extends InputBatch {
 
   createTable(
     table: string,
-    columnSchema: Record<string, InlineColumnSpec>,
-    constraintSchema: Record<string, ConstraintSpec> = {},
+    columnSchema?: Record<string, InlineColumnSpec>,
+    constraintSchema?: Record<string, ConstraintSpec>,
   ) {
     return super.createTable(table, columnSchema, constraintSchema);
   }

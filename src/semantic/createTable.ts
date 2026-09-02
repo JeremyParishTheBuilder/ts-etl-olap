@@ -17,101 +17,355 @@ import { CONSTRAINT_KIND } from "../relational/ConstraintKind.js";
 import { PrimaryKey } from "../relational/PrimaryKey.js";
 import { ForeignKey } from "../relational/ForeignKey.js";
 import { AddUniqueConstraintAction } from "../actions/AddUniqueConstraintAction.js";
+import type { QueryPlan } from "../evaluation/plan/QueryPlan.js";
+import { bindSelect } from "./select.js";
+import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
+import { isAssignable } from "../types/SqlType.js";
+import { ExecutionContext } from "../engine/ExecutionContext.js";
+import { InsertSelectAction } from "../actions/InsertSelectAction.js";
+import { resolveTargetColumns } from "./resolveColumnList.js";
 
 export function bindCreateTable(
   semantic: SemanticAnalyzer,
   stmt: CreateTableStatement,
-) {
-  const ctx = semantic.ctx;
+): Action[] {
   const stmtActions: Action[] = [];
+
+  const ctx = semantic.ctx;
 
   const dbName = ctx.requireDatabase().name;
 
   const tableName: string = stmt.table;
 
-  // create table
-  //validate
-  if (ctx.getTable(tableName)) {
-    throw new Error(`Table '${tableName}' already exists`);
+  assertTableNameUnused(tableName, ctx);
+  function assertTableNameUnused(
+    tableName: string,
+    ctx: ExecutionContext,
+  ): void {
+    if (ctx.getTable(tableName)) {
+      throw new Error(`Table '${tableName}' already exists`);
+    }
   }
 
-  //save action
   stmtActions.push(
     new CreateTableAction(dbName, tableName, ctx.rules.tablePolicy),
   );
 
-  // add columns and inline constraints
-  const seen = new Set<string>();
-  for (const [colName, inlineColSpec] of Object.entries(stmt.columnSchema)) {
-    //check for duplicate columns
-    if (seen.has(colName)) {
-      throw new Error(`Duplicate column '${colName}' in CREATE TABLE`);
+  const queryPlan: QueryPlan | undefined = stmt.select
+    ? bindSelect(semantic, stmt.select)
+    : undefined;
+
+  const columnSpecs: ColumnSpec[] = getColumnSpecsForStatement(
+    stmt.columnSchema,
+    queryPlan,
+    ctx.rules.ddl.ctasDefinedColumnListOverridesQueryColumns
+  );
+  function getColumnSpecsForStatement(
+    columnSchema: Record<string, InlineColumnSpec> | undefined,
+    queryPlan: QueryPlan | undefined,
+    ctasDefinedColumnListOverridesQueryColumns: boolean,
+  ): ColumnSpec[] {
+    const columnsFromDefinition: ColumnSpec[] = columnSchema
+      ? getColumnSpecsFromColumnSchema(columnSchema)
+      : [];
+    function getColumnSpecsFromColumnSchema(
+      columnSchema: Record<string, InlineColumnSpec>
+    ): ColumnSpec[] {
+      const columnSpecs: ColumnSpec[] = [];
+      for (const [colName, inlineColSpec] of Object.entries(columnSchema)) {
+        columnSpecs.push({ name: colName, ...inlineColSpec });
+      }
+      return columnSpecs;
     }
-    seen.add(colName);
 
-    const columnSpec: ColumnSpec = { name: colName, ...inlineColSpec };
+    if (!queryPlan) {
+      return columnsFromDefinition;
+    }
 
+    const columnsFromQuery: ColumnSpec[] = queryPlan
+      ? getColumnSpecsFromQueryPlan(queryPlan)
+      : [];
+    function getColumnSpecsFromQueryPlan(
+      queryPlan: QueryPlan,
+    ): ColumnSpec[] {
+      return queryPlan.columns.map((qc) => ({
+        name: qc.name,
+        type: qc.type,
+        nullable: qc.nullable,
+      }));
+    }
+
+    const columnSpecs: ColumnSpec[] = unifyColumnSpecSets(
+      columnsFromDefinition,
+      columnsFromQuery,
+      ctasDefinedColumnListOverridesQueryColumns,
+    );
+    function unifyColumnSpecSets(
+      columnsFromDefinition: ColumnSpec[],
+      columnsFromQuery: ColumnSpec[],
+      ctasDefinedColumnListOverridesQueryColumns: boolean,
+    ): ColumnSpec[] {
+      assertNoDuplicateColumnNames(columnsFromDefinition);
+      assertNoDuplicateColumnNames(columnsFromQuery);
+
+      const columnSpecs: ColumnSpec[] = [];
+      const addedColumnNames = new Set<string>();
+
+      if (!ctasDefinedColumnListOverridesQueryColumns) {
+        for (const definitionColumn of columnsFromDefinition) {
+          const definitionName = normalizeIdentifier(definitionColumn.name);
+          addedColumnNames.add(definitionName);
+
+          const queryColumn = columnsFromQuery.find(
+            (column) =>
+              normalizeIdentifier(column.name) === definitionName,
+          );
+
+          if (!queryColumn) {
+            columnSpecs.push(definitionColumn);
+            continue;
+          }
+
+          columnSpecs.push(
+            unifyColumnSpecs(definitionColumn, queryColumn),
+          );
+        }
+
+        for (const queryColumn of columnsFromQuery) {
+          if (!addedColumnNames.has(
+            normalizeIdentifier(queryColumn.name)
+          )) {
+            columnSpecs.push(queryColumn);
+          }
+        }
+      } else {
+        for (const [i, queryColumn] of columnsFromQuery.entries()) {
+          if (i < columnsFromDefinition.length) {
+            columnSpecs.push(
+              unifyColumnSpecs(
+                columnsFromDefinition[i],
+                queryColumn,
+              )
+            );
+          } else {
+            columnSpecs.push(queryColumn);
+          }
+        }
+      }
+
+      return columnSpecs;
+
+      function unifyColumnSpecs(
+        definitionColumnSpec: ColumnSpec,
+        queryColumnSpec: ColumnSpec,
+      ): ColumnSpec {
+        if (!isAssignable(
+          queryColumnSpec.type,
+          definitionColumnSpec.type,
+        )) {
+          throw new Error(`Cannot assign type:
+            ${queryColumnSpec.type} to type:
+            ${definitionColumnSpec.type}`);
+        }
+
+        const nullable: boolean | undefined =
+          definitionColumnSpec.nullable !== undefined
+            ? definitionColumnSpec.nullable
+            : queryColumnSpec.nullable
+
+
+        return {
+          ...definitionColumnSpec,
+          nullable,
+        };
+      }
+    }
+
+    assertNoDuplicateColumnNames(columnSpecs);
+    function assertNoDuplicateColumnNames(
+      specs: ColumnSpec[]
+    ): void {
+      const seen = new Set<string>();
+      for (const spec of specs) {
+        const specName = normalizeIdentifier(spec.name);
+        if (seen.has(specName)) {
+          throw new Error(`Duplicate column name '${spec.name}' in CREATE TABLE`);
+        }
+        seen.add(specName);
+      }
+    }
+
+    assertAtLeastOneColumn(columnSpecs);
+    function assertAtLeastOneColumn(columnSpecs: ColumnSpec[]): void {
+      if (columnSpecs.length <= 0) {
+        throw new Error(`Statements has no Column Definitions`);
+      }
+    }
+
+    return columnSpecs;
+  }
+
+  for (const columnSpec of columnSpecs) {
     stmtActions.push(
       new AddColumnAction(
         dbName,
         tableName,
-        {
-          ...columnSpec,
-        },
+        columnSpec,
         ctx.rules.autoIncrementColumnPolicy,
       ),
     );
+  }
 
-    //get any inline constraints
-    const allInlineConstraints = constraintSpecsFromColumnSpec(
-      colName,
-      inlineColSpec,
+  const constraintSpecs: ConstraintSpec[] = getConstraintSpecsForStatement(
+    stmt.columnSchema,
+    stmt.constraintSchema,
+    ctx.rules.ddl.supportsInlineForeignKeys,
+  );
+  function getConstraintSpecsForStatement(
+    inlineColumnSchema: Record<string, InlineColumnSpec> | undefined,
+    tableConstraintSchema: Record<string, ConstraintSpec> | undefined,
+    supportsInlineForeignKeys: boolean,
+  ): ConstraintSpec[] {
+    const inlineConstraints = inlineColumnSchema
+      ? getConstraintSpecsFromColumnSpecs(inlineColumnSchema)
+      : [];
+    function getConstraintSpecsFromColumnSpecs(
+      inlineColumnSchema: Record<string, InlineColumnSpec>
+    ): ConstraintSpec[] {
+      const specs: ConstraintSpec[] = []; 
+      for (const [name, inlineColumnSpec] of Object.entries(inlineColumnSchema)) {
+        specs.push(
+          ...constraintSpecsFromColumnSpec(name, inlineColumnSpec),
+        );
+      }
+      return specs;
+    }
+    assertNoDuplicateConstraintNames(inlineConstraints);
+    assertInlineForeignKeys(
+      inlineConstraints,
+      supportsInlineForeignKeys,
     );
-    for (const spec of allInlineConstraints) {
-      //let action: Action | undefined = undefined;
+    function assertInlineForeignKeys(
+      inlineConstraintSpecs: ConstraintSpec[],
+      supportsInlineForeignKeys: boolean,
+    ): void {
+      if (supportsInlineForeignKeys) {
+        return;
+      }
 
-      switch (spec.kind) {
-        case CONSTRAINT_KIND.foreignKey: {
-          // optionally skip FK if dialect disallows inline FKs
-          if (!semantic.ctx.rules.ddl.supportsInlineForeignKeys) {
-            throw new Error(`Dialect does not allow inline Foreign Keys.`);
-          }
-
-          const reverseIndexName = ForeignKey.defaultIndexName(spec.name);
-
-          stmtActions.push(
-            new AddIndexAction(dbName, tableName, {
-              name: reverseIndexName,
-              columns: spec.columns,
-              unique: false,
-              nullsDistinct: ctx.rules.constraints.nullsDistinct,
-            }),
-          );
-
-          stmtActions.push(
-            new AddForeignKeyAction(dbName, tableName, {
-              ...spec,
-              onDelete:
-                spec.onDelete ??
-                ctx.rules.constraints.foreignKeyDefaultOnDelete,
-              onUpdate:
-                spec.onDelete ??
-                ctx.rules.constraints.foreignKeyDefaultOnUpdate,
-              reverseIndex: reverseIndexName,
-            }),
-          );
-
-          break;
+      for (const spec of inlineConstraintSpecs) {
+        if (spec.kind === CONSTRAINT_KIND.foreignKey) {
+          throw new Error(`Dialect does not allow inline Foreign Keys.`);
         }
+      }
+    }
 
-        case CONSTRAINT_KIND.unique:
+    const tableConstraints = tableConstraintSchema
+      ? getConstraintSpecsFromTableConstraints(tableConstraintSchema)
+      : [];
+    function getConstraintSpecsFromTableConstraints(
+      tableConstraintSchema: Record<string, ConstraintSpec>
+    ): ConstraintSpec[] {
+      const specs: ConstraintSpec[] = []; 
+      for (const [name, constraintSpec] of Object.entries(tableConstraintSchema)) {
+        specs.push(
+          {
+            ...constraintSpec,
+            name,
+          }
+        );
+      }
+      return specs;
+    }
+    assertNoDuplicateConstraintNames(tableConstraints);
+
+    const constraintSpecs: ConstraintSpec[] = [
+      ...inlineConstraints,
+      ...tableConstraints,
+    ];
+    assertNoDuplicateConstraintNames(constraintSpecs);
+    function assertNoDuplicateConstraintNames(
+      specs: ConstraintSpec[]
+    ): void {
+      const seen = new Set<string>();
+      for (const spec of specs) {
+        const specName = normalizeIdentifier(spec.name);
+        if (seen.has(specName)) {
+          throw new Error(`Duplicate constraint name '${spec.name}' in CREATE TABLE`);
+        }
+        seen.add(specName);
+      }
+    }
+    assertOnlyOnePrimaryKey(constraintSpecs);
+    function assertOnlyOnePrimaryKey(
+      constraintSpecs: ConstraintSpec[]
+    ): void {
+      const primaryKeyCount = constraintSpecs.filter(
+        (c) => c.kind === CONSTRAINT_KIND.primaryKey,
+      ).length;
+
+      if (primaryKeyCount > 1) {
+        throw new Error(`Multiple Primary Keys defined`);
+      }
+    }
+
+    return constraintSpecs;
+  }
+
+  constraintSpecs.forEach(spec => {
+    stmtActions.push(
+      ...getActionsForConstraint(
+        dbName,
+        tableName,
+        spec,
+        ctx,
+      )
+    )
+  });
+  function getActionsForConstraint(
+    dbName: string,
+    tableName: string,
+    spec: ConstraintSpec,
+    ctx: ExecutionContext,
+  ): Action[] {
+    const actions: Action[] = [];
+
+    switch (spec.kind) {
+      case CONSTRAINT_KIND.foreignKey:
+        const reverseIndexName = ForeignKey.defaultIndexName(spec.name);
+
+        actions.push(
+          new AddIndexAction(dbName, tableName, {
+            name: reverseIndexName,
+            columns: spec.columns,
+            unique: false,
+            nullsDistinct: ctx.rules.constraints.nullsDistinct,
+          }),
+        );
+
+        actions.push(
+          new AddForeignKeyAction(dbName, tableName, {
+            ...spec,
+            onDelete:
+              spec.onDelete ??
+              ctx.rules.constraints.foreignKeyDefaultOnDelete,
+            onUpdate:
+              spec.onDelete ??
+              ctx.rules.constraints.foreignKeyDefaultOnUpdate,
+            reverseIndex: reverseIndexName,
+          }),
+        );
+
+        break;
+
+      case CONSTRAINT_KIND.unique:
           if ((spec.columns === undefined) === (spec.using === undefined)) {
             throw new Error(
               "UNIQUE constraint requires exactly one of 'columns' or 'using'.",
             );
           }
 
-          stmtActions.push(
+          actions.push(
             new AddUniqueConstraintAction(dbName, tableName, {
               name: spec.name,
               columns: spec.columns,
@@ -123,12 +377,12 @@ export function bindCreateTable(
           break;
 
         case CONSTRAINT_KIND.check:
-          stmtActions.push(new AddCheckAction(dbName, tableName, spec));
+          actions.push(new AddCheckAction(dbName, tableName, spec));
 
           break;
 
         case CONSTRAINT_KIND.primaryKey:
-          stmtActions.push(
+          actions.push(
             new AddIndexAction(dbName, tableName, {
               name: PrimaryKey.defaultIndexName(spec.name),
               columns: spec.columns,
@@ -137,85 +391,24 @@ export function bindCreateTable(
             }),
           );
 
-          stmtActions.push(new AddPrimaryKeyAction(dbName, tableName, spec));
+          actions.push(new AddPrimaryKeyAction(dbName, tableName, spec));
 
           break;
 
         default:
           break;
-      }
     }
+    return actions;
   }
 
-  // add constraints
-  for (const spec of Object.values(stmt.constraintSchema ?? {})) {
-    switch (spec.kind) {
-      case CONSTRAINT_KIND.foreignKey: {
-        const reverseIndexName = ForeignKey.defaultIndexName(spec.name);
-
-        stmtActions.push(
-          new AddIndexAction(dbName, tableName, {
-            name: reverseIndexName,
-            columns: spec.columns,
-            unique: false,
-            nullsDistinct: ctx.rules.constraints.nullsDistinct,
-          }),
-        );
-
-        stmtActions.push(
-          new AddForeignKeyAction(dbName, tableName, {
-            ...spec,
-            onDelete:
-              spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnDelete,
-            onUpdate:
-              spec.onDelete ?? ctx.rules.constraints.foreignKeyDefaultOnUpdate,
-            reverseIndex: reverseIndexName,
-          }),
-        );
-
-        break;
-      }
-
-      case CONSTRAINT_KIND.unique:
-        if ((spec.columns === undefined) === (spec.using === undefined)) {
-          throw new Error(
-            "UNIQUE constraint requires exactly one of 'columns' or 'using'.",
-          );
-        }
-
-        stmtActions.push(
-          new AddUniqueConstraintAction(dbName, tableName, {
-            name: spec.name,
-            columns: spec.columns,
-            using: spec.using,
-            nullsDistinct: ctx.rules.constraints.nullsDistinct,
-          }),
-        );
-
-        break;
-
-      case CONSTRAINT_KIND.check:
-        stmtActions.push(new AddCheckAction(dbName, tableName, spec));
-
-        break;
-
-      case CONSTRAINT_KIND.primaryKey:
-        stmtActions.push(
-          new AddIndexAction(dbName, tableName, {
-            name: PrimaryKey.defaultIndexName(spec.name),
-            columns: spec.columns,
-            unique: true,
-            nullsDistinct: ctx.rules.constraints.nullsDistinct,
-          }),
-        );
-
-        stmtActions.push(new AddPrimaryKeyAction(dbName, tableName, spec));
-
-        break;
-
-      default:
-        throw new Error(`Invalid Inline Constraint Spec`);
-    }
+  if (queryPlan) {
+    stmtActions.push(
+      new InsertSelectAction(
+        dbName,
+        tableName,
+        queryPlan,
+      )
+    );
   }
 
   return stmtActions;

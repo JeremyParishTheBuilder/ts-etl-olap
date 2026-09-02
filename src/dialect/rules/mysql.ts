@@ -29,6 +29,7 @@ export const MYSQL_RULES: DialectRules = {
     supportsIfExists: true,
     supportsDeferrableConstraints: false, // MySQL does not support deferrable constraints
     supportsInlineForeignKeys: false,
+    ctasDefinedColumnListOverridesQueryColumns: false,
   },
 
   constraints: {

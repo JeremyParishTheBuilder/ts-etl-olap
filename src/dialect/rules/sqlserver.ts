@@ -31,6 +31,7 @@ export const SQLSERVER_RULES: DialectRules = {
     supportsIfExists: true, // DROP TABLE / DROP COLUMN ... IF EXISTS is supported in recent versions
     supportsDeferrableConstraints: false, // SQL Server does not support DEFERRABLE
     supportsInlineForeignKeys: true,
+    ctasDefinedColumnListOverridesQueryColumns: false,
   },
 
   constraints: {

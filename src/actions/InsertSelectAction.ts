@@ -9,21 +9,34 @@ export class InsertSelectAction implements Action {
   constructor(
     private dbName: string,
     private tableName: string,
-    private targetColumns: ColumnId[],
     private queryPlan: QueryPlan,
+    private targetColumns?: ColumnId[],
+    //When target column IDs are supplied, insert into those explicitly resolved columns. When omitted, map query result columns to the newly created destination columns by query-result column name.
   ) {}
 
   apply(databases: Databases) {
     const db = databases.requireByName(this.dbName);
 
-    db.tables.requireByName(this.tableName);
+    const table = db.tables.requireByName(this.tableName);
+
+    // TODO, make targetColumns required, but maybe it's just names/strings
+
+    const columnIds: ColumnId[] = this.targetColumns
+      ? this.targetColumns
+      : this.queryPlan.columns.map(qc =>
+        table.columns.requireIdByName(qc.name)
+      );
 
     const queryRows: IterableIterator<RowView> = this.queryPlan.root.execute();
 
     const inputRows: Map<ColumnId, ColumnInput>[] = mapQueryRowsToInsertRows(
       queryRows,
-      this.targetColumns,
+      columnIds,
     );
+
+    //TODO
+    console.log("take al ook at this");
+    console.log(inputRows);
 
     const updatedDatabase = db.addRows(this.tableName, inputRows);
 

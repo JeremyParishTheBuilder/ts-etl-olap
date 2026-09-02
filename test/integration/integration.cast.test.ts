@@ -3,7 +3,6 @@ import { createTestPostgresSql } from '../utils/engineHelpers.ts';
 import { SQL_INTEGER, SQL_VARCHAR } from '../../src/types/SqlType.ts';
 import { cast, col } from '../../src/ast/dsl.ts';
 
-
 describe("Integration::cast", () => {
   it("casts an INSERT value to the target SQL type", () => {
     const sql = createTestPostgresSql();
