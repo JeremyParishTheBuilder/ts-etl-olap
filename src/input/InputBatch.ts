@@ -32,6 +32,7 @@ import type { UpdateInput } from "../types/UpdateInput.js";
 import type { RowView } from "../relational/RowView.js";
 import type { InsertInput } from "../types/InsertInput.js";
 import type { SelectInput } from "../types/SelectInput.js";
+import { UnionAllBuilder } from "../statements/dql/UnionAllStatement.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -426,6 +427,18 @@ export abstract class InputBatch {
       );
     }
     this.currentBuilder.where(predicate);
+    return this;
+  }
+
+  protected unionAll(query: QueryStatement, fragment: string = "UNION ALL") {
+    this.assertAllowed("unionAll", fragment);
+    if (
+      !(this.currentBuilder instanceof SelectBuilder) &&
+      !(this.currentBuilder instanceof UnionAllBuilder)
+    ) {
+      throw new Error(`Cannot call '${fragment}' without a preceding Query`);
+    }
+    this.currentBuilder.unionAll(query);
     return this;
   }
 

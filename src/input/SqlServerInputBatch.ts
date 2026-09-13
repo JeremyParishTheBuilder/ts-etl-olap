@@ -106,4 +106,8 @@ export class SqlServerInputBatch extends InputBatch {
   where(predicate: PredicateNode) {
     return super.where(predicate);
   }
+
+  unionAll(query: QueryStatement) {
+    return super.unionAll(query);
+  }
 }

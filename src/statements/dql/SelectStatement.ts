@@ -1,6 +1,9 @@
 import { type PredicateNode } from "../../ast/predicate/PredicateNode.js";
 import type { SelectInput } from "../../types/SelectInput.js";
-import { type BaseStatement, type StatementBuilder } from "../Statement.js";
+import { type BaseStatement } from "../Statement.js";
+import type { QueryStatement } from "./QueryStatement.js";
+import { QueryStatementBuilder } from "./QueryStatementBuilder.js";
+import { UnionAllBuilder } from "./UnionAllStatement.js";
 
 export interface SelectStatement extends BaseStatement {
   kind: "select";
@@ -9,11 +12,13 @@ export interface SelectStatement extends BaseStatement {
   where?: PredicateNode;
 }
 
-export class SelectBuilder implements StatementBuilder {
+export class SelectBuilder implements QueryStatementBuilder {
   private tableName?: string;
   private whereClause?: PredicateNode;
 
-  constructor(private expressions: SelectInput[] | "*") {}
+  constructor(private expressions: SelectInput[] | "*") {
+    //super();
+  }
 
   from(tableName: string) {
     this.tableName = tableName;
@@ -23,21 +28,33 @@ export class SelectBuilder implements StatementBuilder {
     this.whereClause = predicate;
   }
 
+  unionAll(query: QueryStatement) {
+    return new UnionAllBuilder(
+      this.createStatement(),
+      query,
+    );
+  }
+
   getNextCalls() {
-    if (!this.tableName)
+    const required: string[] = [];
+    const optional: string[] = [];
+
+    if (!this.tableName) {
       return {
         required: ["from"],
-        optional: [],
+        optional,
       };
-    if (!this.whereClause)
-      return {
-        required: [],
-        optional: ["where"],
-      };
+    }
+
+    if (!this.whereClause) {
+      optional.push("where");
+    }
+
+    optional.push("unionAll");
 
     return {
-      required: [],
-      optional: [],
+      required,
+      optional,
     };
   }
 
