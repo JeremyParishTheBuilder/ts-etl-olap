@@ -1,27 +1,45 @@
 import type { StatementBuilder } from "../Statement.js";
 import type { QueryStatement } from "./QueryStatement.js";
-//import { UnionAllBuilder } from "./UnionAllStatement.js";
+import type { UnionAllStatement } from "./UnionAllStatement.js";
 
-export /*abstrct class*/interface QueryStatementBuilder extends StatementBuilder {
-  // constructor() {}
+export abstract class QueryStatementBuilder implements StatementBuilder {
+  unionAll(query: QueryStatement) {
+    return new UnionAllBuilder(this.createStatement(), query);
+  }
 
-  // unionAll(query: QueryStatement) {
-  //   return new UnionAllBuilder(
-  //     this.createStatement(),
-  //     query,
-  //   );
-  // }
+  getNextCalls(): {
+    required: string[];
+    optional: string[];
+  } {
+    return {
+      required: [],
+      optional: ["unionAll"],
+    };
+  }
 
-  unionAll(query: QueryStatement): QueryStatementBuilder;
+  abstract createStatement(): QueryStatement;
+}
 
-  // union(query: QueryStatement): QueryBuilder;
-  // intersect(query: QueryStatement): QueryBuilder;
-  // except(query: QueryStatement): QueryBuilder;
+export class UnionAllBuilder extends QueryStatementBuilder {
+  constructor(
+    private left: QueryStatement,
+    private right: QueryStatement,
+  ) {
+    super();
+  }
 
-  // abstract getNextCalls(): {
-  //   required: string[];
-  //   optional: string[];
-  // };
+  getNextCalls() {
+    return {
+      required: [],
+      optional: ["unionAll"],
+    };
+  }
 
-  // abstract createStatement(): QueryStatement;
+  createStatement(): UnionAllStatement {
+    return {
+      kind: "unionAll",
+      left: this.left,
+      right: this.right,
+    };
+  }
 }

@@ -1,22 +1,20 @@
 import { type Action } from "../actions/Action.js";
 import { InsertRowsAction } from "../actions/InsertRowsAction.js";
-import {
-  type InsertIntoStatement,
-  type QueryStatement,
-} from "../statements/index.js";
+import { type InsertIntoStatement } from "../statements/index.js";
 import { type ColumnId, type Column } from "../relational/Column.js";
 import { resolveTargetColumns } from "./resolveColumnList.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { assertInsertExpression, bindInsertExpression } from "./expression.js";
 import { validateInputNode } from "./toExpressionNode.js";
-import type { DefaultValueNode } from "../ast/DefaultValueNode.js";
+import { DefaultValueNode } from "../ast/DefaultValueNode.js";
 import type { ColumnInput } from "../types/ColumnInput.js";
 import { DEFAULT } from "../dialect/keywords.js";
 import type { ExpressionNode } from "../ast/expression/ExpressionNode.js";
 import { InsertSelectAction } from "../actions/InsertSelectAction.js";
-import { bindSelect } from "./select.js";
 import { isSameType } from "../types/SqlType.js";
 import type { Table } from "../relational/Table.js";
+import { bindQuery } from "./query.js";
+import type { QueryStatement } from "../statements/dql/QueryStatement.js";
 
 export function bindInsertInto(
   semantic: SemanticAnalyzer,
@@ -26,37 +24,43 @@ export function bindInsertInto(
   const table = semantic.ctx.requireTable(stmt.table);
   const effectiveColumns = resolveTargetColumns(table, stmt.columns);
 
-  if (stmt.values !== undefined) {
-    return bindInsertValues(
-      semantic,
-      database.name,
-      table,
-      effectiveColumns,
-      stmt.values,
-    );
-  }
+  switch (stmt.source.kind) {
+    case "values":
+      return bindInsertValues(
+        semantic,
+        database.name,
+        table,
+        effectiveColumns,
+        stmt.source.rows,
+      );
 
-  if (stmt.select !== undefined) {
-    return bindInsertSelect(
-      semantic,
-      database.name,
-      table,
-      effectiveColumns,
-      stmt.select,
-    );
-  }
+    case "query":
+      return bindInsertQuery(
+        semantic,
+        database.name,
+        table,
+        effectiveColumns,
+        stmt.source.query,
+      );
 
-  throw new Error("INSERT requires either VALUES or SELECT.");
+    case "defaultValues":
+      return bindInsertDefaultValues(database.name, table, effectiveColumns);
+
+    default:
+      throw new Error(
+        "INSERT requires either VALUES, DEFAULT VALUES, or a query.",
+      );
+  }
 }
 
-function bindInsertSelect(
+function bindInsertQuery(
   semantic: SemanticAnalyzer,
   dbName: string,
   targetTable: Table,
   targetColumns: Column[],
-  select: QueryStatement,
+  query: QueryStatement,
 ): Action[] {
-  const queryPlan = bindSelect(semantic, select);
+  const queryPlan = bindQuery(semantic, query);
 
   const selectColumns = queryPlan.columns;
 
@@ -141,6 +145,20 @@ function bindInsertValues(
   }
 
   return [new InsertRowsAction(dbName, targetTable.name, inputRows)];
+}
+
+function bindInsertDefaultValues(
+  dbName: string,
+  targetTable: Table,
+  targetColumns: Column[],
+): Action[] {
+  const inputRow = new Map<ColumnId, ColumnInput>();
+
+  for (const column of targetColumns) {
+    inputRow.set(column.id, DEFAULT);
+  }
+
+  return [new InsertRowsAction(dbName, targetTable.name, [inputRow])];
 }
 
 function assertAtLeastOneRowOfValues(

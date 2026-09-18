@@ -1,4 +1,3 @@
-import { commonSqlType } from "../../semantic/expression.js";
 import type { SqlType } from "../../types/SqlType.js";
 import { type PlanNode } from "./PlanNode.js";
 

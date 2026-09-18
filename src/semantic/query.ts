@@ -26,10 +26,7 @@ function bindUnionAll(
   const left = bindQuery(semantic, stmt.left);
   const right = bindQuery(semantic, stmt.right);
 
-  const columns = reconcileQueryColumns(
-    left.columns,
-    right.columns,
-  );
+  const columns = reconcileQueryColumns(left.columns, right.columns);
 
   return {
     root: new UnionAllNode(left.root, right.root),

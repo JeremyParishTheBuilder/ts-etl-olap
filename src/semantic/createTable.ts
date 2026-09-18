@@ -18,11 +18,11 @@ import { PrimaryKey } from "../relational/PrimaryKey.js";
 import { ForeignKey } from "../relational/ForeignKey.js";
 import { AddUniqueConstraintAction } from "../actions/AddUniqueConstraintAction.js";
 import type { QueryPlan } from "../evaluation/plan/QueryPlan.js";
-import { bindSelect } from "./select.js";
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
 import { isAssignable } from "../types/SqlType.js";
 import { ExecutionContext } from "../engine/ExecutionContext.js";
 import { PopulateTableFromQueryAction } from "../actions/PopulateTableFromQueryAction.js";
+import { bindQuery } from "./query.js";
 
 export function bindCreateTable(
   semantic: SemanticAnalyzer,
@@ -52,7 +52,7 @@ export function bindCreateTable(
     ctx: ExecutionContext,
   ): void {
     if (
-      stmt.select !== undefined &&
+      stmt.source !== undefined &&
       stmt.constraintList !== undefined &&
       stmt.constraintList.length > 0 &&
       !ctx.rules.ddl.ctasAllowsConstraints
@@ -65,8 +65,8 @@ export function bindCreateTable(
     new CreateTableAction(dbName, tableName, ctx.rules.tablePolicy),
   );
 
-  const queryPlan: QueryPlan | undefined = stmt.select
-    ? bindSelect(semantic, stmt.select)
+  const queryPlan: QueryPlan | undefined = stmt.source
+    ? bindQuery(semantic, stmt.source)
     : undefined;
 
   const columnSpecs: ColumnSpec[] = getColumnSpecsForStatement(

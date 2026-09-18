@@ -1,5 +1,5 @@
 import type { QueryColumn } from "../evaluation/plan/QueryPlan.js";
-import type { SqlType } from "../types/SqlType.js";
+import { isAssignable, type SqlType } from "../types/SqlType.js";
 import { commonSqlType } from "./expression.js";
 
 export function reconcileQueryColumns(
@@ -15,7 +15,7 @@ export function reconcileQueryColumns(
     left: readonly QueryColumn[],
     _right: readonly QueryColumn[],
   ): string[] {
-    return left.map(qc => qc.name);
+    return left.map((qc) => qc.name);
   }
 
   const types: SqlType[] = getQueryColumnTypes(left, right);
@@ -25,6 +25,8 @@ export function reconcileQueryColumns(
   ): SqlType[] {
     const types: SqlType[] = [];
     for (let i = 0; i < left.length; i++) {
+      assertTypesAssignable(left[i].type, right[i].type);
+
       types[i] = commonSqlType([left[i].type, right[i].type]);
     }
     return types;
@@ -47,7 +49,7 @@ export function reconcileQueryColumns(
     queryColumns.push({
       name: names[i],
       type: types[i],
-      nullable: nullable[i]
+      nullable: nullable[i],
     });
   }
   return queryColumns;
@@ -59,5 +61,13 @@ function assertSameColumnLength(
 ): void {
   if (left.length !== right.length) {
     throw new Error(`Query column lists must have the same length`);
+  }
+}
+
+function assertTypesAssignable(typeA: SqlType, typeB: SqlType): void {
+  if (!isAssignable(typeA, typeB) && !isAssignable(typeB, typeA)) {
+    throw new Error(
+      `Incompatible types from column reconciliation: ${typeA}, ${typeB}`,
+    );
   }
 }

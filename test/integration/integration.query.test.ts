@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { createTestPostgresSql } from '../utils/engineHelpers.ts';
-import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.ts';
+import { SQL_DECIMAL, SQL_INTEGER, SQL_VARCHAR } from '../../src/types/SqlType.ts';
 import { createTableTestSpec } from '../utils/buildSchema.ts';
+import { col } from '../../src/ast/dsl.ts';
 
 describe('Integration::query', () => {
   describe("Union All", () => {
@@ -58,17 +59,16 @@ describe('Integration::query', () => {
       sql.commit().execute();
 
       const rows = sql
-        .select(["Id", "Name"])
+        .select([col("Id"), col("Name")])
         .from("UsersA")
         .unionAll(
           sql
-            .select(["Id", "Name"])
+            .select([col("Id"), col("Name")])
             .from("UsersB")
-            .asQueryStatement(),
         )
         .execute();
 
-      expect(rows).toEqual([
+      expect(rows).toEqual([[
         {
           index: 0,
           values: [1, "Alice"],
@@ -85,7 +85,7 @@ describe('Integration::query', () => {
           index: 1,
           values: [4, "Dave"],
         },
-      ]);
+      ]]);
     });
 
     it("retains duplicate rows with union all", () => {
@@ -122,22 +122,21 @@ describe('Integration::query', () => {
       sql.commit().execute();
 
       const rows = sql
-        .select(["Id", "Name"])
+        .select([col("Id"), col("Name")])
         .from("Users")
         .unionAll(
           sql
-            .select(["Id", "Name"])
-            .from("Users")
-            .asQueryStatement(),
+          .select([col("Id"), col("Name")])
+          .from("Users")
         )
         .execute();
 
-      expect(rows).toEqual([
+      expect(rows).toEqual([[
         { index: 0, values: [1, "Alice"] },
         { index: 1, values: [2, "Bob"] },
         { index: 0, values: [1, "Alice"] },
         { index: 1, values: [2, "Bob"] },
-      ]);
+      ]]);
     });
 
     it("uses the left query column names for union all", () => {
@@ -179,20 +178,19 @@ describe('Integration::query', () => {
       sql.commit().execute();
 
       const rows = sql
-        .select(["Id"])
+        .select([col("Id")])
         .from("UsersA")
         .unionAll(
           sql
-            .select(["UserId"])
+            .select([col("UserId")])
             .from("UsersB")
-            .asQueryStatement(),
         )
         .execute();
 
-      expect(rows).toEqual([
+      expect(rows).toEqual([[
         { index: 0, values: [1] },
         { index: 0, values: [2] },
-      ]);
+      ]]);
     });
 
     it("executes chained union all queries", () => {
@@ -242,27 +240,312 @@ describe('Integration::query', () => {
         .execute();
 
       const rows = sql
-        .select(["Id"])
+        .select([col("Id")])
         .from("UsersA")
         .unionAll(
           sql
-            .select(["Id"])
-            .from("UsersB")
-            .asQueryStatement(),
+          .select([col("UserId")])
+          .from("UsersB")
         )
         .unionAll(
           sql
-            .select(["Id"])
-            .from("UsersC")
-            .asQueryStatement(),
+          .select([col("UserId")])
+          .from("UsersC")
         )
         .execute();
 
-      expect(rows).toEqual([
+      expect(rows).toEqual([[
         { index: 0, values: [1] },
         { index: 0, values: [2] },
-        { index: 0, values: [3] },
-      ]);
+        { index: 0, values: [4] },
+      ]]);
+    });
+
+    it("executes union all with reconciled column types", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.begin().execute();
+
+      sql.createTable(...createTableTestSpec("UsersA", {
+        Id: {
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+      })).execute();
+
+      sql.createTable(...createTableTestSpec("UsersB", {
+        Id: {
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+      })).execute();
+
+      sql.commit().execute();
+
+      sql.begin().execute();
+
+      sql
+        .insertInto("UsersA", ["Id"])
+        .values([[1]])
+        .execute();
+
+      sql
+        .insertInto("UsersB", ["Id"])
+        .values([[2.5]])
+        .execute();
+
+      sql.commit().execute();
+
+      const rows = sql
+        .select([col("Id")])
+        .from("UsersA")
+        .unionAll(
+          sql
+            .select([col("Id")])
+            .from("UsersB")
+        )
+        .execute();
+
+      expect(rows).toEqual([[
+        { index: 0, values: [1] },
+        { index: 0, values: [2.5] },
+      ]]);
+    });
+
+    it("allows null values when union all reconciles a nullable column", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.begin().execute();
+
+      sql.createTable(...createTableTestSpec("UsersA", {
+        Id: {
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+      })).execute();
+
+      sql.createTable(...createTableTestSpec("UsersB", {
+        Id: {
+          type: SQL_DECIMAL,
+          nullable: true,
+        },
+      })).execute();
+
+      sql.commit().execute();
+
+      sql.begin().execute();
+
+      sql
+        .insertInto("UsersA", ["Id"])
+        .values([[1]])
+        .execute();
+
+      sql
+        .insertInto("UsersB", ["Id"])
+        .values([[null]])
+        .execute();
+
+      sql.commit().execute();
+
+      const rows = sql
+        .select([col("Id")])
+        .from("UsersA")
+        .unionAll(
+          sql
+            .select([col("Id")])
+            .from("UsersB")
+        )
+        .execute();
+
+      expect(rows).toEqual([[
+        { index: 0, values: [1] },
+        { index: 0, values: [null] },
+      ]]);
+    });
+
+    it("rejects union all queries with different column counts", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.createTable(...createTableTestSpec("UsersA", {
+        Id: {
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+      })).execute();
+
+      sql.createTable(...createTableTestSpec("UsersB", {
+        Id: {
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+        Name: {
+          type: SQL_VARCHAR,
+          nullable: false,
+        },
+      })).execute();
+
+      expect(() => {
+        sql
+          .select([col("Id")])
+          .from("UsersA")
+          .unionAll(
+            sql
+              .select([col("Id"), col("Name")])
+              .from("UsersB")
+          )
+          .execute();
+      }).toThrow();
+    });
+
+    it("rejects union all queries with incompatible column types", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.createTable(...createTableTestSpec("UsersA", {
+        Value: {
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+      })).execute();
+
+      sql.createTable(...createTableTestSpec("UsersB", {
+        Value: {
+          type: SQL_VARCHAR,
+          nullable: false,
+        },
+      })).execute();
+
+      expect(() => {
+        sql
+          .select([col("Value")])
+          .from("UsersA")
+          .unionAll(
+            sql
+              .select([col("Value")])
+              .from("UsersB")
+          )
+          .execute();
+      }).toThrow();
+    });
+
+    it("allows an empty left query in union all", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.createTable(...createTableTestSpec("Empty", {
+        Id: {
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+      })).execute();
+
+      sql.createTable(...createTableTestSpec("Users", {
+        Id: {
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+      })).execute();
+
+      sql.insertInto("Users", ["Id"]).values([[1], [2]]).execute();
+
+      const rows = sql
+        .select([col("Id")])
+        .from("Empty")
+        .unionAll(
+          sql
+            .select([col("Id")])
+            .from("Users")
+        )
+        .execute();
+
+      expect(rows).toEqual([[
+        { index: 0, values: [1] },
+        { index: 1, values: [2] },
+      ]]);
+    });
+
+    it("allows an empty right query in union all", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.createTable(...createTableTestSpec("Users", {
+        Id: {
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+      })).execute();
+
+      sql.createTable(...createTableTestSpec("Empty", {
+        Id: {
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+      })).execute();
+
+      sql.insertInto("Users", ["Id"]).values([[1], [2]]).execute();
+
+      const rows = sql
+        .select([col("Id")])
+        .from("Users")
+        .unionAll(
+          sql
+            .select([col("Id")])
+            .from("Empty")
+        )
+        .execute();
+
+      expect(rows).toEqual([[
+        { index: 0, values: [1] },
+        { index: 1, values: [2] },
+      ]]);
+    });
+
+    it("allows union all of two empty queries", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.createTable(...createTableTestSpec("EmptyA", {
+        Id: {
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+      })).execute();
+
+      sql.createTable(...createTableTestSpec("EmptyB", {
+        Id: {
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+      })).execute();
+
+      const rows = sql
+        .select([col("Id")])
+        .from("EmptyA")
+        .unionAll(
+          sql
+            .select([col("Id")])
+            .from("EmptyB")
+        )
+        .execute();
+
+      expect(rows).toEqual([[]]);
     });
   });
 });

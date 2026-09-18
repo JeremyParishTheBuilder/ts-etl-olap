@@ -489,12 +489,11 @@ describe("Integration::insertSelect", () => {
       .insertInto("Destination", ["Id", "Name"])
       .select(
         sql
-          .select([
-            col("Id"),
-            col("OldName"),
-          ])
-          .from("Source")
-          .asQueryStatement(),
+        .select([
+          col("Id"),
+          col("OldName"),
+        ])
+        .from("Source")
       )
       .execute();
 
@@ -553,17 +552,16 @@ describe("Integration::insertSelect", () => {
       ])
       .execute();
 
-    const queryStmt = sql
-      .select([
-        col("Id"),
-        col("OldName"),
-      ])
-      .from("Source")
-      .asQueryStatement();
-
     sql
       .insertInto("Destination", ["Id", "Name"])
-      .select(queryStmt)
+      .select(
+        sql
+        .select([
+          col("Id"),
+          col("OldName"),
+        ])
+        .from("Source")
+      )
       .execute();
 
     const rows = sql
@@ -626,15 +624,14 @@ describe("Integration::insertSelect", () => {
       .insertInto("Destination", ["Id", "Name"])
       .select(
         sql
-          .select([
-            col("Id"),
-            col("OldName"),
-          ])
-          .from("Source")
-          .where(
-            col("id").gte(2)
-          )
-          .asQueryStatement(),
+        .select([
+          col("Id"),
+          col("OldName"),
+        ])
+        .from("Source")
+        .where(
+          col("id").gte(2)
+        )
       )
       .execute();
 
@@ -690,11 +687,9 @@ describe("Integration::insertSelect", () => {
         .insertInto("Destination", ["Id", "Name"])
         .select(
           sql
-            .select([col("Id")])
-            .from("Source")
-            .asQueryStatement(),
-        )
-        .execute();
+          .select([col("Id")])
+          .from("Source")
+        ).execute();
     }).toThrow(
       "Column length mismatch between query statement and target columns",
     );
@@ -735,13 +730,117 @@ describe("Integration::insertSelect", () => {
         .insertInto("Destination", ["Id", "Name"])
         .select(
           sql
-            .select([col("Id"), col("OldValue")])
-            .from("Source")
-            .asQueryStatement(),
+          .select([col("Id"), col("OldValue")])
+          .from("Source")
         )
         .execute();
     }).toThrow(
       "Query column type does not match target column type",
     );
+  });
+
+  it("inserts rows from a union all query", () => {
+    const sql = createTestPostgresSql();
+
+    sql.createDatabase("DB1").execute();
+    sql.useDatabase("DB1").execute();
+
+    sql.begin().execute();
+
+    sql.createTable(...createTableTestSpec("SourceA", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    })).execute();
+
+    sql.createTable(...createTableTestSpec("SourceB", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    })).execute();
+
+    sql.createTable(...createTableTestSpec("Destination", {
+      Id: {
+        type: SQL_DECIMAL,
+        nullable: false,
+        primaryKey: true,
+      },
+      Name: {
+        type: SQL_VARCHAR,
+        nullable: false,
+      },
+    })).execute();
+
+    sql.commit().execute();
+
+    sql.begin().execute();
+
+    sql
+      .insertInto("SourceA", ["Id", "Name"])
+      .values([
+        [1, "Alice"],
+        [2, "Bob"],
+      ])
+      .execute();
+
+    sql
+      .insertInto("SourceB", ["Id", "Name"])
+      .values([
+        [3, "Carol"],
+        [4, "Dave"],
+      ])
+      .execute();
+
+    sql.commit().execute();
+
+    sql
+      .insertInto("Destination", ["Id", "Name"])
+      .select(
+        sql
+          .select([col("Id"), col("Name")])
+          .from("SourceA")
+          .unionAll(
+            sql
+              .select([col("Id"), col("Name")])
+              .from("SourceB")
+          )
+      )
+      .execute();
+
+    const rows = sql
+      .select("*")
+      .from("Destination")
+      .execute();
+
+    expect(rows).toEqual([[
+      {
+        index: 0,
+        values: [1, "Alice"],
+      },
+      {
+        index: 1,
+        values: [2, "Bob"],
+      },
+      {
+        index: 2,
+        values: [3, "Carol"],
+      },
+      {
+        index: 3,
+        values: [4, "Dave"],
+      },
+    ]]);
   });
 });

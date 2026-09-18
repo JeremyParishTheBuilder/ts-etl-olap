@@ -4,12 +4,12 @@ import { ExecutionContext } from '../../src/engine/ExecutionContext.js';
 import { SemanticAnalyzer } from '../../src/semantic/SemanticAnalyzer.js';
 import { Engine } from '../../src/engine/Engine.js';
 import { freshEngine } from '../utils/engineHelpers.js';
-import { UnionAllBuilder } from '../../src/statements/dql/UnionAllStatement.js';
 import { SelectBuilder } from '../../src/statements/index.ts';
 import { bindQuery } from '../../src/semantic/query.ts';
 import { buildDatabase, buildTable, createColumnTestSpec } from '../utils/buildSchema.ts';
 import { SQL_INTEGER } from '../../src/types/SqlType.ts';
 import { col } from '../../src/ast/dsl.ts';
+import { UnionAllBuilder } from '../../src/statements/dql/QueryStatementBuilder.ts';
 
 describe('SemanticAnalyzer::bindQuery', () => {
   let engine: Engine;

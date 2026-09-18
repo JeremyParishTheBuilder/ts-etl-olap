@@ -1,9 +1,7 @@
 import { type PredicateNode } from "../../ast/predicate/PredicateNode.js";
 import type { SelectInput } from "../../types/SelectInput.js";
 import { type BaseStatement } from "../Statement.js";
-import type { QueryStatement } from "./QueryStatement.js";
 import { QueryStatementBuilder } from "./QueryStatementBuilder.js";
-import { UnionAllBuilder } from "./UnionAllStatement.js";
 
 export interface SelectStatement extends BaseStatement {
   kind: "select";
@@ -12,12 +10,12 @@ export interface SelectStatement extends BaseStatement {
   where?: PredicateNode;
 }
 
-export class SelectBuilder implements QueryStatementBuilder {
+export class SelectBuilder extends QueryStatementBuilder {
   private tableName?: string;
   private whereClause?: PredicateNode;
 
   constructor(private expressions: SelectInput[] | "*") {
-    //super();
+    super();
   }
 
   from(tableName: string) {
@@ -28,29 +26,19 @@ export class SelectBuilder implements QueryStatementBuilder {
     this.whereClause = predicate;
   }
 
-  unionAll(query: QueryStatement) {
-    return new UnionAllBuilder(
-      this.createStatement(),
-      query,
-    );
-  }
-
   getNextCalls() {
-    const required: string[] = [];
-    const optional: string[] = [];
-
     if (!this.tableName) {
       return {
         required: ["from"],
-        optional,
+        optional: [],
       };
     }
+
+    const { required, optional } = super.getNextCalls();
 
     if (!this.whereClause) {
       optional.push("where");
     }
-
-    optional.push("unionAll");
 
     return {
       required,

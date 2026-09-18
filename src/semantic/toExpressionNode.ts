@@ -16,10 +16,10 @@ import { SqlFunctionExpressionNode } from "../ast/expression/SqlFunctionExpressi
 import { TemporalExpressionNode } from "../ast/expression/TemporalExpressionNode.js";
 import { isExpressionNodeUnion } from "../ast/expression/isExpressionNodeUnion.js";
 import type { ExpressionNode } from "../ast/expression/ExpressionNode.js";
-import type { InsertInput } from "../types/InsertInput.js";
+import type { InsertValuesInput } from "../types/InsertSource.js";
 
 export function toExpressionNode(
-  value: UpdateInput | InsertInput,
+  value: UpdateInput | InsertValuesInput,
 ): ExpressionNode | DefaultValueNode {
   if (value === DEFAULT) {
     return new DefaultValueNode();

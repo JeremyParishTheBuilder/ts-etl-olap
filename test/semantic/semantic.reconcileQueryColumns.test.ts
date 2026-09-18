@@ -199,5 +199,25 @@ describe('SemanticAnalyzer::bindQuery', () => {
         },
       ]);
     });
+
+    it("rejects strongly incompatible column types", () => {
+      const left: QueryColumn[] = [
+        {
+          name: "Value",
+          type: SQL_DECIMAL,
+          nullable: false,
+        },
+      ];
+
+      const right: QueryColumn[] = [
+        {
+          name: "Value",
+          type: SQL_VARCHAR,
+          nullable: false,
+        },
+      ];
+
+      expect(() => reconcileQueryColumns(left, right)).toThrow();
+    });
   });
 });

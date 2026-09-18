@@ -5,10 +5,10 @@ import { type BindResult } from "../engine/BindResult.js";
 import { bindCreateDatabase } from "./createDatabase.js";
 import { bindCreateTable } from "./createTable.js";
 import { bindInsertInto } from "./insertInto.js";
-import { bindSelect } from "./select.js";
 import { bindAlterTable } from "./alterTable.js";
 import { bindUpdateSet } from "./updateSet.js";
 import { bindDeleteFrom } from "./deleteFrom.js";
+import { bindQuery } from "./query.js";
 
 export class SemanticAnalyzer {
   constructor(public readonly ctx: ExecutionContext) {}
@@ -34,7 +34,8 @@ export class SemanticAnalyzer {
         return { kind: "actions", actions: bindDeleteFrom(this, stmt) };
 
       case "select":
-        return { kind: "query", plan: bindSelect(this, stmt) };
+      case "unionAll":
+        return { kind: "query", plan: bindQuery(this, stmt) };
 
       default:
         throw new Error(`Unsupported statement`);

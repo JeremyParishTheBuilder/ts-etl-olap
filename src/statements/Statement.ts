@@ -46,20 +46,11 @@ export type Statement =
 
 export type ConstraintStatement = AlterAddConstraint;
 
-//TODO, delete this
-export type QueryStatement = SelectStatement;
-
-export interface StatementBuilder extends Builder {
-  createStatement(): Statement;
-}
-
-export interface Builder {
+export interface StatementBuilder {
   getNextCalls(): {
     required: string[];
     optional: string[];
   };
-}
 
-export function isStatementBuilder(b: Builder): b is StatementBuilder {
-  return "createStatement" in b;
+  createStatement(): Statement;
 }

@@ -1,7 +1,7 @@
 import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 import { type InlineColumnSpec } from "../../relational/Column.js";
 import { type ConstraintSpec } from "../../relational/Constraint.js";
-import type { SelectStatement } from "../dql/SelectStatement.js";
+import type { QueryStatement } from "../dql/QueryStatement.js";
 
 export interface CreateTableStatement extends BaseStatement {
   kind: "create_table";
@@ -10,11 +10,11 @@ export interface CreateTableStatement extends BaseStatement {
   columnList?: InlineColumnSpec[];
   constraintList?: ConstraintSpec[];
 
-  select?: SelectStatement;
+  source?: QueryStatement;
 }
 
 export class CreateTableBuilder implements StatementBuilder {
-  private selectStatement?: SelectStatement;
+  private source?: QueryStatement;
 
   constructor(
     private table: string,
@@ -22,12 +22,14 @@ export class CreateTableBuilder implements StatementBuilder {
     private constraints?: ConstraintSpec[],
   ) {}
 
-  as(query: SelectStatement) {
-    this.selectStatement = query;
+  as(query: QueryStatement) {
+    this.assertNoSource();
+
+    this.source = query;
   }
 
   getNextCalls() {
-    if (!this.selectStatement) {
+    if (!this.source) {
       return {
         required: [],
         optional: ["as"],
@@ -46,7 +48,13 @@ export class CreateTableBuilder implements StatementBuilder {
       table: this.table,
       columnList: this.columns,
       constraintList: this.constraints,
-      select: this.selectStatement,
+      source: this.source,
     };
+  }
+
+  assertNoSource(): void {
+    if (this.source) {
+      throw new Error(`Insert Into Builder already has an Insert Source.`);
+    }
   }
 }
