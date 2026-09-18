@@ -236,8 +236,8 @@ function createTestDatabase() {
     .values([[sql.DEFAULT]])
     .execute();
   console.log("5");
-  const rows1 = sql.select("*").from("T1").execute();
-  console.log(rows1[0][0]);
+  const results = sql.select("*").from("T1").execute();
+  console.log(results[0].rows[0]);
   sql
     .insertInto("T1")
     .values([[1], [sql.DEFAULT]])

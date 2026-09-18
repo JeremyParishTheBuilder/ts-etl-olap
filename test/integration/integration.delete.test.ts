@@ -37,17 +37,17 @@ describe("Integration::delete", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         "index": 1,
         "values": [2, "Bob"],
       },
-    ]]);
+    ]);
   });
 
   it("deletes all rows when no WHERE clause is specified", () => {
@@ -73,12 +73,12 @@ describe("Integration::delete", () => {
       .deleteFrom("Users")
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[]]);
+    expect(results[0].rows).toEqual([]);
   });
 
   it("deletes multiple rows matching a predicate", () => {
@@ -107,17 +107,17 @@ describe("Integration::delete", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1],
       },
-    ]]);
+    ]);
   });
 
   it("prevents deleting a parent row referenced by a child", () => {
@@ -233,7 +233,7 @@ describe("Integration::delete", () => {
       .from("Users")
       .execute();
 
-    expect(roles).toEqual([[]]);
-    expect(users).toEqual([[]]);
+    expect(roles[0].rows).toEqual([]);
+    expect(users[0].rows).toEqual([]);
   });
 });

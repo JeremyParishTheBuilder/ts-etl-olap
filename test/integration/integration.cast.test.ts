@@ -34,17 +34,17 @@ describe("Integration::cast", () => {
       ])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, "123"],
       },
-    ]]);
+    ]);
   });
 
   it("casts a column value during UPDATE", () => {
@@ -78,17 +78,17 @@ describe("Integration::cast", () => {
       .where(col("Id").eq(123))
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [123, "123"],
       },
-    ]]);
+    ]);
   });
 
   it("evaluates CAST inside a WHERE predicate", () => {
@@ -127,12 +127,12 @@ describe("Integration::cast", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [123, "matched"],
@@ -141,7 +141,7 @@ describe("Integration::cast", () => {
         index: 1,
         values: [456, "456"],
       },
-    ]]);
+    ]);
   });
 
   it("rejects a CAST that is incompatible with a known column type", () => {

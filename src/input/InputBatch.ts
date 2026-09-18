@@ -27,11 +27,11 @@ import {
   NOW,
 } from "../dialect/keywords.js";
 import type { UpdateInput } from "../types/UpdateInput.js";
-import type { RowView } from "../relational/RowView.js";
 import type { InsertValuesInput } from "../types/InsertSource.js";
 import type { SelectInput } from "../types/SelectInput.js";
 import { QueryStatementBuilder } from "../statements/dql/QueryStatementBuilder.js";
 import type { QueryStatement } from "../statements/dql/QueryStatement.js";
+import type { QueryResult } from "../evaluation/QueryResult.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -52,7 +52,9 @@ export abstract class InputBatch {
   ];
 
   constructor(
-    protected readonly executeStatement: (stmt: Statement) => RowView[] | void,
+    protected readonly executeStatement: (
+      stmt: Statement,
+    ) => QueryResult | void,
   ) {}
 
   protected abstract createInputBatch(): this;
@@ -478,10 +480,10 @@ export abstract class InputBatch {
     return statement;
   }
 
-  execute(): RowView[][] {
+  execute(): QueryResult[] {
     this.finalizeStatement();
 
-    const resultIterators: RowView[][] = [];
+    const resultIterators: QueryResult[] = [];
 
     const statementsToExecute = [...this.statements];
     this.statements = [];
@@ -489,7 +491,7 @@ export abstract class InputBatch {
     for (const stmt of statementsToExecute) {
       const result = this.executeStatement(stmt);
 
-      if (isQueryStatement(stmt) && result !== undefined) {
+      if (result !== undefined) {
         resultIterators.push(result);
       }
     }
