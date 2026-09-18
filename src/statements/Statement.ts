@@ -11,6 +11,7 @@ import { type InsertIntoStatement } from "./dml/InsertIntoStatement.js";
 import { type SelectStatement } from "./dql/SelectStatement.js";
 import { type UpdateSetStatement } from "./dml/UpdateSetStatement.js";
 import { type DeleteFromStatement } from "./dml/DeleteFromStatement.js";
+import type { UnionAllStatement } from "./dql/UnionAllStatement.js";
 
 export interface BaseStatement {
   readonly kind: StatementKind;
@@ -27,7 +28,8 @@ export type StatementKind =
   | "update_set"
   | "delete_from"
   | "select"
-  | "where";
+  | "where"
+  | "unionAll";
 
 export type Statement =
   | BeginStatement
@@ -39,23 +41,16 @@ export type Statement =
   | InsertIntoStatement
   | UpdateSetStatement
   | DeleteFromStatement
-  | SelectStatement;
+  | SelectStatement
+  | UnionAllStatement;
 
 export type ConstraintStatement = AlterAddConstraint;
 
-export type QueryStatement = SelectStatement;
-
-export interface StatementBuilder extends Builder {
-  createStatement(): Statement;
-}
-
-export interface Builder {
+export interface StatementBuilder {
   getNextCalls(): {
     required: string[];
     optional: string[];
   };
-}
 
-export function isStatementBuilder(b: Builder): b is StatementBuilder {
-  return "createStatement" in b;
+  createStatement(): Statement;
 }

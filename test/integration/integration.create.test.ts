@@ -42,7 +42,6 @@ describe("Integration::create", () => {
           sql
             .select([col("Id"), col("Name")])
             .from("Users")
-            .asQueryStatement(),
         )
         .execute();
 
@@ -106,7 +105,6 @@ describe("Integration::create", () => {
           sql
             .select([col("Id"), col("Name")])
             .from("Users")
-            .asQueryStatement(),
         )
         .execute();
 
@@ -164,7 +162,6 @@ describe("Integration::create", () => {
               selectAs(col("Name"), "DisplayName"),
             ])
             .from("Users")
-            .asQueryStatement(),
         )
         .execute();
 
@@ -217,7 +214,6 @@ describe("Integration::create", () => {
             sql
               .select([col("Id"), col("Name")])
               .from("Users")
-              .asQueryStatement(),
           )
           .execute();
       }).toThrow(
@@ -260,7 +256,6 @@ describe("Integration::create", () => {
           sql
             .select([col("Id"), col("Name")])
             .from("Users")
-            .asQueryStatement(),
         )
         .execute();
 
@@ -304,7 +299,6 @@ describe("Integration::create", () => {
             sql
               .select([col("Id"), col("Name")])
               .from("Users")
-              .asQueryStatement(),
           )
           .execute();
       }).toThrow(
@@ -352,7 +346,6 @@ describe("Integration::create", () => {
           sql
             .select([col("Id"), col("Name")])
             .from("Users")
-            .asQueryStatement(),
         )
         .execute();
 
@@ -411,7 +404,6 @@ describe("Integration::create", () => {
               selectAs(col("Name"), "DisplayName"),
             ])
             .from("Users")
-            .asQueryStatement(),
         )
         .execute();
 
@@ -479,7 +471,6 @@ describe("Integration::create", () => {
           sql
             .select([col("Id"), col("Name")])
             .from("Users")
-            .asQueryStatement(),
         )
         .execute();
 
@@ -547,7 +538,6 @@ describe("Integration::create", () => {
           sql
             .select([col("Id"), col("Name")])
             .from("Users")
-            .asQueryStatement(),
         )
         .execute();
 
@@ -596,7 +586,6 @@ describe("Integration::create", () => {
           sql
             .select([col("Id"), col("Name")])
             .from("Users")
-            .asQueryStatement(),
         )
         .execute();
 
@@ -655,7 +644,6 @@ describe("Integration::create", () => {
           sql
             .select([col("Name"), col("Id")])
             .from("Users")
-            .asQueryStatement(),
         )
         .execute();
 
@@ -726,7 +714,6 @@ describe("Integration::create", () => {
               selectAs(col("Name"), "QueryName"),
             ])
             .from("Users")
-            .asQueryStatement(),
         )
         .execute();
 
@@ -796,7 +783,6 @@ describe("Integration::create", () => {
       ).as(
         sql.select([col("Id"), col("Name")])
           .from("Users")
-          .asQueryStatement(),
       ).execute();
 
       expect(() => {

@@ -1,22 +1,27 @@
-import { type BaseStatement, type StatementBuilder } from "../Statement.js";
-import type { InsertInput } from "../../types/InsertInput.js";
+import {
+  type BaseStatement,
+  type Statement,
+  type StatementBuilder,
+} from "../Statement.js";
+import type {
+  InsertSource,
+  InsertValuesInput,
+} from "../../types/InsertSource.js";
 import type { DefaultValueNode } from "../../ast/DefaultValueNode.js";
 import { toExpressionNode } from "../../semantic/toExpressionNode.js";
 import type { ExpressionNode } from "../../ast/expression/ExpressionNode.js";
-import type { SelectStatement } from "../dql/SelectStatement.js";
+import type { QueryStatement } from "../dql/QueryStatement.js";
 
 export interface InsertIntoStatement extends BaseStatement {
   kind: "insert_into";
   table: string;
   columns: string[];
-  values?: (ExpressionNode | DefaultValueNode)[][];
-  select?: SelectStatement;
+  source: InsertSource;
   returning?: string[];
 }
 
 export class InsertIntoBuilder implements StatementBuilder {
-  private valuesData?: (ExpressionNode | DefaultValueNode)[][];
-  private selectStatement?: SelectStatement;
+  private source?: InsertSource;
   private returningCols?: string[];
 
   constructor(
@@ -24,37 +29,41 @@ export class InsertIntoBuilder implements StatementBuilder {
     private columns: string[] = [],
   ) {}
 
-  values(data: InsertInput[][]) {
-    const normalized: (ExpressionNode | DefaultValueNode)[][] = [];
+  defaultValues() {
+    this.assertNoSource();
 
-    for (const row of data) {
-      const normalizedRow: (ExpressionNode | DefaultValueNode)[] = [];
-
-      for (const value of row) {
-        normalizedRow.push(toExpressionNode(value));
-      }
-
-      normalized.push(normalizedRow);
-    }
-
-    this.valuesData = normalized;
+    this.source = { kind: "defaultValues" };
   }
 
-  select(query: SelectStatement) {
-    this.selectStatement = query;
+  values(data: InsertValuesInput[][]) {
+    this.assertNoSource();
+
+    this.source = {
+      kind: "values",
+      rows: normalizeInsertValues(data),
+    };
+  }
+
+  select(query: QueryStatement) {
+    this.assertNoSource();
+
+    this.source = {
+      kind: "query",
+      query,
+    };
   }
 
   returning(cols: string[]) {
-    if (!this.valuesData && !this.selectStatement) {
-      throw new Error(`Cannot call returning() before values() or select()`);
+    if (!this.source) {
+      throw new Error(`Cannot call returning() before Insert Source provided`);
     }
     this.returningCols = cols;
   }
 
   getNextCalls() {
-    if (!this.valuesData && !this.selectStatement)
+    if (!this.source)
       return {
-        required: ["values", "select"],
+        required: ["defaultValues", "values", "select"],
         optional: [],
       };
     return {
@@ -64,20 +73,40 @@ export class InsertIntoBuilder implements StatementBuilder {
   }
 
   createStatement(): InsertIntoStatement {
-    const hasValues = this.valuesData !== undefined;
-    const hasSelect = this.selectStatement !== undefined;
-
-    if (hasValues === hasSelect) {
-      throw new Error("INSERT requires exactly one of values() or select()");
+    if (!this.source) {
+      throw new Error("INSERT requires a Source");
     }
 
     return {
       kind: "insert_into",
       table: this.table,
       columns: this.columns,
-      values: this.valuesData,
-      select: this.selectStatement,
+      source: this.source,
       returning: this.returningCols,
     };
   }
+
+  assertNoSource(): void {
+    if (this.source) {
+      throw new Error(`Insert Into Builder already has an Insert Source.`);
+    }
+  }
+}
+
+export function normalizeInsertValues(
+  data: InsertValuesInput[][],
+): (ExpressionNode | DefaultValueNode)[][] {
+  const normalized: (ExpressionNode | DefaultValueNode)[][] = [];
+
+  for (const row of data) {
+    const normalizedRow: (ExpressionNode | DefaultValueNode)[] = [];
+
+    for (const value of row) {
+      normalizedRow.push(toExpressionNode(value));
+    }
+
+    normalized.push(normalizedRow);
+  }
+
+  return normalized;
 }

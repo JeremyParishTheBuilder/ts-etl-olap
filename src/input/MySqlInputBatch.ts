@@ -1,18 +1,19 @@
 import { InputBatch } from "./InputBatch.js";
 import { type InlineColumnSpec } from "../relational/Column.js";
 import { type ConstraintSpec } from "../relational/Constraint.js";
-import {
-  type QueryStatement,
-  type Statement,
-} from "../statements/Statement.js";
+import { type Statement } from "../statements/Statement.js";
 import { type PredicateNode } from "../ast/predicate/PredicateNode.js";
 import type { UpdateInput } from "../types/UpdateInput.js";
-import type { InsertInput } from "../types/InsertInput.js";
+import type { InsertValuesInput } from "../types/InsertSource.js";
 import type { SelectInput } from "../types/SelectInput.js";
 
 export class MySqlInputBatch extends InputBatch {
   constructor(executeStatement: (stmt: Statement) => void) {
     super(executeStatement);
+  }
+
+  createInputBatch(): this {
+    return new MySqlInputBatch(this.executeStatement) as this;
   }
 
   begin() {
@@ -39,7 +40,7 @@ export class MySqlInputBatch extends InputBatch {
     return super.createTable(table, columnList, constraintList);
   }
 
-  as(query: QueryStatement) {
+  as(query: InputBatch) {
     return super.as(query);
   }
 
@@ -79,7 +80,7 @@ export class MySqlInputBatch extends InputBatch {
     return super.insertInto(table, columns);
   }
 
-  values(data: InsertInput[][]) {
+  values(data: InsertValuesInput[][]) {
     return super.values(data);
   }
 
@@ -99,7 +100,7 @@ export class MySqlInputBatch extends InputBatch {
     return super.returning(cols);
   }
 
-  select(expressionsOrQuery: SelectInput[] | "*" | QueryStatement) {
+  select(expressionsOrQuery: SelectInput[] | "*" | InputBatch) {
     return super.select(expressionsOrQuery);
   }
 
@@ -109,5 +110,9 @@ export class MySqlInputBatch extends InputBatch {
 
   where(predicate: PredicateNode) {
     return super.where(predicate);
+  }
+
+  unionAll(query: InputBatch) {
+    return super.unionAll(query);
   }
 }

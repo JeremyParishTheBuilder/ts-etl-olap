@@ -10,10 +10,8 @@ import {
   SelectBuilder,
   UpdateSetBuilder,
   DeleteFromBuilder,
-  type Builder,
-  isStatementBuilder,
   type ConstraintStatement,
-  type QueryStatement,
+  type StatementBuilder,
 } from "../statements/index.js";
 import { type InlineColumnSpec } from "../relational/Column.js";
 import { type ConstraintSpec } from "../relational/Constraint.js";
@@ -30,12 +28,14 @@ import {
 } from "../dialect/keywords.js";
 import type { UpdateInput } from "../types/UpdateInput.js";
 import type { RowView } from "../relational/RowView.js";
-import type { InsertInput } from "../types/InsertInput.js";
+import type { InsertValuesInput } from "../types/InsertSource.js";
 import type { SelectInput } from "../types/SelectInput.js";
+import { QueryStatementBuilder } from "../statements/dql/QueryStatementBuilder.js";
+import type { QueryStatement } from "../statements/dql/QueryStatement.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
-  private currentBuilder: Builder | null = null;
+  private currentBuilder: StatementBuilder | null = null;
 
   static statementStarters = [
     "begin",
@@ -48,47 +48,51 @@ export abstract class InputBatch {
     "select",
     "update",
     "deleteFrom",
+    "values",
   ];
 
   constructor(
     protected readonly executeStatement: (stmt: Statement) => RowView[] | void,
   ) {}
 
+  protected abstract createInputBatch(): this;
+
   private addStatement(stmt: Statement) {
     this.statements.push(stmt);
   }
 
-  private builderStack: Builder[] = [];
-
-  private pauseCurrentBuilder(): void {
+  private finalizeStatement() {
     if (!this.currentBuilder) {
-      throw new Error(`No current builder to pause`);
+      return;
     }
-    this.builderStack.push(this.currentBuilder);
+
+    this.addStatement(this.currentBuilder.createStatement());
     this.currentBuilder = null;
+    return;
   }
 
-  private resumeBuilder(): Builder {
-    if (this.currentBuilder !== null) {
-      throw new Error(
-        "Cannot resume a suspended builder while another builder is active.",
-      );
+  private getAllowedCalls(): {
+    allowed: string[];
+    required: string[];
+  } {
+    const allowed: string[] = [];
+    const required: string[] = [];
+
+    if (this.currentBuilder) {
+      const next = this.currentBuilder.getNextCalls();
+
+      allowed.push(...next.required, ...next.optional);
+      required.push(...next.required);
+
+      if (next.required.length > 0) {
+        return { allowed, required };
+      }
     }
 
-    const builder = this.builderStack.pop();
-
-    if (!builder) {
-      throw new Error("No suspended builder to resume");
-    }
-
-    return builder;
-  }
-
-  private finalizePreviousStatement() {
-    if (this.currentBuilder && isStatementBuilder(this.currentBuilder)) {
-      this.addStatement(this.currentBuilder.createStatement());
-      this.currentBuilder = null;
-    }
+    return {
+      allowed,
+      required,
+    };
   }
 
   private assertAllowed(canonical: string, fragment: string) {
@@ -101,19 +105,11 @@ export abstract class InputBatch {
       return;
     }
 
-    const { required, optional } = this.currentBuilder.getNextCalls();
+    const { allowed } = this.getAllowedCalls();
 
-    if (required.length > 0 && !required.includes(canonical)) {
-      throw new Error(
-        `Expected ${required.join(" or ")}, but got '${fragment}'`,
-      );
-    }
-
-    if (
-      !required.length &&
-      !optional.includes(canonical) &&
-      !InputBatch.statementStarters.includes(canonical)
-    ) {
+    if (!allowed.includes(canonical)) {
+      console.log("allowed");
+      console.log(allowed);
       throw new Error(`'${fragment}' is not valid here`);
     }
   }
@@ -122,25 +118,25 @@ export abstract class InputBatch {
 
   protected begin(fragment: string = "BEGIN") {
     this.assertAllowed("begin", fragment);
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
     this.currentBuilder = new BeginBuilder();
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
     return this;
   }
 
   protected commit(fragment: string = "COMMIT") {
     this.assertAllowed("commit", fragment);
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
     this.currentBuilder = new CommitBuilder();
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
     return this;
   }
 
   protected useDatabase(dbName: string, fragment: string = "USE DATABASE") {
     this.assertAllowed("useDatabase", fragment);
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
     this.currentBuilder = new UseDatabaseBuilder(dbName);
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
     return this;
   }
 
@@ -149,9 +145,9 @@ export abstract class InputBatch {
     fragment: string = "CREATE DATABASE",
   ) {
     this.assertAllowed("createDatabase", fragment);
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
     this.currentBuilder = new CreateDatabaseBuilder(dbName);
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
     return this;
   }
 
@@ -162,7 +158,7 @@ export abstract class InputBatch {
     fragment: string = "CREATE TABLE",
   ) {
     this.assertAllowed("createTable", fragment);
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
 
     this.currentBuilder = new CreateTableBuilder(
       name,
@@ -170,13 +166,10 @@ export abstract class InputBatch {
       constraintList,
     );
 
-    this.pauseCurrentBuilder();
-
     return this;
   }
 
-  protected as(query: QueryStatement, fragment: string = "AS") {
-    this.currentBuilder = this.resumeBuilder();
+  protected as(query: InputBatch, fragment: string = "AS") {
     this.assertAllowed("as", fragment);
 
     if (!(this.currentBuilder instanceof CreateTableBuilder)) {
@@ -185,30 +178,31 @@ export abstract class InputBatch {
       );
     }
 
-    this.currentBuilder.as(query);
+    this.currentBuilder.as(query.asQueryStatement());
     return this;
   }
 
   protected insertInto(
-    table: string,
+    table: string /* | NameWithAlias*/,
     columns: string[],
     fragment: string = "INSERT INTO",
   ) {
+    this.finalizeStatement();
     this.assertAllowed("insertInto", fragment);
-    this.finalizePreviousStatement();
-    this.currentBuilder = new InsertIntoBuilder(table, columns);
 
-    this.pauseCurrentBuilder();
+    this.currentBuilder = new InsertIntoBuilder(table, columns);
 
     return this;
   }
 
-  protected values(data: InsertInput[][], fragment: string = "VALUES") {
-    this.currentBuilder = this.resumeBuilder();
-
+  protected values(data: InsertValuesInput[][], fragment: string = "VALUES") {
     this.assertAllowed("values", fragment);
 
-    if (!(this.currentBuilder instanceof InsertIntoBuilder)) {
+    if (
+      !(this.currentBuilder instanceof InsertIntoBuilder) // &&
+      //!(this.currentBuilder instanceof CreateTableBuilder)
+      // TODO - add to create table
+    ) {
       throw new Error(`Cannot call '${fragment}' outside of InsertInto`);
     }
 
@@ -230,7 +224,7 @@ export abstract class InputBatch {
 
   protected update(table: string, fragment: string = "UPDATE") {
     this.assertAllowed("update", fragment);
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
     this.currentBuilder = new UpdateSetBuilder(table);
     return this;
   }
@@ -246,14 +240,14 @@ export abstract class InputBatch {
 
   protected deleteFrom(table: string, fragment: string = "DELETE FROM") {
     this.assertAllowed("deleteFrom", fragment);
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
     this.currentBuilder = new DeleteFromBuilder(table);
     return this;
   }
 
   protected alterTable(name: string, fragment: string = "ALTER TABLE") {
     this.assertAllowed("alterTable", fragment);
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
     this.currentBuilder = new AlterTableBuilder(name);
     return this;
   }
@@ -381,27 +375,40 @@ export abstract class InputBatch {
   }
 
   protected select(
-    expressionsOrQuery: SelectInput[] | "*" | QueryStatement,
+    expressionsOrQuery: SelectInput[] | "*" | InputBatch,
     fragment: string = "SELECT",
   ) {
-    if (isQueryStatement(expressionsOrQuery)) {
-      this.currentBuilder = this.resumeBuilder();
-      this.assertAllowed("select", fragment);
-
-      if (!(this.currentBuilder instanceof InsertIntoBuilder)) {
-        throw new Error(
-          `Cannot use '${fragment}' with a constructed query outside INSERT`,
-        );
-      }
-
-      this.currentBuilder.select(expressionsOrQuery);
-      return this;
+    if (!isInputBatch(expressionsOrQuery) && this.currentBuilder !== null) {
+      const newQueryInputCursor = this.createInputBatch();
+      newQueryInputCursor.select(expressionsOrQuery);
+      return newQueryInputCursor;
     }
 
     this.assertAllowed("select", fragment);
-    this.finalizePreviousStatement();
+
+    if (isInputBatch(expressionsOrQuery)) {
+      if (this.currentBuilder instanceof InsertIntoBuilder) {
+        this.currentBuilder.select(expressionsOrQuery.asQueryStatement());
+        return this;
+      }
+
+      throw new Error(`Statement does not accept a query here.`);
+    }
 
     this.currentBuilder = new SelectBuilder(expressionsOrQuery);
+    return this;
+  }
+
+  protected unionAll(query: InputBatch, fragment: string = "UNION ALL") {
+    this.assertAllowed("unionAll", fragment);
+
+    if (!(this.currentBuilder instanceof QueryStatementBuilder)) {
+      throw new Error(`Cannot call '${fragment}' without a preceding Query`);
+    }
+
+    this.currentBuilder = this.currentBuilder.unionAll(
+      query.asQueryStatement(),
+    );
     return this;
   }
 
@@ -444,7 +451,7 @@ export abstract class InputBatch {
   }
 
   asStatement(): Statement | undefined {
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
 
     return this.statements.pop();
   }
@@ -472,11 +479,7 @@ export abstract class InputBatch {
   }
 
   execute(): RowView[][] {
-    if (!this.currentBuilder && this.builderStack.length > 0) {
-      this.currentBuilder = this.resumeBuilder();
-    }
-
-    this.finalizePreviousStatement();
+    this.finalizeStatement();
 
     const resultIterators: RowView[][] = [];
 
@@ -486,7 +489,7 @@ export abstract class InputBatch {
     for (const stmt of statementsToExecute) {
       const result = this.executeStatement(stmt);
 
-      if (stmt.kind === "select" && result !== undefined) {
+      if (isQueryStatement(stmt) && result !== undefined) {
         resultIterators.push(result);
       }
     }
@@ -510,6 +513,10 @@ function isQueryStatement(value: unknown): value is QueryStatement {
     typeof value === "object" &&
     value !== null &&
     "kind" in value &&
-    value.kind === "select"
+    (value.kind === "select" || value.kind === "unionAll")
   );
+}
+
+export function isInputBatch(value: unknown): value is InputBatch {
+  return value instanceof InputBatch;
 }

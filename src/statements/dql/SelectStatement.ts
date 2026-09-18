@@ -1,6 +1,7 @@
 import { type PredicateNode } from "../../ast/predicate/PredicateNode.js";
 import type { SelectInput } from "../../types/SelectInput.js";
-import { type BaseStatement, type StatementBuilder } from "../Statement.js";
+import { type BaseStatement } from "../Statement.js";
+import { QueryStatementBuilder } from "./QueryStatementBuilder.js";
 
 export interface SelectStatement extends BaseStatement {
   kind: "select";
@@ -9,11 +10,13 @@ export interface SelectStatement extends BaseStatement {
   where?: PredicateNode;
 }
 
-export class SelectBuilder implements StatementBuilder {
+export class SelectBuilder extends QueryStatementBuilder {
   private tableName?: string;
   private whereClause?: PredicateNode;
 
-  constructor(private expressions: SelectInput[] | "*") {}
+  constructor(private expressions: SelectInput[] | "*") {
+    super();
+  }
 
   from(tableName: string) {
     this.tableName = tableName;
@@ -24,20 +27,22 @@ export class SelectBuilder implements StatementBuilder {
   }
 
   getNextCalls() {
-    if (!this.tableName)
+    if (!this.tableName) {
       return {
         required: ["from"],
         optional: [],
       };
-    if (!this.whereClause)
-      return {
-        required: [],
-        optional: ["where"],
-      };
+    }
+
+    const { required, optional } = super.getNextCalls();
+
+    if (!this.whereClause) {
+      optional.push("where");
+    }
 
     return {
-      required: [],
-      optional: [],
+      required,
+      optional,
     };
   }
 
