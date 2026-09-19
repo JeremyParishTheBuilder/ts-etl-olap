@@ -15,7 +15,7 @@ import { Transaction } from "./Transaction.js";
 import { type Statement } from "../statements/index.js";
 import { Databases } from "../relational/Databases.js";
 import { SemanticAnalyzer } from "../semantic/SemanticAnalyzer.js";
-import type { RowView } from "../relational/RowView.js";
+import type { QueryResult } from "../evaluation/QueryResult.js";
 
 export class Engine {
   public databases: Databases = new Databases();
@@ -81,7 +81,7 @@ export class Engine {
     }
   }
 
-  private bindAndExecute(tx: Transaction, stmt: Statement): RowView[] | void {
+  private bindAndExecute(tx: Transaction, stmt: Statement): QueryResult | void {
     const ctx = new ExecutionContext(tx, this.rules, this.currentDb);
 
     const analyzer = new SemanticAnalyzer(ctx);
@@ -95,10 +95,13 @@ export class Engine {
       return;
     }
 
-    return [...result.plan.root.execute()];
+    return {
+      columns: result.plan.columns,
+      rows: [...result.plan.root.execute()],
+    };
   }
 
-  executeStatement(stmt: Statement): RowView[] | void {
+  executeStatement(stmt: Statement): QueryResult | void {
     if (stmt.kind === "begin") {
       this.beginTx();
       return;
@@ -122,7 +125,7 @@ export class Engine {
     return this.bindAndExecute(tx, stmt);
   }
 
-  tryExecuteAutoCommit(stmt: Statement): RowView[] | void {
+  tryExecuteAutoCommit(stmt: Statement): QueryResult | void {
     if (!this.rules.transaction.autoCommit) {
       throw new Error("Auto-commit disabled");
     }
@@ -143,7 +146,7 @@ export class Engine {
     }
   }
 
-  execute(): RowView[][] {
+  execute(): QueryResult[] {
     if (!this.inputBatch) return [];
 
     const results = this.inputBatch.execute();

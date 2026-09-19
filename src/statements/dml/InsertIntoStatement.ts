@@ -1,6 +1,5 @@
 import {
   type BaseStatement,
-  type Statement,
   type StatementBuilder,
 } from "../Statement.js";
 import type {

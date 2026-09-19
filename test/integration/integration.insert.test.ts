@@ -207,7 +207,7 @@ describe("Integration::insert", () => {
     }).not.toThrow();
 
     expect(
-      sql.select("*").from("Employees").execute()[0]
+      sql.select("*").from("Employees").execute()[0].rows
     ).toEqual([
       { index: 0, values: [1, 2] },
       { index: 1, values: [2, 1] },
@@ -238,17 +238,17 @@ describe("Integration::insert", () => {
       .values([[1]])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, "Anonymous"],
       },
-    ]]);
+    ]);
   });
 
   it("uses DEFAULT explicitly in an insert", () => {
@@ -277,17 +277,17 @@ describe("Integration::insert", () => {
       ])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, "Anonymous"],
       },
-    ]]);
+    ]);
   });
 
   it("uses CURRENT_TIMESTAMP in an insert", () => {
@@ -315,12 +315,12 @@ describe("Integration::insert", () => {
       ])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    const value = rows[0][0].values[1];
+    const value = results[0].rows[0].values[1];
 
     expect(typeof value).toBe("string");
     expect(value).toMatch(
@@ -353,12 +353,12 @@ describe("Integration::insert", () => {
       ])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    const value = rows[0][0].values[1];
+    const value = results[0].rows[0].values[1];
 
     expect(typeof value).toBe("string");
     expect(value).toMatch(
@@ -428,12 +428,12 @@ describe("Integration::insert", () => {
       ])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, "Alice"],
@@ -442,7 +442,7 @@ describe("Integration::insert", () => {
         index: 1,
         values: [2, "Bob"],
       },
-    ]]);
+    ]);
   });
 });
 
@@ -497,12 +497,12 @@ describe("Integration::insertSelect", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Destination")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, "Alice"],
@@ -511,7 +511,7 @@ describe("Integration::insertSelect", () => {
         index: 1,
         values: [2, "Bob"],
       },
-    ]]);
+    ]);
   });
 
   it("accepts a separately constructed query statement", () => {
@@ -564,12 +564,12 @@ describe("Integration::insertSelect", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Destination")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, "Alice"],
@@ -578,7 +578,7 @@ describe("Integration::insertSelect", () => {
         index: 1,
         values: [2, "Bob"],
       },
-    ]]);
+    ]);
   });
 
   it("inserts only rows selected by the query", () => {
@@ -635,12 +635,12 @@ describe("Integration::insertSelect", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Destination")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [2, "Bob"],
@@ -649,7 +649,7 @@ describe("Integration::insertSelect", () => {
         index: 1,
         values: [3, "Carol"],
       },
-    ]]);
+    ]);
   });
 
   it("rejects a query whose column count does not match the target", () => {
@@ -819,12 +819,12 @@ describe("Integration::insertSelect", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Destination")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, "Alice"],
@@ -841,6 +841,6 @@ describe("Integration::insertSelect", () => {
         index: 3,
         values: [4, "Dave"],
       },
-    ]]);
+    ]);
   });
 });

@@ -39,17 +39,17 @@ describe("Integration::update", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         "index": 0,
         "values": [1, "Bob"],
       },
-    ]]);
+    ]);
   });
 
   it("updates all rows matching a predicate", () => {
@@ -89,12 +89,12 @@ describe("Integration::update", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, "Alice"],
@@ -107,7 +107,7 @@ describe("Integration::update", () => {
         index: 2,
         values: [3, "Updated"],
       },
-    ]]);
+    ]);
   });
 
   it("rejects updates that create duplicate primary keys", () => {
@@ -297,17 +297,17 @@ describe("Integration::update", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Posts")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, 2],
       },
-    ]]);
+    ]);
   });
 
   it("updates PKs atomically using CASE expression", () => {
@@ -339,12 +339,12 @@ describe("Integration::update", () => {
       })
       .execute();
 
-    const rows = sql.select("*").from("Users").execute();
+    const results = sql.select("*").from("Users").execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       { index: 0, values: [2, "A"] },
       { index: 1, values: [1, "B"] },
-    ]]);
+    ]);
   });
 
   it("updates using arithmetic expressions", () => {
@@ -373,12 +373,12 @@ describe("Integration::update", () => {
     })
     .execute();
 
-    const rows = sql.select("*").from("Users").execute();
+    const results = sql.select("*").from("Users").execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       { index: 0, values: [2, "A"] },
       { index: 1, values: [3, "B"] },
-    ]]);
+    ]);
   });
 
   it('rejects inserts violating checks', () => {
@@ -501,7 +501,7 @@ describe("Integration::update", () => {
         .from("Users")
         .execute();
 
-    expect(users).toEqual([[
+    expect(users[0].rows).toEqual([
       {
         "index": 0,
         "values": [20],
@@ -510,7 +510,7 @@ describe("Integration::update", () => {
         "index": 1,
         "values": [30],
       },
-    ]]);
+    ]);
   });
 
   it("uses an explicit DEFAULT value", () => {
@@ -547,17 +547,17 @@ describe("Integration::update", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, "Anonymous"],
       },
-    ]]);
+    ]);
   });
 
   it("uses NULL for DEFAULT on a nullable column without a default", () => {
@@ -593,17 +593,17 @@ describe("Integration::update", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows).toEqual([[
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, null],
       },
-    ]]);
+    ]);
   });
 
   it("rejects DEFAULT on a non-nullable column without a default", () => {
@@ -679,12 +679,12 @@ describe("Integration::update", () => {
 
     const after = Date.now();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    const value = rows[0][0].values[1];
+    const value = results[0].rows[0].values[1];
 
     expect(typeof value).toBe("string");
 
@@ -727,12 +727,12 @@ describe("Integration::update", () => {
       )
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    const value = rows[0][0].values[1];
+    const value = results[0].rows[0].values[1];
 
     expect(typeof value).toBe("string");
     expect(Number.isNaN(Date.parse(value as string))).toBe(false);

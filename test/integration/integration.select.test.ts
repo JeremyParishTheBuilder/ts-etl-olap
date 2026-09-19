@@ -39,12 +39,12 @@ describe('Integration::select', () => {
 
     sql.commit().execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .execute();
 
-    expect(rows[0]).toEqual([
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1, "Alice"],
@@ -82,12 +82,12 @@ describe('Integration::select', () => {
       ])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select([col("Name")])
       .from("Users")
       .execute();
 
-    expect(rows[0]).toEqual([
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: ["Alice"],
@@ -122,7 +122,7 @@ describe('Integration::select', () => {
       ])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .where(
@@ -130,7 +130,7 @@ describe('Integration::select', () => {
       )
       .execute();
 
-    expect(rows[0]).toEqual([
+    expect(results[0].rows).toEqual([
       {
         index: 1,
         values: [20],
@@ -169,7 +169,7 @@ describe('Integration::select', () => {
       ])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .where(
@@ -180,7 +180,7 @@ describe('Integration::select', () => {
       )
       .execute();
 
-    expect(rows[0]).toEqual([
+    expect(results[0].rows).toEqual([
       {
         index: 1,
         values: [20, 100],
@@ -215,7 +215,7 @@ describe('Integration::select', () => {
       ])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .where(
@@ -226,7 +226,7 @@ describe('Integration::select', () => {
       )
       .execute();
 
-    expect(rows[0]).toEqual([
+    expect(results[0].rows).toEqual([
       {
         index: 1,
         values: [20, 100],
@@ -257,7 +257,7 @@ describe('Integration::select', () => {
       ])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select("*")
       .from("Users")
       .where(
@@ -268,7 +268,7 @@ describe('Integration::select', () => {
       )
       .execute();
 
-    expect(rows[0]).toEqual([
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [10],
@@ -301,12 +301,12 @@ describe('Integration::select', () => {
       ])
       .execute();
 
-    const rows = sql
+    const results = sql
       .select([col("userid")])
       .from("users")
       .execute();
 
-    expect(rows[0]).toEqual([
+    expect(results[0].rows).toEqual([
       {
         index: 0,
         values: [1],

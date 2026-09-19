@@ -91,7 +91,7 @@ Semantic analysis also resolves engine and dialect policy used by schema-modific
 
 Mutations produce immutable `Action`s.
 
-Queries produce immutable `QueryPlan`s evaluated against relational snapshots and `RowView`s.
+Queries produce immutable `QueryPlan`s containing an executable plan root and `QueryColumn` metadata. Execution evaluates the plan against relational snapshots and produces `QueryResult`s containing the query metadata and resulting `RowView`s.
 
 Relational constraints enforce structural integrity during execution.
 
@@ -101,7 +101,7 @@ Relational constraints enforce structural integrity during execution.
 
 DDL statements are analyzed semantically and converted into executable actions. `CREATE TABLE` may define columns and constraints explicitly, and supported dialects may also create and populate the table from a `SELECT` query (CTAS).
 
-For CTAS, Semantic analysis binds the query into a `QueryPlan`, derives destination column metadata from its `QueryColumn[]`, and combines that metadata with any explicit column definitions according to dialect rules. Table creation and query-result population remain separate actions so that the Relational layer does not need to know that the rows originated from a query.
+For CTAS, Semantic analysis binds the query into a `QueryPlan`, derives destination column metadata from its `QueryColumn[]`, and combines that metadata with any explicit column definitions according to dialect rules. Query output metadata describes only the query result; source defaults, auto-increment behavior, and constraints are not implicitly inherited.
 
 Dialect rules determine which CTAS forms are permitted, including whether explicit column lists must match the query column count and whether constraints are allowed.
 
@@ -109,26 +109,24 @@ Dialect rules determine which CTAS forms are permitted, including whether explic
 
 ### Query Plans
 
-SELECT statements are semantically bound into immutable `QueryPlan`s.
+SELECT and other query statements are semantically bound into immutable `QueryPlan`s.
 
 A query plan contains:
 
 - a plan root responsible for producing result rows
-- `QueryColumn` metadata describing the result columns
+- `QueryColumn` metadata describing the query output
 
-SELECT expressions are resolved and bound into executable expressions and
-evaluated by `EvaluateNode`. Result metadata is derived from the resolved
-expressions rather than being limited to physical source-table columns.
+`QueryColumn` metadata contains the result name, SQL type, and nullability. Metadata is derived from resolved expressions rather than being limited to physical source-table columns.
 
-This allows query results to represent source columns, literals, computed
-expressions, CAST expressions, and other expression forms.
+Query statements can be composed. For example, `UNION ALL` binds its child queries independently, reconciles their output metadata positionally, and produces a combined query plan. Result names come from the left query, compatible types are reconciled through the common SQL type rules, and nullability is combined.
 
-Query-plan metadata forms the schema contract for consumers such as
-`INSERT ... SELECT` and `CREATE TABLE AS SELECT`.
+Query-plan metadata forms the schema contract for consumers such as `INSERT ... SELECT`, `CREATE TABLE AS SELECT`, and query results.
+
+Query execution preserves this metadata in `QueryResult` alongside the evaluated `RowView`s.
 
 ---
 
-`INSERT ... SELECT` combines these execution models: semantic analysis binds the source query into a `QueryPlan`, and an `InsertSelectAction` evaluates that plan and inserts the resulting rows through the relational insertion path.
+`INSERT ... SELECT` combines these execution models: semantic analysis binds the source query into a `QueryPlan`, including its output metadata, and an `InsertSelectAction` evaluates that plan and inserts the resulting rows through the relational insertion path.
 
 ---
 
@@ -145,6 +143,10 @@ The DSL provides fluent builders for:
 Runtime builders evaluate directly against typed contexts, while SQL builders construct ASTs for semantic analysis.
 
 Expression nodes provide reusable fluent operations for composing expressions and predicates. Expression-producing arithmetic operations and predicate-producing comparisons are available across applicable expression nodes rather than being limited to column references.
+
+SQL query builders support composition through nested query expressions. Nested queries are constructed using independent input batches, allowing a query to be supplied as the source of another query or mutation without overwriting the outer statement's builder state.
+
+`UNION ALL` is exposed as a fluent query operation, and `INSERT ... SELECT` accepts a query as its source.
 
 ---
 
@@ -164,12 +166,13 @@ Validation rules reuse constraint statements and the existing SQL/semantic infra
 
 * Tables and databases are immutable.
 * Actions, query plans, expressions, and predicates operate without mutating committed state.
-* Query execution does not mutate committed state.
+* Query execution does not mutate relational state.
 * Schema references are resolved before execution.
 * Referential propagation operates against immutable relational state.
 * Structural validation belongs to the Relational/Engine layer.
 * Business validation belongs to the Validation layer.
 * Discovery is independent of import and relational schema.
+* Query-plan metadata describes query output independently of physical source tables.
 
 ---
 

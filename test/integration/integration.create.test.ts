@@ -50,7 +50,7 @@ describe("Integration::create", () => {
         .from("ActiveUsers")
         .execute();
 
-      expect(result).toEqual([[
+      expect(result[0].rows).toEqual([
         {
           "index": 0,
           "values": [1, "Alice"],
@@ -59,7 +59,7 @@ describe("Integration::create", () => {
           "index": 1,
           "values": [2, "Bob"],
         }
-      ]]);
+      ]);
     });
 
     it("creates a table using explicitly defined columns", () => {
@@ -113,7 +113,7 @@ describe("Integration::create", () => {
         .from("UsersCopy")
         .execute();
 
-      expect(result).toEqual([[
+      expect(result[0].rows).toEqual([
         {
           index: 0,
           values: [1, "Alice"],
@@ -122,7 +122,7 @@ describe("Integration::create", () => {
           index: 1,
           values: [2, "Bob"],
         },
-      ]]);
+      ]);
     });
 
     it("uses query aliases as destination column names", () => {
@@ -170,7 +170,7 @@ describe("Integration::create", () => {
         .from("UsersCopy")
         .execute();
 
-      expect(result).toEqual([[
+      expect(result[0].rows).toEqual([
         {
           index: 0,
           values: [1, "Alice"],
@@ -179,7 +179,7 @@ describe("Integration::create", () => {
           index: 1,
           values: [2, "Bob"],
         },
-      ]]);
+      ]);
     });
 
     it("rejects a CTAS column list whose count does not match the query", () => {
@@ -264,7 +264,7 @@ describe("Integration::create", () => {
         .from("UsersCopy")
         .execute();
 
-      expect(result).toEqual([[]]);
+      expect(result[0].rows).toEqual([]);
     });
 
     it("rejects a CTAS column list whose count does not match the query", () => {
@@ -355,7 +355,7 @@ describe("Integration::create", () => {
         .from("UsersCopy")
         .execute();
 
-      expect(result).toEqual([[
+      expect(result[0].rows).toEqual([
         {
           index: 0,
           values: [1, "Alice"],
@@ -364,7 +364,7 @@ describe("Integration::create", () => {
           index: 1,
           values: [2, "Bob"],
         },
-      ]]);
+      ]);
     });
 
     it("uses query aliases as destination column names", () => {
@@ -412,7 +412,7 @@ describe("Integration::create", () => {
         .from("UsersCopy")
         .execute();
 
-      expect(result).toEqual([[
+      expect(result[0].rows).toEqual([
         {
           index: 0,
           values: [1, "Alice"],
@@ -421,7 +421,7 @@ describe("Integration::create", () => {
           index: 1,
           values: [2, "Bob"],
         },
-      ]]);
+      ]);
     });
 
     it("uses a CTAS column list positionally", () => {
@@ -479,7 +479,7 @@ describe("Integration::create", () => {
         .from("UsersCopy")
         .execute();
 
-      expect(result).toEqual([[
+      expect(result[0].rows).toEqual([
         {
           index: 0,
           values: [1, "Alice"],
@@ -488,7 +488,7 @@ describe("Integration::create", () => {
           index: 1,
           values: [2, "Bob"],
         },
-      ]]);
+      ]);
     });
 
     it("uses explicit column metadata over query metadata", () => {
@@ -546,7 +546,7 @@ describe("Integration::create", () => {
         .from("UsersCopy")
         .execute();
 
-      expect(result).toEqual([[
+      expect(result[0].rows).toEqual([
         {
           index: 0,
           values: [1, "Alice"],
@@ -555,7 +555,7 @@ describe("Integration::create", () => {
           index: 1,
           values: [2, "Bob"],
         },
-      ]]);
+      ]);
     });
 
     it("creates the table when the query produces no rows", () => {
@@ -594,7 +594,7 @@ describe("Integration::create", () => {
         .from("UsersCopy")
         .execute();
 
-      expect(result).toEqual([[]]);
+      expect(result[0].rows).toEqual([]);
     });
 
     it("uses the column list order as the destination column order", () => {
@@ -652,7 +652,7 @@ describe("Integration::create", () => {
         .from("UsersCopy")
         .execute();
 
-      expect(result).toEqual([[
+      expect(result[0].rows).toEqual([
         {
           index: 0,
           values: ["Alice", 1],
@@ -661,7 +661,7 @@ describe("Integration::create", () => {
           index: 1,
           values: ["Bob", 2],
         },
-      ]]);
+      ]);
     });
 
     it("uses explicit column names over query aliases", () => {
@@ -722,7 +722,7 @@ describe("Integration::create", () => {
         .from("UsersCopy")
         .execute();
 
-      expect(result).toEqual([[
+      expect(result[0].rows).toEqual([
         {
           index: 0,
           values: [1, "Alice"],
@@ -731,7 +731,7 @@ describe("Integration::create", () => {
           index: 1,
           values: [2, "Bob"],
         },
-      ]]);
+      ]);
     });
 
     it("applies constraints to a table created with CTAS", () => {
