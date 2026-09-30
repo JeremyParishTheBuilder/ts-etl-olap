@@ -1,11 +1,11 @@
-import { type ColumnId } from "../../relational/Column.js";
+import type { ResolvedColumn } from "../../semantic/relation/ResolvedColumn.js";
 import { BinaryExpressionMixin } from "./BinaryExpressionMixin.js";
 import { ExpressionNode } from "./ExpressionNode.js";
 
 export class ResolvedColumnExpressionNode {
   readonly kind = "column" as const;
 
-  constructor(public columnId: ColumnId) {}
+  constructor(public readonly column: ResolvedColumn) {}
 }
 
 export class ColumnExpressionNode extends BinaryExpressionMixin(

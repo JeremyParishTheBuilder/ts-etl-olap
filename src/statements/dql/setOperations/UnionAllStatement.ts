@@ -1,5 +1,5 @@
-import { type BaseStatement } from "../Statement.js";
-import { type QueryStatement } from "./QueryStatement.js";
+import { type BaseStatement } from "../../Statement.js";
+import { type QueryStatement } from "../QueryStatement.js";
 
 export interface UnionAllStatement extends BaseStatement {
   kind: "unionAll";

@@ -1,11 +1,13 @@
 import { type PlanNode } from "../evaluation/plan/PlanNode.js";
-import { TableScanNode } from "../evaluation/plan/TableScanNode.js";
 import { FilterNode } from "../evaluation/plan/FilterNode.js";
 
 import { type SelectStatement } from "../statements/index.js";
 import { type SemanticAnalyzer } from "./SemanticAnalyzer.js";
 import { bindPredicate, resolvePredicate } from "./predicate.js";
-import type { QueryColumn, QueryPlan } from "../evaluation/plan/QueryPlan.js";
+import {
+  type QueryColumn,
+  type QueryPlan,
+} from "../evaluation/plan/QueryPlan.js";
 import {
   ExpressionNode,
   type ResolvedExpressionNode,
@@ -21,98 +23,113 @@ import { EvaluateNode } from "../evaluation/plan/EvaluateNode.js";
 import type { ColumnValue } from "../types/ColumnValue.js";
 import type { SelectItem } from "../ast/query/SelectItem.js";
 import { asExpressionNode } from "../ast/expression/asExpressionNode.js";
-import { getAllColumnsAsSelectItems } from "./resolveColumnList.js";
-import type { Table } from "../relational/Table.js";
 import { IdAllocator } from "../types/IdAllocator.js";
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
+import { RelationScope } from "./relation/RelationScope.js";
+import type { BoundRelation } from "./relation/BoundRelation.js";
+import { bindRelationSource } from "./relation/bindRelationSource.js";
+import type { RowView } from "../relational/RowView.js";
+import type { Expression } from "../evaluation/expression/Expression.js";
+import type { SelectInput } from "../types/SelectInput.js";
+import {
+  ColumnExpressionNode,
+  ResolvedColumnExpressionNode,
+} from "../ast/expression/ColumnExpressionNode.js";
+import { ColumnExpression } from "../evaluation/expression/ColumnExpression.js";
 
 export function bindSelect(
   semantic: SemanticAnalyzer,
   stmt: SelectStatement,
 ): QueryPlan {
-  const table = semantic.ctx.requireTable(stmt.tableName);
+  const source: BoundRelation = bindRelationSource(semantic, stmt.source);
 
-  const defaultColumnName: string = semantic.ctx.rules.default.resultColumnName;
-  const normalizedDefaultColumnName = normalizeIdentifier(defaultColumnName);
-  let defaultColumnCounter = new IdAllocator<number>();
+  let node: PlanNode = source.plan.root;
 
-  // 2. Base node
-  let node: PlanNode = new TableScanNode(table);
+  const scope = new RelationScope([...source.relations]);
 
-  // 3. WHERE -> predicate -> filter
   const whereClause = stmt.where;
   if (whereClause) {
     const predicate = bindPredicate(
-      resolvePredicate(whereClause, table),
-      table,
+      resolvePredicate(whereClause, scope),
+      scope,
     );
 
     node = new FilterNode(predicate, node);
   }
 
-  const selectItems =
-    stmt.expressions === "*"
-      ? getAllColumnsAsSelectItems(table)
-      : normalizeSelectInputs(stmt.expressions);
-
-  const boundItems = selectItems.map((item) => {
-    const resolved = resolveExpression(item.expression, table);
-    const bound = bindExpression(resolved, table);
-
-    return {
-      item,
-      resolved,
-      bound,
-    };
-  });
+  const boundItems =
+    stmt.projection === "*"
+      ? bindStarProjection(source)
+      : bindExplicitProjection(stmt.projection, scope);
 
   node = new EvaluateNode(
     boundItems.map((x) => x.bound),
     node,
   );
 
-  const usedColumnNames = new Set<string>();
-
-  const allocateColumnName = (name: string | undefined): string => {
-    let result = name;
-
-    if (!result) {
-      let id;
-      [id, defaultColumnCounter] = defaultColumnCounter.allocate();
-
-      result = `${defaultColumnName}${id}`;
-    }
-
-    const normalizedName = normalizeIdentifier(result);
-
-    if (
-      normalizedName.startsWith(normalizedDefaultColumnName) &&
-      name !== undefined
-    ) {
-      throw new Error(
-        `Column name "${result}" uses the reserved default column name prefix`,
-      );
-    }
-
-    if (usedColumnNames.has(normalizedName)) {
-      throw new Error(`Duplicate result column name: ${result}`);
-    }
-
-    usedColumnNames.add(normalizedName);
-    return result;
+  const defaultColumnName: string = semantic.ctx.rules.default.resultColumnName;
+  const defaultColumnNamingToolkit: ColumnNamingToolkit = {
+    columnName: defaultColumnName,
+    normalizedName: normalizeIdentifier(defaultColumnName),
+    counter: new IdAllocator<number>(),
   };
 
-  // 5. Result Metadata
   const columns: QueryColumn[] = boundItems.map((x) => ({
-    name: allocateColumnName(getSelectColumnName(x.item, x.resolved, table)),
-    type: sqlTypeFromExpression(x.resolved, table),
-    nullable: getExpressionNullability(x.resolved, table),
+    name: allocateColumnName(
+      getSelectColumnName(x.item, x.resolved),
+      defaultColumnNamingToolkit,
+    ),
+    type: sqlTypeFromExpression(x.resolved),
+    nullable: getExpressionNullability(x.resolved),
   }));
 
   return {
     root: node,
     columns,
   };
+}
+
+type ColumnNamingToolkit = {
+  columnName: string;
+  normalizedName: string;
+  counter: IdAllocator<number>;
+};
+
+function allocateDefaultColumnName(
+  toolkit: ColumnNamingToolkit,
+): ColumnNamingToolkit {
+  const [id, counter] = toolkit.counter.allocate();
+
+  return {
+    columnName: `${toolkit.columnName}${id}`,
+    normalizedName: `${toolkit.normalizedName}${id}`,
+    counter,
+  };
+}
+
+function allocateColumnName(
+  name: string | undefined,
+  toolkit: ColumnNamingToolkit,
+): string {
+  let resultColumnName: string;
+  let normalizedName: string;
+
+  if (!name) {
+    const defaultColumn = allocateDefaultColumnName(toolkit);
+    resultColumnName = defaultColumn.columnName;
+    toolkit.counter = defaultColumn.counter;
+  } else {
+    resultColumnName = name;
+    normalizedName = normalizeIdentifier(name);
+
+    if (normalizedName.startsWith(toolkit.normalizedName)) {
+      throw new Error(
+        `Column name "${resultColumnName}" uses the reserved default column name prefix`,
+      );
+    }
+  }
+
+  return resultColumnName;
 }
 
 function isSelectItem(value: unknown): value is SelectItem {
@@ -136,15 +153,62 @@ function normalizeSelectInputs(
 function getSelectColumnName(
   item: SelectItem,
   resolvedExpression: ResolvedExpressionNode,
-  table: Table,
 ): string | undefined {
   const alias = item.alias;
+
   if (alias) {
     return alias;
   }
 
-  const nameFromExpression = getNameFromExpression(resolvedExpression, table);
-  if (nameFromExpression) {
-    return nameFromExpression;
-  }
+  return getNameFromExpression(resolvedExpression);
+}
+
+function bindStarProjection(source: BoundRelation): {
+  item: SelectItem;
+  resolved: ResolvedExpressionNode;
+  bound: Expression<RowView>;
+}[] {
+  return source.plan.columns.map((column, position) => {
+    const item: SelectItem = {
+      expression: new ColumnExpressionNode(column.name),
+    };
+
+    const resolved = new ResolvedColumnExpressionNode({
+      column: {
+        column,
+      },
+    });
+
+    const bound = new ColumnExpression(position);
+
+    return {
+      item,
+      resolved,
+      bound,
+    };
+  });
+}
+
+function bindExplicitProjection(
+  projection: SelectInput[],
+  scope: RelationScope,
+): {
+  item: SelectItem;
+  resolved: ResolvedExpressionNode;
+  bound: Expression<RowView>;
+}[] {
+  const selectItems: SelectItem[] = normalizeSelectInputs(projection);
+
+  const boundItems = selectItems.map((item) => {
+    const resolved = resolveExpression(item.expression, scope);
+    const bound = bindExpression(resolved, scope);
+
+    return {
+      item,
+      resolved,
+      bound,
+    };
+  });
+
+  return boundItems;
 }

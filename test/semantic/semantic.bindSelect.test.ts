@@ -10,6 +10,7 @@ import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionN
 import { freshEngine } from '../utils/engineHelpers.js';
 import { SQL_DECIMAL, SQL_INTEGER, SQL_VARCHAR } from '../../src/types/SqlType.js';
 import { case_, cast, col, selectAs, val } from '../../src/ast/dsl.js';
+import { bindQuery } from '../../src/semantic/query.js';
 
 describe('SemanticAnalyzer::bindSelect', () => {
   let engine: Engine;
@@ -886,6 +887,937 @@ describe('SemanticAnalyzer::bindSelect', () => {
           values: ["Alice", 31],
         },
       ]);
+    });
+
+    it("allows duplicate result column names", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .addRows([[1]]);
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("u.Id"),
+        col("u.Id"),
+      ]);
+
+      select.from("Users", "u");
+
+      const statement = select.createStatement();
+      const plan = bindQuery(semantic, statement);
+
+      expect(plan.columns.map((column) => column.name)).toEqual([
+        "Id",
+        "Id",
+      ]);
+    });
+
+    it("allows multiple result columns with the same explicit alias", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .addRows([[1]]);
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        selectAs(col("u.Id"), "Value"),
+        selectAs(col("u.Id"), "Value"),
+      ]);
+
+      select.from("Users", "u");
+
+      const statement = select.createStatement();
+      const plan = bindQuery(semantic, statement);
+
+      expect(plan.columns.map((column) => column.name)).toEqual([
+        "Value",
+        "Value",
+      ]);
+    });
+
+    it("rejects ambiguous references to duplicate columns in a derived relation", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .addRows([[1]]);
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const inner = new SelectBuilder([
+        col("Id"),
+        col("Id"),
+      ]);
+
+      inner.from("Users");
+
+      const outer = new SelectBuilder([
+        col("d.Id"),
+      ]);
+
+      outer.from(inner.createStatement(), "d");
+
+      const statement = outer.createStatement();
+
+      console.log(statement);
+
+      expect(() =>
+        bindQuery(semantic, statement)
+      ).toThrow(/ambiguous/i);
+    });
+
+    it("allows SELECT * from a derived relation with duplicate column names", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "Age",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .addRows([[1, 18]]);
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const inner = new SelectBuilder([
+        selectAs(col("Id"), "a"),
+        selectAs(col("Age"), "a"),
+      ]);
+
+      inner.from("Users");
+
+      const outer = new SelectBuilder(["*"]);
+
+      outer.from(inner.createStatement(), "d");
+
+      expect(() => {
+        bindQuery(semantic, outer.createStatement());
+      }).not.toThrow();
+    });
+
+    it("does not expose the left inner relation through a derived table", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .addRows([[1]]);
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .addRows([[2]]);
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const inner = new SelectBuilder([
+        col("u.Id"),
+        col("o.UserId"),
+      ]);
+
+      inner.from("Users", "u");
+      inner.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      const outer = new SelectBuilder([
+        col("u.Id"),
+      ]);
+
+      outer.from(inner.createStatement(), "d");
+
+      expect(() => {
+        bindQuery(semantic, outer.createStatement());
+      }).toThrow(/no relation binding matches/i);
+    });
+
+    it("does not expose the right inner relation through a derived table", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .addRows([[1]]);
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .addRows([[2]]);
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const inner = new SelectBuilder([
+        col("u.Id"),
+        col("o.UserId"),
+      ]);
+
+      inner.from("Users", "u");
+      inner.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      const outer = new SelectBuilder([
+        col("o.UserId"),
+      ]);
+
+      outer.from(inner.createStatement(), "d");
+
+      expect(() => {
+        bindQuery(semantic, outer.createStatement());
+      }).toThrow(/no relation binding matches/i);
+    });
+
+    it("exposes the derived query only under its outer relation name", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .addRows([[1]]);
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .addRows([[2]]);
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const inner = new SelectBuilder([
+        col("u.Id"),
+        col("o.UserId"),
+      ]);
+
+      inner.from("Users", "u");
+      inner.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      const outer = new SelectBuilder([
+        col("d.Id"),
+      ]);
+
+      outer.from(inner.createStatement(), "d");
+
+      expect(() => {
+        bindQuery(semantic, outer.createStatement());
+      }).not.toThrow();
+    });
+  });
+
+  describe("JOIN", () => {
+    it("exposes both joined relations to the join predicate", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("u.Id"),
+        col("o.UserId"),
+      ]);
+
+      select.from("Users", "u");
+      select.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      expect(() => {
+        bindQuery(semantic, select.createStatement());
+      }).not.toThrow();
+    });
+
+    it("rejects an ambiguous unqualified column in a join predicate", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("u.Id"),
+      ]);
+
+      select.from("Users", "u");
+      select.innerJoin("Orders", "o")
+        .on(col("Id").eq(col("o.Id")));
+
+      expect(() => {
+        bindQuery(semantic, select.createStatement());
+      }).toThrow(/ambiguous/i);
+    });
+
+    it("resolves qualified columns to the correct joined relation", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("u.Id"),
+        col("o.Id"),
+      ]);
+
+      select.from("Users", "u");
+      select.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      const plan = bindQuery(semantic, select.createStatement());
+
+      expect(plan.columns).toEqual([
+        {
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        {
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+      ]);
+    });
+
+    it("produces joined output columns in left-to-right relation order", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder("*");
+
+      select.from("Users", "u");
+      select.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      const plan = bindQuery(semantic, select.createStatement());
+
+      expect(plan.columns).toEqual([
+        {
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        {
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: false,
+        },
+        {
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        {
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+      ]);
+    });
+
+    it("allows the select projection to reference either joined relation", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("u.Name"),
+        col("o.Id"),
+      ]);
+
+      select.from("Users", "u");
+      select.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      const plan = bindQuery(semantic, select.createStatement());
+
+      expect(plan.columns).toEqual([
+        {
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: false,
+        },
+        {
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+      ]);
+    });
+
+    it("rejects a qualified column from a relation outside the join scope", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("x.Id"),
+      ]);
+
+      select.from("Users", "u");
+      select.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      expect(() => {
+        bindQuery(semantic, select.createStatement());
+      }).toThrow(/relation/i);
+    });
+
+    it("supports multiple joins in a single select", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const items = buildTable({ name: "Items" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "OrderId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders)
+        .addTable(items);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("u.Id"),
+        col("o.Id"),
+        col("i.Id"),
+      ]);
+
+      select.from("Users", "u");
+
+      select.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      select.innerJoin("Items", "i")
+        .on(col("o.Id").eq(col("i.OrderId")));
+
+      expect(() => {
+        bindQuery(semantic, select.createStatement());
+      }).not.toThrow();
+    });
+
+    it("allows a later join predicate to reference relations from earlier joins", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const items = buildTable({ name: "Items" })
+        .createColumn(createColumnTestSpec({
+          name: "OrderId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders)
+        .addTable(items);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("u.Id"),
+        col("o.Id"),
+        col("i.OrderId"),
+      ]);
+
+      select.from("Users", "u");
+
+      select.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      select.innerJoin("Items", "i")
+        .on(col("o.Id").eq(col("i.OrderId")));
+
+      const plan = bindQuery(semantic, select.createStatement());
+
+      expect(plan.columns).toEqual([
+        {
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        {
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        {
+          name: "OrderId",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+      ]);
+    });
+
+    it("rejects an ambiguous column in a later join predicate", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const items = buildTable({ name: "Items" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders)
+        .addTable(items);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("u.Id"),
+      ]);
+
+      select.from("Users", "u");
+
+      select.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      select.innerJoin("Items", "i")
+        .on(col("Id").eq(col("i.Id")));
+
+      expect(() => {
+        bindQuery(semantic, select.createStatement());
+      }).toThrow(/ambiguous/i);
+    });
+
+    it("preserves all relations in scope across multiple joins", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const items = buildTable({ name: "Items" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "OrderId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders)
+        .addTable(items);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("u.Id"),
+        col("o.Id"),
+        col("i.Id"),
+      ]);
+
+      select.from("Users", "u");
+
+      select.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      select.innerJoin("Items", "i")
+        .on(col("o.Id").eq(col("i.OrderId")));
+
+      const plan = bindQuery(semantic, select.createStatement());
+
+      expect(plan.columns).toHaveLength(3);
+    });
+
+    it("treats a joined derived query as a single outer relation", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const items = buildTable({ name: "Items" })
+        .createColumn(createColumnTestSpec({
+          name: "OrderId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders)
+        .addTable(items);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const inner = new SelectBuilder([
+        col("u.Id"),
+        col("o.UserId"),
+      ]);
+
+      inner.from("Users", "u");
+      inner.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      const outer = new SelectBuilder([
+        col("j.Id"),
+        col("i.OrderId"),
+      ]);
+
+      outer.from(inner.createStatement(), "j");
+      outer.innerJoin("Items", "i")
+        .on(col("j.Id").eq(col("i.OrderId")));
+
+      expect(() => {
+        bindQuery(semantic, outer.createStatement());
+      }).not.toThrow();
+    });
+
+    it("does not expose inner join relations outside a derived query", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const inner = new SelectBuilder([
+        col("u.Id"),
+        col("o.UserId"),
+      ]);
+
+      inner.from("Users", "u");
+      inner.innerJoin("Orders", "o")
+        .on(col("u.Id").eq(col("o.UserId")));
+
+      const outer = new SelectBuilder([
+        col("u.Id"),
+      ]);
+
+      outer.from(inner.createStatement(), "j");
+
+      expect(() => {
+        bindQuery(semantic, outer.createStatement());
+      }).toThrow(/relation/i);
     });
   });
 });

@@ -5,6 +5,8 @@ import { type ResolvedPredicateNode } from "../ast/predicate/PredicateNode.js";
 import { ResolvedPredicateColumnCollector } from "../utils/PredicateColumnCollector.js";
 import { bindPredicate } from "../semantic/predicate.js";
 import { type Table } from "./Table.js";
+import { RelationScope } from "../semantic/relation/RelationScope.js";
+import { relationBindingFromTable } from "../semantic/relation/RelationBinding.js";
 
 export type CheckId = number & { readonly __brand: "CheckId" };
 
@@ -45,7 +47,8 @@ export class Check extends ColumnBoundImmutable {
   }): Check {
     const columnIds = ResolvedPredicateColumnCollector.collect(
       spec.resolvedPredicate,
-    );
+    ).map((c) => c.column.columnId!);
+
     return new this({
       ...spec,
       columns: columnIds,
@@ -59,8 +62,10 @@ export class Check extends ColumnBoundImmutable {
   }
 
   public tryBindPredicate(table: Table) {
+    const scope = new RelationScope([relationBindingFromTable(table)]);
+
     return this.with({
-      predicate: bindPredicate(this.resolvedPredicate, table),
+      predicate: bindPredicate(this.resolvedPredicate, scope),
     } as Partial<this>);
   }
 }

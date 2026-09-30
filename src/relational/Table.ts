@@ -36,6 +36,8 @@ import { CONSTRAINT_KIND } from "./ConstraintKind.js";
 import { arraysEqual } from "../utils/arrayHelpers.js";
 import type { OrderedInputRow } from "../types/OrderedInputRow.js";
 import type { SqlType } from "../types/SqlType.js";
+import { RelationScope } from "../semantic/relation/RelationScope.js";
+import { relationBindingFromTable } from "../semantic/relation/RelationBinding.js";
 
 export type TableId = number & { readonly __brand: "TableId" };
 
@@ -418,9 +420,9 @@ export class Table extends Immutable {
   public createCheck(spec: Omit<CheckSpec, "kind">): Table {
     this.assertConstraintNameUnused(spec.name);
 
-    const resolvedPredicate = resolvePredicate(spec.predicate, this);
-
-    const boundPredicate = bindPredicate(resolvedPredicate, this);
+    const scope = new RelationScope([relationBindingFromTable(this)]);
+    const resolvedPredicate = resolvePredicate(spec.predicate, scope);
+    const boundPredicate = bindPredicate(resolvedPredicate, scope);
 
     const [id, checkIds] = this.checkIds.allocate();
 

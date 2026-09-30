@@ -2,24 +2,20 @@ import { type PredicateNode } from "../../ast/predicate/PredicateNode.js";
 import type { SelectInput } from "../../types/SelectInput.js";
 import { type BaseStatement } from "../Statement.js";
 import { QueryStatementBuilder } from "./QueryStatementBuilder.js";
+import type { RelationSource } from "../../semantic/relation/RelationSource.js";
 
 export interface SelectStatement extends BaseStatement {
   kind: "select";
-  tableName: string;
-  expressions: SelectInput[] | "*";
+  source: RelationSource;
+  projection: SelectInput[] | "*";
   where?: PredicateNode;
 }
 
 export class SelectBuilder extends QueryStatementBuilder {
-  private tableName?: string;
-  private whereClause?: PredicateNode;
+  protected whereClause?: PredicateNode;
 
-  constructor(private expressions: SelectInput[] | "*") {
+  constructor(protected projection: SelectInput[] | "*") {
     super();
-  }
-
-  from(tableName: string) {
-    this.tableName = tableName;
   }
 
   where(predicate: PredicateNode) {
@@ -27,7 +23,7 @@ export class SelectBuilder extends QueryStatementBuilder {
   }
 
   getNextCalls() {
-    if (!this.tableName) {
+    if (!this.source) {
       return {
         required: ["from"],
         optional: [],
@@ -47,14 +43,14 @@ export class SelectBuilder extends QueryStatementBuilder {
   }
 
   createStatement(): SelectStatement {
-    if (!this.tableName) {
+    if (!this.source) {
       throw new Error("Missing required call: from()");
     }
 
     return {
       kind: "select",
-      tableName: this.tableName,
-      expressions: this.expressions,
+      source: this.source,
+      projection: this.projection,
       where: this.whereClause,
     };
   }

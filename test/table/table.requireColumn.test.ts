@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
+import { SQL_INTEGER } from '../../src/types/SqlType.js';
 
 describe('Table::requireColumn', () => {
   it('returns an existing column', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "C1", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "C1", type: SQL_INTEGER }));
 
     const column = table.columns.requireByName("C1");
 
@@ -22,7 +23,7 @@ describe('Table::requireColumn', () => {
 
   it('retrieves a column regardless of casing', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "UserId", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "UserId", type: SQL_INTEGER }));
 
     expect(
       table.columns.requireByName("userid")
@@ -39,7 +40,7 @@ describe('Table::requireColumn', () => {
 
   it('preserves original column casing', () => {
     const table = buildTable()
-      .createColumn(createColumnTestSpec({ name: "UserId", type: Number }));
+      .createColumn(createColumnTestSpec({ name: "UserId", type: SQL_INTEGER }));
 
     expect(
       table.columns.requireByName("userid").name

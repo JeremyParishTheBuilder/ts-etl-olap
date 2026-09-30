@@ -1,8 +1,8 @@
-import type { StatementBuilder } from "../Statement.js";
 import type { QueryStatement } from "./QueryStatement.js";
-import type { UnionAllStatement } from "./UnionAllStatement.js";
+import { RelationSourceReferencer } from "./RelationSourceReferencer.js";
+import type { UnionAllStatement } from "./setOperations/UnionAllStatement.js";
 
-export abstract class QueryStatementBuilder implements StatementBuilder {
+export abstract class QueryStatementBuilder extends RelationSourceReferencer {
   unionAll(query: QueryStatement) {
     return new UnionAllBuilder(this.createStatement(), query);
   }
@@ -11,10 +11,13 @@ export abstract class QueryStatementBuilder implements StatementBuilder {
     required: string[];
     optional: string[];
   } {
-    return {
-      required: [],
-      optional: ["unionAll"],
-    };
+    const calls = super.getNextCalls();
+
+    if (calls.required.length === 0) {
+      calls.optional.push("unionAll");
+    }
+
+    return calls;
   }
 
   abstract createStatement(): QueryStatement;
@@ -26,13 +29,6 @@ export class UnionAllBuilder extends QueryStatementBuilder {
     private right: QueryStatement,
   ) {
     super();
-  }
-
-  getNextCalls() {
-    return {
-      required: [],
-      optional: ["unionAll"],
-    };
   }
 
   createStatement(): UnionAllStatement {

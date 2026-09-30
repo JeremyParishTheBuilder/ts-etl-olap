@@ -2,6 +2,7 @@ import { ColumnExpressionNode } from "../ast/expression/ColumnExpressionNode.js"
 import type { SelectItem } from "../ast/query/SelectItem.js";
 import { type Column } from "../relational/Column.js";
 import { type Table } from "../relational/Table.js";
+import type { RelationBinding } from "./relation/RelationBinding.js";
 
 export function resolveTargetColumns(
   table: Table,
@@ -32,10 +33,16 @@ export function resolveTargetColumns(
   return result;
 }
 
-export function getAllColumnsAsSelectItems(table: Table): SelectItem[] {
-  return table.getColumnsInOrder().map((col) => {
-    return {
-      expression: new ColumnExpressionNode(col.name),
-    } as SelectItem;
-  });
+export function getAllColumnsAsSelectItems(
+  relations: readonly RelationBinding[],
+): SelectItem[] {
+  return relations.flatMap((relation) =>
+    relation.columns.map((column) => ({
+      expression: new ColumnExpressionNode(
+        relation.name
+          ? `${relation.name}.${column.column.name}`
+          : column.column.name,
+      ),
+    })),
+  );
 }

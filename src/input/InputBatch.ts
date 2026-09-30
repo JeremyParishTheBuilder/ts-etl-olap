@@ -32,6 +32,8 @@ import type { SelectInput } from "../types/SelectInput.js";
 import { QueryStatementBuilder } from "../statements/dql/QueryStatementBuilder.js";
 import type { QueryStatement } from "../statements/dql/QueryStatement.js";
 import type { QueryResult } from "../evaluation/QueryResult.js";
+import { RelationSourceReferencer } from "../statements/dql/RelationSourceReferencer.js";
+import { JoinBuilder } from "../statements/dql/join/JoinStatement.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -110,8 +112,6 @@ export abstract class InputBatch {
     const { allowed } = this.getAllowedCalls();
 
     if (!allowed.includes(canonical)) {
-      console.log("allowed");
-      console.log(allowed);
       throw new Error(`'${fragment}' is not valid here`);
     }
   }
@@ -414,12 +414,51 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected from(name: string, fragment: string = "FROM") {
+  protected from(
+    source: string | InputBatch,
+    alias?: string,
+    fragment: string = "FROM",
+  ) {
     this.assertAllowed("from", fragment);
     if (!(this.currentBuilder instanceof SelectBuilder)) {
       throw new Error(`Cannot call '${fragment}' outside of Select`);
     }
-    this.currentBuilder.from(name);
+
+    const nameOrStmt =
+      typeof source !== "string" ? source.asQueryStatement() : source;
+
+    this.currentBuilder.from(nameOrStmt, alias);
+    return this;
+  }
+
+  protected innerJoin(
+    nameOrStmt: string | InputBatch,
+    alias?: string,
+    fragment: string = "INNER JOIN",
+  ) {
+    this.assertAllowed("innerJoin", fragment);
+    if (!(this.currentBuilder instanceof RelationSourceReferencer)) {
+      throw new Error(
+        `Cannot call '${fragment}' outside of Select/Update/Delete`,
+      );
+    }
+
+    const source =
+      typeof nameOrStmt !== "string"
+        ? nameOrStmt.asQueryStatement()
+        : nameOrStmt;
+
+    this.currentBuilder = this.currentBuilder.innerJoin(source, alias);
+    return this;
+  }
+
+  protected on(predicate: PredicateNode, fragment: string = "ON") {
+    this.assertAllowed("on", fragment);
+    if (!(this.currentBuilder instanceof JoinBuilder)) {
+      throw new Error(`Cannot call '${fragment}' outside of Join`);
+    }
+
+    this.currentBuilder = this.currentBuilder.on(predicate);
     return this;
   }
 

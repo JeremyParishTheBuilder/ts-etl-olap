@@ -42,6 +42,14 @@ export const ENGINE_RULES: Record<
     },
   },
 
+  dql: {
+    denyDuplicateDerivedTableColumnNames: {
+      dialectStrict: (d: Dialect) =>
+        DIALECT_RULES[d].dql.denyDuplicateDerivedTableColumnNames,
+      engineDefault: false,
+    },
+  },
+
   constraints: {
     validateExistingDataOnAdd: {
       engineDefault: true,
