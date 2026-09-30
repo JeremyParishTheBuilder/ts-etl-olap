@@ -3,7 +3,6 @@ import { ResolvedCaseExpressionNode } from "../ast/expression/CaseExpressionNode
 import { ColumnExpression } from "../evaluation/expression/ColumnExpression.js";
 import { LiteralExpression } from "../evaluation/expression/LiteralExpression.js";
 import { type RowView } from "../relational/RowView.js";
-import { type Table } from "../relational/Table.js";
 import {
   assertInsertPredicate,
   bindInsertPredicate,
@@ -41,19 +40,19 @@ import { LiteralExpressionNode } from "../ast/expression/LiteralExpressionNode.j
 import { isExpressionNodeUnion } from "../ast/expression/isExpressionNodeUnion.js";
 import type { TemporalExpressionNode } from "../ast/expression/TemporalExpressionNode.js";
 import type { SqlFunctionExpressionNode } from "../ast/expression/SqlFunctionExpressionNode.js";
+import type { ColumnResolver } from "./relation/ColumnResolver.js";
+import type { ColumnBinder } from "./relation/ColumnBinder.js";
 
 export function bindExpression(
   expr: ResolvedExpressionNode,
-  table: Table,
+  binder: ColumnBinder,
 ): Expression<RowView> {
   switch (expr.kind) {
     case "literal":
       return new LiteralExpression(expr.value);
 
     case "column":
-      return new ColumnExpression(
-        table.columns.require(expr.columnId).position,
-      );
+      return new ColumnExpression(binder.requireColumnPosition(expr.column));
 
     case "temporal":
       return new TemporalExpression(expr.expression);
@@ -64,33 +63,29 @@ export function bindExpression(
     case "case":
       return new CaseExpression(
         expr.branches.map((branch) => ({
-          when: bindPredicate(branch.when, table),
-          then: bindExpression(branch.then, table),
+          when: bindPredicate(branch.when, binder),
+          then: bindExpression(branch.then, binder),
         })),
-        expr.elseExpr ? bindExpression(expr.elseExpr, table) : undefined,
+        expr.elseExpr ? bindExpression(expr.elseExpr, binder) : undefined,
       );
 
     case "cast": {
-      const sourceType = getKnownSqlType(expr, table);
-
-      if (sourceType !== undefined && !isCastable(sourceType, expr.type)) {
-        throw new Error(`Cannot CAST from ${sourceType} to ${expr.type}`);
-      }
-
-      return new CastExpression(bindExpression(expr.expr, table), expr.type);
+      return new CastExpression(bindExpression(expr.expr, binder), expr.type);
     }
 
     case "binary": {
       return new BinaryExpression(
-        bindExpression(expr.left, table),
+        bindExpression(expr.left, binder),
         expr.operator,
-        bindExpression(expr.right, table),
+        bindExpression(expr.right, binder),
       );
     }
 
     case "concat": {
       return new ConcatExpression(
-        expr.expressions.map((expression) => bindExpression(expression, table)),
+        expr.expressions.map((expression) =>
+          bindExpression(expression, binder),
+        ),
       );
     }
 
@@ -102,7 +97,7 @@ export function bindExpression(
 
 export function resolveExpression(
   expr: ExpressionNode | ColumnValue,
-  table: Table,
+  scope: ColumnResolver,
 ): ResolvedExpressionNode {
   if (isColumnValue(expr)) {
     return new LiteralExpressionNode(expr);
@@ -118,7 +113,7 @@ export function resolveExpression(
 
     case "column":
       return new ResolvedColumnExpressionNode(
-        table.columns.requireIdByName(expr.columnName),
+        scope.requireResolvedColumn(expr.columnName),
       );
 
     case "temporal":
@@ -130,31 +125,36 @@ export function resolveExpression(
     case "case":
       return new ResolvedCaseExpressionNode(
         expr.branches.map((branch) => ({
-          when: resolvePredicate(branch.when, table),
-          then: resolveExpression(branch.then, table),
+          when: resolvePredicate(branch.when, scope),
+          then: resolveExpression(branch.then, scope),
         })),
-        expr.elseExpr ? resolveExpression(expr.elseExpr, table) : undefined,
+        expr.elseExpr ? resolveExpression(expr.elseExpr, scope) : undefined,
       );
 
     case "cast": {
-      return new ResolvedCastExpressionNode(
-        resolveExpression(expr.expr, table),
-        expr.type,
-      );
+      const resolvedInnerExpression = resolveExpression(expr.expr, scope);
+
+      const sourceType = getKnownSqlType(resolvedInnerExpression);
+
+      if (sourceType !== undefined && !isCastable(sourceType, expr.type)) {
+        throw new Error(`Cannot CAST from ${sourceType} to ${expr.type}`);
+      }
+
+      return new ResolvedCastExpressionNode(resolvedInnerExpression, expr.type);
     }
 
     case "binary": {
       return new ResolvedBinaryExpressionNode(
-        resolveExpression(expr.left, table),
+        resolveExpression(expr.left, scope),
         expr.operator,
-        resolveExpression(expr.right, table),
+        resolveExpression(expr.right, scope),
       );
     }
 
     case "concat":
       return new ResolvedConcatExpressionNode(
         expr.expressions.map((expression) =>
-          resolveExpression(expression, table),
+          resolveExpression(expression, scope),
         ),
       );
 
@@ -269,24 +269,12 @@ export function bindInsertExpression(
   }
 }
 
-function getKnownSqlType(
-  expr: ResolvedExpressionNode,
-  table: Table,
-): SqlType | undefined {
-  if (expr.kind !== "column") {
-    return undefined;
-  }
-
-  return table.columns.require(expr.columnId).type;
-}
-
 export function getNameFromExpression(
   expr: ResolvedExpressionNode,
-  table: Table,
 ): string | undefined {
   switch (expr.kind) {
     case "column":
-      return table.columns.require(expr.columnId).name;
+      return expr.column.column.column.name;
 
     default:
       return undefined;
@@ -368,28 +356,32 @@ function sqlTypeFromSqlFunction(expr: SqlFunctionExpressionNode): SqlType {
   }
 }
 
-export function sqlTypeFromExpression(
-  expr: ResolvedExpressionNode,
-  table: Table,
-): SqlType {
+function getKnownSqlType(expr: ResolvedExpressionNode): SqlType | undefined {
+  if (expr.kind !== "column") {
+    return undefined;
+  }
+
+  return expr.column.column.column.type;
+}
+
+export function sqlTypeFromExpression(expr: ResolvedExpressionNode): SqlType {
   switch (expr.kind) {
     case "literal":
       return sqlTypeFromValue(expr.value);
 
     case "column":
-      //return getKnownSqlType(expr.columnId)!;
-      return table.columns.require(expr.columnId).type;
+      return expr.column.column.column.type;
 
     case "cast":
       return expr.type;
 
     case "case": {
       const types = expr.branches.map((branch) =>
-        sqlTypeFromExpression(branch.then, table),
+        sqlTypeFromExpression(branch.then),
       );
 
       if (expr.elseExpr) {
-        types.push(sqlTypeFromExpression(expr.elseExpr, table));
+        types.push(sqlTypeFromExpression(expr.elseExpr));
       }
 
       if (types.length === 0) {
@@ -404,8 +396,8 @@ export function sqlTypeFromExpression(
 
     case "binary":
       return commonSqlType([
-        sqlTypeFromExpression(expr.left, table),
-        sqlTypeFromExpression(expr.right, table),
+        sqlTypeFromExpression(expr.left),
+        sqlTypeFromExpression(expr.right),
       ]);
 
     case "temporal":
@@ -421,41 +413,40 @@ export function sqlTypeFromExpression(
 
 export function getExpressionNullability(
   expr: ResolvedExpressionNode,
-  table: Table,
 ): boolean {
   switch (expr.kind) {
     case "literal":
       return expr.value === null;
 
     case "column":
-      return table.columns.require(expr.columnId).nullable;
+      return expr.column.column.column.nullable;
 
     case "cast":
-      return getExpressionNullability(expr.expr, table);
+      return getExpressionNullability(expr.expr);
 
     case "case": {
       if (!expr.elseExpr) {
         return true;
       }
 
-      if (getExpressionNullability(expr.elseExpr, table)) {
+      if (getExpressionNullability(expr.elseExpr)) {
         return true;
       }
 
       return expr.branches.some((branch) =>
-        getExpressionNullability(branch.then, table),
+        getExpressionNullability(branch.then),
       );
     }
 
     case "binary":
       return (
-        getExpressionNullability(expr.left, table) ||
-        getExpressionNullability(expr.right, table)
+        getExpressionNullability(expr.left) ||
+        getExpressionNullability(expr.right)
       );
 
     case "concat":
       return expr.expressions.some((expression) =>
-        getExpressionNullability(expression, table),
+        getExpressionNullability(expression),
       );
 
     case "temporal":

@@ -1,7 +1,4 @@
-import {
-  type BaseStatement,
-  type StatementBuilder,
-} from "../Statement.js";
+import { type BaseStatement, type StatementBuilder } from "../Statement.js";
 import type {
   InsertSource,
   InsertValuesInput,

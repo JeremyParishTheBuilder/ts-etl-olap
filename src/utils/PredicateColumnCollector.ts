@@ -1,10 +1,10 @@
 import { type ResolvedPredicateNode } from "../ast/predicate/PredicateNode.js";
-import { type ColumnId } from "../relational/Column.js";
 import type { ResolvedExpressionNode } from "../ast/expression/ExpressionNode.js";
+import type { ResolvedColumn } from "../semantic/relation/ResolvedColumn.js";
 
 export class ResolvedPredicateColumnCollector {
-  public static collect(predicate: ResolvedPredicateNode): ColumnId[] {
-    const columns = new Set<ColumnId>();
+  public static collect(predicate: ResolvedPredicateNode): ResolvedColumn[] {
+    const columns = new Set<ResolvedColumn>();
 
     this.collectPredicate(predicate, columns);
 
@@ -13,7 +13,7 @@ export class ResolvedPredicateColumnCollector {
 
   private static collectPredicate(
     predicate: ResolvedPredicateNode,
-    columns: Set<ColumnId>,
+    columns: Set<ResolvedColumn>,
   ): void {
     switch (predicate.kind) {
       case "comparison":
@@ -53,11 +53,11 @@ export class ResolvedPredicateColumnCollector {
 
   private static collectExpression(
     expr: ResolvedExpressionNode,
-    columns: Set<ColumnId>,
+    columns: Set<ResolvedColumn>,
   ): void {
     switch (expr.kind) {
       case "column":
-        columns.add(expr.columnId);
+        columns.add(expr.column);
         return;
 
       case "literal":

@@ -39,6 +39,10 @@ export const POSTGRES_RULES: DialectRules = {
     ctasAllowsConstraints: false,
   },
 
+  dql: {
+    denyDuplicateDerivedTableColumnNames: false,
+  },
+
   constraints: {
     supportsNotValidatedConstraints: true,
     nullsDistinct: true,

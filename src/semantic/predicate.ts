@@ -5,7 +5,6 @@ import {
   type ResolvedPredicateNode,
 } from "../ast/predicate/PredicateNode.js";
 import { type Predicate } from "../evaluation/predicate/Predicate.js";
-import { type Table } from "../relational/Table.js";
 import { ResolvedNotPredicateNode } from "../ast/predicate/NotPredicateNode.js";
 import {
   assertInsertExpression,
@@ -25,49 +24,51 @@ import { ResolvedIsNotNullPredicateNode } from "../ast/predicate/IsNotNullPredic
 import { IsNullPredicate } from "../evaluation/predicate/IsNull.js";
 import { IsNotNullPredicate } from "../evaluation/predicate/IsNotNull.js";
 import type { RowView } from "../relational/RowView.js";
+import type { ColumnResolver } from "./relation/ColumnResolver.js";
+import type { ColumnBinder } from "./relation/ColumnBinder.js";
 
 export function bindPredicate(
   pred: ResolvedPredicateNode,
-  table: Table,
+  binder: ColumnBinder,
 ): Predicate<RowView> {
   switch (pred.kind) {
     case "comparison": {
       return new ComparisonPredicate(
-        bindExpression(pred.left, table),
+        bindExpression(pred.left, binder),
         pred.operator,
-        bindExpression(pred.right, table),
+        bindExpression(pred.right, binder),
       );
     }
 
     case "and": {
       return new AndPredicate(
-        pred.predicates.map((p) => bindPredicate(p, table)),
+        pred.predicates.map((p) => bindPredicate(p, binder)),
       );
     }
 
     case "or": {
       return new OrPredicate(
-        pred.predicates.map((p) => bindPredicate(p, table)),
+        pred.predicates.map((p) => bindPredicate(p, binder)),
       );
     }
 
     case "xor": {
       return new XorPredicate(
-        bindPredicate(pred.left, table),
-        bindPredicate(pred.right, table),
+        bindPredicate(pred.left, binder),
+        bindPredicate(pred.right, binder),
       );
     }
 
     case "not": {
-      return new NotPredicate(bindPredicate(pred.inner, table));
+      return new NotPredicate(bindPredicate(pred.inner, binder));
     }
 
     case "is_null": {
-      return new IsNullPredicate(bindExpression(pred.inner, table));
+      return new IsNullPredicate(bindExpression(pred.inner, binder));
     }
 
     case "is_not_null": {
-      return new IsNotNullPredicate(bindExpression(pred.inner, table));
+      return new IsNotNullPredicate(bindExpression(pred.inner, binder));
     }
 
     //TODO: BETWEEN, LIKE, IN
@@ -79,46 +80,46 @@ export function bindPredicate(
 }
 
 export function resolvePredicate(
-  predicate: PredicateNode, // <- union type
-  table: Table,
+  predicate: PredicateNode,
+  scope: ColumnResolver,
 ): ResolvedPredicateNode {
   switch (predicate.kind) {
     case "comparison":
       return new ResolvedComparisonPredicateNode(
-        resolveExpression(predicate.left, table),
+        resolveExpression(predicate.left, scope),
         predicate.operator,
-        resolveExpression(predicate.right, table),
+        resolveExpression(predicate.right, scope),
       );
 
     case "and":
       return new ResolvedAndPredicateNode(
-        predicate.predicates.map((p) => resolvePredicate(p, table)),
+        predicate.predicates.map((p) => resolvePredicate(p, scope)),
       );
 
     case "or":
       return new ResolvedOrPredicateNode(
-        predicate.predicates.map((p) => resolvePredicate(p, table)),
+        predicate.predicates.map((p) => resolvePredicate(p, scope)),
       );
 
     case "xor":
       return new ResolvedXorPredicateNode(
-        resolvePredicate(predicate.left, table),
-        resolvePredicate(predicate.right, table),
+        resolvePredicate(predicate.left, scope),
+        resolvePredicate(predicate.right, scope),
       );
 
     case "not":
       return new ResolvedNotPredicateNode(
-        resolvePredicate(predicate.inner, table),
+        resolvePredicate(predicate.inner, scope),
       );
 
     case "is_null":
       return new ResolvedIsNullPredicateNode(
-        resolveExpression(predicate.inner, table),
+        resolveExpression(predicate.inner, scope),
       );
 
     case "is_not_null":
       return new ResolvedIsNotNullPredicateNode(
-        resolveExpression(predicate.inner, table),
+        resolveExpression(predicate.inner, scope),
       );
 
     default:

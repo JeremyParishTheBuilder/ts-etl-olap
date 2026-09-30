@@ -121,8 +121,17 @@ export class PostgresInputBatch extends InputBatch {
     return super.select(expressionsOrQuery);
   }
 
-  from(name: string) {
-    return super.from(name);
+  from(nameOrStmt: string | InputBatch, alias?: string) {
+    return super.from(nameOrStmt, alias);
+  }
+
+  join = this.innerJoin;
+  innerJoin(nameOrStmt: string | InputBatch, alias?: string) {
+    return super.innerJoin(nameOrStmt, alias);
+  }
+
+  on(predicate: PredicateNode) {
+    return super.on(predicate);
   }
 
   where(predicate: PredicateNode) {

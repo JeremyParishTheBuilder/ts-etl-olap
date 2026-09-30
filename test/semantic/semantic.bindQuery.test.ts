@@ -7,7 +7,7 @@ import { freshEngine } from '../utils/engineHelpers.js';
 import { SelectBuilder } from '../../src/statements/index.ts';
 import { bindQuery } from '../../src/semantic/query.ts';
 import { buildDatabase, buildTable, createColumnTestSpec } from '../utils/buildSchema.ts';
-import { SQL_INTEGER } from '../../src/types/SqlType.ts';
+import { SQL_INTEGER, SQL_VARCHAR } from '../../src/types/SqlType.ts';
 import { col } from '../../src/ast/dsl.ts';
 import { UnionAllBuilder } from '../../src/statements/dql/QueryStatementBuilder.ts';
 
@@ -159,6 +159,151 @@ describe('SemanticAnalyzer::bindQuery', () => {
       expect(() =>
         bindQuery(semantic, statement)
       ).toThrow();
+    });
+  });
+
+  describe("derived query sources", () => {
+    it("treats a derived query as one relation", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: false,
+        }))
+        .addRows([[1, "Alice"]]);
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const inner = new SelectBuilder([
+        col("Id"),
+        col("Name"),
+      ]);
+
+      inner.from("Users");
+
+      const outer = new SelectBuilder([
+        col("u.Id"),
+        col("u.Name"),
+      ]);
+
+      outer.from(inner.createStatement(), "u");
+
+      const statement = outer.createStatement();
+
+      expect(() => bindQuery(semantic, statement)).not.toThrow();
+    });
+
+    it("does not expose inner relations through a derived query", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: false,
+        }))
+        .addRows([[1, "Alice"]]);
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const inner = new SelectBuilder([
+        col("Id"),
+      ]);
+
+      inner.from("Users");
+
+      const outer = new SelectBuilder([
+        col("Users.Id"),
+      ]);
+
+      outer.from(inner.createStatement(), "u");
+
+      const statement = outer.createStatement();
+
+      expect(() =>
+        bindQuery(semantic, statement)
+      ).toThrow();
+    });
+  });
+
+  describe("joins", () => {
+    it("exposes both joined relations to the join predicate", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "Name",
+          type: SQL_VARCHAR,
+          nullable: false,
+        }))
+        .addRows([
+          [1, "Alice"],
+        ]);
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .addRows([
+          [10, 1],
+        ]);
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("u.Id"),
+        col("o.UserId"),
+      ]);
+
+      select.from("Users", "u");
+      select
+        .innerJoin("Orders", "o")
+        .on(
+          col("u.Id").eq(col("o.UserId"))
+        );
+
+      const statement = select.createStatement();
+
+      expect(() =>
+        bindQuery(semantic, statement)
+      ).not.toThrow();
     });
   });
 });

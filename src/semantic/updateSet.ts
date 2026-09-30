@@ -8,6 +8,8 @@ import { bindPredicate, resolvePredicate } from "./predicate.js";
 import { validateInputNode } from "./toExpressionNode.js";
 import { DEFAULT } from "../dialect/keywords.js";
 import type { UpdateAssignment } from "../types/UpdateAssignment.js";
+import { RelationScope } from "./relation/RelationScope.js";
+import { relationBindingFromTable } from "./relation/RelationBinding.js";
 
 export function bindUpdateSet(
   semantic: SemanticAnalyzer,
@@ -22,6 +24,8 @@ export function bindUpdateSet(
 
   const tableName: string = stmt.table;
   const table = database.tables.requireByName(tableName);
+
+  const scope = new RelationScope([relationBindingFromTable(table)]);
 
   const updateMap = new Map<ColumnId, UpdateAssignment>();
 
@@ -55,12 +59,12 @@ export function bindUpdateSet(
 
     updateMap.set(
       column.id,
-      bindExpression(resolveExpression(value, table), table),
+      bindExpression(resolveExpression(value, scope), scope),
     );
   }
 
   const whereClause = stmt.where
-    ? bindPredicate(resolvePredicate(stmt.where, table), table)
+    ? bindPredicate(resolvePredicate(stmt.where, scope), scope)
     : undefined;
 
   stmtActions.push(

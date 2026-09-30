@@ -11,7 +11,11 @@ import { type InsertIntoStatement } from "./dml/InsertIntoStatement.js";
 import { type SelectStatement } from "./dql/SelectStatement.js";
 import { type UpdateSetStatement } from "./dml/UpdateSetStatement.js";
 import { type DeleteFromStatement } from "./dml/DeleteFromStatement.js";
-import type { UnionAllStatement } from "./dql/UnionAllStatement.js";
+import type { UnionAllStatement } from "./dql/setOperations/UnionAllStatement.js";
+import type { InnerJoinStatement } from "./dql/join/InnerJoinStatement.js";
+import type { RightJoinStatement } from "./dql/join/RightJoinStatement.js";
+import type { LeftJoinStatement } from "./dql/join/LeftJoinStatement.js";
+import type { FullJoinStatement } from "./dql/join/FullJoinStatement.js";
 
 export interface BaseStatement {
   readonly kind: StatementKind;
@@ -29,7 +33,11 @@ export type StatementKind =
   | "delete_from"
   | "select"
   | "where"
-  | "unionAll";
+  | "unionAll"
+  | "innerJoin"
+  | "leftJoin"
+  | "rightJoin"
+  | "fullJoin";
 
 export type Statement =
   | BeginStatement
@@ -42,7 +50,11 @@ export type Statement =
   | UpdateSetStatement
   | DeleteFromStatement
   | SelectStatement
-  | UnionAllStatement;
+  | UnionAllStatement
+  | InnerJoinStatement
+  | LeftJoinStatement
+  | RightJoinStatement
+  | FullJoinStatement;
 
 export type ConstraintStatement = AlterAddConstraint;
 

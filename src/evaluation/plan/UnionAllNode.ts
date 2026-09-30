@@ -8,7 +8,6 @@ export class UnionAllNode implements PlanNode {
   ) {}
 
   public *execute(): IterableIterator<RowView> {
-    console.log(this.left);
     yield* this.left.execute();
     yield* this.right.execute();
   }

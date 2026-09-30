@@ -9,6 +9,8 @@ import { LiteralExpression } from '../../src/evaluation/expression/LiteralExpres
 import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.js';
 import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionNode.js';
 import { bindExpression, resolveExpression } from '../../src/semantic/expression.js';
+import { RelationScope } from '../../src/semantic/relation/RelationScope.js';
+import { relationBindingFromTable } from '../../src/semantic/relation/RelationBinding.js';
 
 describe('Query::evaluateNode', () => {
   it("evaluates expressions", () => {
@@ -32,10 +34,18 @@ describe('Query::evaluateNode', () => {
 
     const scan = new TableScanNode(table);
 
+    const scope = new RelationScope([relationBindingFromTable(table)]);
+
     const evaluate = new EvaluateNode(
       [
-        bindExpression(resolveExpression(new ColumnExpressionNode("id"), table), table),
-        bindExpression(resolveExpression(new ColumnExpressionNode("age"), table), table)
+        bindExpression(
+          resolveExpression(new ColumnExpressionNode("id"), scope),
+          scope
+        ),
+        bindExpression(
+          resolveExpression(new ColumnExpressionNode("age"), scope),
+          scope
+        ),
       ],
       scan
     );
@@ -61,8 +71,18 @@ describe('Query::evaluateNode', () => {
 
     const scan = new TableScanNode(table);
 
+    const scope = new RelationScope([relationBindingFromTable(table)]);
+
     const evaluate = new EvaluateNode(
-      [bindExpression(resolveExpression(new ColumnExpressionNode("Value"), table), table),],
+      [
+        bindExpression(
+          resolveExpression(
+            new ColumnExpressionNode("Value"),
+          scope
+          ),
+          scope
+        ),
+      ],
       scan
     );
 
@@ -90,8 +110,15 @@ describe('Query::evaluateNode', () => {
 
     const scan = new TableScanNode(table);
 
+    const scope = new RelationScope([relationBindingFromTable(table)]);
+
     const evaluate = new EvaluateNode(
-      [bindExpression(resolveExpression(new ColumnExpressionNode("B"), table), table),],
+      [
+        bindExpression(
+          resolveExpression(new ColumnExpressionNode("B"), scope),
+          scope
+        ),
+      ],
       scan
     );
 
@@ -125,8 +152,18 @@ describe('Query::evaluateNode', () => {
       scan
     );
 
+    const scope = new RelationScope([relationBindingFromTable(table)]);
+
     const evaluate = new EvaluateNode(
-      [bindExpression(resolveExpression(new ColumnExpressionNode("Id"), table), table),],
+      [
+        bindExpression(
+          resolveExpression(
+            new ColumnExpressionNode("Id"),
+            scope
+          ),
+          scope
+        ),
+      ],
       filter
     );
 
@@ -180,8 +217,15 @@ describe('Query::evaluateNode', () => {
 
     const scan = new TableScanNode(table);
 
+    const scope = new RelationScope([relationBindingFromTable(table)]);
+
     const evaluate = new EvaluateNode(
-      [bindExpression(resolveExpression(new ColumnExpressionNode("Id"), table), table),],
+      [
+        bindExpression(
+          resolveExpression(new ColumnExpressionNode("Id"), scope),
+          scope
+        ),
+      ],
       scan
     );
 
@@ -204,10 +248,18 @@ describe('Query::evaluateNode', () => {
 
     const scan = new TableScanNode(table);
 
+    const scope = new RelationScope([relationBindingFromTable(table)]);
+
     const evaluate = new EvaluateNode(
       [
-        bindExpression(resolveExpression(new ColumnExpressionNode("Id"), table), table),
-        bindExpression(resolveExpression(new ColumnExpressionNode("Name"), table), table),
+        bindExpression(
+          resolveExpression(new ColumnExpressionNode("Id"), scope),
+          scope
+        ),
+        bindExpression(
+          resolveExpression(new ColumnExpressionNode("Name"), scope),
+          scope
+        ),
       ],
       scan
     );
@@ -233,8 +285,15 @@ describe('Query::evaluateNode', () => {
 
     const scan = new TableScanNode(table);
 
+    const scope = new RelationScope([relationBindingFromTable(table)]);
+
     const evaluate = new EvaluateNode(
-      [bindExpression(resolveExpression(new ColumnExpressionNode("Value"), table), table),],
+      [
+        bindExpression(
+          resolveExpression(new ColumnExpressionNode("Value"), scope),
+          scope
+        ),
+      ],
       scan
     );
 

@@ -23,6 +23,10 @@ export interface DialectRules {
     ctasAllowsConstraints: boolean;
   };
 
+  dql: {
+    denyDuplicateDerivedTableColumnNames: boolean;
+  };
+
   constraints: {
     supportsNotValidatedConstraints: boolean;
     requireExplicitNames?: boolean;
