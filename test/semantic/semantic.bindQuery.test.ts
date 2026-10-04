@@ -8,7 +8,7 @@ import { SelectBuilder } from '../../src/statements/index.ts';
 import { bindQuery } from '../../src/semantic/query.ts';
 import { buildDatabase, buildTable, createColumnTestSpec } from '../utils/buildSchema.ts';
 import { SQL_INTEGER, SQL_VARCHAR } from '../../src/types/SqlType.ts';
-import { col } from '../../src/ast/dsl.ts';
+import { col, table } from '../../src/ast/dsl.ts';
 import { UnionAllBuilder } from '../../src/statements/dql/QueryStatementBuilder.ts';
 
 describe('SemanticAnalyzer::bindQuery', () => {
@@ -197,7 +197,8 @@ describe('SemanticAnalyzer::bindQuery', () => {
         col("u.Name"),
       ]);
 
-      outer.from(inner.createStatement(), "u");
+      outer.from(inner.createStatement());
+      outer.as("u");
 
       const statement = outer.createStatement();
 
@@ -236,7 +237,8 @@ describe('SemanticAnalyzer::bindQuery', () => {
         col("Users.Id"),
       ]);
 
-      outer.from(inner.createStatement(), "u");
+      outer.from(inner.createStatement());
+      outer.as("u");
 
       const statement = outer.createStatement();
 
@@ -292,9 +294,10 @@ describe('SemanticAnalyzer::bindQuery', () => {
         col("o.UserId"),
       ]);
 
-      select.from("Users", "u");
+      select.from("Users");
+      select.as("u");
       select
-        .innerJoin("Orders", "o")
+        .innerJoin( table("Orders").as("o") )
         .on(
           col("u.Id").eq(col("o.UserId"))
         );

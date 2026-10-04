@@ -5,7 +5,9 @@ import { type Statement } from "../statements/Statement.js";
 import { type PredicateNode } from "../ast/predicate/PredicateNode.js";
 import type { UpdateInput } from "../types/UpdateInput.js";
 import type { InsertValuesInput } from "../types/InsertSource.js";
-import type { SelectInput } from "../types/SelectInput.js";
+import type { QueryProjection } from "../ast/query/QueryProjection.js";
+import type { TabularExpressionInput } from "../statements/dql/TabularExpressionReferencer.js";
+import type { TableReferenceNode } from "../ast/tabular/TableReferenceNode.js";
 
 export class MySqlInputBatch extends InputBatch {
   constructor(executeStatement: (stmt: Statement) => void) {
@@ -40,8 +42,8 @@ export class MySqlInputBatch extends InputBatch {
     return super.createTable(table, columnList, constraintList);
   }
 
-  as(query: InputBatch) {
-    return super.as(query);
+  as(input: string | InputBatch) {
+    return super.as(input);
   }
 
   alterTable(table: string) {
@@ -76,7 +78,7 @@ export class MySqlInputBatch extends InputBatch {
     return super.check(predicate);
   }
 
-  insertInto(table: string, columns: string[] = []) {
+  insertInto(table: string | TableReferenceNode, columns: string[] = []) {
     return super.insertInto(table, columns);
   }
 
@@ -100,17 +102,17 @@ export class MySqlInputBatch extends InputBatch {
     return super.returning(cols);
   }
 
-  select(expressionsOrQuery: SelectInput[] | "*" | InputBatch) {
-    return super.select(expressionsOrQuery);
+  select(projectionOrQuery: QueryProjection | InputBatch) {
+    return super.select(projectionOrQuery);
   }
 
-  from(nameOrStmt: string | InputBatch, alias?: string) {
-    return super.from(nameOrStmt, alias);
+  from(input: TabularExpressionInput | InputBatch) {
+    return super.from(input);
   }
 
   join = this.innerJoin;
-  innerJoin(nameOrStmt: string | InputBatch, alias?: string) {
-    return super.innerJoin(nameOrStmt, alias);
+  innerJoin(input: TabularExpressionInput | InputBatch) {
+    return super.innerJoin(input);
   }
 
   on(predicate: PredicateNode) {

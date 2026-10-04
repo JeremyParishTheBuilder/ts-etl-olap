@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createTestMySqlSql, createTestPostgresSql, freshEngine } from '../utils/engineHelpers.ts';
 import { SQL_INTEGER, SQL_VARCHAR } from '../../src/types/SqlType.ts';
-import { col, selectAs } from '../../src/ast/dsl.ts';
+import { col } from '../../src/ast/dsl.ts';
 import { Dialect } from '../../src/dialect/Dialect.ts';
 import { createTableTestSpec } from '../utils/buildSchema.ts';
 import { CONSTRAINT_KIND } from '../../src/relational/ConstraintKind.ts';
@@ -158,8 +158,8 @@ describe("Integration::create", () => {
         .as(
           sql
             .select([
-              selectAs(col("Id"), "UserId"),
-              selectAs(col("Name"), "DisplayName"),
+              col("Id").as("UserId"),
+              col("Name").as("DisplayName"),
             ])
             .from("Users")
         )
@@ -400,8 +400,8 @@ describe("Integration::create", () => {
         .as(
           sql
             .select([
-              selectAs(col("Id"), "UserId"),
-              selectAs(col("Name"), "DisplayName"),
+              col("Id").as("UserId"),
+              col("Name").as("DisplayName"),
             ])
             .from("Users")
         )
@@ -710,8 +710,8 @@ describe("Integration::create", () => {
         .as(
           sql
             .select([
-              selectAs(col("Id"), "QueryId"),
-              selectAs(col("Name"), "QueryName"),
+              col("Id").as("QueryId"),
+              col("Name").as("QueryName"),
             ])
             .from("Users")
         )

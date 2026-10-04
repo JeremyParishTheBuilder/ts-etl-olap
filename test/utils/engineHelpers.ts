@@ -4,6 +4,8 @@ import type { Engine } from "../../src/engine/Engine.ts";
 import type { PostgresInputBatch } from "../../src/input/PostgresInputBatch.ts";
 import type { SqlServerInputBatch } from "../../src/input/SqlServerInputBatch.ts";
 import type { MySqlInputBatch } from "../../src/input/MySqlInputBatch.ts";
+import type { TabularExpressionProjection } from "../../src/ast/tabular/TabularExpressionNode.ts";
+import { TableReferenceNode } from "../../src/ast/tabular/TableReferenceNode.ts";
 
 let engineId = 0;
 
@@ -49,4 +51,15 @@ export function createTestMySqlSql(
   }
   return (engine ?? freshEngine(Dialect.MySQL))
     .input() as MySqlInputBatch;
+}
+
+export function createTestTableProjection(
+  tableName: string,
+  alias?: string,
+): TabularExpressionProjection {
+  return {
+    kind: "tabularProjection",
+    source: new TableReferenceNode(tableName),
+    alias,
+  };
 }

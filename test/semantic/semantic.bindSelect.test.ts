@@ -7,10 +7,11 @@ import { bindSelect } from '../../src/semantic/select.js';
 import { Engine } from '../../src/engine/Engine.js';
 import { buildDatabase, buildTable, createColumnTestSpec } from '../utils/buildSchema.js';
 import { ColumnExpressionNode } from '../../src/ast/expression/ColumnExpressionNode.js';
-import { freshEngine } from '../utils/engineHelpers.js';
+import { createTestTableProjection, freshEngine } from '../utils/engineHelpers.js';
 import { SQL_DECIMAL, SQL_INTEGER, SQL_VARCHAR } from '../../src/types/SqlType.js';
-import { case_, cast, col, selectAs, val } from '../../src/ast/dsl.js';
+import { case_, cast, col, val } from '../../src/ast/dsl.js';
 import { bindQuery } from '../../src/semantic/query.js';
+import type { ExpressionNode } from '../../src/ast/expression/ExpressionNode.js';
 
 describe('SemanticAnalyzer::bindSelect', () => {
   let engine: Engine;
@@ -586,7 +587,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
       const semantic = createSemantic(database);
 
       const builder = new SelectBuilder([
-        selectAs(col("Name"), "UserName"),
+        col("Name").as("UserName"),
       ]);
 
       builder.from("Users");
@@ -860,7 +861,7 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
       const builder = new SelectBuilder([
         col("Name"),
-        selectAs(col("Age").add(1), "Age"),
+        col("Age").add(1).as("Age"),
       ]);
       builder.from("Users");
 
@@ -911,7 +912,8 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("u.Id"),
       ]);
 
-      select.from("Users", "u");
+      select.from("Users");
+      select.as("u");
 
       const statement = select.createStatement();
       const plan = bindQuery(semantic, statement);
@@ -940,11 +942,12 @@ describe('SemanticAnalyzer::bindSelect', () => {
       const semantic = createSemantic(database);
 
       const select = new SelectBuilder([
-        selectAs(col("u.Id"), "Value"),
-        selectAs(col("u.Id"), "Value"),
+        col("u.Id").as("Value"),
+        col("u.Id").as("Value"),
       ]);
 
-      select.from("Users", "u");
+      select.from("Users");
+      select.as("u");
 
       const statement = select.createStatement();
       const plan = bindQuery(semantic, statement);
@@ -983,7 +986,8 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("d.Id"),
       ]);
 
-      outer.from(inner.createStatement(), "d");
+      outer.from(inner.createStatement());
+      outer.as("d");
 
       const statement = outer.createStatement();
 
@@ -1017,15 +1021,16 @@ describe('SemanticAnalyzer::bindSelect', () => {
       const semantic = createSemantic(database);
 
       const inner = new SelectBuilder([
-        selectAs(col("Id"), "a"),
-        selectAs(col("Age"), "a"),
+        col("Id").as("a"),
+        col("Age").as("a"),
       ]);
 
       inner.from("Users");
 
       const outer = new SelectBuilder(["*"]);
 
-      outer.from(inner.createStatement(), "d");
+      outer.from(inner.createStatement());
+      outer.as("d");
 
       expect(() => {
         bindQuery(semantic, outer.createStatement());
@@ -1063,15 +1068,17 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("o.UserId"),
       ]);
 
-      inner.from("Users", "u");
-      inner.innerJoin("Orders", "o")
+      inner.from("Users");
+      inner.as("u")
+      inner.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
       const outer = new SelectBuilder([
         col("u.Id"),
       ]);
 
-      outer.from(inner.createStatement(), "d");
+      outer.from(inner.createStatement());
+      outer.as("d");
 
       expect(() => {
         bindQuery(semantic, outer.createStatement());
@@ -1109,15 +1116,16 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("o.UserId"),
       ]);
 
-      inner.from("Users", "u");
-      inner.innerJoin("Orders", "o")
+      inner.from( createTestTableProjection("Users", "u") );
+      inner.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
       const outer = new SelectBuilder([
         col("o.UserId"),
       ]);
 
-      outer.from(inner.createStatement(), "d");
+      outer.from(inner.createStatement());
+      outer.as("d");
 
       expect(() => {
         bindQuery(semantic, outer.createStatement());
@@ -1155,15 +1163,17 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("o.UserId"),
       ]);
 
-      inner.from("Users", "u");
-      inner.innerJoin("Orders", "o")
+      inner.from("Users");
+      inner.as("u")
+      inner.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
       const outer = new SelectBuilder([
         col("d.Id"),
       ]);
 
-      outer.from(inner.createStatement(), "d");
+      outer.from(inner.createStatement());
+      outer.as("d");
 
       expect(() => {
         bindQuery(semantic, outer.createStatement());
@@ -1211,8 +1221,8 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("o.UserId"),
       ]);
 
-      select.from("Users", "u");
-      select.innerJoin("Orders", "o")
+      select.from( createTestTableProjection("Users", "u") );
+      select.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
       expect(() => {
@@ -1248,8 +1258,8 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("u.Id"),
       ]);
 
-      select.from("Users", "u");
-      select.innerJoin("Orders", "o")
+      select.from( createTestTableProjection("Users", "u") );
+      select.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("Id").eq(col("o.Id")));
 
       expect(() => {
@@ -1291,8 +1301,8 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("o.Id"),
       ]);
 
-      select.from("Users", "u");
-      select.innerJoin("Orders", "o")
+      select.from( createTestTableProjection("Users", "u") );
+      select.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
       const plan = bindQuery(semantic, select.createStatement());
@@ -1347,8 +1357,8 @@ describe('SemanticAnalyzer::bindSelect', () => {
 
       const select = new SelectBuilder("*");
 
-      select.from("Users", "u");
-      select.innerJoin("Orders", "o")
+      select.from( createTestTableProjection("Users", "u") );
+      select.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
       const plan = bindQuery(semantic, select.createStatement());
@@ -1416,8 +1426,8 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("o.Id"),
       ]);
 
-      select.from("Users", "u");
-      select.innerJoin("Orders", "o")
+      select.from( createTestTableProjection("Users", "u") );
+      select.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
       const plan = bindQuery(semantic, select.createStatement());
@@ -1464,8 +1474,8 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("x.Id"),
       ]);
 
-      select.from("Users", "u");
-      select.innerJoin("Orders", "o")
+      select.from( createTestTableProjection("Users", "u") );
+      select.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
       expect(() => {
@@ -1521,12 +1531,12 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("i.Id"),
       ]);
 
-      select.from("Users", "u");
+      select.from( createTestTableProjection("Users", "u") );
 
-      select.innerJoin("Orders", "o")
+      select.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
-      select.innerJoin("Items", "i")
+      select.innerJoin( createTestTableProjection("Items", "i") )
         .on(col("o.Id").eq(col("i.OrderId")));
 
       expect(() => {
@@ -1577,12 +1587,12 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("i.OrderId"),
       ]);
 
-      select.from("Users", "u");
+      select.from( createTestTableProjection("Users", "u") );
 
-      select.innerJoin("Orders", "o")
+      select.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
-      select.innerJoin("Items", "i")
+      select.innerJoin( createTestTableProjection("Items", "i") )
         .on(col("o.Id").eq(col("i.OrderId")));
 
       const plan = bindQuery(semantic, select.createStatement());
@@ -1647,12 +1657,12 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("u.Id"),
       ]);
 
-      select.from("Users", "u");
+      select.from( createTestTableProjection("Users", "u") );
 
-      select.innerJoin("Orders", "o")
+      select.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
-      select.innerJoin("Items", "i")
+      select.innerJoin( createTestTableProjection("Items", "i") )
         .on(col("Id").eq(col("i.Id")));
 
       expect(() => {
@@ -1708,12 +1718,12 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("i.Id"),
       ]);
 
-      select.from("Users", "u");
+      select.from( createTestTableProjection("Users", "u") );
 
-      select.innerJoin("Orders", "o")
+      select.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
-      select.innerJoin("Items", "i")
+      select.innerJoin( createTestTableProjection("Items", "i") )
         .on(col("o.Id").eq(col("i.OrderId")));
 
       const plan = bindQuery(semantic, select.createStatement());
@@ -1758,8 +1768,8 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("o.UserId"),
       ]);
 
-      inner.from("Users", "u");
-      inner.innerJoin("Orders", "o")
+      inner.from( createTestTableProjection("Users", "u") );
+      inner.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
       const outer = new SelectBuilder([
@@ -1767,8 +1777,9 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("i.OrderId"),
       ]);
 
-      outer.from(inner.createStatement(), "j");
-      outer.innerJoin("Items", "i")
+      outer.from(inner.createStatement());
+      outer.as("j");
+      outer.innerJoin( createTestTableProjection("Items", "i") )
         .on(col("j.Id").eq(col("i.OrderId")));
 
       expect(() => {
@@ -1805,19 +1816,147 @@ describe('SemanticAnalyzer::bindSelect', () => {
         col("o.UserId"),
       ]);
 
-      inner.from("Users", "u");
-      inner.innerJoin("Orders", "o")
+      inner.from( createTestTableProjection("Users", "u") );
+      inner.innerJoin( createTestTableProjection("Orders", "o") )
         .on(col("u.Id").eq(col("o.UserId")));
 
       const outer = new SelectBuilder([
         col("u.Id"),
       ]);
 
-      outer.from(inner.createStatement(), "j");
+      outer.from(inner.createStatement());
+      outer.as("j");
 
       expect(() => {
         bindQuery(semantic, outer.createStatement());
       }).toThrow(/relation/i);
+    });
+  });
+
+  describe("tabular expression binding", () => {
+    it("binds an unaliased table reference", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("Id"),
+      ]);
+
+      select.from(createTestTableProjection("Users"));
+
+      expect(() => {
+        bindQuery(semantic, select.createStatement());
+      }).not.toThrow();
+    });
+
+    it("binds an unaliased table reference", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const select = new SelectBuilder([
+        col("Id"),
+      ]);
+
+      select.from(createTestTableProjection("Users"));
+
+      expect(() => {
+        bindQuery(semantic, select.createStatement());
+      }).not.toThrow();
+    });
+
+    it("does not expose internal join aliases through an outer join alias", () => {
+      const users = buildTable({ name: "Users" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const orders = buildTable({ name: "Orders" })
+        .createColumn(createColumnTestSpec({
+          name: "Id",
+          type: SQL_INTEGER,
+          nullable: false,
+        }))
+        .createColumn(createColumnTestSpec({
+          name: "UserId",
+          type: SQL_INTEGER,
+          nullable: false,
+        }));
+
+      const database = buildDatabase()
+        .addTable(users)
+        .addTable(orders);
+
+      engine.databases = engine.databases.add(database);
+      engine.beginTx();
+
+      const semantic = createSemantic(database);
+
+      const createSelect = (
+        expression: ExpressionNode,
+      ): SelectBuilder => {
+        const select = new SelectBuilder([expression]);
+
+        select.from(createTestTableProjection("Users", "u"));
+
+        const joinBuilder = select.innerJoin(
+          createTestTableProjection("Orders", "o"),
+        );
+
+        joinBuilder.on(
+          col("u.Id").eq(col("o.UserId")),
+        );
+
+        select.as("a");
+
+        return select;
+      };
+
+      expect(() => {
+        bindQuery(
+          semantic,
+          createSelect(col("o.Id")).createStatement(),
+        );
+      }).toThrow(/No relation binding matches given relation name/i);
+
+      expect(() => {
+        bindQuery(
+          semantic,
+          createSelect(col("a.Id")).createStatement(),
+        );
+      }).toThrow(/ambiguous/i);
+
+      expect(() => {
+        bindQuery(
+          semantic,
+          createSelect(col("a.UserId")).createStatement(),
+        );
+      }).not.toThrow();
     });
   });
 });

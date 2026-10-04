@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createTestPostgresSql } from '../utils/engineHelpers.ts';
-import { col } from '../../src/ast/dsl.ts';
+import { col, table } from '../../src/ast/dsl.ts';
 import { SQL_DECIMAL, SQL_VARCHAR } from '../../src/types/SqlType.ts';
 import { createTableTestSpec } from '../utils/buildSchema.ts';
 
@@ -153,6 +153,38 @@ describe("Integration::insert", () => {
     expect(() => {
       sql
         .insertInto("Users", ["Age"])
+        .values([
+          [20]
+        ])
+        .execute();
+    }).not.toThrow();
+  });
+
+  it('allows insert using a TableReferenceNode', () => {
+
+    const sql = createTestPostgresSql();
+
+    sql.createDatabase("DB1").execute();
+
+    sql.useDatabase("DB1").execute();
+
+    sql.createTable(...createTableTestSpec("Users", {
+      Age: {
+        type: SQL_DECIMAL,
+        nullable: false,
+      },
+    })).execute();
+
+    sql.alterTable("Users")
+      .addConstraint("CHK_Adult")
+      .check(
+        col("Age").gte(18)
+      )
+      .execute();
+
+    expect(() => {
+      sql
+        .insertInto(table("Users"), ["Age"])
         .values([
           [20]
         ])

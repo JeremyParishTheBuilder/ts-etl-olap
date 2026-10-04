@@ -10,6 +10,7 @@ import {
 } from "../evaluation/plan/QueryPlan.js";
 import {
   ExpressionNode,
+  type ExpressionProjection,
   type ResolvedExpressionNode,
 } from "../ast/expression/ExpressionNode.js";
 import {
@@ -21,16 +22,14 @@ import {
 } from "./expression.js";
 import { EvaluateNode } from "../evaluation/plan/EvaluateNode.js";
 import type { ColumnValue } from "../types/ColumnValue.js";
-import type { SelectItem } from "../ast/query/SelectItem.js";
 import { asExpressionNode } from "../ast/expression/asExpressionNode.js";
 import { IdAllocator } from "../types/IdAllocator.js";
 import { normalizeIdentifier } from "../utils/normalizeIdentifier.js";
 import { RelationScope } from "./relation/RelationScope.js";
 import type { BoundRelation } from "./relation/BoundRelation.js";
-import { bindRelationSource } from "./relation/bindRelationSource.js";
+import { bindTabularExpression } from "./relation/bindTabularExpression.js";
 import type { RowView } from "../relational/RowView.js";
 import type { Expression } from "../evaluation/expression/Expression.js";
-import type { SelectInput } from "../types/SelectInput.js";
 import {
   ColumnExpressionNode,
   ResolvedColumnExpressionNode,
@@ -41,7 +40,7 @@ export function bindSelect(
   semantic: SemanticAnalyzer,
   stmt: SelectStatement,
 ): QueryPlan {
-  const source: BoundRelation = bindRelationSource(semantic, stmt.source);
+  const source: BoundRelation = bindTabularExpression(semantic, stmt.source);
 
   let node: PlanNode = source.plan.root;
 
@@ -57,13 +56,13 @@ export function bindSelect(
     node = new FilterNode(predicate, node);
   }
 
-  const boundItems =
+  const boundProjection =
     stmt.projection === "*"
       ? bindStarProjection(source)
       : bindExplicitProjection(stmt.projection, scope);
 
   node = new EvaluateNode(
-    boundItems.map((x) => x.bound),
+    boundProjection.map((x) => x.bound),
     node,
   );
 
@@ -74,9 +73,9 @@ export function bindSelect(
     counter: new IdAllocator<number>(),
   };
 
-  const columns: QueryColumn[] = boundItems.map((x) => ({
+  const columns: QueryColumn[] = boundProjection.map((x) => ({
     name: allocateColumnName(
-      getSelectColumnName(x.item, x.resolved),
+      getColumnName(x.node, x.resolved),
       defaultColumnNamingToolkit,
     ),
     type: sqlTypeFromExpression(x.resolved),
@@ -132,15 +131,15 @@ function allocateColumnName(
   return resultColumnName;
 }
 
-function isSelectItem(value: unknown): value is SelectItem {
+function isExpressionProjection(value: unknown): value is ExpressionProjection {
   return typeof value === "object" && value !== null && "expression" in value;
 }
 
 function normalizeSelectInputs(
-  expressions: (ExpressionNode | ColumnValue | SelectItem)[],
-): SelectItem[] {
-  return expressions.map((item) => {
-    if (isSelectItem(item)) {
+  inputs: (ExpressionNode | ExpressionProjection | ColumnValue)[],
+): ExpressionProjection[] {
+  return inputs.map((item) => {
+    if (isExpressionProjection(item)) {
       return item;
     }
 
@@ -150,8 +149,8 @@ function normalizeSelectInputs(
   });
 }
 
-function getSelectColumnName(
-  item: SelectItem,
+function getColumnName(
+  item: ExpressionProjection,
   resolvedExpression: ResolvedExpressionNode,
 ): string | undefined {
   const alias = item.alias;
@@ -164,12 +163,12 @@ function getSelectColumnName(
 }
 
 function bindStarProjection(source: BoundRelation): {
-  item: SelectItem;
+  node: ExpressionProjection;
   resolved: ResolvedExpressionNode;
   bound: Expression<RowView>;
 }[] {
   return source.plan.columns.map((column, position) => {
-    const item: SelectItem = {
+    const node: ExpressionProjection = {
       expression: new ColumnExpressionNode(column.name),
     };
 
@@ -182,7 +181,7 @@ function bindStarProjection(source: BoundRelation): {
     const bound = new ColumnExpression(position);
 
     return {
-      item,
+      node,
       resolved,
       bound,
     };
@@ -190,25 +189,26 @@ function bindStarProjection(source: BoundRelation): {
 }
 
 function bindExplicitProjection(
-  projection: SelectInput[],
+  projection: (ExpressionNode | ExpressionProjection | ColumnValue)[],
   scope: RelationScope,
 ): {
-  item: SelectItem;
+  node: ExpressionProjection;
   resolved: ResolvedExpressionNode;
   bound: Expression<RowView>;
 }[] {
-  const selectItems: SelectItem[] = normalizeSelectInputs(projection);
+  const normalizedProjection: ExpressionProjection[] =
+    normalizeSelectInputs(projection);
 
-  const boundItems = selectItems.map((item) => {
-    const resolved = resolveExpression(item.expression, scope);
+  const boundProjection = normalizedProjection.map((node) => {
+    const resolved = resolveExpression(node.expression, scope);
     const bound = bindExpression(resolved, scope);
 
     return {
-      item,
+      node,
       resolved,
       bound,
     };
   });
 
-  return boundItems;
+  return boundProjection;
 }

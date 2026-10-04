@@ -21,7 +21,7 @@ export function bindInsertInto(
   stmt: InsertIntoStatement,
 ) {
   const database = semantic.ctx.requireDatabase();
-  const table = semantic.ctx.requireTable(stmt.table);
+  const table = semantic.ctx.requireTable(stmt.table.name);
   const effectiveColumns = resolveTargetColumns(table, stmt.columns);
 
   switch (stmt.source.kind) {

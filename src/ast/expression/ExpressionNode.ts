@@ -65,8 +65,20 @@ export type ExpressionKind =
   | "current"
   | "source";
 
+export interface ExpressionProjection {
+  readonly expression: ExpressionNode;
+  readonly alias?: string;
+}
+
 export abstract class ExpressionNode {
   abstract readonly kind: ExpressionKind;
+
+  as(alias: string): ExpressionProjection {
+    return {
+      expression: this,
+      alias,
+    };
+  }
 
   eq(this: ExpressionNode, expr: ExpressionNode | ColumnValue) {
     return new ComparisonPredicateNode(this, "eq", expr);
