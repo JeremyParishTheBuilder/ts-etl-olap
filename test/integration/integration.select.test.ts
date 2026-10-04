@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createTestMySqlSql, createTestPostgresSql } from '../utils/engineHelpers.ts';
-import { and, col, or, selectAs } from '../../src/ast/dsl.ts';
+import { and, col, or, table } from '../../src/ast/dsl.ts';
 import { SQL_DECIMAL, SQL_INTEGER, SQL_VARCHAR } from '../../src/types/SqlType.ts';
 import { createTableTestSpec } from '../utils/buildSchema.ts';
 
@@ -388,184 +388,6 @@ describe('Integration::select', () => {
     expect(before).toEqual(after);
   });
 
-  it("projects duplicate-named columns from a derived table", () => {
-    const sql = createTestPostgresSql();
-
-    sql.createDatabase("DB1").execute();
-    sql.useDatabase("DB1").execute();
-
-    sql.createTable(...createTableTestSpec("Users", {
-      Id: {
-        type: SQL_INTEGER,
-        nullable: false,
-      },
-      Age: {
-        type: SQL_INTEGER,
-        nullable: false,
-      },
-    })).execute();
-
-    sql
-      .insertInto("Users", ["Id", "Age"])
-      .values([
-        [1, 25],
-      ])
-      .execute();
-
-    const result = sql
-      .select("*")
-      .from(
-        sql
-          .select([
-            selectAs(col("Id"), "a"),
-            selectAs(col("Age"), "a"),
-          ])
-          .from("Users"),
-        "d",
-      )
-      .execute();
-
-    expect(result[0].columns).toEqual([
-      {
-        name: "a",
-        type: SQL_INTEGER,
-        nullable: false,
-      },
-      {
-        name: "a",
-        type: SQL_INTEGER,
-        nullable: false,
-      },
-    ]);
-
-    expect(result[0].rows).toEqual([
-      {
-        index: 0,
-        values: [1, 25],
-      },
-    ]);
-  });
-
-  it("rejects an ambiguous reference to a duplicate-named derived column", () => {
-    const sql = createTestPostgresSql();
-
-    sql.createDatabase("DB1").execute();
-    sql.useDatabase("DB1").execute();
-
-    sql.createTable(...createTableTestSpec("Users", {
-      Id: {
-        type: SQL_INTEGER,
-        nullable: false,
-      },
-      Age: {
-        type: SQL_INTEGER,
-        nullable: false,
-      },
-    })).execute();
-
-    sql
-      .insertInto("Users", ["Id", "Age"])
-      .values([
-        [1, 25],
-      ])
-      .execute();
-
-    expect(() =>
-      sql
-        .select([col("d.a")])
-        .from(
-          sql
-            .select([
-              selectAs(col("Id"), "a"),
-              selectAs(col("Age"), "a"),
-            ])
-            .from("Users"),
-          "d",
-        )
-        .execute(),
-    ).toThrow(/ambiguous/i);
-  });
-
-  it("allows duplicate column names in a PostgreSQL derived table", () => {
-    const sql = createTestPostgresSql();
-
-    sql.createDatabase("DB1").execute();
-    sql.useDatabase("DB1").execute();
-
-    sql.createTable(...createTableTestSpec("Users", {
-      Id: {
-        type: SQL_INTEGER,
-        nullable: false,
-      },
-      Age: {
-        type: SQL_INTEGER,
-        nullable: false,
-      },
-    })).execute();
-
-    sql
-      .insertInto("Users", ["Id", "Age"])
-      .values([
-        [1, 25],
-      ])
-      .execute();
-
-    expect(() =>
-      sql
-        .select("*")
-        .from(
-          sql
-            .select([
-              selectAs(col("Id"), "a"),
-              selectAs(col("Age"), "a"),
-            ])
-            .from("Users"),
-          "d",
-        )
-        .execute(),
-    ).not.toThrow();
-  });
-
-  it("rejects duplicate column names in a MySQL derived table", () => {
-    const sql = createTestMySqlSql();
-
-    sql.createDatabase("DB1").execute();
-    sql.useDatabase("DB1").execute();
-
-    sql.createTable(...createTableTestSpec("Users", {
-      Id: {
-        type: SQL_INTEGER,
-        nullable: false,
-      },
-      Age: {
-        type: SQL_INTEGER,
-        nullable: false,
-      },
-    })).execute();
-
-    sql
-      .insertInto("Users", ["Id", "Age"])
-      .values([
-        [1, 25],
-      ])
-      .execute();
-
-    expect(() =>
-      sql
-        .select("*")
-        .from(
-          sql
-            .select([
-              selectAs(col("Id"), "a"),
-              selectAs(col("Age"), "a"),
-            ])
-            .from("Users"),
-          "d",
-        )
-        .execute(),
-    ).toThrow(/duplicate/i);
-  });
-
   it("binds star projection columns to the correct positions", () => {
     const sql = createTestPostgresSql();
 
@@ -606,8 +428,9 @@ describe('Integration::select', () => {
 
     const result = sql
       .select("*")
-      .from("Users", "u")
-      .innerJoin("Orders", "o")
+      .from("Users")
+      .as("u")
+      .innerJoin( table("Orders").as("o") )
       .on(
         col("u.Id").eq(col("o.UserId"))
       )
@@ -657,8 +480,8 @@ describe('Integration::select', () => {
 
     const result = sql
       .select([col("u.Name"), col("o.Id")])
-      .from("Users", "u")
-      .innerJoin("Orders", "o")
+      .from( table("Users").as("u") )
+      .innerJoin( table("Orders").as("o") )
       .on(col("u.Id").eq(col("o.UserId")))
       .execute();
 
@@ -697,8 +520,8 @@ describe('Integration::select', () => {
 
     const result = sql
       .select([col("u.Id"), col("u.Name"), col("o.Id"), col("o.UserId")])
-      .from("Users", "u")
-      .innerJoin("Orders", "o")
+      .from( table("Users").as("u") )
+      .innerJoin( table("Orders").as("o") )
       .on(col("u.Id").eq(col("o.UserId")))
       .execute();
 
@@ -743,8 +566,8 @@ describe('Integration::select', () => {
 
     const result = sql
       .select([col("u.Name"), col("o.Id")])
-      .from("Users", "u")
-      .innerJoin("Orders", "o")
+      .from( table("Users").as("u") )
+      .innerJoin( table("Orders").as("o") )
       .on(col("u.Id").eq(col("o.UserId")))
       .execute();
 
@@ -809,10 +632,10 @@ describe('Integration::select', () => {
         col("o.Id"),
         col("i.Id"),
       ])
-      .from("Users", "u")
-      .innerJoin("Orders", "o")
+      .from( table("Users").as("u") )
+      .innerJoin( table("Orders").as("o") )
       .on(col("u.Id").eq(col("o.UserId")))
-      .innerJoin("Items", "i")
+      .innerJoin( table("Items").as("i") )
       .on(col("o.Id").eq(col("i.OrderId")))
       .execute();
 
@@ -820,5 +643,308 @@ describe('Integration::select', () => {
       { index: 0, values: ["Alice", 10, 100] },
       { index: 1, values: ["Bob", 20, 200] },
     ]);
+  });
+
+  describe("derived tables", () => {
+    it("allows duplicate column names in a PostgreSQL derived table", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.createTable(...createTableTestSpec("Users", {
+        Id: {
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        Age: {
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+      })).execute();
+
+      sql
+        .insertInto("Users", ["Id", "Age"])
+        .values([
+          [1, 25],
+        ])
+        .execute();
+
+      expect(() =>
+        sql
+          .select("*")
+          .from(
+            sql
+              .select([
+                col("Id").as("a"),
+                col("Age").as("a"),
+              ])
+              .from("Users")
+              .as("d")
+          )
+          .execute(),
+      ).not.toThrow();
+    });
+
+    it("rejects duplicate column names in a MySQL derived table", () => {
+      const sql = createTestMySqlSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.createTable(...createTableTestSpec("Users", {
+        Id: {
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        Age: {
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+      })).execute();
+
+      sql
+        .insertInto("Users", ["Id", "Age"])
+        .values([
+          [1, 25],
+        ])
+        .execute();
+
+      expect(() =>
+        sql
+          .select("*")
+          .from(
+            sql
+              .select([
+                col("Id").as("a"),
+                col("Age").as("a"),
+              ])
+              .from("Users")
+              .as("d")
+          )
+          .execute(),
+      ).toThrow(/duplicate/i);
+    });
+
+    it("projects duplicate-named columns from a derived table", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.createTable(...createTableTestSpec("Users", {
+        Id: {
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        Age: {
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+      })).execute();
+
+      sql
+        .insertInto("Users", ["Id", "Age"])
+        .values([
+          [1, 25],
+        ])
+        .execute();
+
+      const result = sql
+        .select("*")
+        .from(
+          sql
+            .select([
+              col("d.Id").as("a"),
+              col("d.Age").as("a"),
+            ])
+            .from("Users")
+            .as("d")
+        )
+        .execute();
+
+      expect(result[0].columns).toEqual([
+        {
+          name: "a",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        {
+          name: "a",
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+      ]);
+
+      expect(result[0].rows).toEqual([
+        {
+          index: 0,
+          values: [1, 25],
+        },
+      ]);
+    });
+
+    it("rejects an ambiguous reference to a duplicate-named derived column", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.createTable(...createTableTestSpec("Users", {
+        Id: {
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+        Age: {
+          type: SQL_INTEGER,
+          nullable: false,
+        },
+      })).execute();
+
+      sql
+        .insertInto("Users", ["Id", "Age"])
+        .values([
+          [1, 25],
+        ])
+        .execute();
+
+      expect(() =>
+        sql
+          .select([col("d.a")])
+          .from(
+            sql
+              .select([
+                col("a.Id").as("a"),
+              ])
+              .from("Users")
+              .as("a")
+          )
+          .as("d")
+          .execute(),
+      ).not.toThrow();
+
+      expect(() =>
+        sql
+          .select([col("d.a")])
+          .from(
+            sql
+              .select([
+                col("a.Id").as("a"),
+                col("Age").as("a"),
+              ])
+              .from("Users")
+              .as("a")
+          )
+          .as("d")
+          .execute(),
+      ).toThrow(/ambiguous/i);
+    });
+
+    it("does not expose an inner relation alias outside a derived table", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.createTable(
+        ...createTableTestSpec("Users", {
+          Id: {
+            type: SQL_INTEGER,
+            nullable: false,
+          },
+        }),
+      ).execute();
+
+      expect(() =>
+        sql
+          .select([col("d.a")])
+          .from(
+            sql
+              .select([
+                col("a.Id").as("a"),
+              ])
+              .from("Users")
+              .as("a"),
+          )
+          .as("d")
+          .execute(),
+      ).not.toThrow();
+
+      expect(() =>
+        sql
+          .select([col("u.Id")])
+          .from(
+            sql
+              .select([
+                col("u.Id").as("Id"),
+              ])
+              .from("Users")
+              .as("u"),
+          )
+          .as("a")
+          .execute(),
+      ).toThrow(/No relation binding matches given relation name/i);
+    });
+  });
+
+  describe("joins", () => {
+    it("resolves an aliased join as a single outer relation", () => {
+      const sql = createTestPostgresSql();
+
+      sql.createDatabase("DB1").execute();
+      sql.useDatabase("DB1").execute();
+
+      sql.createTable(
+        ...createTableTestSpec("Users", {
+          Id: {
+            type: SQL_INTEGER,
+            nullable: false,
+          },
+        }),
+      ).execute();
+
+      sql.createTable(
+        ...createTableTestSpec("Orders", {
+          Id: {
+            type: SQL_INTEGER,
+            nullable: false,
+          },
+          UserId: {
+            type: SQL_INTEGER,
+            nullable: false,
+          },
+        }),
+      ).execute();
+
+      expect(() =>
+        sql
+          .select([col("a.UserId")])
+          .from(table("Users").as("u"))
+          .innerJoin(table("Orders").as("o"))
+          .on(col("u.Id").eq(col("o.UserId")))
+          .as("a")
+          .execute(),
+      ).not.toThrow();
+
+      expect(() =>
+        sql
+          .select([col("o.Id")])
+          .from(table("Users").as("u"))
+          .innerJoin(table("Orders").as("o"))
+          .on(col("u.Id").eq(col("o.UserId")))
+          .as("a")
+          .execute(),
+      ).toThrow(/No relation binding matches given relation name/i);
+
+      expect(() =>
+        sql
+          .select([col("a.Id")])
+          .from(table("Users").as("u"))
+          .innerJoin(table("Orders").as("o"))
+          .on(col("u.Id").eq(col("o.UserId")))
+          .as("a")
+          .execute(),
+      ).toThrow(/ambiguous/i);
+    });
   });
 });

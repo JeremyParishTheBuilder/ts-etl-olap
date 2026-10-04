@@ -21,9 +21,8 @@ Semantic owns:
 * Schema and name resolution
 * Semantic validation
 * Dialect and engine policy application
-* AST resolution
 * Expression and predicate binding
-* Relation and column scope construction
+* Tabular-expression and relation scope construction
 * Statement binding
 * Query-plan construction
 * Query-result metadata derivation
@@ -40,18 +39,18 @@ The general progression is:
 AST -> Resolved AST -> Bound runtime object
 ```
 
-`resolveExpression()` converts expression nodes into resolved nodes.
-`bindExpression()` converts resolved nodes into executable `Expression`
-objects.
+`resolveExpression()` resolves schema-dependent expression references.
+`bindExpression()` converts resolved expressions into executable
+`Expression` objects.
 
 Predicates follow the same resolution and binding model and produce
 executable `Predicate` objects.
 
-Resolution is schema-dependent; AST construction is not.
+AST construction does not require a schema; semantic resolution does.
 
 ## Expressions
 
-Current expression forms include:
+Expression forms include:
 
 * Column references
 * Binary expressions
@@ -60,23 +59,27 @@ Current expression forms include:
 * CAST
 * Temporal expressions
 * SQL functions
-* Default values
+* JSON extraction
+* DEFAULT and other special values
 
-Expressions evaluated against existing rows are bound with `RowView` context.
+Expressions evaluated against existing rows use `RowView` context.
 
-## Relation Sources and Scope
+## Tabular Expressions and Relation Scope
 
-Queries resolve against a `RelationSource`, which may be:
+Query sources are represented by `TabularExpressionNode` and its projection
+wrapper, `TabularExpressionProjection`.
 
-* A physical table
-* A child query
-* A join
+Current tabular expression forms include:
 
-Semantic binding converts a relation source into a `BoundRelation` containing
-its executable plan and the relations visible at that level.
+* Physical table references
+* Query references
+* Joins
+
+Semantic binding converts a tabular expression into a `BoundRelation`
+containing its executable plan and the relations visible at that query level.
 
 `RelationBinding` describes a relation's semantic column namespace.
-`RelationScope` resolves column references across the visible relations.
+`RelationScope` resolves column references across visible relations.
 
 Qualified references resolve the relation first and then the column.
 Unqualified references must resolve to exactly one matching column.
@@ -84,7 +87,7 @@ Ambiguous references are rejected.
 
 Identifier comparison uses normalized names while preserving display names.
 
-## Relation Boundaries
+## Relation Boundaries and Aliases
 
 A physical table exposes its columns as one relation.
 
@@ -92,55 +95,52 @@ A derived query creates a new relation boundary. Its outer query sees the
 derived query under its alias rather than seeing the relations used inside
 the child query.
 
+Likewise, an aliased join becomes one relation at the parent query level.
+
 For example:
 
 ```text
 Users u JOIN Orders o
         |
         v
-     query d
+     join a
         |
         v
-outer scope sees d
+outer scope sees a
 ```
 
-Columns from `u` and `o` therefore do not escape into the outer scope.
+The join predicate is resolved while `u` and `o` are both visible. Once the
+join is aliased as `a`, the parent scope sees one relation named `a` whose
+columns are the complete join output. `u` and `o` do not escape that boundary.
 
-Duplicate output names may remain in a derived query where the active dialect
-permits them. Explicit references to an ambiguous duplicate name are
-rejected. Dialect policy may instead require unique derived-table column
-names.
+This preserves SQL-style relation scoping and prevents an alias from creating
+multiple bindings with the same relation name.
+
+Duplicate output column names may remain where the active dialect permits
+them. Referencing an ambiguous duplicate column is rejected.
 
 ## JOIN
 
-JOIN is a relation-source operation rather than a query statement.
+JOIN is a tabular expression rather than a query statement.
 
-Semantic recursively binds the left and right sources, then resolves the
-join predicate against a scope containing both sides.
+Semantic recursively binds the left and right tabular expressions, then
+resolves the join predicate against a scope containing both sides.
 
-The resulting plan contains the left and right plans and the bound predicate.
-Its output columns are ordered left-to-right.
+The resulting plan contains the two child plans and the bound predicate.
+Output columns are ordered left-to-right.
 
-The completed join exposes its constituent relations to subsequent SELECT
-expressions and chained joins.
+Unaliased joins expose their constituent relations to the surrounding query.
+An aliased join exposes one combined relation at the parent level.
 
-For example:
-
-```text
-A JOIN B ON ...
-  JOIN C ON ...
-```
-
-The second join can reference relations from `A` and `B` as well as `C`.
-
-Semantic resolves and binds the operation; execution evaluates the join and
-produces its rows.
+Chained joins are bound recursively, allowing each join predicate to
+reference the relations visible at that stage.
 
 ## SELECT
 
 `bindSelect()` converts a `SelectStatement` into a `QueryPlan`.
 
-SELECT items are expressions and are not limited to physical columns.
+SELECT projections contain expressions and are not limited to physical
+columns.
 
 A `QueryPlan` contains:
 
@@ -153,21 +153,20 @@ Each `QueryColumn` contains:
 * `type`
 * `nullable`
 
-Metadata is derived from expression semantics. Aliases take precedence over
-derived names; expressions without suitable names receive generated names.
+Metadata is derived from expression semantics. Projection aliases take
+precedence over derived names; expressions without suitable names receive
+generated names.
 
-Query metadata describes the query output independently of physical source
+Query metadata describes query output independently of physical source
 schema.
 
 ### SELECT *
 
-`*` expands from the bound relation source and preserves output positions.
+`*` expands from the bound tabular source and preserves output positions.
 It is not treated as a set of ordinary named column references.
 
 This allows star expansion to preserve duplicate output names and joined
 column positions without incorrectly resolving ambiguous names.
-
-Semantic constructs the plan but does not execute it.
 
 ## Query Statements
 
@@ -194,50 +193,41 @@ For each position:
 
 * The result name comes from the left query.
 * Nullability is combined from both columns.
-* Types must be mutually assignment-compatible.
-* `commonSqlType()` determines the resulting type.
-
-`UnionAllNode` executes the left plan followed by the right plan and
-preserves duplicates.
+* Types are reconciled through `commonSqlType()`.
 
 The resulting `QueryPlan.columns` describes the complete UNION ALL output.
 
-## Query Results
-
-Execution converts a query plan into a `QueryResult` containing:
-
-* `columns`: the plan's `QueryColumn[]`
-* `rows`: evaluated `RowView[]`
-
-Semantic establishes the query metadata; execution produces the data.
-
 ## INSERT
 
-INSERT supports VALUES input and query-based input.
+INSERT has a `TableReferenceNode` as its destination. The destination is
+therefore structurally restricted to a table rather than an arbitrary
+tabular expression.
 
-### INSERT ... VALUES
+INSERT supports:
 
-Semantic resolves and binds input expressions and validates their context.
+* `INSERT ... VALUES`
+* `INSERT ... DEFAULT VALUES`
+* `INSERT ... SELECT`
 
-`DEFAULT` is handled separately because its final value depends on the target
-column.
+For VALUES input, semantic resolves and binds input expressions and validates
+their context. `DEFAULT` is handled separately because its final value
+depends on the target column.
 
-### INSERT ... SELECT
+For INSERT SELECT, the source query is bound through normal query binding.
+Output count and type compatibility are validated positionally.
 
-The source query is bound to a `QueryPlan`.
+The source may be any supported composed query, including `UNION ALL`.
 
-Semantic validates output count and compatibility with the target columns.
-Mapping is positional.
-
-The source may be any supported composed query, including UNION ALL.
-
-## UPDATE
+## UPDATE and DELETE
 
 UPDATE expressions may reference existing columns because they are evaluated
 against affected `RowView`s.
 
-Semantic resolves and binds the assignments; execution evaluates them against
-the affected rows.
+Semantic resolves and binds assignments and predicates; execution evaluates
+them against affected rows.
+
+DELETE predicates follow the same expression and relation-scope binding
+rules.
 
 ## CREATE TABLE and CTAS
 
@@ -252,9 +242,6 @@ implicitly inherited.
 
 Dialect rules determine how explicit CTAS definitions interact with query
 metadata.
-
-The destination is created through normal schema actions and populated
-separately.
 
 ## Keywords and DEFAULT
 
@@ -280,10 +267,7 @@ auto-increment behavior.
 
 Semantic obtains active policies through the execution context.
 
-Policies may originate from engine configuration, dialect defaults, or
-dialect-specific rules.
-
-They may govern:
+Policies may govern:
 
 * Supported keywords and functions
 * Statement capabilities
@@ -324,7 +308,7 @@ Statement
 Binders reuse existing semantic mechanisms where appropriate. INSERT SELECT
 and CTAS, for example, reuse normal query binding.
 
-## Semantic vs Relational
+## Semantic Boundaries
 
 Semantic determines whether an operation is meaningful and permitted.
 
@@ -346,25 +330,7 @@ Relational remains responsible for persistent-state invariants such as:
 * Index consistency
 * Relational mutation
 
-## Semantic vs Execution
-
-The primary boundary is:
-
-```text
-Semantic
-   |
-   +--> Actions
-   |
-   +--> QueryPlans
-            |
-            v
-         Execution
-            |
-            v
-         Relational
-```
-
-Semantic does not mutate relational state or execute query plans.
+Semantic does not execute plans or mutate relational state.
 
 ## Module Boundaries
 
@@ -388,7 +354,7 @@ Semantic does not own:
 * Relational tables or persistent rows
 * Relational mutation algorithms
 * Action or query-plan execution
-* Mapping-specific expression contexts
+* Discovery or Import-specific expression contexts
 
 Its role is the translation boundary between statement structure and
 executable relational operations.

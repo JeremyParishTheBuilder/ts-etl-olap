@@ -1,8 +1,8 @@
 import type { QueryStatement } from "./QueryStatement.js";
-import { RelationSourceReferencer } from "./RelationSourceReferencer.js";
+import { TabularExpressionReferencer } from "./TabularExpressionReferencer.js";
 import type { UnionAllStatement } from "./setOperations/UnionAllStatement.js";
 
-export abstract class QueryStatementBuilder extends RelationSourceReferencer {
+export abstract class QueryStatementBuilder extends TabularExpressionReferencer {
   unionAll(query: QueryStatement) {
     return new UnionAllBuilder(this.createStatement(), query);
   }

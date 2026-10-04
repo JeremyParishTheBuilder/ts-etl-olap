@@ -2,7 +2,7 @@ import type { RowView } from "../../../relational/RowView.js";
 import type { Predicate } from "../../predicate/Predicate.js";
 import type { PlanNode } from "../PlanNode.js";
 
-export class InnerJoinNode implements PlanNode {
+export class InnerJoinPlanNode implements PlanNode {
   constructor(
     public left: PlanNode,
     public right: PlanNode,

@@ -14,12 +14,12 @@ import { NotPredicateNode } from "./predicate/NotPredicateNode.js";
 import { OrPredicateNode } from "./predicate/OrPredicateNode.js";
 import type { PredicateNode } from "./predicate/PredicateNode.js";
 import { XorPredicateNode } from "./predicate/XorPredicateNode.js";
-import type { SelectItem } from "./query/SelectItem.js";
+import { TableReferenceNode } from "./tabular/TableReferenceNode.js";
 
 // Expressions
 
-export function col(name: string) {
-  return new ColumnExpressionNode(name);
+export function col(reference: string) {
+  return new ColumnExpressionNode(reference);
 }
 
 export function case_() {
@@ -49,6 +49,12 @@ export function source() {
   return new SourceExpressionNode();
 }
 
+// Tabular Expressions
+
+export function table(reference: string) {
+  return new TableReferenceNode(reference);
+}
+
 // Predicates
 
 export function and(left: PredicateNode, right: PredicateNode) {
@@ -65,16 +71,4 @@ export function xor(left: PredicateNode, right: PredicateNode) {
 
 export function not(inner: PredicateNode) {
   return new NotPredicateNode(inner);
-}
-
-// Wrappers
-
-export function selectAs(
-  expression: ExpressionNode,
-  alias: string,
-): SelectItem {
-  return {
-    expression,
-    alias,
-  };
 }

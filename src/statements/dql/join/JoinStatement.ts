@@ -3,7 +3,7 @@ import type { LeftJoinStatement } from "./LeftJoinStatement.js";
 import type { FullJoinStatement } from "./FullJoinStatement.js";
 import type { RightJoinStatement } from "./RightJoinStatement.js";
 import type { PredicateNode } from "../../../ast/predicate/PredicateNode.js";
-import type { RelationSourceReferencer } from "../RelationSourceReferencer.js";
+import type { TabularExpressionReferencer } from "../TabularExpressionReferencer.js";
 import type { StatementBuilder } from "../../Statement.js";
 
 export type JoinStatement =
@@ -13,7 +13,7 @@ export type JoinStatement =
   | FullJoinStatement;
 
 export abstract class JoinBuilder implements StatementBuilder {
-  abstract on(predicate?: PredicateNode): RelationSourceReferencer;
+  abstract on(predicate?: PredicateNode): TabularExpressionReferencer;
   abstract getNextCalls(): { required: string[]; optional: string[] };
   abstract createStatement(): JoinStatement;
 }

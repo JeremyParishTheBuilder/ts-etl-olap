@@ -7,23 +7,28 @@ import type { DefaultValueNode } from "../../ast/DefaultValueNode.js";
 import { toExpressionNode } from "../../semantic/toExpressionNode.js";
 import type { ExpressionNode } from "../../ast/expression/ExpressionNode.js";
 import type { QueryStatement } from "../dql/QueryStatement.js";
+import { TableReferenceNode } from "../../ast/tabular/TableReferenceNode.js";
 
 export interface InsertIntoStatement extends BaseStatement {
   kind: "insert_into";
-  table: string;
+  table: TableReferenceNode;
   columns: string[];
   source: InsertSource;
   returning?: string[];
 }
 
 export class InsertIntoBuilder implements StatementBuilder {
+  private readonly table: TableReferenceNode;
   private source?: InsertSource;
   private returningCols?: string[];
 
   constructor(
-    private table: string,
+    table: string | TableReferenceNode,
     private columns: string[] = [],
-  ) {}
+  ) {
+    this.table =
+      typeof table === "string" ? new TableReferenceNode(table) : table;
+  }
 
   defaultValues() {
     this.assertNoSource();

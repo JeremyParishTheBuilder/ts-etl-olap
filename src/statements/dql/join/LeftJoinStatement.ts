@@ -1,9 +1,9 @@
 import type { PredicateNode } from "../../../ast/predicate/PredicateNode.js";
-import type { RelationSource } from "../../../semantic/relation/RelationSource.js";
+import type { TabularExpressionProjection } from "../../../ast/tabular/TabularExpressionNode.js";
 
 export interface LeftJoinStatement {
   kind: "leftJoin";
-  left: RelationSource;
-  right: RelationSource;
+  left: TabularExpressionProjection;
+  right: TabularExpressionProjection;
   on: PredicateNode;
 }

@@ -1,20 +1,20 @@
 import { type PredicateNode } from "../../ast/predicate/PredicateNode.js";
-import type { SelectInput } from "../../types/SelectInput.js";
 import { type BaseStatement } from "../Statement.js";
 import { QueryStatementBuilder } from "./QueryStatementBuilder.js";
-import type { RelationSource } from "../../semantic/relation/RelationSource.js";
+import type { QueryProjection } from "../../ast/query/QueryProjection.js";
+import type { TabularExpressionProjection } from "../../ast/tabular/TabularExpressionNode.js";
 
 export interface SelectStatement extends BaseStatement {
   kind: "select";
-  source: RelationSource;
-  projection: SelectInput[] | "*";
+  source: TabularExpressionProjection;
+  projection: QueryProjection;
   where?: PredicateNode;
 }
 
 export class SelectBuilder extends QueryStatementBuilder {
   protected whereClause?: PredicateNode;
 
-  constructor(protected projection: SelectInput[] | "*") {
+  constructor(protected projection: QueryProjection) {
     super();
   }
 

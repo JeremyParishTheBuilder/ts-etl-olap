@@ -28,12 +28,16 @@ import {
 } from "../dialect/keywords.js";
 import type { UpdateInput } from "../types/UpdateInput.js";
 import type { InsertValuesInput } from "../types/InsertSource.js";
-import type { SelectInput } from "../types/SelectInput.js";
 import { QueryStatementBuilder } from "../statements/dql/QueryStatementBuilder.js";
 import type { QueryStatement } from "../statements/dql/QueryStatement.js";
 import type { QueryResult } from "../evaluation/QueryResult.js";
-import { RelationSourceReferencer } from "../statements/dql/RelationSourceReferencer.js";
+import {
+  TabularExpressionReferencer,
+  type TabularExpressionInput,
+} from "../statements/dql/TabularExpressionReferencer.js";
 import { JoinBuilder } from "../statements/dql/join/JoinStatement.js";
+import type { QueryProjection } from "../ast/query/QueryProjection.js";
+import type { TableReferenceNode } from "../ast/tabular/TableReferenceNode.js";
 
 export abstract class InputBatch {
   private statements: Statement[] = [];
@@ -171,8 +175,17 @@ export abstract class InputBatch {
     return this;
   }
 
-  protected as(query: InputBatch, fragment: string = "AS") {
+  protected as(input: string | InputBatch, fragment: string = "AS") {
     this.assertAllowed("as", fragment);
+
+    if (typeof input === "string") {
+      if (!(this.currentBuilder instanceof TabularExpressionReferencer)) {
+        throw new Error(`Cannot use '${fragment}' as a tabular alias here`);
+      }
+
+      this.currentBuilder.as(input);
+      return this;
+    }
 
     if (!(this.currentBuilder instanceof CreateTableBuilder)) {
       throw new Error(
@@ -180,12 +193,12 @@ export abstract class InputBatch {
       );
     }
 
-    this.currentBuilder.as(query.asQueryStatement());
+    this.currentBuilder.as(input.asQueryStatement());
     return this;
   }
 
   protected insertInto(
-    table: string /* | NameWithAlias*/,
+    table: string | TableReferenceNode,
     columns: string[],
     fragment: string = "INSERT INTO",
   ) {
@@ -377,27 +390,27 @@ export abstract class InputBatch {
   }
 
   protected select(
-    expressionsOrQuery: SelectInput[] | "*" | InputBatch,
+    projectionOrQuery: QueryProjection | InputBatch,
     fragment: string = "SELECT",
   ) {
-    if (!isInputBatch(expressionsOrQuery) && this.currentBuilder !== null) {
+    if (!isInputBatch(projectionOrQuery) && this.currentBuilder !== null) {
       const newQueryInputCursor = this.createInputBatch();
-      newQueryInputCursor.select(expressionsOrQuery);
+      newQueryInputCursor.select(projectionOrQuery);
       return newQueryInputCursor;
     }
 
     this.assertAllowed("select", fragment);
 
-    if (isInputBatch(expressionsOrQuery)) {
+    if (isInputBatch(projectionOrQuery)) {
       if (this.currentBuilder instanceof InsertIntoBuilder) {
-        this.currentBuilder.select(expressionsOrQuery.asQueryStatement());
+        this.currentBuilder.select(projectionOrQuery.asQueryStatement());
         return this;
       }
 
       throw new Error(`Statement does not accept a query here.`);
     }
 
-    this.currentBuilder = new SelectBuilder(expressionsOrQuery);
+    this.currentBuilder = new SelectBuilder(projectionOrQuery);
     return this;
   }
 
@@ -415,8 +428,7 @@ export abstract class InputBatch {
   }
 
   protected from(
-    source: string | InputBatch,
-    alias?: string,
+    input: TabularExpressionInput | InputBatch,
     fragment: string = "FROM",
   ) {
     this.assertAllowed("from", fragment);
@@ -424,31 +436,27 @@ export abstract class InputBatch {
       throw new Error(`Cannot call '${fragment}' outside of Select`);
     }
 
-    const nameOrStmt =
-      typeof source !== "string" ? source.asQueryStatement() : source;
+    const source = isInputBatch(input) ? input.asQueryStatement() : input;
 
-    this.currentBuilder.from(nameOrStmt, alias);
+    this.currentBuilder.from(source);
     return this;
   }
 
   protected innerJoin(
-    nameOrStmt: string | InputBatch,
-    alias?: string,
+    input: TabularExpressionInput | InputBatch,
     fragment: string = "INNER JOIN",
   ) {
     this.assertAllowed("innerJoin", fragment);
-    if (!(this.currentBuilder instanceof RelationSourceReferencer)) {
+    if (!(this.currentBuilder instanceof TabularExpressionReferencer)) {
       throw new Error(
         `Cannot call '${fragment}' outside of Select/Update/Delete`,
       );
     }
 
-    const source =
-      typeof nameOrStmt !== "string"
-        ? nameOrStmt.asQueryStatement()
-        : nameOrStmt;
+    const right = isInputBatch(input) ? input.asQueryStatement() : input;
 
-    this.currentBuilder = this.currentBuilder.innerJoin(source, alias);
+    this.currentBuilder = this.currentBuilder.innerJoin(right);
+
     return this;
   }
 
